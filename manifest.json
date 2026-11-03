@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Game Speed Tester",
+  "version": "1.0.0",
+  "description": "Local movement-speed override for authorized testing on nghichthienky.online.",
+  "minimum_chrome_version": "111",
+  "permissions": ["storage"],
+  "action": { "default_popup": "popup.html" },
+  "content_scripts": [
+    {
+      "matches": ["https://nghichthienky.online/*"],
+      "js": ["page.js", "farm-page.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://nghichthienky.online/*"],
+      "js": ["content.js", "font-options.js", "font.js", "farm-content.js"],
+      "run_at": "document_start",
+      "world": "ISOLATED"
+    }
+  ]
+}

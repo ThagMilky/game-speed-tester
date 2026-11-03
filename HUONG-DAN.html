@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hướng dẫn Game Speed Tester</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f6f8;color:#22303c;font:16px/1.7 "Segoe UI",Arial,sans-serif}main{max-width:860px;margin:auto;padding:36px 22px 70px}header{background:#123c36;color:#fff;border-radius:18px;padding:28px;margin-bottom:24px}h1{font-size:30px;margin:0 0 6px}h2{font-size:23px;margin:0 0 12px}h3{font-size:18px;margin:20px 0 8px}p{margin:8px 0 14px}.version{color:#b9e9d5}section{background:white;border:1px solid #dde5ea;border-radius:14px;margin:18px 0;padding:22px}li{margin:12px 0}code,kbd{background:#eaf0f4;padding:3px 7px;border-radius:5px;font-size:14px;overflow-wrap:anywhere}a{color:#087b66}.note{border-left:4px solid #087b66;padding:10px 14px;background:#edf8f2}table{width:100%;border-collapse:collapse}td,th{text-align:left;vertical-align:top;padding:10px;border-bottom:1px solid #e6ecef}th{background:#f5f7f9}details{padding:10px 0;border-bottom:1px solid #edf0f2}summary{cursor:pointer;font-weight:600}.small{font-size:14px;color:#5b6b78}
+</style>
+</head>
+<body><main>
+<header><p class="version">PHIÊN BẢN 1.0.0 · CHROME TRÊN MÁY TÍNH</p><h1>Game Speed Tester</h1><p>Cài một lần, sử dụng bằng nút gạt. Không cần biết code.</p></header>
+<section><h2>1. Cài vào Chrome</h2>
+<ol>
+<li><b>Giải nén ZIP</b>: nhấp phải file ZIP → <b>Extract All / Giải nén tất cả</b>. Đặt thư mục ở nơi bạn sẽ giữ lâu dài, ví dụ Documents. Không mở trực tiếp từ trong file ZIP.</li>
+<li>Mở Chrome, gõ <code>chrome://extensions</code> vào thanh địa chỉ rồi Enter.</li>
+<li>Bật <b>Developer mode / Chế độ dành cho nhà phát triển</b>, thường ở góc phải trên.</li>
+<li>Bấm <b>Load unpacked / Tải tiện ích đã giải nén</b>.</li>
+<li>Chọn <b>thư mục chứa file manifest.json</b>, cùng chỗ với file hướng dẫn này. Không chọn ZIP hay một file lẻ bên trong thư mục.</li>
+<li>Bấm biểu tượng mảnh ghép Extensions ở góc phải Chrome → tìm <b>Game Speed Tester</b> → ghim để dễ mở.</li>
+<li>Mở <a href="https://nghichthienky.online/">nghichthienky.online</a>, tải lại trang rồi bấm biểu tượng extension.</li>
+</ol>
+<p class="note">Giữ nguyên thư mục đã giải nén sau khi cài. Người nhận chỉ cần bản ZIP; không cần tài khoản GitHub, terminal hay công cụ lập trình.</p>
+<p class="small">Đây là bản cài thủ công bằng Load unpacked, chưa phải bản phát hành qua Chrome Web Store. Cách cài đối chiếu <a href="https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked">hướng dẫn chính thức của Chrome</a>.</p>
+</section>
+<section><h2>2. Dùng tính năng nào thì mở mục đó</h2>
+<p>Đầu popup hiển thị Auto Farm thật của game, trạng thái bay/đi bộ, tốc độ và Fix. Bấm tên từng nhóm để mở hoặc thu gọn.</p>
+<table><thead><tr><th>Mục</th><th>Cách dùng</th></tr></thead><tbody>
+<tr><td><b>Auto Farm</b></td><td>Bật <b>Mở rộng vùng tìm quái</b>, nhập bán kính (mặc định 22) → <b>Lưu bán kính</b>. Vào game nhấn <kbd>V</kbd> để bật Auto Farm. Tool dùng lại Auto Farm của game, không tạo bộ chiến đấu riêng. Khi phần mở rộng đang hoạt động, chưa bay thì yêu cầu bật bay.</td></tr>
+<tr><td><b>Lọc quái</b></td><td>Trong Auto Farm, chọn <b>Tất cả quái</b> hoặc <b>Đúng level</b>. Nhập level, bấm <b>Lưu lựa chọn quái</b>. Level 100 chỉ khớp 100; không phải từ 100 trở lên. Chưa có chế độ chỉ boss.</td></tr>
+<tr><td><b>Tự hồi sinh</b></td><td>Tick <b>Tự hồi sinh khi nút sẵn sàng</b>. Tool chỉ bấm khi hết thời gian chờ của game; không bấm lặp một yêu cầu. Mặc định tùy chọn này tắt.</td></tr>
+<tr><td><b>Phím tắt</b></td><td>Bấm <b>Đặt phím</b>, bấm phím muốn dùng (gợi ý <kbd>F6</kbd>). Phím mới thay V trong game. Bấm <b>Dùng phím gốc</b> để quay lại V. Chỉ nhận khi trang game có focus và bạn không nhập chữ.</td></tr>
+<tr><td><b>Tốc độ</b></td><td>Bật <b>Điều chỉnh tốc độ</b>, nhập riêng đi bộ/bay → <b>Lưu tốc độ</b>. Mặc định đi bộ 3.5, bay 2; giới hạn 1–6. Đổi trạng thái chờ ổn định 1 giây. Tắt công tắc để trả tốc độ về game.</td></tr>
+<tr><td><b>Bảng trạng thái</b></td><td>Bật/tắt bảng ở góc phải dưới; tick từng thông tin muốn hiện. Tự lưu, không cần bật điều chỉnh tốc độ để ẩn/hiện bảng.</td></tr>
+<tr><td><b>Font chữ</b></td><td>Bật <b>Đổi font web</b>, chọn một trong 10 font. Chờ 1 giây để áp dụng. Tắt thì về font gốc ngay. Chữ nằm trong ảnh/canvas có thể không đổi.</td></tr>
+</tbody></table>
+<p class="note">Các lựa chọn được giữ qua đổi map và dùng chung cho các tab game. Lần đầu bật một tính năng cần truy cập game, trang có thể tải lại một lần để thêm tham số <code>timer</code>. Đây là hành vi dự kiến.</p>
+<p class="small">Tốc độ và mở rộng Auto Farm mặc định tắt; font mặc định bật Times New Roman; bảng trạng thái mặc định hiện. Hãy bật những tính năng bạn cần.</p>
+</section>
+<section><h2>3. Khi có vấn đề</h2>
+<details><summary>Không thấy extension / Chrome báo thiếu manifest</summary><p>Kiểm tra đã giải nén toàn bộ ZIP chưa. Khi Load unpacked, chọn đúng thư mục có <code>manifest.json</code>, không phải thư mục cha. Không đổi tên các file bên trong.</p></details>
+<details><summary>Trạng thái hiện “Chưa rõ” hoặc bấm không có tác dụng</summary><p>Chọn tab game, tải lại trang sau khi cài/cập nhật extension, chờ nhân vật vào map. Mở mục <b>Chi tiết Auto Farm</b> hoặc <b>Kết nối &amp; thông tin hoạt động</b> để đọc thông báo. Một số truy cập cần URL có <code>timer</code>; tool tự thêm khi bạn bật tính năng liên quan.</p></details>
+<details><summary>Đã bật mở rộng nhưng nhân vật chưa tự farm</summary><p>Công tắc trong extension chỉ bật phần hỗ trợ. Bạn vẫn cần nhấn V hoặc phím đã đặt trong game để bật Auto Farm gốc. Xem ô <b>Auto Farm game</b> ở đầu popup.</p></details>
+<details><summary>Chết và hồi sinh xong Auto Farm tắt</summary><p>Mã game có quy tắc tự tắt sau 3 lần chết trong 10 phút. Tool không bỏ quy tắc này; nếu ô Auto Farm game là TẮT thì bạn cần bật lại bằng phím. Nếu vẫn BẬT, tool đợi game xử lý hồi sinh xong rồi kiểm tra bật bay lại khi phần mở rộng đang dùng.</p></details>
+<details><summary>Nhân vật đi tới lui hoặc Fix tăng nhiều</summary><p>Thử tắt điều chỉnh tốc độ để so với game gốc. Không có mức 5–6 nào được xác nhận ổn định trên server. Đường không đến được, thiếu linh lực, hồi máu và quái không đúng level cũng có thể làm farm chờ. Kiểm tra phần chi tiết; không giả định mọi trường hợp đứng yên là lỗi.</p></details>
+<details><summary>Tab nền không chạy đều</summary><p>Chrome có thể hạn chế hoặc tạm dừng tab nền. Extension không bảo đảm chạy liên tục khi trình duyệt/Windows tạm dừng trang hoặc máy ngủ.</p></details>
+<details><summary>Muốn cập nhật hoặc gỡ</summary><p><b>Cập nhật:</b> giữ bản cũ làm bản sao, thay các file bằng bản mới trong cùng thư mục, mở chrome://extensions → bấm Reload của extension → tải lại tab game. Không cần gỡ/cài lại chỉ để cập nhật. <b>Gỡ:</b> tắt các công tắc trong popup, Remove extension tại chrome://extensions rồi tải lại game để bỏ script/CSS cũ.</p></details>
+</section>
+<section><h2>4. Phạm vi bản phát hành</h2><p>Chỉ dùng cho kiểm thử được phép trên <b>nghichthienky.online</b>. Mã chạy cục bộ, không có telemetry hoặc tải script từ xa.</p><p>Đã qua <b>29 ca QA mô phỏng cục bộ</b> và kiểm tra cú pháp file sửa. <b>UI trên trình duyệt và gameplay/server thật: chưa kiểm chứng</b>. Đừng xem kết quả mô phỏng là bảo đảm hoạt động ổn định trên mọi map hoặc tốc độ.</p><p class="small">README.md là tài liệu kỹ thuật; QA-report.md ghi phạm vi kiểm chứng. Khi gửi bạn bè, gửi nguyên file ZIP và nhắc mở hướng dẫn này trước.</p></section>
+</main></body></html>

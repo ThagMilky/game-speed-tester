@@ -1,0 +1,22 @@
+GAME SPEED TESTER — BẢN 1.0.0
+
+Không cần biết code. Không cần cài Node, npm hoặc đăng nhập GitHub.
+
+1. Giải nén toàn bộ file ZIP vào một thư mục cố định trên máy.
+2. Mở file HUONG-DAN.html bằng Chrome để xem hướng dẫn đầy đủ.
+3. Trong Chrome, gõ chrome://extensions vào thanh địa chỉ.
+4. Bật Developer mode / Chế độ dành cho nhà phát triển.
+5. Bấm Load unpacked / Tải tiện ích đã giải nén.
+6. Chọn thư mục chứa manifest.json và file BAT-DAU.txt này.
+7. Mở https://nghichthienky.online/, tải lại trang, mở extension để sử dụng.
+
+Giữ nguyên thư mục đã giải nén sau khi cài, không xóa hoặc đổi vị trí.
+Nếu cài bản cập nhật: thay file trong cùng thư mục, Reload extension rồi tải lại game.
+
+Auto Farm: bật mở rộng vùng trong extension, rồi nhấn V của game (hoặc phím đã đặt).
+Các nút gạt và cài đặt được lưu. Chỉ thay đổi tốc độ/bán kính/level khi bạn muốn thử.
+Nếu chỉ muốn font: vào Font chữ, bật đổi font và chọn font mong muốn.
+
+Chỉ dùng trên website trên, trong phạm vi kiểm thử được phép.
+Bản này đã qua 29 ca QA mô phỏng cục bộ; gameplay/server thật chưa xác minh.
+Đừng coi tốc độ 5–6 là đã được xác nhận ổn định.

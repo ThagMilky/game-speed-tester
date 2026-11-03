@@ -1,0 +1,4 @@
+Game Speed Tester 1.0.0
+Manifest V3; Chrome desktop 111+.
+Install: open HUONG-DAN.html or BAT-DAU.txt.
+QA: 29 local simulation cases passed; live browser/gameplay remains unverified.
