@@ -40,12 +40,17 @@
     const ignored = document.hidden || !document.hasFocus() || editing || event.isComposing
       || event.repeat || event.ctrlKey || event.altKey || event.metaKey || !event.isTrusted
       || (shortcut !== null && event.shiftKey);
-    if (ignored || shortcut !== null) {
-      // Run before Phaser's window listener. Preserve normal text entry/default
-      // shortcuts: block native keyboard handling without cancelling text entry.
+    if (ignored) {
+      // Block background/editing events without cancelling normal text entry.
       event.stopImmediatePropagation();
+      return;
     }
-    if (ignored || !customKey) return;
+    // With no exposed scene, keep the game's focused native binding usable.
+    // Otherwise handle the native binding here too, so Phaser cannot queue a
+    // toggle for a later update after the tab loses focus.
+    if (shortcut === null && typeof scene?.toggleAutoFarm !== "function") return;
+    event.stopImmediatePropagation();
+    if (shortcut !== null && !customKey) return;
     event.preventDefault();
     const conflict = Object.entries(scene?.controls?.bindings ?? {})
       .some(([action, binding]) => action !== "V" && binding === shortcut);
