@@ -205,6 +205,7 @@ async function refresh() {
   globalThis.GSTHarvestPopup?.refresh();
   globalThis.GSTRealmPopup?.refresh();
   globalThis.GSTFpsPopup?.refresh();
+  globalThis.GSTChestPopup?.refresh();
   if (busy) return;
   busy = true;
   try {

@@ -79,6 +79,7 @@
     if (!connected(scene)) return "Chờ kết nối game ổn định.";
     if (scene.self.dead) return "Nhân vật đã chết; chờ hồi sinh.";
     if (scene.leaving) return "Đang chuyển map.";
+    if (globalThis.GSTChest?.controls(scene)) return "Nhường di chuyển để nhặt rương bí cảnh.";
     if (globalThis.GSTFarmMap?.controls(scene)) return "Nhường di chuyển để tiếp cận boss.";
     if (globalThis.GSTFarmBehavior?.controls(scene)) return "Nhường di chuyển để né quái level cao.";
     if (modalOpen(fresh)) return "Chờ bạn xử lý hộp kiểm tra người chơi.";

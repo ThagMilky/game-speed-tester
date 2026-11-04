@@ -15,6 +15,7 @@
   <script src="fps-options.js" defer></script>
   <script src="fps-popup.js" defer></script>
   <script src="realm-time-popup.js" defer></script>
+  <script src="chest-popup.js" defer></script>
 </head>
 <body>
   <header><p class="eyebrow">NGHICHTHIENKY.ONLINE</p><h1>Game Speed Tester</h1><p class="muted">Điều khiển gọn, theo dõi ngay.</p></header>
@@ -135,6 +136,14 @@
           <p class="hint">Tìm cổng hợp lệ trong toàn map hiện tại, không cần bán kính. Chờ hết giao tranh; tự tới cổng và yêu cầu vào một lần. Bạn di chuyển/tung chiêu thì tạm nhường, chờ 3 giây rồi tiếp tục.</p>
           <p class="hint">Giữ bộ lọc quái hiện tại; muốn chỉ boss bạn tự đổi. Không tự mở rương, bỏ bảo vệ hay thoát bí cảnh. Chết trong bí cảnh có thể mất đồ của lượt đó.</p>
         </fieldset>
+        <fieldset id="chestControls" class="separated" disabled>
+          <p class="field-title">Auto nhặt rương bí cảnh</p>
+          <label class="switch-row"><span>Bật Auto nhặt rương</span><input id="chestEnabled" class="switch" type="checkbox"></label>
+          <label class="check-row"><input id="chestAllowFarm" type="checkbox"><span>Cho phép nhặt khi Auto Farm bật (chờ hết giao tranh)</span></label>
+          <label for="chestKind">Loại rương</label><select id="chestKind"><option value="all">Tất cả</option><option value="common">Thường</option><option value="hidden">Ẩn</option><option value="treasure">Linh tàng</option></select>
+          <p class="hint">Tìm rương game đã cung cấp trong toàn bí cảnh, tránh quái gần. Chỉ tương tác F khi đúng rương; không mở cổng thoát hoặc bỏ bảo vệ. Rương chưa phản hồi/không tới được bỏ qua 30 giây. Điều kiện level/email do game quyết định. Rương biến mất chưa đủ chứng minh đã nhận đồ.</p>
+        </fieldset>
+        <p id="chestStatus" class="hint" role="status">Đang đọc dữ liệu rương…</p>
         <p class="field-title">Thời gian &amp; thông báo</p>
         <label class="check-row"><input id="realmNotices" type="checkbox" disabled><span>Nhắc trước đợt 5 phút, có cổng mở, còn 2 phút để rút</span></label>
         <p class="hint">Thông báo trong trang, một lần mỗi mốc/đợt theo tab. Cổng thông báo chưa lọc theo bậc cấp; kiểm tra điều kiện vào trong game. Mất dữ liệu thì không đoán lịch.</p>
