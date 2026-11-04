@@ -5,6 +5,7 @@
   "description": "Local movement-speed override for authorized testing on nghichthienky.online.",
   "minimum_chrome_version": "111",
   "permissions": ["storage"],
+  "web_accessible_resources": [{ "resources": ["popup.html"], "matches": ["https://nghichthienky.online/*"] }],
   "action": { "default_popup": "popup.html" },
   "content_scripts": [
     {
@@ -15,7 +16,7 @@
     },
     {
       "matches": ["https://nghichthienky.online/*"],
-      "js": ["harvest-options.js", "content.js", "font-options.js", "font.js", "farm-content.js", "farm-diagnostics-content.js", "harvest-content.js", "realm-content.js", "fps-options.js", "fps-content.js", "realm-time-content.js", "chest-content.js"],
+      "js": ["harvest-options.js", "content.js", "font-options.js", "font.js", "farm-content.js", "farm-diagnostics-content.js", "harvest-content.js", "realm-content.js", "fps-options.js", "fps-content.js", "realm-time-content.js", "chest-content.js", "game-menu.js"],
       "run_at": "document_start",
       "world": "ISOLATED"
     }

@@ -47,6 +47,7 @@
   }
 
   function guardFarmKey(event) {
+    if (document.getElementById("gst-game-menu")?.dataset.open === "true") return;
     let code = 86;
     let scene = null;
     try {
