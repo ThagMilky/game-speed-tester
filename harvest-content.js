@@ -7,6 +7,7 @@
   let sequence = 0;
   let navigating = false;
   let repairedKey = null;
+  let readError = "";
   function configure(value, respond) {
     const next = GSTHarvest.normalize(value);
     if (respond || JSON.stringify(next) !== JSON.stringify(preferences)) repairedKey = null;
@@ -42,14 +43,24 @@
   }
   async function readPreferences() {
     const before = revision;
+    let saved;
     try {
-      const saved = await chrome.storage.local.get("harvestPreferences");
+      saved = await chrome.storage.local.get("harvestPreferences");
+    } catch (error) {
+      readError = /context invalidated/i.test(String(error?.message)) ? "HS-CONTEXT" : "HS-STORAGE";
+      return false;
+    }
+    try {
       if (before === revision) {
         const next = GSTHarvest.normalize(saved.harvestPreferences);
         if (JSON.stringify(next) !== JSON.stringify(preferences)) configure(next);
       }
+      readError = "";
       return true;
-    } catch { return false; }
+    } catch {
+      readError = typeof globalThis.GSTHarvest?.normalize === "function" ? "HS-CONFIGURE" : "HS-OPTIONS";
+      return false;
+    }
   }
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:harvest-status:v1") return;
@@ -94,9 +105,22 @@
       return true;
     }
     if (message?.type !== "gst:harvest-status") return;
-    readPreferences().then((ok) => {
+    // The popup has already read storage. Use that authenticated extension
+    // message rather than requiring a second storage read in the tab.
+    let preparation;
+    if (typeof message.preferences?.enabled === "boolean") {
+      try {
+        revision++;
+        configure(message.preferences);
+        preparation = Promise.resolve(true);
+      } catch {
+        readError = typeof globalThis.GSTHarvest?.normalize === "function" ? "HS-CONFIGURE" : "HS-OPTIONS";
+        preparation = Promise.resolve(false);
+      }
+    } else preparation = readPreferences();
+    preparation.then((ok) => {
       if (!ok) {
-        respond({ message: "Không đọc được cài đặt trong tab này. Tải lại extension rồi tải lại trang game.",
+        respond({ message: `Chưa chuẩn bị được cài đặt trong tab (${readError || "HS-UNKNOWN"}). Tải lại extension rồi tải lại trang game.`,
           enabled: null, applied: false, catalog: [], available: false });
         return;
       }
@@ -131,5 +155,9 @@
   const initialRevision = revision;
   chrome.storage.local.get("harvestPreferences").then((saved) => {
     if (initialRevision === revision) configure(saved.harvestPreferences);
-  }).catch(() => { if (initialRevision === revision) configure(null); });
+  }).catch(() => {
+    // MAIN starts disabled already. A failed read must not send guessed OFF
+    // settings or overwrite a configuration received from the popup.
+    if (initialRevision === revision) readError = "HS-INITIAL";
+  });
 })();

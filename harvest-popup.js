@@ -16,6 +16,7 @@
   let available = false;
   let saving = false;
   let busy = false;
+  let loaded = false;
   const fold = (value) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
   function renderList() {
     byId("harvestCount").textContent = `Đã chọn ${preferences.items.length} loại`;
@@ -105,12 +106,12 @@
   byId("saveHarvestRange").addEventListener("click", saveRanges);
   for (const [, input] of ranges) input.addEventListener("keydown", (event) => { if (event.key === "Enter") saveRanges(); });
   async function refresh() {
-    if (busy) return;
+    if (busy || !loaded) return;
     busy = true;
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab?.id) throw new Error("No active tab");
-      const data = await chrome.tabs.sendMessage(tab.id, { type: "gst:harvest-status" });
+      const data = await chrome.tabs.sendMessage(tab.id, { type: "gst:harvest-status", preferences });
       if (typeof data.applied !== "boolean") {
         status.textContent = "Tab game vẫn dùng cầu nối cũ. Tải lại extension tại chrome://extensions, rồi tải lại trang game.";
       } else if (typeof data.enabled !== "boolean") {
@@ -146,6 +147,7 @@
     ignoreMonsters.checked = preferences.ignoreMonsters;
     mode.value = preferences.mode;
     for (const [key, input] of ranges) input.value = preferences[key];
+    loaded = true;
     renderList(); controls.disabled = false; refresh();
   }).catch(() => { feedback.textContent = "Chưa đọc được cài đặt Tự hái; hãy mở lại popup."; });
 })();

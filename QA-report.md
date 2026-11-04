@@ -4,6 +4,8 @@ Lưu ý cập nhật 2026-11-04: báo cáo bên dưới là kết quả lịch s
 
 ## Kết luận
 
+Sau báo cáo lỗi đọc cài đặt trong tab: popup gửi cấu hình đã đọc qua thông điệp nội bộ; không bắt buộc lần đọc storage thứ hai trong tab, chặn gửi mặc định trước khi popup tải xong, không gửi OFF khi khởi tạo lỗi và tách mã lỗi từng giai đoạn. Chỉ review source/diff. **Tests/lint/typecheck/browser/gameplay: NOT RUN. Behavior: UNVERIFIED. CI: NOT CHECKED.** Chưa có kết quả runtime sau bản sửa này.
+
 Theo báo cáo Tự hái vẫn TẮT dù checkbox bật: đối chiếu lại storage khi hỏi trạng thái, nhận biết cầu nối cũ trong popup, cập nhật checkbox theo thay đổi storage, hiển thị cờ Tự hái thực tế trên overlay và bỏ tiêu đề overlay. **Tests/lint/typecheck/browser/gameplay: NOT RUN**, behavior **UNVERIFIED**, CI **NOT CHECKED**. Chưa khẳng định đã xử lý dứt điểm trường hợp live của người dùng.
 
 Sửa đồng bộ Tự hái sau báo cáo checkbox bật nhưng trang báo tắt: xác nhận cấu hình MAIN, đối chiếu trạng thái, thử lại có giới hạn, không đặt lại lượt hái với cấu hình trùng, bảo vệ lệnh mới khỏi lỗi storage khởi tạo muộn. Chỉ review source/diff; **tests/lint/typecheck/browser/gameplay: NOT RUN**, behavior **UNVERIFIED**, CI **NOT CHECKED**. Chưa chứng minh xử lý dứt điểm trường hợp live được báo.
