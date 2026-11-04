@@ -32,6 +32,11 @@
       enabled: value?.enabled === true,
       autoRespawn: true,
       breakSeals: value?.breakSeals === true,
+      idleMode: value?.idleMode === "home" ? "home" : "hold",
+      avoidEnabled: value?.avoidEnabled === true,
+      avoidLevel: Number.isSafeInteger(value?.avoidLevel) && value.avoidLevel > 0 ? value.avoidLevel : 10,
+      avoidDistance: typeof value?.avoidDistance === "number" && Number.isFinite(value.avoidDistance)
+        ? Math.max(1, Math.min(6, value.avoidDistance)) : 2,
       targetMode: value?.targetMode === "level" ? "maxLevel"
         : ["maxLevel", "minLevel", "range", "boss"].includes(value?.targetMode) ? value.targetMode : "all",
       targetLevel: Number.isSafeInteger(value?.targetLevel) && value.targetLevel > 0 ? value.targetLevel : 1,

@@ -4,7 +4,8 @@
   const channel = "gst:farm:v1";
   const baseRadius = 11;
   globalThis.GSTFarmConfigurationReady = false;
-  let settings = { enabled: false, radius: 22, autoRespawn: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20 };
+  let settings = { enabled: false, radius: 22, autoRespawn: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
+    idleMode: "hold", avoidEnabled: false, avoidLevel: 10, avoidDistance: 2 };
   let filterBinding = null;
   let death = null;
   let respawnMessage = "";
@@ -32,6 +33,7 @@
     return "Farm tất cả quái";
   }
   function matchesTarget(enemy) {
+    if (settings.avoidEnabled && (!finite(enemy?.lv) || enemy.lv >= settings.avoidLevel)) return false;
     if (settings.targetMode === "boss") return enemy?.cls === "boss" || enemy?.wb === true;
     if (settings.targetMode === "all") return true;
     if (!finite(enemy?.lv)) return false;
@@ -89,6 +91,7 @@
         && (scene.self.dead || scene.uiBlocked || !connected(scene)))) return;
     shortcutMessage = "";
     globalThis.GSTFarmRevivePolicy?.attach(scene);
+    globalThis.GSTFarmBehavior?.attach(scene);
     const previousAuto = scene.auto;
     const wasOn = previousAuto?.on;
     if (wasOn === false && session) stop("Đã kết thúc phiên hỗ trợ cũ trước khi bật lại Auto Farm.");
@@ -137,6 +140,7 @@
     if (scene.pendingSkill || scene.aiming) return "Đang chờ/ngắm chiêu tay; kết thúc hoặc hủy ngắm để farm tiếp.";
     if (scene.self.med && !scene.auto.resting) return "Game vẫn ghi nhận đang bế quan; chờ game xác nhận thoát bế quan để farm tiếp.";
     if (scene.auto.resting) return "Auto Farm đang rút lui/hồi máu; chưa tiếp tục tìm quái.";
+    if (globalThis.GSTFarmBehavior?.controls(scene)) return globalThis.GSTFarmBehavior.status(scene);
     if (GSTHarvest.controls(scene)) return "Đang nhường di chuyển cho Tự hái.";
     if (globalThis.GSTRealm?.controls(scene)) return "Đang nhường di chuyển để tới/vào bí cảnh.";
     if (globalThis.GSTFarmSeals?.controls(scene)) return "Đang nhường di chuyển để phá phong ấn.";
@@ -162,7 +166,7 @@
   }
 
   function syncFilter(scene) {
-    if (settings.targetMode === "all") { clearFilter(); return; }
+    if (settings.targetMode === "all" && !settings.avoidEnabled) { clearFilter(); return; }
     if (filterBinding?.scene === scene && scene.autoHost === filterBinding.wrapper) return;
     clearFilter();
     const original = scene.autoHost;
@@ -171,12 +175,13 @@
     const descriptor = Object.getOwnPropertyDescriptor(scene, "autoHost");
     const wrapper = function (...args) {
       const host = original.apply(this, args);
-      if (settings.targetMode === "all" || !this.auto?.on) return host;
+      if ((settings.targetMode === "all" && !settings.avoidEnabled) || !this.auto?.on) return host;
       return { ...host, enemies: () => {
         const enemies = typeof host?.enemies === "function" ? host.enemies() : [];
         if (this.auto?.resting) return Array.isArray(enemies) ? enemies : [];
         // Use only the native host's level/boss metadata, never names or HP guesses.
-        return Array.isArray(enemies) ? enemies.filter(matchesTarget) : [];
+        return Array.isArray(enemies) ? enemies.filter((enemy) => matchesTarget(enemy)
+          && (globalThis.GSTFarmBehavior?.allowsTarget(this, enemy) ?? true)) : [];
       } };
     };
     scene.autoHost = wrapper;
@@ -201,7 +206,7 @@
   function stop(reason, block = false) {
     // Keep the inert filter attached through death/off so the next native
     // update after revival/re-enable cannot select an unfiltered target.
-    if (block || settings.targetMode === "all") clearFilter();
+    if (block || (settings.targetMode === "all" && !settings.avoidEnabled)) clearFilter();
     if (block) revival = null;
     if (session) {
       const old = session;
@@ -297,9 +302,10 @@
     try {
       const scene = sceneNow();
       globalThis.GSTFarmRevivePolicy?.attach(scene);
+      globalThis.GSTFarmBehavior?.attach(scene);
       globalThis.GSTFarmDiagnostics?.attach(scene);
       checkRespawn(scene);
-      if (!settings.enabled && settings.targetMode === "all") return;
+      if (!settings.enabled && settings.targetMode === "all" && !settings.avoidEnabled) return;
       if (compatible(scene) && scene.self && !scene.leaving
           && connected(scene) && scene.auto !== blockedAuto) syncFilter(scene);
       else clearFilter();
@@ -377,7 +383,12 @@
         return;
       }
       const time = s.scene.now();
+      globalThis.GSTFarmBehavior?.attach(s.scene);
       syncFilter(s.scene);
+      if (globalThis.GSTFarmBehavior?.controls(s.scene)) {
+        message = globalThis.GSTFarmBehavior.status(s.scene);
+        return;
+      }
       if (GSTHarvest.controls(s.scene)) {
         message = "Tạm nhường di chuyển cho Tự hái; giữ nguyên tâm farm.";
         return;
@@ -465,7 +476,8 @@
         message = "Search center extended; built-in Auto Farm will choose/pursue a target.";
       } else {
         center(s, s.home);
-        message = "No eligible targets; built-in Auto Farm returns to the original area.";
+        message = settings.idleMode === "hold" ? "Không có quái phù hợp; nhặt đồ rồi đứng chờ trong vùng farm."
+          : "Không có quái phù hợp; Auto Farm quay về tâm farm gốc.";
       }
     } catch {
       stop("Auto Farm interface error; extended range stopped.", true);
@@ -496,22 +508,27 @@
         && finite(data.radius) && data.radius >= 11 && data.radius <= 100) {
       const filterChanged = settings.targetMode !== targetMode(data.targetMode)
         || settings.targetLevel !== data.targetLevel
-        || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel;
+        || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel
+        || settings.avoidEnabled !== (data.avoidEnabled === true) || settings.avoidLevel !== data.avoidLevel;
       settings = { enabled: data.enabled, radius: data.radius, autoRespawn: true,
         targetMode: targetMode(data.targetMode),
         targetLevel: Number.isSafeInteger(data.targetLevel) && data.targetLevel > 0 ? data.targetLevel : 1,
         targetMinLevel: Number.isSafeInteger(data.targetMinLevel) && data.targetMinLevel > 0 ? data.targetMinLevel : 1,
-        targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20 };
+        targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20,
+        idleMode: data.idleMode === "home" ? "home" : "hold", avoidEnabled: data.avoidEnabled === true,
+        avoidLevel: Number.isSafeInteger(data.avoidLevel) && data.avoidLevel > 0 ? data.avoidLevel : 10,
+        avoidDistance: finite(data.avoidDistance) ? Math.max(1, Math.min(6, data.avoidDistance)) : 2 };
+      globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
-      if (settings.targetMode === "all") clearFilter();
+      if (settings.targetMode === "all" && !settings.avoidEnabled) clearFilter();
       if (session) {
         syncFilter(session.scene);
         if (filterChanged) session.auto.think = 0;
         if (!settings.enabled) restore(session);
       }
       if (!settings.autoRespawn) respawnMessage = "";
-      if (!settings.enabled && settings.targetMode === "all") {
+      if (!settings.enabled && settings.targetMode === "all" && !settings.avoidEnabled) {
         if (watcher !== null) clearInterval(watcher);
         watcher = null;
         stop("Extended range disabled; original center restored where owned.");
@@ -535,7 +552,8 @@
       } catch { /* Read-only status must not start or restart gameplay. */ }
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
         message: (settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage
-          || (dead && respawnMessage ? respawnMessage : (waitReason || globalThis.GSTFarmSession?.status(sceneNow()) || globalThis.GSTFarmSeals?.status(sceneNow()) || message))),
+          || (dead && respawnMessage ? respawnMessage : (waitReason || globalThis.GSTFarmBehavior?.status(sceneNow())
+            || globalThis.GSTFarmSession?.status(sceneNow()) || globalThis.GSTFarmSeals?.status(sceneNow()) || message))),
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);
     }
   });

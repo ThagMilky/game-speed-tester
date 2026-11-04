@@ -21,6 +21,10 @@ const farmTargetMode = document.getElementById("farmTargetMode");
 const farmTargetLevel = document.getElementById("farmTargetLevel");
 const farmTargetMinLevel = document.getElementById("farmTargetMinLevel");
 const farmTargetMaxLevel = document.getElementById("farmTargetMaxLevel");
+const farmIdleMode = document.getElementById("farmIdleMode");
+const farmAvoidEnabled = document.getElementById("farmAvoidEnabled");
+const farmAvoidLevel = document.getElementById("farmAvoidLevel");
+const farmAvoidDistance = document.getElementById("farmAvoidDistance");
 const positiveLevel = (value, fallback) => Number.isSafeInteger(value) && value > 0 ? value : fallback;
 function syncFarmLevelInputs() {
   const range = farmTargetMode.value === "range";
@@ -108,7 +112,8 @@ async function refreshFarm() {
 async function saveFarm(event) {
   if (farmSaving) return;
   const disabling = event?.target === farmEnabled && !farmEnabled.checked ? "enabled"
-    : event?.target === breakSeals && !breakSeals.checked ? "breakSeals" : null;
+    : event?.target === breakSeals && !breakSeals.checked ? "breakSeals"
+    : event?.target === farmAvoidEnabled && !farmAvoidEnabled.checked ? "avoidEnabled" : null;
   let farmPreferences;
   if (!disabling) {
     if (!farmEnabled.checked && !farmRadius.checkValidity()) farmRadius.value = "22";
@@ -132,7 +137,14 @@ async function saveFarm(event) {
         return;
       }
     }
+    if (farmAvoidEnabled.checked && (!farmAvoidLevel.reportValidity() || !farmAvoidDistance.reportValidity())) return;
+    const avoidLevel = farmAvoidLevel.valueAsNumber, avoidDistance = farmAvoidDistance.valueAsNumber;
+    if (farmAvoidEnabled.checked && (!Number.isSafeInteger(avoidLevel) || avoidLevel < 1
+        || !Number.isFinite(avoidDistance) || avoidDistance < 1 || avoidDistance > 6)) return;
     farmPreferences = { enabled: farmEnabled.checked, radius, autoRespawn: true, breakSeals: breakSeals.checked,
+      idleMode: farmIdleMode.value === "home" ? "home" : "hold", avoidEnabled: farmAvoidEnabled.checked,
+      avoidLevel: positiveLevel(avoidLevel, 10),
+      avoidDistance: Number.isFinite(avoidDistance) ? Math.max(1, Math.min(6, avoidDistance)) : 2,
       targetMode, targetLevel: positiveLevel(targetLevel, 1),
       targetMinLevel: positiveLevel(targetMinLevel, 1), targetMaxLevel: positiveLevel(targetMaxLevel, 20) };
   }
@@ -165,6 +177,8 @@ async function saveFarm(event) {
 }
 document.getElementById("saveFarm").addEventListener("click", saveFarm);
 document.getElementById("saveFarmFilter").addEventListener("click", saveFarm);
+document.getElementById("saveFarmBehavior").addEventListener("click", saveFarm);
+farmAvoidEnabled.addEventListener("change", saveFarm);
 farmTargetMode.addEventListener("change", syncFarmLevelInputs);
 for (const input of [farmTargetMinLevel, farmTargetMaxLevel]) {
   input.addEventListener("input", () => farmTargetMaxLevel.setCustomValidity(""));
@@ -313,6 +327,11 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   fontControls.disabled = false;
   farmEnabled.checked = farmPreferences?.enabled === true;
   breakSeals.checked = farmPreferences?.breakSeals === true;
+  farmIdleMode.value = farmPreferences?.idleMode === "home" ? "home" : "hold";
+  farmAvoidEnabled.checked = farmPreferences?.avoidEnabled === true;
+  farmAvoidLevel.value = positiveLevel(farmPreferences?.avoidLevel, 10);
+  farmAvoidDistance.value = Number.isFinite(farmPreferences?.avoidDistance)
+    ? Math.max(1, Math.min(6, farmPreferences.avoidDistance)) : 2;
   farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
     : ["maxLevel", "minLevel", "range", "boss"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
   farmTargetLevel.value = Number.isSafeInteger(farmPreferences?.targetLevel) && farmPreferences.targetLevel > 0
