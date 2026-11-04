@@ -10,8 +10,8 @@
     if (job && binding) {
       if (skip) skipped.set(job.id, performance.now() + 30000);
       const scene = binding.scene;
-      if (job.steer && scene.autoX === job.steer[0] && scene.autoY === job.steer[1]) scene.autoX = scene.autoY = 0;
-      if (scene.auto.on && scene.auto.target === job.target) { scene.auto.chaseSince = scene.now(); scene.auto.think = 0; }
+      if (scene.auto === binding.auto && job.steer && scene.autoX === job.steer[0] && scene.autoY === job.steer[1]) scene.autoX = scene.autoY = 0;
+      if (scene.auto === binding.auto && scene.auto?.on && scene.auto.target === job.target) { scene.auto.chaseSince = scene.now(); scene.auto.think = 0; }
     }
     job = null; if (text) message = text;
   }
@@ -31,11 +31,13 @@
       || performance.now() < manualUntil;
   }
   function guard() {
-    const scene = binding?.scene; if (!scene) return;
-    if (sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto) { detach(); watch(); return; }
-    if (manual(scene) || job && scene.castAt !== job.castAt) { manualUntil = performance.now() + 3000; release("Nhường thao tác tay; tiếp tục sau 3 giây."); }
-    if (job && blocked(scene)) release("Nhường chiến đấu, hồi phục hoặc giao diện game.");
-    if (scene.self?.dead && settings.enabled) GSTHarvest.respawn(scene);
+    try {
+      const scene = binding?.scene; if (!scene) return;
+      if (sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto) { detach(); watch(); return; }
+      if (manual(scene) || job && scene.castAt !== job.castAt) { manualUntil = performance.now() + 3000; release("Nhường thao tác tay; tiếp tục sau 3 giây."); }
+      if (job && blocked(scene)) release("Nhường chiến đấu, hồi phục hoặc giao diện game.");
+      if (scene.self?.dead && settings.enabled) GSTHarvest.respawn(scene);
+    } catch { detach(); watch(); }
   }
   function danger(scene, chest) {
     return [...scene.views.values()].some((actor) => actor.k === "m" && !actor.dead && actor.st?.cls !== "pet"
@@ -44,8 +46,17 @@
   function update(host, time) {
     const scene = binding?.scene;
     try {
-      if (!scene || blocked(scene)) { release(); return false; }
-      if (scene.auto.on && (host.inCombat() || host.enemies().some((enemy) => enemy.id === scene.auto.target && !enemy.dead))) {
+      if (!scene) return false;
+      if (blocked(scene)) {
+        release(!scene.self?.realm?.inside ? "Chờ vào bí cảnh để tìm rương."
+          : scene.self.dead ? "Nhân vật đã chết; chờ hồi sinh."
+          : scene.auto.on && !settings.allowFarm ? "Auto Farm đang bật; chưa cho phép nhặt rương cùng farm."
+          : scene.self.realm.inside.protection > 0 ? "Chờ hết bảo vệ đầu bí cảnh."
+          : "Tạm nhường thao tác tay, hồi phục, giao diện hoặc điều khiển khác.");
+        return false;
+      }
+      if (typeof host.inCombat !== "function" || typeof host.enemies !== "function") { release(); return false; }
+      if (host.inCombat() || scene.auto.on && host.enemies().some((enemy) => enemy.id === scene.auto.target && !enemy.dead)) {
         release("Chờ Auto Farm kết thúc mục tiêu/giao tranh hiện tại."); return false;
       }
       if (performance.now() - binding.modalAt > 250) {
@@ -57,7 +68,8 @@
       if (!Array.isArray(list) || !finite(time)) { release(); return false; }
       for (const [id, at] of skipped) if (performance.now() >= at) skipped.delete(id);
       const chests = list.filter((chest) => (typeof chest.id === "string" || Number.isSafeInteger(chest.id))
-        && finite(chest.x) && finite(chest.y) && (!chest.owner || chest.owner === scene.profile?.name)
+        && finite(chest.x) && finite(chest.y) && finite(scene.map?.w) && finite(scene.map?.h)
+        && chest.x >= 0 && chest.y >= 0 && chest.x < scene.map.w && chest.y < scene.map.h && (!chest.owner || chest.owner === scene.profile?.name)
         && (settings.kind === "all" || chest.kind === settings.kind));
       if (job && !chests.some((chest) => chest.id === job.id)) {
         release("Rương không còn trong danh sách game; xem túi bí cảnh để xác nhận chiến lợi phẩm."); return false;
@@ -109,6 +121,7 @@
       const scene = sceneNow();
       if (!settings.enabled || suspended || binding || !scene?.sys?.isActive?.() || !scene.self
           || typeof scene.auto?.walk !== "function" || typeof scene.pickTarget !== "function" || typeof scene.interact !== "function"
+          || typeof scene.now !== "function" || typeof scene.auto.update !== "function"
           || typeof scene.views?.values !== "function" || !scene.events?.on || !scene.events.off) return;
       binding = { scene, auto: scene.auto, remove: GSTFarmUpdate.add(scene, 15, update), modalAt: -Infinity, modal: false, scanAt: -Infinity };
       scene.events.on("preupdate", guard); scene.events.on("shutdown", shutdown); scene.events.on("destroy", shutdown);
@@ -125,7 +138,7 @@
       settings = { enabled: value?.enabled === true, allowFarm: value?.allowFarm === true,
         kind: ["common", "hidden", "treasure"].includes(value?.kind) ? value.kind : "all" };
       if (!settings.enabled) { detach(); clearInterval(timer); timer = null; message = "Auto nhặt rương đang tắt."; }
-      else { watch(); discover(); }
+      else { message = "Auto nhặt rương đã bật; chờ vào bí cảnh và có rương phù hợp/an toàn."; watch(); discover(); }
     }
     window.postMessage({ channel: "gst:chest-status:v1", requestId: data.requestId, message, enabled: settings.enabled }, origin);
   });

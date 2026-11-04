@@ -7,7 +7,7 @@
   let job = null;
   let watcher = null;
   let suspended = false;
-  let message = "Tự hái đang tắt.";
+  let message = "Thu hoạch đang tắt.";
   let safeSince = null;
   let manualUntil = 0;
   let lastStep = -Infinity;
@@ -73,7 +73,7 @@
       && (host.pills?.("mp") ?? []).some((count) => count > 0));
   }
   function blockedReason(scene, fresh = false) {
-    if (!settings.enabled) return "Tự hái đang tắt.";
+    if (!settings.enabled) return "Thu hoạch đang tắt.";
     if (suspended) return "Tạm dừng vì trang đang rời đi.";
     if (!compatible(scene)) return "Chưa đọc đủ interface thu hoạch của game.";
     if (!connected(scene)) return "Chờ kết nối game ổn định.";
@@ -221,7 +221,7 @@
         }
         recovery.aliveAt ??= performance.now();
         if (performance.now() - recovery.aliveAt < 2000) {
-          message = "Đã hồi sinh; chờ ổn định 2 giây rồi tiếp tục Tự hái.";
+          message = "Đã hồi sinh; chờ ổn định 2 giây rồi tiếp tục Thu hoạch.";
           return;
         }
       }
@@ -341,7 +341,7 @@
       return;
     }
     if (settings.mode === "selected" && !settings.items.length) {
-      release("Chưa chọn loại cây; không tự hái.");
+      release("Chưa chọn loại cây; không thu hoạch.");
       return;
     }
     const host = scene.autoHost();
@@ -508,7 +508,7 @@
       recovery = null;
       lastResult = null;
       clearInterval(watcher); watcher = null;
-      message = "Tự hái đã tắt; không hủy lượt hái game đã bắt đầu.";
+      message = "Thu hoạch đã tắt; không hủy lượt hái game đã bắt đầu.";
     } else {
       // Keep an outstanding F request until its acknowledgement/timeout even
       // when options change, so toggling a checkbox cannot resend it early.

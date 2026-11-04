@@ -104,7 +104,7 @@
       const empty = document.createElement("p");
       empty.className = "hint";
       empty.textContent = available ? "Không có loại cây khớp tìm kiếm."
-        : "Bật Tự hái, chờ vào map để đọc danh sách cây từ game.";
+        : "Bật Thu hoạch, chờ vào map để đọc danh sách cây từ game.";
       nodes.push(empty);
     }
     list.replaceChildren(...nodes);
@@ -123,7 +123,7 @@
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab?.id) throw new Error("No active tab");
         const result = await chrome.tabs.sendMessage(tab.id, { type: "gst:harvest-configure", preferences });
-        if (result?.navigating) feedback.textContent = "Đã lưu. Game đang tải lại để áp dụng Tự hái.";
+        if (result?.navigating) feedback.textContent = "Đã lưu. Game đang tải lại để áp dụng Thu hoạch.";
         else if (!result?.accepted || !result.applied) throw new Error("Page has not confirmed configuration");
       } catch {
         feedback.textContent = "Đã lưu. Tải lại trang game nếu chưa áp dụng được.";
@@ -131,7 +131,7 @@
       await refresh();
     } catch {
       preferences = previous;
-      feedback.textContent = "Chưa lưu được Tự hái. Hãy mở lại popup.";
+      feedback.textContent = "Chưa lưu được Thu hoạch. Hãy mở lại popup.";
     } finally {
       enabled.checked = preferences.enabled;
       allowFarm.checked = preferences.allowFarm;
@@ -175,14 +175,14 @@
       } else if (!data.applied || data.enabled !== preferences.enabled) {
         status.textContent = `Đã lưu: ${preferences.enabled ? "BẬT" : "TẮT"} · Trang game: ${data.enabled ? "BẬT" : "TẮT"}. ${data.message}`;
       } else {
-        status.textContent = `Tự hái: ${data.enabled ? "BẬT" : "TẮT"} · ${data.message}`;
+        status.textContent = `Thu hoạch: ${data.enabled ? "BẬT" : "TẮT"} · ${data.message}`;
       }
       const next = Array.isArray(data.catalog) ? data.catalog : [];
       if (JSON.stringify(next) !== JSON.stringify(catalog) || available !== (data.available === true)) {
         catalog = next; available = data.available === true; renderList();
       }
     } catch {
-      status.textContent = "Mở tab game và tải lại sau khi cập nhật extension để đọc Tự hái.";
+      status.textContent = "Mở tab game và tải lại sau khi cập nhật extension để đọc Thu hoạch.";
       if (catalog.length || available) { catalog = []; available = false; renderList(); }
     } finally { busy = false; refreshDebug(); }
   }
@@ -210,6 +210,6 @@
     renderList(); controls.disabled = false; refresh();
   }).catch(() => {
     debugToggle.disabled = false;
-    feedback.textContent = "Chưa đọc được cài đặt Tự hái; hãy mở lại popup.";
+    feedback.textContent = "Chưa đọc được cài đặt Thu hoạch; hãy mở lại popup.";
   });
 })();

@@ -43,7 +43,7 @@
     if (event.key === "Escape") { event.preventDefault(); close(); }
   }, true);
   window.addEventListener("message", (event) => {
-    if (frame && event.source === frame.contentWindow && event.origin === new URL(chrome.runtime.getURL("/")).origin
+    if (frame && event.source === frame.contentWindow && event.origin === `chrome-extension://${chrome.runtime.id}`
         && event.data?.channel === "gst:menu-close:v1") close();
   });
   chrome.runtime.onMessage.addListener((message, sender, respond) => {

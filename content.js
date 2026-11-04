@@ -101,7 +101,7 @@
     if (fields.speed) lines.push(`Tốc độ: ${status?.current ?? "—"}`);
     if (fields.movement) lines.push(`Trạng thái: ${movement}`);
     if (fields.autoFarm) lines.push(`Auto Farm game: ${autoFarmOn === true ? "BẬT" : autoFarmOn === false ? "TẮT" : "CHƯA RÕ"}`);
-    if (fields.harvest) lines.push(`Tự hái: ${harvestOn === true ? "BẬT" : harvestOn === false ? "TẮT" : "CHƯA RÕ"} · ${harvestMessage}`);
+    if (fields.harvest) lines.push(`Thu hoạch: ${harvestOn === true ? "BẬT" : harvestOn === false ? "TẮT" : "CHƯA RÕ"} · ${harvestMessage}`);
     if (fields.fix) lines.push(`Fix (từ lần đổi tốc độ): ${status?.fix ?? "—"}`);
     if (fields.message) {
       lines.push(status?.message ?? "Đang kết nối…");

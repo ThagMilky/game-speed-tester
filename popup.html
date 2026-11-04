@@ -60,7 +60,7 @@
           <div class="separated">
             <label for="farmIdleMode">Khi không còn mục tiêu</label>
             <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi đứng chờ tại chỗ</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option></select>
-            <p class="hint">Giữ nguyên tâm và bán kính tìm quái. Rút lui hồi máu vẫn do game xử lý. Tự hái/Tự vào bí cảnh có thể di chuyển nếu bạn bật riêng.</p>
+            <p class="hint">Giữ nguyên tâm và bán kính tìm quái. Rút lui hồi máu vẫn do game xử lý. Thu hoạch/Tự vào bí cảnh có thể di chuyển nếu bạn bật riêng.</p>
             <label class="check-row"><input id="farmAvoidEnabled" type="checkbox"><span>Né quái level cao khi xác định được nó đánh mình</span></label>
             <div class="two-columns">
               <div><label for="farmAvoidLevel">Né level ≥</label><input id="farmAvoidLevel" type="number" min="1" step="1" value="10" required></div>
@@ -92,18 +92,18 @@
       <summary><span><strong>Thu hoạch</strong><small>Hái, đào và bộ lọc tài nguyên</small></span></summary>
       <div class="card-body">
         <p id="harvestStatus" class="hint" role="status" aria-live="polite">Đang đọc trạng thái thu hoạch…</p>
-        <fieldset id="harvestControls" disabled aria-label="Tùy chọn Tự hái">
+        <fieldset id="harvestControls" disabled aria-label="Tùy chọn Thu hoạch">
           <label class="switch-row"><span>Bật Thu hoạch</span><input id="harvestEnabled" class="switch" type="checkbox"></label>
           <label for="harvestKind">Loại thu hoạch</label><select id="harvestKind"><option value="plant">Chỉ hái</option><option value="ore">Chỉ đào</option><option value="both">Hái và đào</option></select>
           <p class="hint">Cài đặt cũ giữ Chỉ hái. Danh sách tài nguyên đổi theo loại; các tick đã lưu vẫn được giữ khi chuyển loại.</p>
-          <p class="hint">Tự hồi sinh rồi tiếp tục hái: luôn BẬT khi Tự hái đang bật.</p>
+          <p class="hint">Tự hồi sinh rồi tiếp tục hái: luôn BẬT khi Thu hoạch đang bật.</p>
           <p class="hint">Vẫn tự đi/hái khi mở kho, bảng thông tin hoặc gõ chat. Lệnh di chuyển, đánh/tung chiêu hoặc F tay sẽ tạm dừng 3 giây. Hộp thoại NPC và hộp kiểm tra người chơi vẫn tạm dừng.</p>
           <label class="check-row"><input id="harvestAllowFarm" type="checkbox"><span>Cho phép thu hoạch khi Auto Farm đang bật</span></label>
           <label class="check-row"><input id="harvestIgnoreMonsters" type="checkbox"><span>Bỏ qua kiểm tra quái gần</span></label>
           <p class="hint">Bật để vẫn tới cây và thử hái dù có quái gần. Không tự đánh quái; vùng sạch quái không áp dụng khi bật. Các kiểm tra cổng/NPC, chết và hộp kiểm tra người chơi vẫn giữ.</p>
           <p class="hint">Mặc định không hái khi farm. Khi cho phép, vẫn ưu tiên mục tiêu chiến đấu của Auto Farm.</p>
           <div class="two-columns separated">
-            <div><label for="harvestRadius" class="help-label">Vùng tìm cây (1–30 ô)<span class="field-help" tabindex="0" aria-label="Giải thích vùng tìm cây" aria-describedby="harvestRadiusHelp">?<span id="harvestRadiusHelp" class="help-tooltip" role="tooltip">Bán kính tìm cây quanh điểm bắt đầu Tự hái, hoặc tâm Auto Farm khi phối hợp. Ví dụ 6 ô: chỉ chọn cây cách tâm tối đa 6 ô, đúng bộ lọc. Đây không phải 6 ô quanh vị trí đang đi; vùng không chạy theo nhân vật. Tăng số để tìm xa hơn.</span></span></label><input id="harvestRadius" type="number" min="1" max="30" step="0.5" value="6" required></div>
+            <div><label for="harvestRadius" class="help-label">Vùng tìm cây (1–30 ô)<span class="field-help" tabindex="0" aria-label="Giải thích vùng tìm cây" aria-describedby="harvestRadiusHelp">?<span id="harvestRadiusHelp" class="help-tooltip" role="tooltip">Bán kính tìm cây quanh điểm bắt đầu Thu hoạch, hoặc tâm Auto Farm khi phối hợp. Ví dụ 6 ô: chỉ chọn cây cách tâm tối đa 6 ô, đúng bộ lọc. Đây không phải 6 ô quanh vị trí đang đi; vùng không chạy theo nhân vật. Tăng số để tìm xa hơn.</span></span></label><input id="harvestRadius" type="number" min="1" max="30" step="0.5" value="6" required></div>
             <div><label for="harvestClearRadius" class="help-label">Vùng sạch quái (2–15 ô)<span class="field-help" tabindex="0" aria-label="Giải thích vùng sạch quái" aria-describedby="harvestClearRadiusHelp">?<span id="harvestClearRadiusHelp" class="help-tooltip" role="tooltip">Khoảng kiểm tra quái nguy hiểm quanh cả nhân vật và cây sắp hái. Ví dụ 4 ô: có quái trong khoảng này thì chờ; quái lớn có thể được tính thêm tầm của nó. Không tự đánh dọn quái. Tăng số thì thận trọng hơn, dễ phải chờ hơn. Không áp dụng khi bật “Bỏ qua kiểm tra quái gần”.</span></span></label><input id="harvestClearRadius" type="number" min="2" max="15" step="0.5" value="4" required></div>
           </div>
           <label for="harvestReach" class="separated help-label">Khoảng cách hái (0.5–1.5 ô)<span class="field-help" tabindex="0" aria-label="Giải thích khoảng cách hái" aria-describedby="harvestReachHelp">?<span id="harvestReachHelp" class="help-tooltip" role="tooltip">Khoảng cách từ nhân vật tới cây để dừng đi và thử hái. Ví dụ 1.2 ô: đi đến cách cây tối đa 1.2 ô mới tương tác. Số nhỏ phải tới sát hơn. Đây không phải vùng tìm cây và không tăng tầm hái của game; game vẫn phải chọn đúng cây, không phải cổng/NPC. Gợi ý giữ 1.2.</span></span></label><input id="harvestReach" type="number" min="0.5" max="1.5" step="0.1" value="1.2" required>
@@ -120,7 +120,7 @@
           <label class="check-row"><input id="harvestDebugEnabled" type="checkbox" disabled><span>Ghi chẩn đoán khi cần hỗ trợ</span></label>
           <div id="harvestDebugDetails" hidden>
             <p class="hint">Chỉ ghi lỗi hoặc lượt chưa xác nhận, tối đa 60 dòng tạm trong tab. Tắt để dừng và xóa log.</p>
-            <textarea id="harvestDebugOutput" readonly rows="4" aria-label="Log chẩn đoán Tự hái" spellcheck="false"></textarea>
+            <textarea id="harvestDebugOutput" readonly rows="4" aria-label="Log chẩn đoán Thu hoạch" spellcheck="false"></textarea>
             <div class="button-row"><button id="copyHarvestDebug" type="button">Sao chép log</button><button id="clearHarvestDebug" type="button" class="quiet">Xóa log</button></div>
           </div>
           <p id="harvestDebugFeedback" class="notice" role="status"></p>
@@ -209,7 +209,7 @@
             <label class="check-row"><input type="checkbox" data-display-field="realm"><span>Thời gian bí cảnh</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="fps"><span>FPS</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="autoFarm" checked><span>Auto Farm</span></label>
-            <label class="check-row"><input type="checkbox" data-display-field="harvest"><span>Tự hái (bật/tắt và trạng thái)</span></label>
+            <label class="check-row"><input type="checkbox" data-display-field="harvest"><span>Thu hoạch (bật/tắt và trạng thái)</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="movement" checked><span>Bay / đi bộ</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="speed" checked><span>Tốc độ</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="fix" checked><span>Bộ đếm Fix</span></label>

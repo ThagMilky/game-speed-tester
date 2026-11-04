@@ -37,12 +37,13 @@
           if (left > 0 && left <= 120) notify(`exit:${realm.inside.ends}`, "Bí cảnh còn dưới 2 phút: chuẩn bị rút lui!");
         } else if (open.length) {
           text = `Bí cảnh: có cổng đang mở · còn ${format(Math.min(...open.map((event) => event.ends)) - now)} (kiểm tra bậc cấp).`;
-          notify(`open:${open.map((event) => event.id).sort().join(":")}`, "Game đang có cổng bí cảnh mở; kiểm tra bậc cấp trước khi vào.");
+          if (Number.isFinite(realm.next)) notify(`open:${realm.next}`, "Game đang có cổng bí cảnh mở; kiểm tra bậc cấp trước khi vào.");
         } else if (Number.isFinite(realm.next)) {
           const left = realm.next - now;
           text = left > 0 ? `Bí cảnh: đợt tiếp sau ${format(left)}.` : "Bí cảnh: chờ game xác nhận đợt mới.";
-          if (left > 0 && left <= 300) notify(`next:${realm.next}`, "Bí cảnh còn dưới 5 phút đến đợt tiếp theo.");
         }
+        if (Number.isFinite(realm.next) && realm.next > now && realm.next - now <= 300)
+          notify(`next:${realm.next}`, "Bí cảnh còn dưới 5 phút đến đợt tiếp theo.");
         if (realm.retryAt > now && !realm.inside) text += ` Tái nhập sau ${format(realm.retryAt - now)}.`;
       }
     } catch { /* Missing or changed game state is not a schedule. */ }
@@ -55,7 +56,9 @@
   }
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:realm-time:v1") return;
-    display = event.data.display === true; notices = event.data.notices === true; monitor();
+    const nextDisplay = event.data.display === true, nextNotices = event.data.notices === true;
+    if (display === nextDisplay && notices === nextNotices) return;
+    display = nextDisplay; notices = nextNotices; monitor();
   });
   window.addEventListener("pagehide", () => { suspended = true; monitor(); });
   window.addEventListener("pageshow", () => { suspended = false; monitor(); });

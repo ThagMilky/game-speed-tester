@@ -254,7 +254,7 @@
       const requestId = `popup:${++sequence}`;
       const timer = setTimeout(() => {
         pending.delete(requestId);
-        respond({ message: "Chưa kết nối Tự hái; tải lại trang game sau khi cập nhật extension.",
+        respond({ message: "Chưa kết nối Thu hoạch; tải lại trang game sau khi cập nhật extension.",
           enabled: null, applied: false, catalog: [], available: false });
       }, 800);
       pending.set(requestId, { timer, respond });
