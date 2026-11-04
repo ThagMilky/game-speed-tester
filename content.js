@@ -58,8 +58,8 @@
         :host {
           all: initial !important;
           position: fixed !important;
-          bottom: 12px !important;
-          right: 12px !important;
+          top: 12px !important;
+          right: 200px !important;
           z-index: 2147483647 !important;
           display: block !important;
           pointer-events: none !important;
@@ -77,6 +77,12 @@
           white-space: pre-wrap;
           overflow-wrap: anywhere;
           user-select: none;
+        }
+        @media (max-width: 600px) {
+          :host {
+            top: 220px !important;
+            right: 12px !important;
+          }
         }
       `;
       overlayText = document.createElement("pre");
