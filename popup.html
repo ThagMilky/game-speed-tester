@@ -14,6 +14,7 @@
   <script src="farm-diagnostics-popup.js" defer></script>
   <script src="fps-options.js" defer></script>
   <script src="fps-popup.js" defer></script>
+  <script src="realm-time-popup.js" defer></script>
 </head>
 <body>
   <header><p class="eyebrow">NGHICHTHIENKY.ONLINE</p><h1>Game Speed Tester</h1><p class="muted">Điều khiển gọn, theo dõi ngay.</p></header>
@@ -132,6 +133,9 @@
           <p class="hint">Tìm cổng hợp lệ trong toàn map hiện tại, không cần bán kính. Chờ hết giao tranh; tự tới cổng và yêu cầu vào một lần. Bạn di chuyển/tung chiêu thì tạm nhường, chờ 3 giây rồi tiếp tục.</p>
           <p class="hint">Giữ bộ lọc quái hiện tại; muốn chỉ boss bạn tự đổi. Không tự mở rương, bỏ bảo vệ hay thoát bí cảnh. Chết trong bí cảnh có thể mất đồ của lượt đó.</p>
         </fieldset>
+        <p class="field-title">Thời gian &amp; thông báo</p>
+        <label class="check-row"><input id="realmNotices" type="checkbox" disabled><span>Nhắc trước đợt 5 phút, có cổng mở, còn 2 phút để rút</span></label>
+        <p class="hint">Thông báo trong trang, một lần mỗi mốc/đợt theo tab. Cổng thông báo chưa lọc theo bậc cấp; kiểm tra điều kiện vào trong game. Mất dữ liệu thì không đoán lịch.</p>
         <p id="realmFeedback" class="notice" role="alert"></p>
       </div>
     </details>
@@ -189,6 +193,7 @@
         <fieldset id="displayControls" disabled aria-label="Tùy chọn bảng trạng thái">
           <label class="switch-row"><span>Hiện bảng trong game</span><input id="showOverlay" class="switch" type="checkbox" checked></label>
           <div class="choice-grid">
+            <label class="check-row"><input type="checkbox" data-display-field="realm"><span>Thời gian bí cảnh</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="fps"><span>FPS</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="autoFarm" checked><span>Auto Farm</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="harvest"><span>Tự hái (bật/tắt và trạng thái)</span></label>

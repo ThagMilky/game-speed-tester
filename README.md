@@ -348,3 +348,5 @@ Tối ưu FPS tách Ẩn hình/bóng boss và Giảm hiệu ứng boss, mặc đ
 Chỉ đối chiếu source và review diff/status. Tests/lint/typecheck/browser/gameplay: NOT RUN; hành vi toàn map, tiếp cận boss, tách hình/FX và tương thích live: UNVERIFIED; CI: NOT CHECKED. Reload extension rồi tải lại game để áp dụng.
 
 Quy tắc tên: menu dùng tiếng Việt dễ hiểu, giữ Auto/FPS/boss/level/map. Code và mã cài đặt dùng tiếng Anh. Nhóm Bí cảnh giữ panel ID realm để bảo toàn thứ tự đã lưu; không đổi realmPreferences. *-page: xử lý game, *-content: cầu nối/storage, *-popup: UI, *-options: chuẩn hóa.
+
+Thời gian bí cảnh: chọn mục trong Bảng trạng thái, thông báo bật riêng trong Bí cảnh. Dùng realm.now/next/ends/retryAt; dữ liệu đứng quá 10 giây hoặc mất kết nối thì báo chưa cập nhật. Nhắc 5 phút trước đợt, có cổng mở (chưa lọc bậc cấp), 2 phút trước khi đóng; chống trùng theo tab sessionStorage, không thêm quyền OS notification, không tự vào/thoát. Tests/gameplay NOT RUN; runtime UNVERIFIED.
