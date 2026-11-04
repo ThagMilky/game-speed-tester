@@ -2,7 +2,7 @@
   "use strict";
   const origin = "https://nghichthienky.online";
   const fields = ["hidePlayers", "hidePlayerEffects", "hideOwnEffects", "hideMonsterEffects",
-    "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings"];
+    "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings", "hideBosses", "hideBossEffects"];
   let settings = {}, measure = false, suspended = false, watcher = null, binding = null;
   let failure = "";
   const sceneNow = () => window.game?.scene?.getScene?.("world")
@@ -10,11 +10,12 @@
   const wanted = () => settings.enabled && fields.some((key) => settings[key]);
   const on = (key) => settings.enabled && settings[key];
 
+  const boss = (actor) => actor?.st?.cls === "boss" || actor?.st?.wb === true;
   function suppress(scene, id) {
     if (id === scene.you) return on("hideOwnEffects");
     const actor = scene.views.get(id);
     return actor?.k === "p" ? on("hidePlayers") || on("hidePlayerEffects")
-      : actor?.k === "m" && actor.st?.cls !== "pet" ? on("hideMonsterEffects") : false;
+      : actor?.k === "m" && actor.st?.cls !== "pet" ? boss(actor) ? on("hideBossEffects") : on("hideMonsterEffects") : false;
   }
 
   function restoreMasks(owner) {
@@ -78,11 +79,11 @@
     try {
       const scene = owner.scene;
       owner.mapReady = GSTFpsMap.update(scene, settings, (value) => mask(owner, value));
-      if (on("hidePlayers") || on("hideMonsters") || on("hidePlayerEffects") || on("hideMonsterEffects")) {
+      if (on("hidePlayers") || on("hideMonsters") || on("hideBosses") || on("hideBossEffects") || on("hidePlayerEffects") || on("hideMonsterEffects")) {
         for (const actor of scene.views.values()) {
           const player = actor.k === "p" && actor.id !== scene.you;
           const monster = actor.k === "m" && actor.st?.cls !== "pet";
-          if ((player && on("hidePlayers")) || (monster && on("hideMonsters"))) {
+          if ((player && on("hidePlayers")) || (monster && (boss(actor) ? on("hideBosses") : on("hideMonsters")))) {
             mask(owner, actor.ch);
             mask(owner, actor.shadow);
             if (player) {
@@ -156,7 +157,7 @@
       return original.apply(this, args);
     });
     wrap(owner, scene, "afterImage", function (original, args) {
-      if (!on("hidePlayers") && !on("hidePlayerEffects") && !on("hideOwnEffects") && !on("hideMonsterEffects")) {
+      if (!on("hidePlayers") && !on("hidePlayerEffects") && !on("hideOwnEffects") && !on("hideMonsterEffects") && !on("hideBossEffects")) {
         return original.apply(this, args);
       }
       const character = args[0] ?? scene.player;

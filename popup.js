@@ -18,6 +18,7 @@ const fontFeedback = document.getElementById("fontFeedback");
 const farmControls = document.getElementById("farmControls");
 const farmEnabled = document.getElementById("farmEnabled");
 const breakSeals = document.getElementById("breakSeals");
+const farmSearchScope = document.getElementById("farmSearchScope");
 const farmRadius = document.getElementById("farmRadius");
 const farmTargetMode = document.getElementById("farmTargetMode");
 const farmTargetLevel = document.getElementById("farmTargetLevel");
@@ -118,7 +119,7 @@ async function saveFarm(event) {
     : event?.target === farmAvoidEnabled && !farmAvoidEnabled.checked ? "avoidEnabled" : null;
   let farmPreferences;
   if (!disabling) {
-    if (!farmEnabled.checked && !farmRadius.checkValidity()) farmRadius.value = "22";
+    if ((!farmEnabled.checked || farmSearchScope.value === "map") && !farmRadius.checkValidity()) farmRadius.value = "22";
     if (!farmRadius.reportValidity()) return;
     const radius = farmRadius.valueAsNumber;
     if (!Number.isFinite(radius) || radius < 11 || radius > 100) return;
@@ -143,7 +144,7 @@ async function saveFarm(event) {
     const avoidLevel = farmAvoidLevel.valueAsNumber, avoidDistance = farmAvoidDistance.valueAsNumber;
     if (farmAvoidEnabled.checked && (!Number.isSafeInteger(avoidLevel) || avoidLevel < 1
         || !Number.isFinite(avoidDistance) || avoidDistance < 1 || avoidDistance > 6)) return;
-    farmPreferences = { enabled: farmEnabled.checked, radius, autoRespawn: true, breakSeals: breakSeals.checked,
+    farmPreferences = { enabled: farmEnabled.checked, searchScope: farmSearchScope.value === "map" ? "map" : "radius", radius, autoRespawn: true, breakSeals: breakSeals.checked,
       idleMode: farmIdleMode.value === "home" ? "home" : "hold", avoidEnabled: farmAvoidEnabled.checked,
       avoidLevel: positiveLevel(avoidLevel, 10),
       avoidDistance: Number.isFinite(avoidDistance) ? Math.max(1, Math.min(6, avoidDistance)) : 2,
@@ -331,6 +332,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   fontFamily.disabled = !font.enabled;
   fontControls.disabled = false;
   farmEnabled.checked = farmPreferences?.enabled === true;
+  farmSearchScope.value = farmPreferences?.searchScope === "map" ? "map" : "radius";
   breakSeals.checked = farmPreferences?.breakSeals === true;
   farmIdleMode.value = farmPreferences?.idleMode === "home" ? "home" : "hold";
   farmAvoidEnabled.checked = farmPreferences?.avoidEnabled === true;

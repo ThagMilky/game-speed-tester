@@ -5,7 +5,7 @@
   const baseRadius = 11;
   globalThis.GSTFarmConfigurationReady = false;
   let settings = { enabled: false, radius: 22, autoRespawn: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
-    idleMode: "hold", avoidEnabled: false, avoidLevel: 10, avoidDistance: 2 };
+    searchScope: "radius", idleMode: "hold", avoidEnabled: false, avoidLevel: 10, avoidDistance: 2 };
   let filterBinding = null;
   let death = null;
   let respawnMessage = "";
@@ -303,6 +303,7 @@
       const scene = sceneNow();
       globalThis.GSTFarmRevivePolicy?.attach(scene);
       globalThis.GSTFarmBehavior?.attach(scene);
+      globalThis.GSTFarmMap?.attach(scene);
       globalThis.GSTFarmDiagnostics?.attach(scene);
       checkRespawn(scene);
       if (!settings.enabled && settings.targetMode === "all" && !settings.avoidEnabled) return;
@@ -385,6 +386,7 @@
       const time = s.scene.now();
       globalThis.GSTFarmBehavior?.attach(s.scene);
       syncFilter(s.scene);
+      if (globalThis.GSTFarmMap?.controls(s.scene)) { message = GSTFarmMap.status(s.scene); return; }
       if (globalThis.GSTFarmBehavior?.controls(s.scene)) {
         message = globalThis.GSTFarmBehavior.status(s.scene);
         return;
@@ -438,16 +440,26 @@
       }
       const pos = { x: position[0], y: position[1] };
       const eligible = enemies.filter((enemy) => finite(enemy?.id) && finite(enemy.x) && finite(enemy.y)
-        && !enemy.dead && enemy.hostile && distance(enemy, s.home) < settings.radius
+        && !enemy.dead && enemy.hostile && (settings.searchScope === "map" ? finite(s.scene.map?.w) && finite(s.scene.map?.h)
+          && enemy.x >= 0 && enemy.y >= 0 && enemy.x < s.scene.map.w && enemy.y < s.scene.map.h
+          : distance(enemy, s.home) < settings.radius)
         && !(s.auto.skipped.has(enemy.id) && s.auto.skipped.get(enemy.id) > time));
       // Match the built-in skipped expiry without deleting its records ourselves.
       const candidates = eligible.filter((enemy) => !s.auto.skipped.has(enemy.id));
       const target = candidates.find((enemy) => enemy.id === s.auto.target);
       if (target) {
         if (distance(target, s.center) >= baseRadius - 0.5) shiftToward(s, target);
+        if (settings.searchScope === "map" && distance(target, pos) > 8) {
+          const progress = s.mapProgress;
+          if (!progress || progress.id !== target.id) s.mapProgress = { id: target.id, remaining: distance(target, pos) };
+          else if (progress.remaining - distance(target, pos) >= 0.5) {
+            s.auto.chaseSince = time; progress.remaining = distance(target, pos);
+          }
+        } else s.mapProgress = null;
         message = "Keeping the built-in target.";
         return;
       }
+      s.mapProgress = null;
       const local = candidates.filter((enemy) => distance(enemy, s.center) < baseRadius);
       const aggro = host.inCombat() ? local.filter((enemy) => enemy.aggro && distance(enemy, pos) < 3.2) : [];
       // Use the game's picker, including its reachability cache and skip backoff.
@@ -485,6 +497,7 @@
   }
 
   function shiftToward(s, enemy) {
+    if (settings.searchScope === "map") { center(s, { x: enemy.x, y: enemy.y }); return; }
     const length = distance(enemy, s.home);
     // Keep the entire built-in 11-unit circle inside the configured home radius.
     const shift = Math.min(length, settings.radius - baseRadius);
@@ -506,11 +519,13 @@
     }
     if (data.type === "configure" && typeof data.enabled === "boolean"
         && finite(data.radius) && data.radius >= 11 && data.radius <= 100) {
-      const filterChanged = settings.targetMode !== targetMode(data.targetMode)
+      const scopeChanged = settings.searchScope !== (data.searchScope === "map" ? "map" : "radius");
+      const filterChanged = settings.searchScope !== data.searchScope || settings.targetMode !== targetMode(data.targetMode)
         || settings.targetLevel !== data.targetLevel
         || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel
         || settings.avoidEnabled !== (data.avoidEnabled === true) || settings.avoidLevel !== data.avoidLevel;
       settings = { enabled: data.enabled, radius: data.radius, autoRespawn: true,
+        searchScope: data.searchScope === "map" ? "map" : "radius",
         targetMode: targetMode(data.targetMode),
         targetLevel: Number.isSafeInteger(data.targetLevel) && data.targetLevel > 0 ? data.targetLevel : 1,
         targetMinLevel: Number.isSafeInteger(data.targetMinLevel) && data.targetMinLevel > 0 ? data.targetMinLevel : 1,
@@ -519,10 +534,12 @@
         avoidLevel: Number.isSafeInteger(data.avoidLevel) && data.avoidLevel > 0 ? data.avoidLevel : 10,
         avoidDistance: finite(data.avoidDistance) ? Math.max(1, Math.min(6, data.avoidDistance)) : 2 };
       globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);
+      globalThis.GSTFarmMap?.configure(sceneNow(), settings);
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
       if (settings.targetMode === "all" && !settings.avoidEnabled) clearFilter();
       if (session) {
+        if (scopeChanged) { restore(session); session.mapProgress = null; session.at = -Infinity; }
         syncFilter(session.scene);
         if (filterChanged) session.auto.think = 0;
         if (!settings.enabled) restore(session);
@@ -552,7 +569,7 @@
       } catch { /* Read-only status must not start or restart gameplay. */ }
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
         message: (settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage
-          || (dead && respawnMessage ? respawnMessage : (waitReason || globalThis.GSTFarmBehavior?.status(sceneNow())
+          || (dead && respawnMessage ? respawnMessage : (waitReason || globalThis.GSTFarmMap?.status(sceneNow()) || globalThis.GSTFarmBehavior?.status(sceneNow())
             || globalThis.GSTFarmSession?.status(sceneNow()) || globalThis.GSTFarmSeals?.status(sceneNow()) || message))),
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);
     }

@@ -31,6 +31,7 @@
     settings = {
       enabled: value?.enabled === true,
       autoRespawn: true,
+      searchScope: value?.searchScope === "map" ? "map" : "radius",
       breakSeals: value?.breakSeals === true,
       idleMode: value?.idleMode === "home" ? "home" : "hold",
       avoidEnabled: value?.avoidEnabled === true,

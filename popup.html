@@ -32,6 +32,9 @@
       <div class="card-body">
         <fieldset id="farmControls" disabled aria-label="Tùy chọn Auto Farm">
           <label class="switch-row"><span>Mở rộng vùng tìm quái</span><input id="farmEnabled" class="switch" type="checkbox"></label>
+          <label for="farmSearchScope">Phạm vi tìm quái</label>
+          <select id="farmSearchScope"><option value="radius">Theo bán kính</option><option value="map">Toàn map hiện tại</option></select>
+          <p class="hint">Bật Mở rộng vùng tìm quái và bấm Lưu bán kính để lưu phạm vi. Toàn map bỏ giới hạn bán kính, giữ bộ lọc hiện tại. Chỉ tìm quái game đã cung cấp; Chỉ boss có thể dùng tọa độ boss bí cảnh để đi tới gần. Không tự đổi sang farm quái thường sau khi boss chết.</p>
           <div class="input-action">
             <div><label for="farmRadius">Bán kính <span class="range">11–100 ô</span></label><input id="farmRadius" type="number" min="11" max="100" step="1" value="22" required></div>
             <button id="saveFarm" type="button" class="primary">Lưu bán kính</button>
@@ -161,8 +164,10 @@
           <label class="check-row"><input type="checkbox" data-fps-field="hidePlayers"><span>Ẩn hình người chơi khác, vũ khí, thú cưỡi và bóng</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hidePlayerEffects"><span>Giảm hiệu ứng người chơi khác</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideOwnEffects"><span>Giảm hiệu ứng của bạn (giữ dấu ngắm)</span></label>
-          <label class="check-row"><input type="checkbox" data-fps-field="hideMonsterEffects"><span>Giảm hiệu ứng quái xác định được nguồn</span></label>
-          <label class="check-row"><input type="checkbox" data-fps-field="hideMonsters"><span>Ẩn hình và bóng quái, giữ tên / level / thanh máu</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideMonsterEffects"><span>Giảm hiệu ứng quái thường xác định được nguồn</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideMonsters"><span>Ẩn hình và bóng quái thường, giữ tên / level / thanh máu</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideBosses"><span>Ẩn hình và bóng boss, giữ tên / thanh máu</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideBossEffects"><span>Giảm hiệu ứng boss xác định được nguồn (giữ cảnh báo)</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideNumbers"><span>Ẩn số sát thương, hồi máu và chữ Né</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="reduceEnvironment"><span>Giảm thời tiết, sương bụi và hạt trang trí nền</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="reduceScreen"><span>Giảm rung và chớp màn hình</span></label>

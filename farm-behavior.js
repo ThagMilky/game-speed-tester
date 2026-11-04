@@ -88,7 +88,8 @@
   }
   function area(scene) {
     const home = GSTHarvest.farmOrigin(scene) ?? { x: scene.auto.ax, y: scene.auto.ay };
-    return { home, radius: settings.enabled ? settings.radius : 11 };
+    return { home, radius: settings.enabled && settings.searchScope === "map" ? Infinity : settings.enabled ? settings.radius : 11,
+      w: scene.map?.w, h: scene.map?.h, whole: settings.enabled && settings.searchScope === "map" };
   }
   function safePath(scene, points, origin, zone, primary) {
     if (!Array.isArray(points) || !points.length || !finite(zone.home.x) || !finite(zone.home.y)) return false;
@@ -98,7 +99,8 @@
     for (const point of points) {
       if (!Array.isArray(point) || point.length < 2 || !finite(point[0]) || !finite(point[1])) return false;
       const next = { x: point[0], y: point[1] };
-      if (dist(next, zone.home) > zone.radius) return false;
+      if (dist(next, zone.home) > zone.radius || zone.whole && (!finite(zone.w) || !finite(zone.h)
+          || next.x < 0 || next.y < 0 || next.x >= zone.w || next.y >= zone.h)) return false;
       length += dist(previous, next);
       if (length > settings.avoidDistance * 2 + 2) return false;
       for (const actor of nearby) {
@@ -114,7 +116,8 @@
     for (const offset of [0, 0.5, -0.5, 1, -1, 1.5, -1.5]) {
       const point = { x: origin.x + Math.cos(angle + offset) * settings.avoidDistance,
         y: origin.y + Math.sin(angle + offset) * settings.avoidDistance };
-      if (dist(point, zone.home) > zone.radius) continue;
+      if (dist(point, zone.home) > zone.radius || zone.whole && (!finite(zone.w) || !finite(zone.h)
+          || point.x < 0 || point.y < 0 || point.x >= zone.w || point.y >= zone.h)) continue;
       const route = host.clear(origin.x, origin.y, point.x, point.y)
         ? [[point.x, point.y]] : host.route(origin.x, origin.y, point.x, point.y);
       const path = Array.isArray(route) ? [...route, [point.x, point.y]] : null;
@@ -171,6 +174,8 @@
         steer: (x, y) => {
           const next = { x: pos.x + x * 0.25, y: pos.y + y * 0.25 };
           if (!finite(x) || !finite(y) || dist(next, owner.zone.home) > owner.zone.radius
+              || owner.zone.whole && (!finite(owner.zone.w) || !finite(owner.zone.h) || next.x < 0 || next.y < 0
+                || next.x >= owner.zone.w || next.y >= owner.zone.h)
               || [...scene.views.values()].filter(dangerous).some((actor) =>
                 segmentDistance(actor, pos, next) < Math.min(reach(actor), dist(pos, actor)) - 0.1)) {
             owner.denied = true; x = 0; y = 0;
@@ -237,7 +242,7 @@
       const next = { idleMode: value.idleMode === "home" ? "home" : "hold", avoidEnabled: value.avoidEnabled === true,
         avoidLevel: Number.isSafeInteger(value.avoidLevel) && value.avoidLevel > 0 ? value.avoidLevel : 10,
         avoidDistance: finite(value.avoidDistance) ? Math.max(1, Math.min(6, value.avoidDistance)) : 2,
-        enabled: value.enabled === true, radius: value.radius };
+        enabled: value.enabled === true, radius: value.radius, searchScope: value.searchScope };
       if (Object.keys(next).some((key) => settings[key] !== next[key])) detach();
       settings = next; this.attach(scene);
     },
