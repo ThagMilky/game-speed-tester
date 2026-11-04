@@ -16,6 +16,8 @@ game-speed-tester/
   font.js        Bật/tắt và áp dụng font giao diện web sau 1 giây
   farm-page.js   Mở rộng tâm tìm kiếm của Auto Farm có sẵn, chạy trong MAIN world
   farm-content.js Storage và cầu nối riêng cho tùy chọn/trạng thái Auto Farm
+  farm-update.js Một wrapper update chung để bàn giao phong ấn/Tự hái/game gốc
+  farm-seals.js  Hỗ trợ di chuyển và đánh phong ấn bí cảnh bằng hàm gốc
   harvest-options.js Tùy chọn Tự hái dùng chung; cầu nối điều phối trong MAIN world
   harvest-main-options.js Bản sinh từ harvest-options.js, đường dẫn riêng cho MAIN
   harvest-page.js Chọn cây, tìm đường, tương tác gốc và bàn giao với Auto Farm
@@ -44,6 +46,16 @@ Không cần build, npm, backend hoặc dependency.
 Đầu popup có bốn chỉ số: Auto Farm thật của game, trạng thái di chuyển, tốc độ hiện tại và Fix. Bên dưới là năm nhóm: **Auto Farm**, **Tự hái**, **Tốc độ di chuyển**, **Bảng trạng thái**, **Font chữ**. Mỗi lần mở popup, cả năm nhóm đều thu gọn; bấm tiêu đề để mở. Kéo tay nắm **⠿** ở đầu nhóm lên/xuống và thả khi thấy vạch màu để đổi thứ tự. Ví dụ kéo Tự hái xuống dưới Tốc độ di chuyển để Auto Farm và Tốc độ nằm cạnh nhau. Thứ tự tự lưu riêng ở `popupPanelOrder` trong `chrome.storage.local`, dùng lại khi mở popup; không đổi cài đặt tính năng hoặc tác động game. Có thể dùng bàn phím: đặt focus vào tay nắm rồi bấm Alt + mũi tên lên/xuống.
 
 Các thông báo kỹ thuật nằm trong mục chi tiết; lỗi lưu cài đặt vẫn có thông báo riêng. Checkbox hiển thị/font/hồi sinh và phím tắt vẫn tự lưu; nhập bán kính/tốc độ vẫn dùng nút Lưu hoặc Enter như trước. Popup hỗ trợ giao diện sáng/tối theo hệ thống. Thay đổi bố cục/kéo thả: tests/lint/typecheck/browser **NOT RUN**, hành vi giao diện **UNVERIFIED**, CI **NOT CHECKED**.
+
+## Phong ấn boss bí cảnh
+
+Trong Auto Farm, tick **Tự phá phong ấn khi đánh boss bí cảnh** (`farmPreferences.breakSeals`, mặc định tắt). Bật Auto Farm của game bằng phím đã chọn. Không cần bật mở rộng bán kính hoặc Tự hái; URL vẫn cần `timer`, cầu nối tự bổ sung như các tính năng hiện có. Chỉ áp dụng khi `scene.self.realm.inside` có boss còn HP và danh sách `seals` có x/y/hits hợp lệ. Không giả định có đúng 3 phong ấn, không tạo mục tiêu quái/ID giả.
+
+Module chọn phong ấn còn hits gần nhất; dùng `auto.walk` gốc với trạng thái đường đi riêng thừa kế từ Auto Farm, giữ nguyên native target/path/ax/ay. Đến trong 1 ô và có đường thông thì hướng mặt về phong ấn và gọi `host.basic()` gốc: `useSkill("Space", true, false)`. Nhịp quyết định tối đa 5 lần/giây bằng nhịp update game (như native Auto Farm), hàm game vẫn kiểm tra cooldown và server quyết định đòn hợp lệ; không sửa damage, attack speed, cooldown hoặc tự dựng packet. Khi nhường lại, làm mới mốc chaseSince/think cho mục tiêu vẫn còn đúng, để thời gian phá phong ấn không bị tính thành đuổi boss thất bại. Không thay target/path/center của boss hoặc tự bật V.
+
+Theo dõi hits mới từ game, không tự trừ hits. Không giảm trong 8 giây ở vị trí đánh hoặc không tới trong 15 giây thì bỏ mục tiêu đó và báo trạng thái; không tự thử mãi cùng phong ấn với cùng số hits. Có thể thử phong ấn khác. Khi hits/vị trí đổi, hết đợt phong ấn hoặc người dùng tắt/bật Auto Farm thì cho phép thử lại. Hết phong ấn trả về native Auto Farm. Chưa xác minh server nhận đánh thường của mọi class với cơ chế này; nếu server không tính đòn, module sẽ dừng thử và báo, không tuyên bố đã phá thành công.
+
+Ưu tiên nhường hồi HP/MP theo ngưỡng game, chết/hồi sinh, UI/hộp kiểm tra người chơi và thao tác tay; không đi qua cổng/NPC. Tự hái đang được game xác nhận thì để hoàn tất; khi xử lý phong ấn, Tự hái và hỗ trợ tiếp cận tốc độ tạm nhường di chuyển. `farm-update.js` giữ một wrapper native update, phong ấn và Tự hái đăng ký/gỡ handler riêng; gỡ handler cuối khôi phục descriptor gốc nếu còn sở hữu. Khi tắt hỗ trợ/rời scene/mất kết nối, dọn điều khiển và handler; chỉ giữ một watcher 1 giây lúc chờ scene, không timer theo từng phong ấn. Kiểm tra modal cache 200 ms, ngưỡng hồi phục cache 1 giây. Tests/lint/typecheck/browser/gameplay **NOT RUN**; hành vi phá phong ấn/server **UNVERIFIED**, CI **NOT CHECKED**.
 
 ## Tự hái cây
 

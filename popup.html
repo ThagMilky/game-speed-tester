@@ -33,6 +33,8 @@
             <button id="saveFarm" type="button" class="primary">Lưu bán kính</button>
           </div>
           <label class="check-row"><input id="autoRespawn" type="checkbox"><span>Tự hồi sinh khi nút sẵn sàng</span></label>
+          <label class="check-row"><input id="breakSeals" type="checkbox"><span>Tự phá phong ấn khi đánh boss bí cảnh</span></label>
+          <p class="hint">Ưu tiên phong ấn còn đòn, dùng đường đi/đánh thường gốc rồi quay lại boss. Nếu số đòn không giảm trong 8 giây thì dừng thử mục tiêu đó, không tăng nhịp đánh.</p>
           <div class="two-columns separated">
             <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="maxLevel">Level ≤ mức chọn</option><option value="minLevel">Level ≥ mức chọn</option><option value="boss">Chỉ boss</option></select></div>
             <div><label for="farmTargetLevel">Level quái</label><input id="farmTargetLevel" type="number" min="1" step="1" value="1" required disabled></div>

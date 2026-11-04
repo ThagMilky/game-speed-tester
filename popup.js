@@ -16,6 +16,7 @@ const fontFeedback = document.getElementById("fontFeedback");
 const farmControls = document.getElementById("farmControls");
 const farmEnabled = document.getElementById("farmEnabled");
 const autoRespawn = document.getElementById("autoRespawn");
+const breakSeals = document.getElementById("breakSeals");
 const farmRadius = document.getElementById("farmRadius");
 const farmTargetMode = document.getElementById("farmTargetMode");
 const farmTargetLevel = document.getElementById("farmTargetLevel");
@@ -97,7 +98,8 @@ async function refreshFarm() {
 async function saveFarm(event) {
   if (farmSaving) return;
   const disabling = event?.target === farmEnabled && !farmEnabled.checked ? "enabled"
-    : event?.target === autoRespawn && !autoRespawn.checked ? "autoRespawn" : null;
+    : event?.target === autoRespawn && !autoRespawn.checked ? "autoRespawn"
+    : event?.target === breakSeals && !breakSeals.checked ? "breakSeals" : null;
   let farmPreferences;
   if (!disabling) {
     if (!farmEnabled.checked && !farmRadius.checkValidity()) farmRadius.value = "22";
@@ -109,7 +111,7 @@ async function saveFarm(event) {
     if (needsLevel && !farmTargetLevel.reportValidity()) return;
     const targetLevel = farmTargetLevel.valueAsNumber;
     if (needsLevel && (!Number.isSafeInteger(targetLevel) || targetLevel < 1)) return;
-    farmPreferences = { enabled: farmEnabled.checked, radius, autoRespawn: autoRespawn.checked,
+    farmPreferences = { enabled: farmEnabled.checked, radius, autoRespawn: autoRespawn.checked, breakSeals: breakSeals.checked,
       targetMode, targetLevel: Number.isSafeInteger(targetLevel) && targetLevel > 0 ? targetLevel : 1 };
   }
   farmSaving = true;
@@ -147,6 +149,7 @@ farmTargetMode.addEventListener("change", () => {
 farmTargetLevel.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
 farmEnabled.addEventListener("change", saveFarm);
 autoRespawn.addEventListener("change", saveFarm);
+breakSeals.addEventListener("change", saveFarm);
 farmRadius.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
 for (const name of Object.keys(GSTFont.families)) {
   const option = document.createElement("option");
@@ -285,6 +288,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   fontControls.disabled = false;
   farmEnabled.checked = farmPreferences?.enabled === true;
   autoRespawn.checked = farmPreferences?.autoRespawn === true;
+  breakSeals.checked = farmPreferences?.breakSeals === true;
   farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
     : ["maxLevel", "minLevel", "boss"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
   farmTargetLevel.value = Number.isSafeInteger(farmPreferences?.targetLevel) && farmPreferences.targetLevel > 0

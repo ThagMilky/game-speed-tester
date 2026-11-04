@@ -339,6 +339,10 @@
         message = "Tạm nhường di chuyển cho Tự hái; giữ nguyên tâm farm.";
         return;
       }
+      if (globalThis.GSTFarmSeals?.controls(s.scene)) {
+        message = "Đang hỗ trợ phá phong ấn; giữ nguyên tâm và mục tiêu boss.";
+        return;
+      }
       if (!finite(time) || time - s.at < 0.5) return;
       s.at = time;
       const host = s.scene.autoHost();
@@ -479,7 +483,7 @@
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
         message: (settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage || (autoOn === false && stoppedAfterDeaths
           ? "Auto Farm is OFF. The game recorded repeated deaths and may have stopped farming; use its configured shortcut manually to start a new session."
-          : dead && respawnMessage ? respawnMessage : message)),
+          : dead && respawnMessage ? respawnMessage : (globalThis.GSTFarmSeals?.status(sceneNow()) || message))),
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);
     }
   });

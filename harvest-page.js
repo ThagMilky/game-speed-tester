@@ -80,6 +80,7 @@
     if (scene.self.dead) return "Nhân vật đã chết; chờ hồi sinh.";
     if (scene.leaving) return "Đang chuyển map.";
     if (modalOpen(fresh)) return "Chờ bạn xử lý hộp kiểm tra người chơi.";
+    if (globalThis.GSTFarmSeals?.controls(scene)) return "Nhường Auto Farm xử lý phong ấn của boss.";
     if (scene.keyCapture) return "Chờ kết thúc đổi phím trong game.";
     if (scene.overlay?.dialogOpen) return "Chờ đóng hộp thoại tương tác trong game.";
     if (document.body.classList.contains("mobile") && innerHeight > innerWidth) return "Chờ xoay ngang màn hình game.";
@@ -159,10 +160,7 @@
     old.scene.events.off("preupdate", onFrame);
     old.scene.events.off("shutdown", onShutdown);
     old.scene.events.off("destroy", onShutdown);
-    if (old.auto.update === old.wrapper) {
-      if (old.descriptor) Object.defineProperty(old.auto, "update", old.descriptor);
-      else delete old.auto.update;
-    }
+    old.removeUpdate();
     for (const { key, wrapper, descriptor } of old.methods) {
       if (old.scene[key] !== wrapper) continue;
       if (descriptor) Object.defineProperty(old.scene, key, descriptor);
@@ -222,23 +220,21 @@
         }
       }
       const auto = scene.auto;
-      const original = auto.update;
-      const descriptor = Object.getOwnPropertyDescriptor(auto, "update");
       const home = recovery?.home ?? GSTHarvest.farmOrigin(scene)
         ?? (auto.on ? { x: auto.ax, y: auto.ay } : { x: scene.px, y: scene.py });
       if (!finite(home.x) || !finite(home.y)) { message = "Chờ vị trí gốc hợp lệ."; return; }
-      const wrapper = function (...args) {
+      const handler = function () {
         // Native update remains responsible for combat/death/respawn whenever we yield.
         if (binding?.auto === this && job) {
           try {
-            if (!blocked(scene) && farmAllowed(scene) && !fighting(scene) && !danger(scene, job.node)) return;
+            if (!blocked(scene) && farmAllowed(scene) && !fighting(scene) && !danger(scene, job.node)) return true;
           } catch { /* Yield to the native update if a runtime interface changes. */ }
           release("Nhường lại cho game; tạm dừng thu hoạch.", 0, "yield_native");
         }
-        return original.apply(this, args);
+        return false;
       };
-      auto.update = wrapper;
-      binding = { scene, auto, wrapper, descriptor, home: { ...home }, farmOn: auto.on, methods: [] };
+      const removeUpdate = GSTFarmUpdate.add(scene, 20, handler);
+      binding = { scene, auto, removeUpdate, home: { ...home }, farmOn: auto.on, methods: [] };
       wrapMethod(scene, "move", (originalMove) => function (...args) {
         if (binding?.scene !== this || !job || this.auto.on || !browsingUI(this) || blocked(this)) {
           return originalMove.apply(this, args);
@@ -448,7 +444,7 @@
     try {
       const scene = binding?.scene;
       if (sceneNow() !== scene || !compatible(scene) || scene.auto !== binding.auto
-          || scene.auto.update !== binding.wrapper || !connected(scene) || scene.leaving) {
+          || !GSTFarmUpdate.attached(scene) || !connected(scene) || scene.leaving) {
         detach(); message = "Tạm dừng: scene hoặc kết nối thay đổi."; watch(); return;
       }
       if (scene.self.dead) {
