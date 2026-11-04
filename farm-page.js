@@ -92,7 +92,8 @@
     const previousAuto = scene.auto;
     const wasOn = previousAuto?.on;
     if (wasOn === false && session) stop("Đã kết thúc phiên hỗ trợ cũ trước khi bật lại Auto Farm.");
-    scene.toggleAutoFarm();
+    if (globalThis.GSTFarmDiagnostics) GSTFarmDiagnostics.toggleByUser(scene);
+    else scene.toggleAutoFarm();
     if (wasOn === false && scene.auto === previousAuto && scene.auto.on) {
       // An explicit new session must not inherit the old extension block or
       // native navigation failure counters left behind by native toggle().
@@ -296,6 +297,7 @@
     if ((!settings.enabled && !settings.autoRespawn && settings.targetMode === "all") || suspended || session) return;
     try {
       const scene = sceneNow();
+      globalThis.GSTFarmDiagnostics?.attach(scene);
       checkRespawn(scene);
       if (!settings.enabled && settings.targetMode === "all") return;
       if (compatible(scene) && scene.self && !scene.leaving
@@ -501,6 +503,7 @@
         targetLevel: Number.isSafeInteger(data.targetLevel) && data.targetLevel > 0 ? data.targetLevel : 1,
         targetMinLevel: Number.isSafeInteger(data.targetMinLevel) && data.targetMinLevel > 0 ? data.targetMinLevel : 1,
         targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20 };
+      globalThis.GSTFarmDiagnostics?.attach(sceneNow());
       if (settings.targetMode === "all") clearFilter();
       if (session) {
         syncFilter(session.scene);

@@ -83,4 +83,4 @@ input[type="search"] { width: 100%; min-height: 36px; padding: 7px 9px; font: in
 .harvest-list .check-row { align-items: flex-start; padding: 5px 0; }
 .harvest-list input { margin-top: 3px; }
 .harvest-list small { display: block; color: var(--muted); font-size: 10px; }
-#harvestDebugOutput { width: 100%; resize: vertical; margin: 8px 0; padding: 8px; font: 10px/1.5 Consolas, monospace; color: var(--text); background: var(--subtle); border: 1px solid var(--border); border-radius: 7px; }
+#harvestDebugOutput, #farmDiagnosticsOutput { width: 100%; resize: vertical; margin: 8px 0; padding: 8px; font: 10px/1.5 Consolas, monospace; color: var(--text); background: var(--subtle); border: 1px solid var(--border); border-radius: 7px; }

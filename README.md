@@ -18,6 +18,10 @@ game-speed-tester/
   farm-content.js Storage và cầu nối riêng cho tùy chọn/trạng thái Auto Farm
   farm-session.js Giữ ý định Auto Farm theo tab qua tải lại/đổi map
   farm-update.js Một wrapper update chung để bàn giao phong ấn/Tự hái/game gốc
+  farm-input.js  Một wrapper click-to-move chung, kiểm tra focus lúc thực thi
+  farm-diagnostics.js Theo dõi các lần bật/tắt và nguyên nhân, không điều khiển farm
+  farm-diagnostics-content.js Cầu nối chỉ đọc chẩn đoán, lọc trường xuất
+  farm-diagnostics-popup.js Sao chép chẩn đoán theo yêu cầu, không polling riêng
   farm-seals.js  Hỗ trợ di chuyển và đánh phong ấn bí cảnh bằng hàm gốc
   harvest-options.js Tùy chọn Tự hái dùng chung; cầu nối điều phối trong MAIN world
   harvest-main-options.js Bản sinh từ harvest-options.js, đường dẫn riêng cho MAIN
@@ -80,6 +84,18 @@ Chỉ thêm script cục bộ trong đúng MAIN/ISOLATED, không quyền mới h
 Khi phím V/phím tùy chỉnh do extension xử lý thực sự chuyển native Auto Farm từ OFF sang ON, kết thúc phiên hỗ trợ cũ còn sót **trước** native toggle (để không ghi đè tâm mới), bỏ khóa phiên mở rộng cũ và làm mới lastX/Y, stillSince, chaseSince, sideUntil/sideX/Y, stuckCount, moved cùng cache reachable của game. Source native toggle đã xóa target/path/think/pauseUntil nhưng giữ các trạng thái chống kẹt này; bước di chuyển của game lại làm mới một số trạng thái đó. Đây là sửa khởi tạo cho trường hợp có thể giữ trạng thái cũ, chưa chứng minh là nguyên nhân duy nhất của báo cáo đứng yên sau đổi trang bị. Chỉ thực hiện một lần khi người dùng chủ động bật phiên mới, không tự giả di chuyển hoặc bật/tắt V liên tục; không sửa HP/MP, kỹ năng, trang bị, cooldown hoặc tọa độ.
 
 Chi tiết Auto Farm ưu tiên thông báo tiếng Việt khi game còn bế quan, nghỉ hồi máu, ngắm/chờ chiêu, UI/ô nhập, mất kết nối hoặc tạm dừng sau đi tay. Cờ Auto Farm BẬT chỉ cho biết đã bật chế độ, không đảm bảo đang chọn/đánh quái. Bản sửa khởi tạo hiện áp dụng cho V/phím tùy chỉnh đi qua extension, chưa thêm hook riêng cho nút cảm ứng bật Auto Farm. Tests/lint/typecheck/browser/gameplay **NOT RUN**, chuỗi tắt farm → di chuyển → trang bị → bật lại **UNVERIFIED**, CI **NOT CHECKED**.
+
+## Chẩn đoán Auto Farm tự tắt ở tab nền
+
+QA cục bộ ngày 2026-11-04: **27/27 ca PASS** bằng `node work/qa-auto-stop.cjs` từ workspace cha; kết quả ở `work/qa-auto-stop-results.json`, ngoài gói extension. Harness dùng native Auto Farm/toggleAutoFarm/startClickOrder trích từ code.txt, DOM/timer giả, không game client đầy đủ, đăng nhập hoặc network. Hai ca thiếu guard đã tái hiện: gọi native startClickOrder khi hidden hoặc mất focus sẽ tắt auto; sau sửa bị chặn. Mô phỏng 30 phút chỉ kiểm tra logic đồng hồ, không phải treo trình duyệt thật 30 phút. Không có bằng chứng xác nhận đây là nguyên nhân của mọi lần người dùng báo.
+
+V/F10 đã có guard ở keydown, nhưng nguồn game còn gọi toggleAutoFarm từ click-to-move, câu cá và quy tắc chết nhiều lần. Thêm guard ở **lúc startClickOrder thực sự chạy** để chặn click xử lý trễ khi document.hidden hoặc !document.hasFocus; không giả định đổi phím là đủ. Tự hái dùng chung lease input, chỉ nhường khi click được chấp nhận. Các đường đi tự động dùng auto.walk nên vẫn chạy ở nền theo nhịp game. Click tay hợp lệ trong tab game vẫn chạy nguyên bản. Module chẩn đoán không tự ép bật lại hoặc bỏ qua giới hạn game.
+
+Khi gặp lại lỗi: mở tab game → popup → Auto Farm → **Chi tiết Auto Farm → Sao chép chẩn đoán lần tự tắt**, rồi dán vào chat, tốt nhất trước khi tự bật lại. Giữ tối đa 20 mốc ON/OFF/bối cảnh trong sessionStorage riêng tab qua reload/map. Ghi thời gian UTC, khoảng thời gian từ lúc quan sát ON/attach, hidden/focused, số lần chết native, clickOrder/reconnect/displaced và tối đa bốn tên file:line:column đã lọc. Không ghi nội dung phím, tên tài khoản/nhân vật, tọa độ, packet, token, URL đầy đủ hoặc raw stack. Quan sát trạng thái direct-write có thể trễ đến lúc game cập nhật/đọc chẩn đoán; timestamp trường hợp đó là lúc quan sát, không cam kết thời điểm thay đổi chính xác.
+
+Mã lý do: shortcut (đã qua guard phím), death_limit (native stopOnRevive trước toggle), click_to_move, native_game (caller game khác/chưa phân loại), state_changed (cờ đổi không đi qua toggle đã theo dõi), background_click_blocked (đã chặn lệnh, không phải OFF). blocking_dialog/displaced/navigation là bối cảnh, không tự chứng minh nguyên nhân. Ví dụ hai lần chết đầu vẫn chạy, lần thứ ba trong 10 phút có thể bị game tắt. Hộp kiểm tra người chơi chỉ được ghi nhận xuất hiện; không tự bấm/ẩn hoặc xác nhận hộ. Có lệnh đi tay hợp lệ còn chưa xong thì giữ farm tạm dừng; không tự hủy lệnh đó để ép farm.
+
+Không thêm quyền, telemetry, network request hoặc timer chẩn đoán riêng; gắn scene từ watcher farm hiện có, đọc fallback tối đa mỗi 500 ms bằng preupdate, ghi storage chỉ khi có sự kiện, dọn hook/listener lúc rời scene/trang. Kiểm tra cục bộ gồm phím nền, click nền, OFF chủ động, ba lần chết, giữ trạng thái qua reload, cleanup, bật/tắt Tự hái, cầu nối chẩn đoán và bindings/permissions. Browser UI/live gameplay/nguồn sự kiện thực tế trên máy người dùng **NOT RUN / UNVERIFIED**; lint/typecheck/full historical suite **NOT RUN**, CI **NOT CHECKED**.
 
 ## Tự hái cây
 

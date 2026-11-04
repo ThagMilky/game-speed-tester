@@ -163,6 +163,7 @@
     old.scene.events.off("shutdown", onShutdown);
     old.scene.events.off("destroy", onShutdown);
     old.removeUpdate();
+    old.removeInput?.();
     for (const { key, wrapper, descriptor } of old.methods) {
       if (old.scene[key] !== wrapper) continue;
       if (descriptor) Object.defineProperty(old.scene, key, descriptor);
@@ -262,11 +263,10 @@
         }
         return originalSkill.apply(this, args);
       });
-      wrapMethod(scene, "startClickOrder", (originalOrder) => function (...args) {
-        if (binding?.scene === this) {
+      binding.removeInput = GSTFarmInput.add(scene, (accepted) => {
+        if (accepted && binding?.scene === scene) {
           pauseManual("Tạm dừng 3 giây sau lệnh chuột di chuyển/chiến đấu.", "manual_pointer");
         }
-        return originalOrder.apply(this, args);
       });
       GSTHarvest.controls = (current) => binding?.scene === current && job !== null;
       scene.events.on("preupdate", onFrame);

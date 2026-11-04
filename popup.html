@@ -11,6 +11,7 @@
   <script src="harvest-options.js" defer></script>
   <script src="harvest-popup.js" defer></script>
   <script src="realm-popup.js" defer></script>
+  <script src="farm-diagnostics-popup.js" defer></script>
 </head>
 <body>
   <header><p class="eyebrow">NGHICHTHIENKY.ONLINE</p><h1>Game Speed Tester</h1><p class="muted">Điều khiển gọn, theo dõi ngay.</p></header>
@@ -56,7 +57,14 @@
           <p class="hint">Gợi ý F6. Hỗ trợ chữ, số, F1–F10 trừ F5; Esc để hủy. Chỉ nhận phím khi đang ở trang game.</p>
           <p id="shortcutFeedback" class="notice" role="status"></p>
         </fieldset>
-        <details class="diagnostic"><summary>Chi tiết Auto Farm</summary><p id="farmStatus" role="status" aria-live="polite">Đang đọc trạng thái…</p></details>
+        <details class="diagnostic">
+          <summary>Chi tiết Auto Farm</summary>
+          <p id="farmStatus" role="status" aria-live="polite">Đang đọc trạng thái…</p>
+          <button id="copyFarmDiagnostics" type="button" class="full">Sao chép chẩn đoán lần tự tắt</button>
+          <p class="hint">Giữ tối đa 20 mốc ON/OFF và lý do theo tab, qua đổi map. Không ghi phím gõ, tài khoản hoặc packet. Khi lỗi xảy ra, sao chép trước khi tự bật lại farm.</p>
+          <textarea id="farmDiagnosticsOutput" readonly rows="4" aria-label="Chẩn đoán Auto Farm" hidden spellcheck="false"></textarea>
+          <p id="farmDiagnosticsFeedback" class="notice" role="status"></p>
+        </details>
       </div>
     </details>
     <details class="card" data-panel="harvest">

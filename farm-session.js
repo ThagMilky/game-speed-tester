@@ -82,7 +82,10 @@
       restoreAttempts.add(scene.auto);
       monitorResume();
       binding.restoring = true;
-      try { scene.toggleAutoFarm(); }
+      try {
+        if (globalThis.GSTFarmDiagnostics) GSTFarmDiagnostics.restore(scene);
+        else scene.toggleAutoFarm();
+      }
       finally { if (binding?.scene === scene) binding.restoring = false; }
     } catch { detach(); watch(); }
   }
