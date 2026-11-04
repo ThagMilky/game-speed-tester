@@ -144,6 +144,7 @@
     if (scene.auto.resting) return "Auto Farm đang rút lui/hồi máu; chưa tiếp tục tìm quái.";
     if (globalThis.GSTFarmBehavior?.controls(scene)) return globalThis.GSTFarmBehavior.status(scene);
     if (GSTHarvest.controls(scene)) return "Đang nhường di chuyển cho Tự hái.";
+    if (globalThis.GSTChest?.controls(scene)) return "Đang nhường di chuyển để tìm và mở rương bí cảnh.";
     if (globalThis.GSTRealm?.controls(scene)) return "Đang nhường di chuyển để tới/vào bí cảnh.";
     if (globalThis.GSTFarmSeals?.controls(scene)) return "Đang nhường di chuyển để phá phong ấn.";
     if (GSTFarmRouting.blocked(scene)) return "Auto Farm vẫn bật; chờ đóng hội thoại NPC hoặc bảng bảo vệ để tiếp tục.";
@@ -397,6 +398,10 @@
       }
       if (GSTHarvest.controls(s.scene)) {
         message = "Tạm nhường di chuyển cho Tự hái; giữ nguyên tâm farm.";
+        return;
+      }
+      if (globalThis.GSTChest?.controls(s.scene)) {
+        message = "Tạm nhường di chuyển để mở rương bí cảnh; giữ nguyên tâm farm.";
         return;
       }
       if (globalThis.GSTFarmSeals?.controls(s.scene)) {

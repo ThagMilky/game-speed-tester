@@ -388,3 +388,13 @@ Trước đây chỉ cần có actor boss trong views là farm-map nhường nga
 Cách dùng: bật **Mở rộng vùng tìm quái**, chọn **Toàn map hiện tại** và **Chỉ boss**, bấm **Lưu phạm vi**, rồi bật Auto Farm bằng phím đã đặt. Trạng thái cảnh báo khi chọn toàn map nhưng công tắc mở rộng vẫn tắt. Reload extension và tải lại game sau khi cập nhật.
 
 Giới hạn: không tự khám phá từng khu vực khi game chưa gửi vị trí boss; chưa bảo đảm đi được qua mọi mê cung vì vẫn dùng đường đi/hop gốc. Chỉ review source/diff/status; tests/lint/typecheck/gameplay **NOT RUN**, hành vi trong game **UNVERIFIED**, CI **NOT CHECKED**.
+
+### Tự tìm và mở rương trong toàn bí cảnh
+
+Mở nhóm **Bí cảnh → Tự tìm và mở rương bí cảnh**, bật **Bật tự tìm và mở rương** và chọn loại rương. Các lựa chọn tự lưu, không phụ thuộc phạm vi Auto Farm. Nếu đang farm, tick thêm **Cho phép nhặt khi Auto Farm bật**: chiến đấu vẫn được ưu tiên, sau đó tự tới rương phù hợp/an toàn gần nhất trong toàn bí cảnh rồi mở bằng tương tác F gốc. Có thể bật riêng khi Auto Farm tắt. Cài đặt chestPreferences và giá trị mặc định giữ nguyên.
+
+Đường tới rương dùng walk/hop và collision của game. Theo dõi tiến độ qua waypoint để chấp nhận đường vòng; yêu cầu tính lại tối đa hai lần khi không tiến triển hơn 2 giây. Không tiến triển 8 giây hoặc một lượt quá 120 giây thì bỏ qua 30 giây. Auto Farm mở rộng nhường di chuyển và giữ tâm farm khi đang tới rương. Trạng thái hiển thị khoảng cách còn lại hoặc đang tính lại đường. Không thay sát thương, tốc độ, cooldown, packet hay vị trí nhân vật.
+
+Chỉ mở khi cả mục tiêu F vừa đọc và mục tiêu game lưu đều là realm-chest đúng ID. Giữ kiểm tra quyền sở hữu, quái gần, giao tranh, bảo vệ đầu bí cảnh, hồi phục, UI và thao tác tay; một yêu cầu rồi chờ phản hồi, không spam F. Rương ẩn chưa được game gửi tọa độ không thể tự tìm; rương biến mất chưa chứng minh nhận được đồ. Không tự thoát bí cảnh.
+
+Chỉ đối chiếu source và review diff/status. Tests/lint/typecheck/gameplay **NOT RUN**; tự di chuyển/mở rương trên server **UNVERIFIED**; CI **NOT CHECKED**. Reload extension rồi tải lại game.
