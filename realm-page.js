@@ -44,7 +44,7 @@
       if (!scene) return;
       if (sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto
           || !GSTFarmUpdate.attached(scene) || !connected(scene) || scene.leaving) { detach(); watch(); return; }
-      if (globalThis.GSTFarmMap?.controls(scene)) { release("Nhường di chuyển để tiếp cận boss."); return false; }
+      if (globalThis.GSTFarmMap?.controls(scene)) { release("Nhường di chuyển để tiếp cận mục tiêu farm."); return false; }
       if (globalThis.GSTFarmBehavior?.controls(scene)) { release("Nhường di chuyển để né quái level cao."); return; }
       if (scene.self.dead) {
         if (performance.now() - lastReviveAt >= 1000) {
@@ -91,7 +91,7 @@
       const scene = binding?.scene;
       if (!scene || !preferences.enabled || suspended) return false;
       if (globalThis.GSTQuest?.active(scene)) { release("Nhường cho Auto Quest đang chạy."); return false; }
-      if (globalThis.GSTFarmMap?.controls(scene)) { release("Nhường di chuyển để tiếp cận boss."); return false; }
+      if (globalThis.GSTFarmMap?.controls(scene)) { release("Nhường di chuyển để tiếp cận mục tiêu farm."); return false; }
       if (globalThis.GSTFarmBehavior?.controls(scene)) { release("Nhường di chuyển để né quái level cao."); return false; }
       if (scene.self?.dead) return false;
       const now = performance.now(), realm = scene.self?.realm;

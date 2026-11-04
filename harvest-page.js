@@ -79,7 +79,7 @@
     if (scene.leaving) return "Đang chuyển map.";
     if (globalThis.GSTQuest?.active(scene)) return "Nhường cho Auto Quest đang chạy.";
     if (globalThis.GSTChest?.controls(scene)) return "Nhường di chuyển để nhặt rương bí cảnh.";
-    if (globalThis.GSTFarmMap?.controls(scene)) return "Nhường di chuyển để tiếp cận boss.";
+    if (globalThis.GSTFarmMap?.controls(scene)) return "Nhường di chuyển để tiếp cận mục tiêu farm.";
     if (globalThis.GSTFarmBehavior?.controls(scene)) return "Nhường di chuyển để né quái level cao.";
     if (modalOpen(fresh)) return "Chờ bạn xử lý hộp kiểm tra người chơi.";
     if (globalThis.GSTFarmSeals?.controls(scene)) return "Nhường Auto Farm xử lý phong ấn của boss.";

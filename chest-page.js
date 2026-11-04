@@ -34,7 +34,7 @@
     if (scene.self.med || scene.auto.resting) return "Chờ kết thúc bế quan/hồi phục của game.";
     if (scene.self.fish) return "Chờ kết thúc câu cá.";
     if (GSTFarmBehavior.controls(scene)) return "Đang nhường lượt né quái.";
-    if (GSTFarmMap.controls(scene)) return "Đang nhường di chuyển tới boss. Dừng Auto Farm nếu muốn chỉ mở rương.";
+    if (GSTFarmMap.controls(scene)) return "Đang nhường di chuyển tới mục tiêu farm. Dừng Auto Farm nếu muốn chỉ mở rương.";
     if (GSTFarmSeals?.controls(scene)) return "Đang nhường phá phong ấn.";
     if (scene.auto.on && !settings.allowFarm) return "Auto Farm đang bật: tick Cho phép nhặt khi Auto Farm bật, hoặc tắt Auto Farm.";
     if (scene.auto.on && GSTHarvest.needsRecovery(scene)) return "Chờ Auto Farm hồi HP/MP theo cài đặt của game.";

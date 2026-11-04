@@ -457,9 +457,9 @@
         && !(s.auto.skipped.has(enemy.id) && s.auto.skipped.get(enemy.id) > time));
       // Match the built-in skipped expiry without deleting its records ourselves.
       const candidates = eligible.filter((enemy) => !s.auto.skipped.has(enemy.id)
-        // The map navigator approaches distant bosses with native walk/hop first.
+        // The map navigator approaches all distant targets with native walk/hop first.
         // Probing a full long route with pick() here would repeatedly mark them skipped.
-        && !(settings.searchScope === "map" && settings.targetMode === "boss" && distance(enemy, pos) > 6));
+        && !(settings.searchScope === "map" && distance(enemy, pos) > 6));
       const target = candidates.find((enemy) => enemy.id === s.auto.target);
       if (target) {
         if (distance(target, s.center) >= baseRadius - 0.5) shiftToward(s, target);
