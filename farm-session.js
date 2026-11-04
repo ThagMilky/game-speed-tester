@@ -139,6 +139,9 @@
   }
   function watch() { if (configured && keep && !suspended && !binding && watcher === null) watcher = setInterval(discover, 1000); }
   globalThis.GSTFarmSession = {
+    forget: (scene) => {
+      if (binding?.scene === scene) { save(scene, false); binding.seenOn = false; stableAt = null; }
+    },
     remember: (scene) => { if (keep && scene.auto?.on) save(scene, true); },
     waiting: (scene) => !!binding && binding.scene === scene && keep && intent?.on && !scene.auto.on,
     status: (scene) => binding && binding.scene === scene && keep && intent?.on && !scene.auto.on

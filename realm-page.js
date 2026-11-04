@@ -90,6 +90,7 @@
     try {
       const scene = binding?.scene;
       if (!scene || !preferences.enabled || suspended) return false;
+      if (globalThis.GSTQuest?.active(scene)) { release("Nhường cho Auto Quest đang chạy."); return false; }
       if (globalThis.GSTFarmMap?.controls(scene)) { release("Nhường di chuyển để tiếp cận boss."); return false; }
       if (globalThis.GSTFarmBehavior?.controls(scene)) { release("Nhường di chuyển để né quái level cao."); return false; }
       if (scene.self?.dead) return false;

@@ -16,6 +16,7 @@
   <script src="fps-popup.js" defer></script>
   <script src="realm-time-popup.js" defer></script>
   <script src="chest-popup.js" defer></script>
+  <script src="quest-popup.js" defer></script>
   <script src="menu-position.js" defer></script>
   <script src="menu-popup.js" defer></script>
 </head>
@@ -32,6 +33,21 @@
   </section>
   <p id="layoutFeedback" class="layout-hint" role="status">Kéo ⠿ để đổi thứ tự nhóm. Tự lưu.</p>
   <main id="featurePanels">
+    <details class="card" data-panel="quest">
+      <summary><span><strong>Auto Quest · Cơ bản</strong><small>Chỉ làm quest đã chọn trong map hiện tại</small></span></summary>
+      <div class="card-body">
+        <fieldset id="questControls" disabled>
+          <label for="questSearch">Tìm quest đã nhận</label><input id="questSearch" type="search" placeholder="Gõ tên quest…">
+          <label for="questSort">Sắp xếp</label><select id="questSort"><option value="xp">Tu vi cao trước</option><option value="coins">Linh thạch cao trước</option><option value="name">Tên quest</option></select>
+          <div class="harvest-toolbar"><span id="questCount">Đang đọc quest…</span><button id="questClear" type="button">Bỏ chọn tất cả</button></div>
+          <div id="questList" class="harvest-list" aria-label="Quest đã nhận"></div>
+          <div class="two-columns"><button id="questStart" type="button" class="primary">Bắt đầu Auto Quest</button><button id="questStop" type="button">Dừng Auto Quest</button></div>
+        </fieldset>
+        <p id="questStatus" class="hint" role="status">Đang đọc dữ liệu quest…</p>
+        <p class="hint">Mở N (Hành trình) trong game một lần để đọc đúng thưởng, rồi đóng bảng. Bản cơ bản làm quest đánh quái kill-in trong map hiện tại và trả quest đã đủ cho NPC cùng map. Cần tắt Auto Farm trước, chọn bộ lọc Tất cả quái; tool dùng phạm vi farm đã cài, không sửa cài đặt farm/hái. Chế độ auto khác tạm nhường trong lượt quest. Quest đổi map, hái/chế tạo và các mục tiêu khác chưa hỗ trợ; không tự nhận quest mới hoặc làm quest chưa tick.</p>
+        <p class="hint">Mở game với tham số timer. Bản thử dừng khi chết, đổi map, mất kết nối hoặc Auto Farm bị tắt; bạn bấm Bắt đầu lại để tiếp tục. Giai đoạn về NPC cần giữ tab hoạt động; chưa hỗ trợ chạy nền khi Auto Farm đã tắt.</p>
+      </div>
+    </details>
     <details class="card" data-panel="farm">
       <summary><span><strong>Auto Farm</strong><small>Phạm vi, hồi sinh và phím tắt</small></span></summary>
       <div class="card-body">

@@ -13,7 +13,7 @@
   }
   function allowed(scene) {
     const driver = scene.driver;
-    return scene.auto.on && scene.self && !scene.self.dead && !scene.leaving && driver
+    return !globalThis.GSTQuest?.active(scene) && scene.auto.on && scene.self && !scene.self.dead && !scene.leaving && driver
       && !driver.closing && !driver.reconnecting && !driver.displaced && (driver.online === false || driver.link?.open?.() === true)
       && !GSTFarmRouting.blocked(scene) && !scene.keyCapture && !scene.overlay?.dialogOpen && !scene.harvesting
       && !scene.auto.resting && !scene.self.med && !scene.self.fish && !scene.pendingSkill && !scene.aiming

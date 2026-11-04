@@ -410,3 +410,23 @@ Các lỗi tìm thấy qua đọc source đã được sửa:
 GSTFarmInput.movement dùng chung cho hái/đào, cổng, rương, né, tiếp cận boss, ổn định farm và phong ấn: nhận lệnh click/joystick, chỉ coi WASD/mũi tên là di chuyển khi không nhập chat/ô chữ/đặt phím. Né/phong ấn khi Auto Farm ON theo cùng quy tắc UI với farm: xem bảng thông tin không tự chặn; NPC, đặt phím, hộp bảo vệ vẫn chờ. Cổng/rương vẫn không tự tương tác xuyên qua UI đang mở. Không đổi thứ tự ưu tiên dispatcher, cài đặt đã lưu, damage, cooldown, tốc độ hoặc cơ chế collision của game; không thêm timer/dependency.
 
 Đây là review source và cải tiến cục bộ, chưa chứng minh mọi trường hợp kẹt hoặc phối hợp nhiều chế độ trên game thật đã hết. Tests/lint/typecheck/browser/gameplay **NOT RUN**; hành vi thực tế **UNVERIFIED**; CI **NOT CHECKED**. Reload extension và tải lại game để nhận bản sửa.
+
+### Auto Quest cơ bản (bản thử)
+
+Nhóm **Auto Quest · Cơ bản** chỉ đọc nhiệm vụ đã nhận. Có tìm tên, tick chọn, Bỏ chọn tất cả và sắp xếp tu vi/linh thạch cao trước. Lựa chọn lưu trong chrome.storage.local questPreferences.selected; không tự nhận quest mới, không tự chọn theo ngưỡng thưởng hoặc làm điều kiện tiên quyết.
+
+Cách dùng:
+
+1. Reload extension và tải lại game có tham số timer. Mở bảng **N / Hành trình** trong game một lần rồi đóng lại. Tool quan sát DOM bảng do game tự tạo để đọc đúng thưởng; không đoán công thức, không tự mở bảng hoặc gửi menu action để lấy thưởng. Khi lên level, mở N lại để cập nhật thưởng theo level mới.
+2. Mở nhóm Auto Quest, sắp xếp thưởng và tick quest mong muốn. Từng dòng ghi tiến độ và có hỗ trợ trong map hiện tại hay không.
+3. Với quest chưa đủ, bản này chỉ hỗ trợ mục tiêu **kill-in:<map hiện tại>**: đánh quái trong đúng map đang đứng, dùng Auto Farm gốc và phạm vi farm đã cài. Đặt bộ lọc Auto Farm **Tất cả quái** rồi lưu; tool không tự sửa bộ lọc, tốc độ, vùng tìm hoặc cài đặt Tự hái. Các điều kiện né quái vẫn áp dụng. Tắt Auto Farm trước khi bắt đầu.
+4. Bấm **Bắt đầu Auto Quest**. Tool tự bật Auto Farm khi cần. Đủ mục tiêu thì tắt lượt farm do nó bật, đi về NPC trả quest trong cùng map, kiểm tra đúng mục tiêu F và danh sách handIn của game, rồi bấm đúng nút **Nhận thưởng** native cho quest đã chọn. Chỉ một lần yêu cầu, chờ claimed xác nhận tối đa 8 giây; chưa xác nhận thì dừng, không spam.
+5. Có thể chọn quest đã đủ tiến độ để chỉ tự về trả, miễn NPC ở ngay map hiện tại. Không cần tự di chuyển tới sát NPC trước. Bấm **Dừng Auto Quest** để hủy. Đổi lựa chọn trong lúc chạy cũng dừng lượt, cần bấm Bắt đầu lại.
+
+Giới hạn bản đầu: chưa hỗ trợ qua cổng/đổi map, quest hái/đào, collect, kill-band, boss cụ thể, chế tạo, trang bị, chọn môn phái hoặc tiêu tài nguyên. Quest khác hiện rõ chưa hỗ trợ và không được tự nhận/trả. Khi farm, tiến độ quest không chọn có thể tăng theo hành vi vốn có của game; tool không nhận thưởng cho chúng. Nếu NPC ở map khác, dừng để bạn tự chuyển map rồi bắt đầu lại.
+
+Chế độ auto cổng/rương/hái/phong ấn/tiếp cận boss tạm nhường khi Auto Quest đang chạy; cài đặt của chúng không bị ghi lại. Né quái vẫn ưu tiên trước lượt quest. Di chuyển/ngắm chiêu tay nhường 3 giây; thao tác nào khiến Auto Farm gốc OFF (kể cả click đi tay) sẽ dừng Auto Quest. Chết, mất kết nối, đổi map/nhân vật hoặc rời trang cũng dừng, không tự khôi phục Auto Quest. Xóa ý định khôi phục của lượt farm do Auto Quest sở hữu khi dừng để tránh tự bật farm ngoài lượt quest. Các tính năng auto khác đã bật có thể tiếp tục theo cài đặt của chúng sau khi quest dừng.
+
+Giai đoạn đánh quái dùng nhịp nền native của Auto Farm; giai đoạn đi về NPC khi Auto Farm OFF chưa tích hợp Worker nền, nên giữ tab game hoạt động. Đường về NPC dùng walk/hop/collision gốc, dừng nếu không tiến 8 giây hoặc lượt quá 120 giây. Không tự đóng bảng người dùng đang xem; chỉ tự đóng đúng body hội thoại tool mở sau khi game xác nhận claimed. Hộp kiểm tra, bảo vệ, NPC khác và trạng thái hồi phục vẫn được tôn trọng. Không sửa damage, cooldown, ms, tọa độ hay network packets; không thêm permission/dependency/request từ extension.
+
+Source mới: quest-page.js (đọc quest, quan sát thưởng và điều phối cùng dispatcher), quest-content.js (bridge ISOLATED/storage, chỉ cho phép trường trạng thái cần dùng), quest-popup.js (menu). Không tự chạy khi reload; chỉ danh sách tick được lưu. Đối chiếu source game đã cung cấp và review diff/status. Tests/lint/typecheck/browser/gameplay **NOT RUN**; đọc thưởng, farm và trả thưởng trong runtime thực tế **UNVERIFIED**; CI **NOT CHECKED**.

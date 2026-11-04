@@ -21,7 +21,7 @@
   }
   function blocked(scene) {
     const driver = scene.driver;
-    return !scene.self || scene.self.dead || scene.leaving || !driver || driver.closing || driver.reconnecting || driver.displaced
+    return globalThis.GSTQuest?.active(scene) || !scene.self || scene.self.dead || scene.leaving || !driver || driver.closing || driver.reconnecting || driver.displaced
       || !(driver.online === false || driver.link?.open?.() === true) || !scene.self.realm?.inside
       || scene.self.realm.inside.protection > 0 || scene.uiBlocked || scene.keyCapture || scene.overlay?.dialogOpen
       || scene.harvesting || scene.self.med || scene.self.fish || scene.auto.resting

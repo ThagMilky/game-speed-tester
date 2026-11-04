@@ -144,6 +144,7 @@
     if (scene.auto.resting) return "Auto Farm đang rút lui/hồi máu; chưa tiếp tục tìm quái.";
     if (globalThis.GSTFarmBehavior?.controls(scene)) return globalThis.GSTFarmBehavior.status(scene);
     if (GSTHarvest.controls(scene)) return "Đang nhường di chuyển cho Tự hái.";
+    if (globalThis.GSTQuest?.controls(scene)) return "Auto Quest đang về NPC/trả nhiệm vụ.";
     if (globalThis.GSTChest?.controls(scene)) return "Đang nhường di chuyển để tìm và mở rương bí cảnh.";
     if (globalThis.GSTRealm?.controls(scene)) return "Đang nhường di chuyển để tới/vào bí cảnh.";
     if (globalThis.GSTFarmSeals?.controls(scene)) return "Đang nhường di chuyển để phá phong ấn.";
@@ -396,6 +397,7 @@
         message = globalThis.GSTFarmBehavior.status(s.scene);
         return;
       }
+      if (globalThis.GSTQuest?.controls(s.scene)) { message = "Nhường di chuyển để Auto Quest về NPC/trả nhiệm vụ."; return; }
       if (GSTHarvest.controls(s.scene)) {
         message = "Tạm nhường di chuyển cho Tự hái; giữ nguyên tâm farm.";
         return;
@@ -511,6 +513,17 @@
     } : s.home;
     if (distance(point, s.center) > 0.25 || distance(enemy, s.center) >= baseRadius) center(s, point);
   }
+
+  globalThis.GSTFarmQuest = {
+    ready: () => globalThis.GSTFarmConfigurationReady === true && settings.targetMode === "all",
+    prepare(scene) {
+      if (!this.ready() || !compatible(scene)) throw new Error("Farm configuration unavailable");
+      blockedAuto = null; revival = null;
+      globalThis.GSTFarmRevivePolicy?.attach(scene);
+      globalThis.GSTFarmBehavior?.attach(scene);
+      globalThis.GSTFarmRouting?.attach(scene);
+    }
+  };
 
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== channel) return;
