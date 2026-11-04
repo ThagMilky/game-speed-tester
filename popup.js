@@ -187,6 +187,7 @@ async function refresh() {
   refreshFarm();
   globalThis.GSTHarvestPopup?.refresh();
   globalThis.GSTRealmPopup?.refresh();
+  globalThis.GSTFpsPopup?.refresh();
   if (busy) return;
   busy = true;
   try {
@@ -302,7 +303,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   showOverlay.checked = displayPreferences?.visible !== false;
   for (const input of displayFields) {
     const key = input.dataset.displayField;
-    input.checked = key === "harvest" ? displayPreferences?.fields?.[key] === true : displayPreferences?.fields?.[key] !== false;
+    input.checked = ["harvest", "fps"].includes(key) ? displayPreferences?.fields?.[key] === true : displayPreferences?.fields?.[key] !== false;
   }
   displayControls.disabled = false;
   const font = GSTFont.normalize(fontPreferences);

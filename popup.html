@@ -12,6 +12,8 @@
   <script src="harvest-popup.js" defer></script>
   <script src="realm-popup.js" defer></script>
   <script src="farm-diagnostics-popup.js" defer></script>
+  <script src="fps-options.js" defer></script>
+  <script src="fps-popup.js" defer></script>
 </head>
 <body>
   <header><p class="eyebrow">NGHICHTHIENKY.ONLINE</p><h1>Game Speed Tester</h1><p class="muted">Điều khiển gọn, theo dõi ngay.</p></header>
@@ -132,12 +134,34 @@
         </fieldset>
       </div>
     </details>
+    <details class="card" data-panel="fps">
+      <summary><span><strong>Tối ưu FPS</strong><small>Giảm hình ảnh, giữ dữ liệu và điều khiển game</small></span></summary>
+      <div class="card-body">
+        <p id="fpsStatus" class="hint" role="status" aria-live="polite">Đang đọc trạng thái FPS…</p>
+        <fieldset id="fpsControls" disabled aria-label="Tùy chọn tối ưu FPS">
+          <label class="switch-row"><span>Bật tối ưu FPS</span><input id="fpsEnabled" class="switch" type="checkbox"></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hidePlayers"><span>Ẩn hình người chơi khác, vũ khí, thú cưỡi và bóng</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hidePlayerEffects"><span>Giảm hiệu ứng người chơi khác</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideOwnEffects"><span>Giảm hiệu ứng của bạn (giữ dấu ngắm)</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideMonsterEffects"><span>Giảm hiệu ứng quái xác định được nguồn</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideMonsters"><span>Ẩn hình và bóng quái, giữ tên / level / thanh máu</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideNumbers"><span>Ẩn số sát thương, hồi máu và chữ Né</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="reduceEnvironment"><span>Giảm thời tiết, sương bụi và hạt trang trí nền</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="reduceScreen"><span>Giảm rung và chớp màn hình</span></label>
+          <button id="fpsReset" type="button" class="secondary full">Khôi phục hình ảnh gốc</button>
+          <p class="hint">Tự lưu và giữ qua đổi map. Tắt công tắc để trả hình ảnh; nút khôi phục bỏ tất cả lựa chọn tối ưu. Tên/thanh máu vẫn theo khoảng cách và điều kiện gốc của game. Không ẩn cổng, NPC, cây hái, phong ấn hoặc vùng cảnh báo nguy hiểm.</p>
+          <p class="hint">Chỉ giảm các lớp xác định được; hiệu ứng đang chạy có thể cần kết thúc. Không giảm lag mạng/server. Tick FPS trong Bảng trạng thái để theo dõi. Chưa đo hiệu quả trong game thật.</p>
+        </fieldset>
+        <p id="fpsFeedback" class="notice" role="alert"></p>
+      </div>
+    </details>
     <details class="card" data-panel="display">
       <summary><span><strong>Bảng trạng thái</strong><small>Ẩn/hiện và chọn thông tin cần xem</small></span></summary>
       <div class="card-body">
         <fieldset id="displayControls" disabled aria-label="Tùy chọn bảng trạng thái">
           <label class="switch-row"><span>Hiện bảng trong game</span><input id="showOverlay" class="switch" type="checkbox" checked></label>
           <div class="choice-grid">
+            <label class="check-row"><input type="checkbox" data-display-field="fps"><span>FPS</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="autoFarm" checked><span>Auto Farm</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="harvest"><span>Tự hái (bật/tắt và trạng thái)</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="movement" checked><span>Bay / đi bộ</span></label>

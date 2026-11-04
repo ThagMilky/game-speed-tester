@@ -14,6 +14,10 @@ game-speed-tester/
   content.js     Đọc cài đặt, thêm timer, cầu nối popup và bảng trạng thái trên game
   font-options.js Danh sách 10 font và quy tắc tùy chọn dùng chung
   font.js        Bật/tắt và áp dụng font giao diện web sau 1 giây
+  fps-options.js Tùy chọn FPS dùng chung giữa popup và ISOLATED
+  fps-popup.js   Lưu lựa chọn giảm hình ảnh, khôi phục và đọc FPS
+  fps-content.js Storage và cầu nối FPS theo danh sách trường boolean
+  fps-page.js    Bộ lọc camera và hook tạo hiệu ứng trong MAIN world
   farm-page.js   Mở rộng tâm tìm kiếm của Auto Farm có sẵn, chạy trong MAIN world
   farm-content.js Storage và cầu nối riêng cho tùy chọn/trạng thái Auto Farm
   farm-session.js Giữ ý định Auto Farm theo tab qua tải lại/đổi map
@@ -204,6 +208,25 @@ Chỉ xử lý phím trong trang game đang hiển thị và có focus, không t
 - Khi chết: dừng phiên mở rộng, tháo listener và khôi phục tâm còn sở hữu; watcher chờ hồi sinh và chỉ bấm nút sẵn sàng khi Auto Farm hoặc chế độ tự động còn hoạt động. Sau khi game xác nhận sống lại và Auto Farm gốc xử lý xong trạng thái chết, chờ **2 giây** rồi tiếp tục nếu `auto.on` vẫn bật. Phiên mới kiểm tra bay lại: đã bay thì bỏ qua; chưa bay thì yêu cầu bật một lần theo cơ chế chờ 1 giây nêu trên. Chết nhiều lần không còn làm Auto Farm tự dừng. Nếu người dùng chủ động tắt Auto Farm thì giữ OFF. Thời gian chờ hồi sinh của game vẫn giữ nguyên.
 - Khi driver mất kết nối/đang reconnect, rời scene hoặc interface không hợp lệ: dừng phiên và không tự tiếp tục trên cùng instance. Sau khi kết nối lại vẫn cần **V tắt rồi V bật**. Đổi map tạo scene mới được module giữ ý định Auto Farm khôi phục nếu bật lựa chọn giữ farm; OFF chủ động vẫn giữ OFF. Cơ chế tiếp tục sau hồi sinh chỉ áp dụng khi còn cùng scene/instance và kết nối vẫn hợp lệ.
 - Khi mở rộng hoặc tự hồi sinh bật nhưng đang chờ Auto Farm/scene, dùng một watcher mỗi giây. Khi đã gắn scene, dừng watcher và dùng event `preupdate` có giới hạn xử lý mỗi 500 ms. Không tạo timer theo từng quái; khi tắt cả hai tùy chọn hoặc rời trang không còn watcher/listener scene của các thao tác tự động này. Timer chỉ đọc của bảng trạng thái là riêng và phụ thuộc mục Auto Farm đang được hiển thị. Popup đọc thông báo riêng trong **Extended Auto Farm Range**, không phụ thuộc timer speed override.
+
+### Tối ưu FPS (2026-11-04)
+
+Sau khi cập nhật, Reload extension tại chrome://extensions rồi tải lại game. Mở nhóm **Tối ưu FPS**, bật công tắc và tick phần muốn giảm; mọi lựa chọn mặc định tắt. Nhóm này có thể kéo đổi vị trí như các nhóm khác. Cài đặt `fpsPreferences` lưu ở chrome.storage.local và tự áp dụng lại khi đổi map. Nếu thiếu tham số timer, tính năng hoặc hiển thị FPS có thể tải lại trang một lần để game công khai instance; giữ nguyên query/hash hiện có.
+
+- Ẩn hình người chơi khác: thân, lớp vũ khí/thú cưỡi xác định được, bóng và hào quang. Giữ tên theo điều kiện game; không ẩn nhân vật của bạn.
+- Giảm hiệu ứng người chơi khác/của bạn/quái: lọc nguồn qua you/views.k; bỏ tạo liveSkills/weaponFx trong castFx tương ứng, bỏ statusFx và dư ảnh xác định được, che hào quang/thiền của đúng chủ thể. Giữ lời gọi castFx gốc và các nhánh animation; không bỏ onEvent, không sửa lock/cooldown. Không phân loại theo khoảng cách hoặc texture chung.
+- Ẩn hình quái: thân và bóng, không áp dụng cho pet. Chỉ thêm bit cameraFilter của camera chính sau update; hoàn trả bit sở hữu trước update tiếp theo hoặc khi tắt, không đổi visible/active. Vì tên/thanh máu gốc đọc visible, chúng vẫn theo điều kiện khoảng cách/đã nhận đòn vốn có; không ép hiện toàn map. Giữ mục tiêu, dữ liệu, va chạm, cổng, NPC, cây và phong ấn.
+- Ẩn số: không tạo floatText cho chuỗi số sát thương/hồi máu và chữ Né; giữ thông báo chữ khác. Số đã xuất hiện sẽ kết thúc theo game.
+- Giảm nền: weather.update dùng nhánh disabled chỉ trong lời gọi rồi trả cờ enabled, air.update dùng nhánh ẩn gốc; bỏ update emitter trang trí có sẵn trong scene, che sprite sương/bụi/hạt nền. Không giảm độ phân giải hoặc tần số mô phỏng.
+- Giảm rung/chớp: vẫn gọi feel gốc, trả cameraKick về 0 và che riêng lớp flash/vignette. Không bỏ vòng cập nhật HP hoặc heartbeat.
+
+**Khôi phục hình ảnh gốc** tắt tối ưu và bỏ mọi lựa chọn FPS; tắt công tắc tổng giữ các lựa chọn cho lần sau. Gỡ wrapper chỉ khi vẫn sở hữu, hoàn trả cameraFilter/visibility CSS còn thuộc tool và dọn listener khi shutdown/destroy/pagehide. Không ép mọi hình sang visible=true: quái chết/hình vốn ẩn vẫn theo game. Hiệu ứng đã bị bỏ tạo không được phát lại khi tắt; các hiệu ứng đang chạy trước khi bật có thể còn đến lúc hết hạn. Một số lớp trang trí chưa nhận diện đầy đủ sẽ được giữ nguyên; không cam kết ẩn toàn bộ hiệu ứng của mọi class. Không đụng groundFx, sự kiện chiến đấu hoặc cảnh báo vùng đánh.
+
+Trong **Bảng trạng thái**, tick **FPS** (mặc định tắt). Đọc số làm mượt game.loop.actualFps, không dùng FPS do timer giả tạo. Một watcher mỗi giây chỉ tồn tại khi cần giảm hình ảnh hoặc hiển thị FPS; bộ lọc dùng preupdate/postupdate của scene, không quét DOM hoặc tạo timer theo từng đối tượng. Không đổi game loop, requestAnimationFrame, tốc độ, damage, packet hoặc Auto Farm. Không thêm quyền/dependency/network request. Nhịp nền vẫn do Chrome/game quyết định; số FPS khi tab ẩn là chưa rõ.
+
+Chỉ đối chiếu source code.txt và tài liệu Phaser, review diff/status. **Tests, lint, typecheck, browser và gameplay: NOT RUN. Hiệu quả FPS, hiển thị/khôi phục thực tế và tương thích mọi class: UNVERIFIED. CI: NOT CHECKED.** Không giải quyết lag mạng/server; chưa có số đo cải thiện.
+
+Tham khảo API: [Phaser cameraFilter](https://docs.phaser.io/api-documentation/4.0.0/class/gameobjects-gameobject), [TimeStep.actualFps](https://www.phaser.io/oss/docs/api-documentation/class/core-timestep). Chỉ dùng các thuộc tính đã có trong source/interface; chưa xác minh phiên bản Phaser của phiên chơi hiện tại.
 
 ### Nguồn và giới hạn xác minh
 
