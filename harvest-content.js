@@ -133,7 +133,7 @@
       const codes = ["selected", "native_F", "started", "yield", "detach", "yield_native", "blocked",
         "harvest_ended", "node_unavailable_before_ack", "request_timeout", "target_changed", "danger",
         "interaction_target_other", "interaction_cache_timeout", "pre_interaction_blocked", "interact_error",
-        "stalled", "approach_timeout", "no_path", "path_blocked", "manual_pointer", "manual_key"];
+        "stalled", "approach_timeout", "no_path", "path_blocked", "manual_pointer", "manual_key", "manual_skill"];
       record(data.event, {
         code: codes.includes(data.code) ? data.code : "unknown",
         attempt: Number.isSafeInteger(data.attempt) && data.attempt > 0 ? data.attempt : null,

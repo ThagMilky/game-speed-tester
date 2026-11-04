@@ -30,6 +30,9 @@
       && typeof scene.auto.on === "boolean" && typeof scene.autoHost === "function"
       && typeof scene.now === "function"
       && typeof scene.pickTarget === "function" && typeof scene.interact === "function"
+      && typeof scene.move === "function" && typeof scene.useSkill === "function"
+      && typeof scene.startClickOrder === "function"
+      && typeof scene.sendMove === "function" && typeof scene.act === "function"
       && typeof scene.events?.on === "function" && typeof scene.events.off === "function";
   }
   function modalOpen(fresh = false) {
@@ -40,8 +43,12 @@
     return modal;
   }
   function manualMovement(scene) {
-    return ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"]
-      .some((key) => scene.keys?.[key]?.isDown) || !!scene.joyX || !!scene.joyY || !!scene.clickOrder;
+    const keyboardActive = !scene.chat?.typing && !scene.inputFieldActive?.() && !scene.keyCapture;
+    return (keyboardActive && ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"]
+      .some((key) => scene.keys?.[key]?.isDown)) || !!scene.joyX || !!scene.joyY || !!scene.clickOrder;
+  }
+  function browsingUI(scene) {
+    return !!(scene.panels?.open || scene.chat?.typing || scene.inputFieldActive?.());
   }
   function needsRecovery(scene) {
     if (!scene.auto.on) return false;
@@ -66,16 +73,16 @@
     if (scene.self.dead) return "Nhân vật đã chết; chờ hồi sinh.";
     if (scene.leaving) return "Đang chuyển map.";
     if (modalOpen(fresh)) return "Chờ bạn xử lý hộp kiểm tra người chơi.";
-    if (scene.chat?.typing || scene.inputFieldActive?.()) return "Chờ đóng chat hoặc bỏ chọn ô nhập trong game.";
     if (scene.keyCapture) return "Chờ kết thúc đổi phím trong game.";
-    if (scene.panels?.open || scene.overlay?.dialogOpen) return "Chờ đóng bảng hoặc hộp thoại trong game.";
-    if (scene.uiBlocked) return "Giao diện game đang chặn thao tác; đóng bảng/ô nhập hoặc xoay ngang nếu dùng điện thoại.";
+    if (scene.overlay?.dialogOpen) return "Chờ đóng hộp thoại tương tác trong game.";
+    if (document.body.classList.contains("mobile") && innerHeight > innerWidth) return "Chờ xoay ngang màn hình game.";
+    if (scene.uiBlocked && !browsingUI(scene)) return "Giao diện game đang chặn thao tác thu hoạch.";
     if (scene.pendingSkill || scene.aiming || scene.heldAttack) return "Chờ thả phím đánh hoặc kết thúc ngắm/tung chiêu.";
     if (scene.self.med || scene.auto.resting) return "Chờ kết thúc bế quan hoặc hồi máu.";
     if (scene.self.fish) return "Chờ kết thúc câu cá.";
     if (manualMovement(scene)) return "Chờ nhân vật kết thúc lệnh đi tay; thả WASD/phím mũi tên.";
     if (scene.auto.on && (scene.auto.moved || scene.now() < scene.auto.pauseUntil)) return "Chờ Auto Farm xử lý lệnh di chuyển tay.";
-    if (performance.now() < manualUntil) return "Tạm dừng 3 giây sau thao tác phím/chuột trong game.";
+    if (performance.now() < manualUntil) return "Tạm dừng 3 giây sau lệnh di chuyển, chiến đấu hoặc tương tác tay.";
     if (needsRecovery(scene)) return "Chờ cơ chế hồi HP/MP của Auto Farm.";
     return null;
   }
@@ -138,7 +145,6 @@
   }
   function detach() {
     release(undefined, 0, "detach");
-    window.removeEventListener("pointerdown", onPointer, true);
     window.removeEventListener("keydown", onKey, true);
     const old = binding;
     binding = null;
@@ -150,7 +156,22 @@
       if (old.descriptor) Object.defineProperty(old.auto, "update", old.descriptor);
       else delete old.auto.update;
     }
+    for (const { key, wrapper, descriptor } of old.methods) {
+      if (old.scene[key] !== wrapper) continue;
+      if (descriptor) Object.defineProperty(old.scene, key, descriptor);
+      else delete old.scene[key];
+    }
     skipped.clear();
+  }
+  function wrapMethod(scene, key, makeWrapper) {
+    const descriptor = Object.getOwnPropertyDescriptor(scene, key);
+    const wrapper = makeWrapper(scene[key]);
+    scene[key] = wrapper;
+    binding.methods.push({ key, wrapper, descriptor });
+  }
+  function pauseManual(reason, code) {
+    manualUntil = performance.now() + 3000;
+    release(reason, 0, code);
   }
   function onShutdown() {
     detach();
@@ -184,12 +205,42 @@
         return original.apply(this, args);
       };
       auto.update = wrapper;
-      binding = { scene, auto, wrapper, descriptor, home: { ...home }, farmOn: auto.on };
+      binding = { scene, auto, wrapper, descriptor, home: { ...home }, farmOn: auto.on, methods: [] };
+      wrapMethod(scene, "move", (originalMove) => function (...args) {
+        if (binding?.scene !== this || !job || this.auto.on || !browsingUI(this) || blocked(this)) {
+          return originalMove.apply(this, args);
+        }
+        // Native move otherwise freezes with a panel/chat open when Auto Farm is off.
+        // Scope the exception to this synchronous movement call only. Native keyboard
+        // guards, collision, locks, death and harvesting checks still run unchanged.
+        const own = Object.getOwnPropertyDescriptor(this, "uiBlocked");
+        if (own && !own.configurable) return originalMove.apply(this, args);
+        Object.defineProperty(this, "uiBlocked", { configurable: true, get: () => false });
+        try { return originalMove.apply(this, args); }
+        finally {
+          if (own) Object.defineProperty(this, "uiBlocked", own);
+          else delete this.uiBlocked;
+        }
+      });
+      wrapMethod(scene, "useSkill", (originalSkill) => function (...args) {
+        // Game calls from its Auto Farm/held attack/queued skill pass manual=false.
+        // Default/manual calls also cover clicking a skill button, without changing it.
+        if (binding?.scene === this && args[2] !== false && !this.dead
+            && !(this.uiBlocked && !this.auto.on)) {
+          pauseManual("Tạm dừng 3 giây sau lệnh đánh/tung chiêu tay.", "manual_skill");
+        }
+        return originalSkill.apply(this, args);
+      });
+      wrapMethod(scene, "startClickOrder", (originalOrder) => function (...args) {
+        if (binding?.scene === this) {
+          pauseManual("Tạm dừng 3 giây sau lệnh chuột di chuyển/chiến đấu.", "manual_pointer");
+        }
+        return originalOrder.apply(this, args);
+      });
       GSTHarvest.controls = (current) => binding?.scene === current && job !== null;
       scene.events.on("preupdate", onFrame);
       scene.events.on("shutdown", onShutdown);
       scene.events.on("destroy", onShutdown);
-      window.addEventListener("pointerdown", onPointer, true);
       window.addEventListener("keydown", onKey, true);
       clearInterval(watcher);
       watcher = null;
@@ -305,7 +356,15 @@
       job.phase = "request";
       job.requestedAt = now;
       trace("harvest.request", "native_F");
-      try { scene.interact(); }
+      try {
+        if (scene.panels?.open) {
+          // Exact native node branch: interact() would close the inventory and return.
+          // Target guards above still apply; never synthesize F or close the user's UI.
+          scene.sendMove();
+          scene.harvestNode = job.index;
+          scene.act("harvest", String(job.index));
+        } else scene.interact();
+      }
       catch { release("Lỗi khi gọi tương tác của game; tạm bỏ qua.", 20000, "interact_error"); return; }
       message = `Đã yêu cầu hái ${node.item}; chờ game xác nhận.`;
       return;
@@ -403,7 +462,7 @@
     if (event.data.type === "diagnostics") {
       if (event.data.enabled === true) debugEnabled = true;
       window.postMessage({ channel: "gst:harvest-status:v1", type: "diagnostics", requestId: event.data.requestId,
-        debug: { build: "harvest-main-log-2-events", world: "MAIN", helper: typeof globalThis.GSTHarvest,
+        debug: { build: "harvest-main-log-3-ui", world: "MAIN", helper: typeof globalThis.GSTHarvest,
           normalize: typeof globalThis.GSTHarvest?.normalize,
           optionsBuild: globalThis.__gstHarvestOptionsLoad?.build ?? "missing",
           enabled: settings.enabled, scene: binding !== null, controlling: job !== null } }, origin);
@@ -427,23 +486,19 @@
     window.postMessage({ channel: "gst:harvest-status:v1", type: "configured", requestId: event.data.requestId,
       enabled: settings.enabled, configKey: JSON.stringify(settings) }, origin);
   });
-  function onPointer(event) {
-    if (binding && event.isTrusted && event.target === binding.scene.game?.canvas) {
-      manualUntil = performance.now() + 3000;
-      release("Tạm dừng 3 giây sau thao tác chuột.", 0, "manual_pointer");
-    }
-  }
   function onKey(event) {
     if (!binding || !event.isTrusted || document.hidden || !document.hasFocus()) return;
-    if (Object.values(binding.scene.controls?.bindings ?? {}).includes(event.keyCode)
+    const scene = binding.scene;
+    if (event.isComposing || scene.chat?.typing || scene.inputFieldActive?.() || scene.keyCapture
+        || event.target?.closest?.("input,textarea,select,[contenteditable]:not([contenteditable='false'])")) return;
+    const keys = ["W", "A", "S", "D", "SPACE", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "Q", "H", "F"];
+    if (keys.some((key) => scene.controls?.bindings?.[key] === event.keyCode)
         || [37, 38, 39, 40].includes(event.keyCode)) {
-      manualUntil = performance.now() + 3000;
-      release("Tạm dừng 3 giây sau thao tác phím trong game.", 0, "manual_key");
+      pauseManual("Tạm dừng 3 giây sau lệnh di chuyển/chiến đấu/tương tác tay.", "manual_key");
     }
   }
   window.addEventListener("pagehide", () => {
     suspended = true; detach(); clearInterval(watcher); watcher = null;
-    window.removeEventListener("pointerdown", onPointer, true);
   });
   window.addEventListener("pageshow", () => {
     suspended = false; watch(); discover();
