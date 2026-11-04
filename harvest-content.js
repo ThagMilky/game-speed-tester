@@ -40,12 +40,26 @@
     configure(preferences);
     return true;
   }
+  async function readPreferences() {
+    const before = revision;
+    try {
+      const saved = await chrome.storage.local.get("harvestPreferences");
+      if (before === revision) {
+        const next = GSTHarvest.normalize(saved.harvestPreferences);
+        if (JSON.stringify(next) !== JSON.stringify(preferences)) configure(next);
+      }
+      return true;
+    } catch { return false; }
+  }
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:harvest-status:v1") return;
     if (event.data.ready) { if (preferences) configure(preferences); return; }
     const entry = pending.get(event.data.requestId);
     const data = event.data;
-    if (!entry) { repair(data); return; }
+    if (!entry) {
+      if (data.type !== "configured") readPreferences().then((ok) => { if (ok) repair(data); });
+      return;
+    }
     if (entry.kind === "configure") {
       if (data.type !== "configured") return;
       pending.delete(data.requestId);
@@ -80,13 +94,21 @@
       return true;
     }
     if (message?.type !== "gst:harvest-status") return;
-    const requestId = `popup:${++sequence}`;
-    const timer = setTimeout(() => {
-      pending.delete(requestId);
-      respond({ message: "Chưa kết nối Tự hái; tải lại trang game sau khi cập nhật extension.", catalog: [], available: false });
-    }, 800);
-    pending.set(requestId, { timer, respond });
-    window.postMessage({ channel: "gst:harvest:v1", type: "status", requestId }, origin);
+    readPreferences().then((ok) => {
+      if (!ok) {
+        respond({ message: "Không đọc được cài đặt trong tab này. Tải lại extension rồi tải lại trang game.",
+          enabled: null, applied: false, catalog: [], available: false });
+        return;
+      }
+      const requestId = `popup:${++sequence}`;
+      const timer = setTimeout(() => {
+        pending.delete(requestId);
+        respond({ message: "Chưa kết nối Tự hái; tải lại trang game sau khi cập nhật extension.",
+          enabled: null, applied: false, catalog: [], available: false });
+      }, 800);
+      pending.set(requestId, { timer, respond });
+      window.postMessage({ channel: "gst:harvest:v1", type: "synchronize", preferences, requestId }, origin);
+    });
     return true;
   });
   chrome.storage.onChanged.addListener((changes, area) => {

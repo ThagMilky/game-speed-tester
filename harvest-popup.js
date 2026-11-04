@@ -111,7 +111,15 @@
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab?.id) throw new Error("No active tab");
       const data = await chrome.tabs.sendMessage(tab.id, { type: "gst:harvest-status" });
-      status.textContent = `Trạng thái: ${data.message}`;
+      if (typeof data.applied !== "boolean") {
+        status.textContent = "Tab game vẫn dùng cầu nối cũ. Tải lại extension tại chrome://extensions, rồi tải lại trang game.";
+      } else if (typeof data.enabled !== "boolean") {
+        status.textContent = `Trạng thái: ${data.message}`;
+      } else if (!data.applied || data.enabled !== preferences.enabled) {
+        status.textContent = `Đã lưu: ${preferences.enabled ? "BẬT" : "TẮT"} · Trang game: ${data.enabled ? "BẬT" : "TẮT"}. ${data.message}`;
+      } else {
+        status.textContent = `Tự hái: ${data.enabled ? "BẬT" : "TẮT"} · ${data.message}`;
+      }
       const next = Array.isArray(data.catalog) ? data.catalog : [];
       if (JSON.stringify(next) !== JSON.stringify(catalog) || available !== (data.available === true)) {
         catalog = next; available = data.available === true; renderList();
@@ -122,6 +130,15 @@
     } finally { busy = false; }
   }
   globalThis.GSTHarvestPopup = { refresh };
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local" || !changes.harvestPreferences || saving) return;
+    preferences = GSTHarvest.normalize(changes.harvestPreferences.newValue);
+    enabled.checked = preferences.enabled;
+    allowFarm.checked = preferences.allowFarm;
+    ignoreMonsters.checked = preferences.ignoreMonsters;
+    mode.value = preferences.mode;
+    renderList();
+  });
   chrome.storage.local.get("harvestPreferences").then((saved) => {
     preferences = GSTHarvest.normalize(saved.harvestPreferences);
     enabled.checked = preferences.enabled;

@@ -13,6 +13,7 @@
   let displayRevision = 0;
   let autoFarmOn = null;
   let harvestMessage = "Đang đọc…";
+  let harvestOn = null;
   let farmDisplayTimer = null;
   let displaySuspended = false;
 
@@ -85,12 +86,12 @@
     const movement = status?.state === "walking" ? "Đi bộ"
       : status?.state === "flying" ? "Bay" : "Chưa rõ";
     const fields = displayPreferences.fields;
-    const lines = ["GAME SPEED TESTER"];
+    const lines = [];
     if (fields.override) lines.push(`Override: ${status ? (status.enabled ? "BẬT" : "TẮT") : "—"}`);
     if (fields.speed) lines.push(`Tốc độ: ${status?.current ?? "—"}`);
     if (fields.movement) lines.push(`Trạng thái: ${movement}`);
     if (fields.autoFarm) lines.push(`Auto Farm game: ${autoFarmOn === true ? "BẬT" : autoFarmOn === false ? "TẮT" : "CHƯA RÕ"}`);
-    if (fields.harvest) lines.push(`Thu hoạch: ${harvestMessage}`);
+    if (fields.harvest) lines.push(`Tự hái: ${harvestOn === true ? "BẬT" : harvestOn === false ? "TẮT" : "CHƯA RÕ"} · ${harvestMessage}`);
     if (fields.fix) lines.push(`Fix (từ lần đổi tốc độ): ${status?.fix ?? "—"}`);
     if (fields.message) {
       lines.push(status?.message ?? "Đang kết nối…");
@@ -132,6 +133,7 @@
     if (event.source === window && event.origin === origin && event.data?.channel === "gst:harvest-status:v1"
         && !event.data.ready && event.data.type !== "configured") {
       harvestMessage = typeof event.data.message === "string" ? event.data.message.slice(0, 240) : "Chưa rõ";
+      harvestOn = typeof event.data.enabled === "boolean" ? event.data.enabled : null;
       renderOverlay();
       return;
     }

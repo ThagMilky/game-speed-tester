@@ -346,25 +346,12 @@
       available: names.size > 0,
       catalog: [...names].slice(0, 200).map((name) => ({ name, inMap: here.has(name) })) }, origin);
   }
-  window.addEventListener("message", (event) => {
-    if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:harvest:v1") return;
-    if (event.data.type === "status") {
-      try { status(event.data.requestId); }
-      catch {
-        window.postMessage({ channel: "gst:harvest-status:v1", requestId: event.data.requestId,
-          message: "Chờ dữ liệu tài nguyên của game.", enabled: settings.enabled, configKey: JSON.stringify(settings),
-          available: false, catalog: [] }, origin);
-      }
-      return;
-    }
-    if (event.data.type !== "configure") return;
-    const next = GSTHarvest.normalize(event.data.preferences);
+  function applyPreferences(value) {
+    const next = GSTHarvest.normalize(value);
     const changed = JSON.stringify(next) !== JSON.stringify(settings);
     settings = next;
     if (!changed) {
       if (settings.enabled) { watch(); discover(); }
-      window.postMessage({ channel: "gst:harvest-status:v1", type: "configured", requestId: event.data.requestId,
-        enabled: settings.enabled, configKey: JSON.stringify(settings) }, origin);
       return;
     }
     if (job?.phase === "request" && binding?.scene.harvesting && binding.scene.harvestNode === job.index) {
@@ -381,6 +368,24 @@
       watch(); discover();
     }
     safeSince = null;
+  }
+  window.addEventListener("message", (event) => {
+    if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:harvest:v1") return;
+    if (event.data.type === "status" || event.data.type === "synchronize") {
+      try {
+        // A synchronized read applies the stored intent before reporting state
+        // in this same handler; ordinary overlay status requests remain read-only.
+        if (event.data.type === "synchronize") applyPreferences(event.data.preferences);
+        status(event.data.requestId);
+      } catch {
+        window.postMessage({ channel: "gst:harvest-status:v1", requestId: event.data.requestId,
+          message: "Chờ dữ liệu tài nguyên của game.", enabled: settings.enabled, configKey: JSON.stringify(settings),
+          available: false, catalog: [] }, origin);
+      }
+      return;
+    }
+    if (event.data.type !== "configure") return;
+    applyPreferences(event.data.preferences);
     window.postMessage({ channel: "gst:harvest-status:v1", type: "configured", requestId: event.data.requestId,
       enabled: settings.enabled, configKey: JSON.stringify(settings) }, origin);
   });
