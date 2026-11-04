@@ -19,22 +19,36 @@
     return scene.pendingSkill || scene.aiming || scene.heldAttack || GSTFarmInput.movement(scene)
       || (scene.auto.on && (scene.auto.moved || scene.now() < scene.auto.pauseUntil));
   }
-  function blocked(scene) {
+  function blockedReason(scene) {
     const driver = scene.driver;
-    return globalThis.GSTQuest?.active(scene) || !scene.self || scene.self.dead || scene.leaving || !driver || driver.closing || driver.reconnecting || driver.displaced
-      || !(driver.online === false || driver.link?.open?.() === true) || !scene.self.realm?.inside
-      || scene.self.realm.inside.protection > 0 || scene.uiBlocked || scene.keyCapture || scene.overlay?.dialogOpen
-      || scene.harvesting || scene.self.med || scene.self.fish || scene.auto.resting
-      || GSTFarmBehavior.controls(scene) || GSTFarmMap.controls(scene) || GSTFarmSeals?.controls(scene)
-      || (scene.auto.on && (!settings.allowFarm || GSTHarvest.needsRecovery(scene))) || manual(scene)
-      || performance.now() < manualUntil;
+    if (!settings.enabled) return "Tự tìm và mở rương đang tắt.";
+    if (!scene.self || scene.self.dead) return "Nhân vật đã chết/chưa sẵn sàng; chờ hồi sinh.";
+    if (scene.leaving || !driver || driver.closing || driver.reconnecting || driver.displaced
+        || !(driver.online === false || driver.link?.open?.() === true)) return "Chờ kết nối game/scene ổn định.";
+    if (!scene.self.realm?.inside) return "Chờ vào bí cảnh để tìm rương.";
+    if (globalThis.GSTQuest?.active(scene)) return "Đang nhường Auto Quest. Bấm Dừng Auto Quest nếu muốn mở rương.";
+    if (scene.self.realm.inside.protection > 0) return `Chờ hết bảo vệ bí cảnh · còn ${Math.ceil(scene.self.realm.inside.protection)} giây.`;
+    if (scene.keyCapture) return "Chờ kết thúc đặt phím trong game.";
+    if (scene.uiBlocked || scene.overlay?.dialogOpen) return "Đóng bảng/hội thoại của game để mục tiêu F rương hoạt động.";
+    if (scene.harvesting) return "Game đang ghi nhận một lượt thu hoạch; chờ kết thúc.";
+    if (scene.self.med || scene.auto.resting) return "Chờ kết thúc bế quan/hồi phục của game.";
+    if (scene.self.fish) return "Chờ kết thúc câu cá.";
+    if (GSTFarmBehavior.controls(scene)) return "Đang nhường lượt né quái.";
+    if (GSTFarmMap.controls(scene)) return "Đang nhường di chuyển tới boss. Dừng Auto Farm nếu muốn chỉ mở rương.";
+    if (GSTFarmSeals?.controls(scene)) return "Đang nhường phá phong ấn.";
+    if (scene.auto.on && !settings.allowFarm) return "Auto Farm đang bật: tick Cho phép nhặt khi Auto Farm bật, hoặc tắt Auto Farm.";
+    if (scene.auto.on && GSTHarvest.needsRecovery(scene)) return "Chờ Auto Farm hồi HP/MP theo cài đặt của game.";
+    if (manual(scene)) return "Chờ kết thúc lệnh đi tay/ngắm chiêu/giữ phím đánh.";
+    if (performance.now() < manualUntil) return "Nhường thao tác tay; chờ ổn định 3 giây.";
+    return "";
   }
+  const blocked = (scene) => blockedReason(scene) !== "";
   function guard() {
     try {
       const scene = binding?.scene; if (!scene) return;
       if (sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto) { detach(); watch(); return; }
       if (manual(scene) || job && scene.castAt !== job.castAt) { manualUntil = performance.now() + 3000; release("Nhường thao tác tay; tiếp tục sau 3 giây."); }
-      if (job && blocked(scene)) release("Nhường chiến đấu, hồi phục hoặc giao diện game.");
+      if (job && blocked(scene)) release(blockedReason(scene));
       if (scene.self?.dead && settings.enabled) GSTHarvest.respawn(scene);
     } catch { detach(); watch(); }
   }
@@ -46,14 +60,8 @@
     const scene = binding?.scene;
     try {
       if (!scene) return false;
-      if (blocked(scene)) {
-        release(!scene.self?.realm?.inside ? "Chờ vào bí cảnh để tìm rương."
-          : scene.self.dead ? "Nhân vật đã chết; chờ hồi sinh."
-          : scene.auto.on && !settings.allowFarm ? "Auto Farm đang bật; chưa cho phép nhặt rương cùng farm."
-          : scene.self.realm.inside.protection > 0 ? "Chờ hết bảo vệ đầu bí cảnh."
-          : "Tạm nhường thao tác tay, hồi phục, giao diện hoặc điều khiển khác.");
-        return false;
-      }
+      const reason = blockedReason(scene);
+      if (reason) { release(reason); return false; }
       if (typeof host.inCombat !== "function" || typeof host.enemies !== "function") { release(); return false; }
       if (host.inCombat() || scene.auto.on && host.enemies().some((enemy) => enemy.id === scene.auto.target && !enemy.dead)) {
         release("Chờ Auto Farm kết thúc mục tiêu/giao tranh hiện tại."); return false;
@@ -71,13 +79,21 @@
         && chest.x >= 0 && chest.y >= 0 && chest.x < scene.map.w && chest.y < scene.map.h && (!chest.owner || chest.owner === scene.profile?.name)
         && (settings.kind === "all" || chest.kind === settings.kind));
       if (job && !chests.some((chest) => chest.id === job.id)) {
-        release("Rương không còn trong danh sách game; xem túi bí cảnh để xác nhận chiến lợi phẩm."); return false;
+        const stillExists = list.some((chest) => chest.id === job.id);
+        release(stillExists ? "Rương còn nhưng quyền sở hữu/loại/tọa độ không còn phù hợp; đã bỏ mục tiêu."
+          : "Rương không còn trong danh sách game; xem túi bí cảnh để xác nhận chiến lợi phẩm."); return false;
       }
       if (!job) {
         if (performance.now() - binding.scanAt < 1000) return false; binding.scanAt = performance.now();
         const next = chests.filter((chest) => !skipped.has(chest.id) && !danger(scene, chest))
           .sort((a, b) => Math.hypot(a.x - scene.px, a.y - scene.py) - Math.hypot(b.x - scene.px, b.y - scene.py))[0];
-        if (!next) { message = "Chưa có rương phù hợp/an toàn trong dữ liệu game."; return false; }
+        if (!next) {
+          message = !list.length ? "Game chưa gửi rương trong bí cảnh này; chưa có tọa độ để tự đi tới."
+            : !chests.length ? `Có ${list.length} rương nhưng không khớp loại, quyền sở hữu hoặc tọa độ hợp lệ.`
+            : chests.every((chest) => skipped.has(chest.id)) ? `Có ${chests.length} rương phù hợp đang tạm bỏ; chờ tối đa 30 giây.`
+            : "Có rương phù hợp nhưng đang có quái trong 6 ô quanh nhân vật hoặc rương; chờ an toàn.";
+          return false;
+        }
         const navigation = Object.assign(Object.create(scene.auto), { path: [], pathAt: -Infinity,
           lastX: scene.px, lastY: scene.py, stillSince: time, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0 });
         job = { id: next.id, navigation, target: scene.auto.target, castAt: scene.castAt,
@@ -112,7 +128,11 @@
       walking.steer(0, 0);
       const picked = scene.pickTarget()?.realm, cached = scene.target?.realm;
       if (picked?.action !== "realm-chest" || picked.arg !== job.id || cached?.action !== "realm-chest" || cached.arg !== job.id) {
-        message = "Chờ mục tiêu F đúng rương, không tương tác cổng/NPC."; return true;
+        const action = picked?.action ?? "chưa có";
+        message = picked?.action === "realm-chest" && picked.arg === job.id
+          ? "Đã nhận đúng rương; chờ game cập nhật mục tiêu F đã lưu."
+          : `Đã tới rương nhưng mục tiêu F là ${action}; chưa bấm để tránh nhầm cổng/rương khác.`;
+        return true;
       }
       if (blocked(scene)) { release(); return false; }
       job.requestedAt = time; scene.interact(); message = "Đã yêu cầu mở đúng rương; chờ game xác nhận."; return true;
@@ -148,7 +168,12 @@
       if (!settings.enabled) { detach(); clearInterval(timer); timer = null; message = "Auto nhặt rương đang tắt."; }
       else { message = "Auto nhặt rương đã bật; chờ vào bí cảnh và có rương phù hợp/an toàn."; watch(); discover(); }
     }
-    window.postMessage({ channel: "gst:chest-status:v1", requestId: data.requestId, message: [message, globalThis.GSTBackground?.status()].filter(Boolean).join(" "), enabled: settings.enabled }, origin);
+    let current = message;
+    try {
+      if (settings.enabled) current = binding ? (blockedReason(binding.scene) || message)
+        : "Đã bật nhưng chưa gắn được bộ điều khiển rương; kiểm tra timer và tải lại game.";
+    } catch { current = "Chưa đọc được điều kiện mở rương của game; tải lại trang để kết nối lại."; }
+    window.postMessage({ channel: "gst:chest-status:v1", requestId: data.requestId, message: [current, globalThis.GSTBackground?.status()].filter(Boolean).join(" "), enabled: settings.enabled }, origin);
   });
   window.addEventListener("pagehide", () => { suspended = true; detach(); clearInterval(timer); timer = null; });
   window.addEventListener("pageshow", () => { suspended = false; watch(); discover(); });
