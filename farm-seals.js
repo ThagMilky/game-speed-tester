@@ -5,7 +5,7 @@
   let suspended = false;
   let watcher = null;
   let binding = null;
-  let job = null;
+  let job = null, holding = false;
   let message = "";
   let manualUntil = 0;
   let modalAt = -Infinity;
@@ -33,7 +33,7 @@
   function stopJob(reason, skip = false) {
     if (job && binding) {
       const scene = binding.scene;
-      if (skip) skipped.set(job.key, job.hits);
+      if (skip) skipped.set(job.key, { hits: job.hits, until: scene.now() + 15 });
       if (job.steer && scene.autoX === job.steer[0] && scene.autoY === job.steer[1]) {
         scene.autoX = 0; scene.autoY = 0;
       }
@@ -53,7 +53,6 @@
   function yieldReason(scene, freshModal = false) {
     if (!enabled || suspended || !scene.auto.on) return "";
     if (globalThis.GSTQuest?.active(scene)) return "Nhường cho Auto Quest đang chạy.";
-    if (globalThis.GSTFarmMap?.controls(scene)) return "Nhường di chuyển để tiếp cận mục tiêu farm.";
     if (globalThis.GSTFarmBehavior?.controls(scene)) return "Nhường di chuyển để né quái level cao.";
     if (globalThis.GSTRealm?.controls(scene)) return "Nhường di chuyển để vào bí cảnh.";
     if (!scene.self || scene.self.dead || scene.leaving || !connected(scene)) return "Chờ nhân vật/kết nối ổn định.";
@@ -80,7 +79,7 @@
       } catch { /* Same thresholds/defaults as the native farm. */ }
     }
     if (typeof host.hp !== "function" || typeof host.mp !== "function" || typeof host.pills !== "function"
-        || host.hp() < hpThreshold || (host.mp() < mpThreshold && host.pills("mp").some((count) => count > 0))) return "Nhường hồi HP/MP cho Auto Farm gốc.";
+        || (host.hp() < hpThreshold && host.pills("hp").some((count) => count > 0)) || (host.mp() < mpThreshold && host.pills("mp").some((count) => count > 0))) return "Nhường hồi HP/MP cho Auto Farm gốc.";
     return null;
   }
   function guard() {
@@ -92,6 +91,7 @@
         detach(); watch(); return;
       }
       if (!scene.auto.on || scene.self?.dead) {
+        holding = false;
         stopJob(); skipped.clear(); manualUntil = 0;
         message = scene.self?.dead ? "Nhân vật đã chết; nhường hồi sinh cho game."
           : "Chờ bật Auto Farm để hỗ trợ phá phong ấn.";
@@ -106,10 +106,11 @@
   function update(host, time) {
     const scene = binding?.scene;
     try {
+      holding = false;
       if (!scene || !enabled || suspended || !scene.auto.on) return false;
       const active = seals(scene);
-      for (const [id, hits] of skipped) {
-        if (!active.some((seal) => key(seal) === id && seal.hits === hits)) skipped.delete(id);
+      for (const [id, entry] of skipped) {
+        if (time >= entry.until || !active.some((seal) => key(seal) === id && seal.hits === entry.hits)) skipped.delete(id);
       }
       if (!active.length) {
         stopJob(); skipped.clear(); message = "Không có phong ấn cần phá trong bí cảnh."; return false;
@@ -123,9 +124,9 @@
       const pos = { x: scene.px, y: scene.py };
       if (job && !active.some((seal) => key(seal) === job.key)) stopJob();
       if (!job) {
-        const next = active.filter((seal) => skipped.get(key(seal)) !== seal.hits)
+        const next = active.filter((seal) => !skipped.has(key(seal)))
           .sort((a, b) => distance(a, pos) - distance(b, pos))[0];
-        if (!next) { message = "Chưa phá được phong ấn; đã dừng thử. Đổi trạng thái phong ấn hoặc tắt/bật Auto Farm để thử lại."; return false; }
+        if (!next) { holding = true; host.steer(0, 0); message = "Phong ấn chưa xử lý được; chờ tối đa 15 giây rồi thử lại, chưa tiếp tục đánh boss."; return true; }
         // Use native navigation on private state; preserve the boss target/path/center.
         const navigation = Object.assign(Object.create(scene.auto), { path: [], lastX: pos.x, lastY: pos.y,
           stillSince: time, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0, pathAt: -Infinity });
@@ -138,11 +139,11 @@
       job.hits = seal.hits;
       const reach = 1; // Conservative approach distance; never enlarge the game's hit range.
       if (distance(seal, pos) > reach || !host.clear(pos.x, pos.y, seal.x, seal.y)) {
-        if (time - job.startAt > 15) { stopJob("Không tới được phong ấn; tạm bỏ mục tiêu này.", true); return false; }
+        if (time - job.startAt > 15) { stopJob("Không tới được phong ấn; tạm bỏ mục tiêu này.", true); holding = true; host.steer(0, 0); return true; }
         const owner = job;
         const walkingHost = { ...host, steer: (x, y) => steer(scene, x, y) };
         if (!GSTNavigation.walk(scene, owner.navigation, walkingHost, time, pos.x, pos.y, seal.x, seal.y, reach)) {
-          stopJob("Đường tới phong ấn bị chặn; tạm bỏ mục tiêu này.", true); return false;
+          stopJob("Đường tới phong ấn bị chặn; tạm bỏ mục tiêu này.", true); holding = true; host.steer(0, 0); return true;
         }
         message = `Đang tới phong ấn · còn ${seal.hits} đòn.`;
         return true;
@@ -150,7 +151,7 @@
       steer(scene, 0, 0);
       job.attackAt ??= time;
       if (time - Math.max(job.attackAt, job.progressAt) > 8) {
-        stopJob("Phong ấn không giảm số đòn; đã dừng thử để tránh đánh mãi.", true); return false;
+        stopJob("Phong ấn không giảm số đòn; chờ rồi thử lại.", true); holding = true; host.steer(0, 0); return true;
       }
       if (time < job.nextAt) return true;
       job.nextAt = time + 0.2; // Native attack decision interval; approach steering stays per-frame.
@@ -171,7 +172,7 @@
     }
   }
   function detach() {
-    stopJob();
+    holding = false; stopJob();
     if (!binding) return;
     const old = binding; binding = null;
     old.remove();
@@ -192,7 +193,7 @@
           || typeof scene.auto?.update !== "function" || typeof scene.autoHost !== "function"
           || typeof scene.now !== "function" || typeof scene.events?.on !== "function"
           || typeof scene.events.off !== "function") return;
-      const remove = GSTFarmUpdate.add(scene, 10, update);
+      const remove = GSTFarmUpdate.add(scene, 3.5, update);
       binding = { scene, auto: scene.auto, remove };
       scene.events.on("preupdate", guard);
       scene.events.on("shutdown", shutdown);
@@ -202,7 +203,7 @@
     } catch { message = "Chưa gắn được hỗ trợ phong ấn; chờ game."; }
   }
   globalThis.GSTFarmSeals = {
-    controls: (scene) => binding?.scene === scene && job !== null,
+    controls: (scene) => binding?.scene === scene && (job !== null || holding),
     status: (scene) => enabled && binding && binding.scene === scene && scene.auto.on && inside(scene) ? message : ""
   };
   window.addEventListener("message", (event) => {

@@ -306,6 +306,7 @@
     if ((!settings.enabled && !settings.autoRespawn && settings.targetMode === "all") || suspended || session) return;
     try {
       const scene = sceneNow();
+      globalThis.GSTFarmCombat?.attach(scene);
       globalThis.GSTFarmRevivePolicy?.attach(scene);
       globalThis.GSTFarmBehavior?.attach(scene);
       globalThis.GSTFarmMap?.attach(scene);
@@ -519,6 +520,7 @@
     prepare(scene) {
       if (!this.ready() || !compatible(scene)) throw new Error("Farm configuration unavailable");
       blockedAuto = null; revival = null;
+      globalThis.GSTFarmCombat?.attach(scene);
       globalThis.GSTFarmRevivePolicy?.attach(scene);
       globalThis.GSTFarmBehavior?.attach(scene);
       globalThis.GSTFarmRouting?.attach(scene);
@@ -554,6 +556,7 @@
       globalThis.GSTFarmMap?.configure(sceneNow(), settings);
       globalThis.GSTFarmRouting?.configure(sceneNow(), settings);
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());
+      globalThis.GSTFarmCombat?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
       if (settings.targetMode === "all" && !settings.avoidEnabled) clearFilter();
       if (session) {

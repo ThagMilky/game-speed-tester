@@ -1,6 +1,50 @@
 (() => {
   "use strict";
   const previous = new WeakMap(), progress = new WeakMap(), finite = Number.isFinite;
+  const movers = new Map();
+  function detach(scene) {
+    const entry = movers.get(scene); if (!entry) return;
+    entry.intent = null;
+    movers.delete(scene);
+    scene.events.off("shutdown", entry.cleanup); scene.events.off("destroy", entry.cleanup);
+    if (scene.move === entry.wrapper) {
+      if (entry.descriptor) Object.defineProperty(scene, "move", entry.descriptor); else delete scene.move;
+    }
+  }
+  function schedule(scene, nav, gx, gy, reach) {
+    if (typeof scene.move !== "function" || !scene.events?.on || !scene.events.off) return;
+    let entry = movers.get(scene);
+    if (!entry) {
+      const original = scene.move;
+      entry = { descriptor: Object.getOwnPropertyDescriptor(scene, "move"), intent: null };
+      entry.cleanup = () => detach(scene);
+      entry.wrapper = function (delta, ...rest) {
+        const intent = entry.intent; entry.intent = null;
+        if (this !== scene || !intent || !finite(delta) || delta <= 0 || !scene.self || scene.self.dead
+            || scene.leaving || scene.dashT > 0 || GSTFarmInput.movement(scene) || scene.pendingSkill || scene.aiming
+            || scene.self.fix !== intent.fix || scene.autoX !== intent.x || scene.autoY !== intent.y
+            || Math.hypot(scene.px - intent.point[0], scene.py - intent.point[1]) > 3) return original.call(this, delta, ...rest);
+        // Preserve native movement/collision and ms. Near a private navigation
+        // endpoint, split this frame's movement and stop at actual arrival,
+        // rather than pretending a crossed, out-of-range point was reached.
+        let remaining = delta, result;
+        for (let i = 0; remaining > 1e-8 && i < 16; i++) {
+          if (Math.hypot(scene.px - intent.point[0], scene.py - intent.point[1]) <= intent.reach) {
+            scene.autoX = scene.autoY = 0; break;
+          }
+          const step = Math.min(remaining, 1 / 240);
+          result = original.call(this, step, ...rest); remaining -= step;
+        }
+        return result;
+      };
+      movers.set(scene, entry); scene.move = entry.wrapper;
+      scene.events.on("shutdown", entry.cleanup); scene.events.on("destroy", entry.cleanup);
+    }
+    const point = Array.isArray(nav.path?.[0]) ? nav.path[0] : [gx, gy];
+    if (!Array.isArray(point) || point.length !== 2 || !point.every(finite)) return;
+    entry.intent = { x: scene.autoX, y: scene.autoY, fix: scene.self?.fix, point: [...point],
+      reach: Math.hypot(point[0] - gx, point[1] - gy) < 0.01 ? reach : 0.25 };
+  }
   function crossed(scene, nav, point, tolerance) {
     const old = previous.get(nav), fix = scene.self?.fix;
     if (!old || !finite(fix) || old.fix !== fix || !finite(scene.px) || !finite(scene.py)) return false;
@@ -45,6 +89,7 @@
       if (nav === scene.auto) return scene.auto.walk.call(nav, host, time, x, y, gx, gy, reach);
       if (typeof host.clear === "function") prune(scene, nav, host);
       const result = scene.auto.walk.call(nav, host, time, x, y, gx, gy, reach);
+      if (result) schedule(scene, nav, gx, gy, reach);
       previous.set(nav, { x: scene.px, y: scene.py, fix: scene.self?.fix, path: nav.path,
         point: Array.isArray(nav.path?.[0]) ? [...nav.path[0]] : null, goal: [gx, gy] });
       return result;
@@ -57,4 +102,5 @@
     },
     prune
   };
+  window.addEventListener("pagehide", () => { for (const scene of [...movers.keys()]) detach(scene); });
 })();

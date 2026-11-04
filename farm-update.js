@@ -19,6 +19,11 @@
           if (this === auto) {
             for (const handler of entry.ordered) if (handler.callback.apply(this, args) === true) return;
           }
+          if (this === auto && globalThis.GSTFarmCombat?.active(scene)) {
+            const nativeArgs = [...args];
+            nativeArgs[0] = GSTFarmCombat.host(scene, args[0]);
+            return original.apply(this, nativeArgs);
+          }
           return original.apply(this, args);
         };
         auto.update = entry.wrapper;

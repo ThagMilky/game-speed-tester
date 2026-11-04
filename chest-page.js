@@ -157,7 +157,22 @@
     } catch { detach(); }
   }
   function watch() { if (settings.enabled && !suspended && !binding && timer === null) timer = setInterval(discover, 1000); }
-  globalThis.GSTChest = { controls: (scene) => !!binding && binding.scene === scene && job !== null };
+  globalThis.GSTChest = {
+    controls: (scene) => !!binding && binding.scene === scene && job !== null,
+    ready(scene) {
+      try {
+        if (binding?.scene !== scene || blocked(scene) || binding.modal) return false;
+        const host = scene.autoHost();
+        if (host.inCombat() || host.enemies().some((enemy) => enemy.id === scene.auto.target && !enemy.dead)) return false;
+        return (scene.self.realm.inside.chests ?? []).some((chest) =>
+          (typeof chest.id === "string" || Number.isSafeInteger(chest.id)) && finite(chest.x) && finite(chest.y)
+          && chest.x >= 0 && chest.y >= 0 && chest.x < scene.map.w && chest.y < scene.map.h
+          && (!chest.owner || chest.owner === scene.profile?.name) && (settings.kind === "all" || chest.kind === settings.kind)
+          && !(skipped.get(chest.id) > performance.now()) && Math.hypot(chest.x - scene.px, chest.y - scene.py) <= 6
+          && !danger(scene, chest));
+      } catch { return false; }
+    }
+  };
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:chest:v1") return;
     const data = event.data;

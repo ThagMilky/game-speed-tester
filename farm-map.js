@@ -15,6 +15,7 @@
     const driver = scene.driver;
     return (!globalThis.GSTQuest?.active(scene) || (!GSTQuest.controls(scene) && preferences.targetMode === "all")) && scene.auto.on && scene.self && !scene.self.dead && !scene.leaving && driver
       && !driver.closing && !driver.reconnecting && !driver.displaced && (driver.online === false || driver.link?.open?.() === true)
+      && !globalThis.GSTFarmSeals?.controls(scene) && !globalThis.GSTChest?.controls(scene)
       && !GSTFarmRouting.blocked(scene) && !scene.keyCapture && !scene.overlay?.dialogOpen && !scene.harvesting
       && !scene.auto.resting && !scene.self.med && !scene.self.fish && !scene.pendingSkill && !scene.aiming
       && !scene.heldAttack && !GSTFarmInput.movement(scene) && !scene.auto.moved
@@ -96,6 +97,7 @@
         release(); message = "Đã tới gần mục tiêu; bàn giao chọn quái và chiến đấu cho Auto Farm gốc.";
         return false;
       }
+      if (!job && globalThis.GSTChest?.ready(scene)) { message = "Nhường mở rương an toàn gần trước khi tìm bãi xa."; return false; }
       if (time < retryAt) { message = "Đang chờ nhịp thử lại đường tới bãi quái."; return false; }
       if (performance.now() - binding.modalAt >= 250) {
         binding.modalAt = performance.now();
