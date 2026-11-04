@@ -70,7 +70,10 @@
     } catch { debugFeedback.textContent = "Chưa xóa được log; tab có thể đang tải lại."; }
   });
   const fold = (value) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
+  const kind = byId("harvestKind");
+  kind.addEventListener("change", () => save({ kind: kind.value }));
   function renderList() {
+    kind.value = preferences.kind;
     byId("harvestCount").textContent = `Đã chọn ${preferences.items.length} loại`;
     byId("clearHarvestItems").disabled = !preferences.items.length;
     const focused = document.activeElement?.dataset?.item;
@@ -87,7 +90,8 @@
       checkbox.checked = preferences.items.includes(name);
       checkbox.disabled = preferences.mode !== "selected";
       const text = document.createElement("span");
-      text.textContent = name;
+      const type = catalog.find((item) => item.name === name)?.kind;
+      text.textContent = `${type === "ore" ? "[Đào] " : type === "plant" ? "[Hái] " : type === "both" ? "[Hái/đào] " : ""}${name}`;
       if (!inMap.get(name)) {
         const hint = document.createElement("small");
         hint.textContent = available ? "Không có trong map" : "Đã lưu · chưa đọc được dữ liệu map";

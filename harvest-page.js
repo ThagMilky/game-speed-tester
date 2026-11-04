@@ -285,8 +285,9 @@
       message = "Chưa tương thích dữ liệu thu hoạch; chờ game.";
     }
   }
+  const matchesKind = (node) => settings.kind === "both" || (settings.kind === "ore" ? !!node?.ore : !node?.ore);
   function matches(node) {
-    return node && !node.ore && typeof node.item === "string" && finite(node.x) && finite(node.y)
+    return node && matchesKind(node) && typeof node.item === "string" && finite(node.x) && finite(node.y)
       && (settings.mode === "all" || settings.items.includes(node.item.normalize("NFC")));
   }
   function passedPoint(scene, pos, point, next, host) {
@@ -474,16 +475,20 @@
   function status(requestId) {
     const scene = sceneNow();
     const names = new Set();
+    const types = new Map();
     for (const area of scene?.world?.herbs?.scenes ?? []) {
-      for (const node of area.nodes ?? []) if (!node.ore && typeof node.item === "string") names.add(node.item.normalize("NFC"));
+      for (const node of area.nodes ?? []) if (matchesKind(node) && typeof node.item === "string") {
+        const name = node.item.normalize("NFC"); names.add(name);
+        types.set(name, (types.get(name) ?? 0) | (node.ore ? 2 : 1));
+      }
     }
-    const here = new Set((scene?.nodes ?? []).filter((n) => !n.ore && typeof n.item === "string")
+    const here = new Set((scene?.nodes ?? []).filter((n) => matchesKind(n) && typeof n.item === "string")
       .map((n) => n.item.normalize("NFC")));
     const resultMessage = lastResult && performance.now() < lastResult.until ? `${lastResult.text} ${message}` : message;
     window.postMessage({ channel: "gst:harvest-status:v1", requestId, message: resultMessage,
       enabled: settings.enabled, configKey: JSON.stringify(settings),
       available: names.size > 0,
-      catalog: [...names].slice(0, 200).map((name) => ({ name, inMap: here.has(name) })) }, origin);
+      catalog: [...names].slice(0, 200).map((name) => ({ name, inMap: here.has(name), kind: types.get(name) === 2 ? "ore" : types.get(name) === 3 ? "both" : "plant" })) }, origin);
   }
   function applyPreferences(value) {
     const next = GSTHarvest.normalize(value);

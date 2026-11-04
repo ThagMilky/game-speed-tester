@@ -198,7 +198,7 @@
       available: data.available === true,
       catalog: (Array.isArray(data.catalog) ? data.catalog : [])
         .filter((item) => typeof item?.name === "string" && item.name.length <= 120).slice(0, 200)
-        .map((item) => ({ name: item.name, inMap: item.inMap === true })) });
+        .map((item) => ({ name: item.name, inMap: item.inMap === true, kind: ["plant", "ore", "both"].includes(item.kind) ? item.kind : "unknown" })) });
   });
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
     if (sender.id !== chrome.runtime.id) return;

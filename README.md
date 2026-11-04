@@ -350,3 +350,5 @@ Chỉ đối chiếu source và review diff/status. Tests/lint/typecheck/browser
 Quy tắc tên: menu dùng tiếng Việt dễ hiểu, giữ Auto/FPS/boss/level/map. Code và mã cài đặt dùng tiếng Anh. Nhóm Bí cảnh giữ panel ID realm để bảo toàn thứ tự đã lưu; không đổi realmPreferences. *-page: xử lý game, *-content: cầu nối/storage, *-popup: UI, *-options: chuẩn hóa.
 
 Thời gian bí cảnh: chọn mục trong Bảng trạng thái, thông báo bật riêng trong Bí cảnh. Dùng realm.now/next/ends/retryAt; dữ liệu đứng quá 10 giây hoặc mất kết nối thì báo chưa cập nhật. Nhắc 5 phút trước đợt, có cổng mở (chưa lọc bậc cấp), 2 phút trước khi đóng; chống trùng theo tab sessionStorage, không thêm quyền OS notification, không tự vào/thoát. Tests/gameplay NOT RUN; runtime UNVERIFIED.
+
+Thu hoạch: kind plant/ore/both, mặc định plant để giữ ý định cũ. Source tương tác node đều dùng native harvest; chỉ gỡ điều kiện loại ore sau khi chọn Chỉ đào/Hái và đào. Catalog lọc cùng kind và có nhãn Hái/Đào; kiểm tra mục tiêu F, ready, inventory và nhường tay giữ nguyên. Helper MAIN được sinh lại từ canonical. Tests/gameplay NOT RUN; đào thực tế UNVERIFIED.
