@@ -73,6 +73,14 @@
           <p class="hint">Tìm không dấu, tick nhiều loại; tự lưu. Chọn riêng nhưng chưa tick thì không hái. Cây đã chọn vẫn được giữ khi đổi map. Chỉ hái cây, không đào quặng hoặc tương tác cổng/NPC.</p>
         </fieldset>
         <p id="harvestFeedback" class="notice" role="alert"></p>
+        <details id="harvestDebugPanel" class="diagnostic">
+          <summary>Log chẩn đoán Tự hái (tạm thời)</summary>
+          <label class="check-row"><input id="harvestDebugEnabled" type="checkbox" disabled><span>Bật ghi log chẩn đoán</span></label>
+          <p class="hint">Chỉ giữ tối đa 60 dòng trong bộ nhớ tab. Không ghi phím bấm, tài khoản hoặc danh sách cây đã chọn. Tắt để dừng và xóa log; không ảnh hưởng Tự hái.</p>
+          <textarea id="harvestDebugOutput" readonly rows="7" aria-label="Log chẩn đoán Tự hái" spellcheck="false"></textarea>
+          <div class="button-row"><button id="copyHarvestDebug" type="button">Sao chép log</button><button id="clearHarvestDebug" type="button" class="quiet">Xóa log</button></div>
+          <p id="harvestDebugFeedback" class="notice" role="status"></p>
+        </details>
       </div>
     </details>
     <details class="card">

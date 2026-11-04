@@ -17,6 +17,56 @@
   let saving = false;
   let busy = false;
   let loaded = false;
+  const debugPanel = byId("harvestDebugPanel");
+  const debugToggle = byId("harvestDebugEnabled");
+  const debugOutput = byId("harvestDebugOutput");
+  const debugFeedback = byId("harvestDebugFeedback");
+  let debugBusy = false;
+  async function debugMessage(type, extra = {}) {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id) throw new Error("No active tab");
+    return chrome.tabs.sendMessage(tab.id, { type, ...extra });
+  }
+  async function refreshDebug() {
+    if (debugBusy || !debugToggle.checked || !debugPanel.open) return;
+    debugBusy = true;
+    try {
+      const data = await debugMessage("gst:harvest-debug-get");
+      if (data?.build !== "harvest-bridge-log-1") throw new Error("Old bridge");
+      const value = JSON.stringify(data, null, 2);
+      if (debugOutput.value !== value) debugOutput.value = value;
+    } catch {
+      debugFeedback.textContent = "Chưa nhận được log bản mới. Tải lại extension rồi tải lại tab game.";
+    } finally { debugBusy = false; }
+  }
+  debugToggle.addEventListener("change", async () => {
+    debugToggle.disabled = true;
+    try {
+      await chrome.storage.local.set({ harvestDebugEnabled: debugToggle.checked });
+      const data = await debugMessage("gst:harvest-debug-set", { enabled: debugToggle.checked });
+      debugOutput.value = JSON.stringify(data, null, 2);
+      debugFeedback.textContent = "";
+      await refreshDebug();
+    } catch { debugFeedback.textContent = "Đã yêu cầu ghi log; tải lại trang game nếu chưa nhận được log."; }
+    finally { debugToggle.disabled = false; }
+  });
+  debugPanel.addEventListener("toggle", refreshDebug);
+  byId("copyHarvestDebug").addEventListener("click", async () => {
+    if (!debugOutput.value) { debugFeedback.textContent = "Bật ghi log và chờ đọc được dữ liệu trước."; return; }
+    try {
+      await navigator.clipboard.writeText(debugOutput.value);
+      debugFeedback.textContent = "Đã sao chép. Bạn có thể dán log vào chat.";
+    } catch {
+      debugOutput.focus(); debugOutput.select();
+      debugFeedback.textContent = "Đã chọn log; bấm Ctrl+C để sao chép.";
+    }
+  });
+  byId("clearHarvestDebug").addEventListener("click", async () => {
+    try {
+      debugOutput.value = JSON.stringify(await debugMessage("gst:harvest-debug-clear"), null, 2);
+      debugFeedback.textContent = "Đã xóa log.";
+    } catch { debugFeedback.textContent = "Chưa xóa được log; tab có thể đang tải lại."; }
+  });
   const fold = (value) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
   function renderList() {
     byId("harvestCount").textContent = `Đã chọn ${preferences.items.length} loại`;
@@ -128,7 +178,7 @@
     } catch {
       status.textContent = "Mở tab game và tải lại sau khi cập nhật extension để đọc Tự hái.";
       if (catalog.length || available) { catalog = []; available = false; renderList(); }
-    } finally { busy = false; }
+    } finally { busy = false; refreshDebug(); }
   }
   globalThis.GSTHarvestPopup = { refresh };
   chrome.storage.onChanged.addListener((changes, area) => {
@@ -140,7 +190,9 @@
     mode.value = preferences.mode;
     renderList();
   });
-  chrome.storage.local.get("harvestPreferences").then((saved) => {
+  chrome.storage.local.get(["harvestPreferences", "harvestDebugEnabled"]).then((saved) => {
+    debugToggle.checked = saved.harvestDebugEnabled === true;
+    debugToggle.disabled = false;
     preferences = GSTHarvest.normalize(saved.harvestPreferences);
     enabled.checked = preferences.enabled;
     allowFarm.checked = preferences.allowFarm;
@@ -149,5 +201,8 @@
     for (const [key, input] of ranges) input.value = preferences[key];
     loaded = true;
     renderList(); controls.disabled = false; refresh();
-  }).catch(() => { feedback.textContent = "Chưa đọc được cài đặt Tự hái; hãy mở lại popup."; });
+  }).catch(() => {
+    debugToggle.disabled = false;
+    feedback.textContent = "Chưa đọc được cài đặt Tự hái; hãy mở lại popup.";
+  });
 })();

@@ -4,6 +4,8 @@ Lưu ý cập nhật 2026-11-04: báo cáo bên dưới là kết quả lịch s
 
 ## Kết luận
 
+Log chẩn đoán HS-OPTIONS: thêm buffer tạm 60 dòng, trạng thái module/marker từng world, nhận diện manifest options ISOLATED, lỗi theo giai đoạn và sao chép/xóa/tắt log trong popup. Không chạy module game để thử, không lưu nội dung log ra storage hoặc gửi mạng. Chỉ review source/diff. **Tests/lint/typecheck/browser/gameplay: NOT RUN. CI: NOT CHECKED.** Đang chờ log thực tế để xác định vì sao normalize vắng ở cầu nối.
+
 Sau báo cáo lỗi đọc cài đặt trong tab: popup gửi cấu hình đã đọc qua thông điệp nội bộ; không bắt buộc lần đọc storage thứ hai trong tab, chặn gửi mặc định trước khi popup tải xong, không gửi OFF khi khởi tạo lỗi và tách mã lỗi từng giai đoạn. Chỉ review source/diff. **Tests/lint/typecheck/browser/gameplay: NOT RUN. Behavior: UNVERIFIED. CI: NOT CHECKED.** Chưa có kết quả runtime sau bản sửa này.
 
 Theo báo cáo Tự hái vẫn TẮT dù checkbox bật: đối chiếu lại storage khi hỏi trạng thái, nhận biết cầu nối cũ trong popup, cập nhật checkbox theo thay đổi storage, hiển thị cờ Tự hái thực tế trên overlay và bỏ tiêu đề overlay. **Tests/lint/typecheck/browser/gameplay: NOT RUN**, behavior **UNVERIFIED**, CI **NOT CHECKED**. Chưa khẳng định đã xử lý dứt điểm trường hợp live của người dùng.

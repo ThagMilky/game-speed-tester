@@ -8,10 +8,62 @@
   let navigating = false;
   let repairedKey = null;
   let readError = "";
+  let debugEnabled = false;
+  const debugRows = [];
+  const lastDebug = new Map();
+  let lastFailure = null;
+  function moduleState() {
+    let isolatedDeclared = null;
+    try {
+      isolatedDeclared = chrome.runtime.getManifest().content_scripts.some((script) =>
+        (!script.world || script.world === "ISOLATED") && script.js?.includes("harvest-options.js"));
+    } catch { /* Context-invalid diagnostics should still be readable. */ }
+    return {
+      build: "harvest-bridge-log-1", world: "ISOLATED",
+      helper: typeof globalThis.GSTHarvest, normalize: typeof globalThis.GSTHarvest?.normalize,
+      optionsBuild: globalThis.__gstHarvestOptionsLoad?.build ?? "missing",
+      normalizeAtLoad: globalThis.__gstHarvestOptionsLoad?.normalizeAtLoad ?? "missing",
+      isolatedOptionsDeclared: isolatedDeclared,
+      storageApi: typeof chrome.storage?.local?.get, timer: new URL(location.href).searchParams.has("timer"),
+      desiredEnabled: preferences?.enabled ?? null
+    };
+  }
+  function record(event, detail) {
+    if (!debugEnabled) return;
+    const key = JSON.stringify({ event, detail });
+    const group = `${event}:${detail?.stage ?? ""}`;
+    if (key === lastDebug.get(group)) return;
+    lastDebug.set(group, key);
+    debugRows.push({ at: new Date().toISOString(), event, ...detail });
+    if (debugRows.length > 60) debugRows.shift();
+  }
+  function failure(stage, error) {
+    if (!debugEnabled) return;
+    const text = String(error?.message ?? "");
+    const location = String(error?.stack ?? "").match(/([a-z-]+\.js):(\d+):(\d+)/i);
+    lastFailure = {
+      stage, name: String(error?.name ?? "Error").slice(0, 40),
+      reason: /GSTHarvest/.test(text) ? "GSTHarvest reference unavailable"
+        : /normalize/i.test(text) ? "normalize unavailable or not callable"
+          : /context invalidated/i.test(text) ? "extension context invalidated" : "details omitted",
+      location: location ? location[0] : "unavailable", ...moduleState()
+    };
+    record("failure", lastFailure);
+  }
+  function debugState() {
+    return { enabled: debugEnabled, build: "harvest-bridge-log-1", module: moduleState(), lastFailure, rows: [...debugRows] };
+  }
+  function setDebug(value) {
+    debugEnabled = value === true;
+    lastDebug.clear();
+    if (debugEnabled) record("debug.enabled", moduleState());
+    else { debugRows.length = 0; lastFailure = null; }
+  }
   function configure(value, respond) {
     const next = GSTHarvest.normalize(value);
     if (respond || JSON.stringify(next) !== JSON.stringify(preferences)) repairedKey = null;
     preferences = next;
+    record("configure", { enabled: preferences.enabled, helper: typeof globalThis.GSTHarvest?.normalize });
     const url = new URL(location.href);
     if (preferences.enabled && !url.searchParams.has("timer")) {
       if (!navigating) {
@@ -47,6 +99,7 @@
     try {
       saved = await chrome.storage.local.get("harvestPreferences");
     } catch (error) {
+      failure("storage.read", error);
       readError = /context invalidated/i.test(String(error?.message)) ? "HS-CONTEXT" : "HS-STORAGE";
       return false;
     }
@@ -57,7 +110,8 @@
       }
       readError = "";
       return true;
-    } catch {
+    } catch (error) {
+      failure("storage.normalize-or-configure", error);
       readError = typeof globalThis.GSTHarvest?.normalize === "function" ? "HS-CONFIGURE" : "HS-OPTIONS";
       return false;
     }
@@ -67,6 +121,21 @@
     if (event.data.ready) { if (preferences) configure(preferences); return; }
     const entry = pending.get(event.data.requestId);
     const data = event.data;
+    if (data.type === "diagnostics") {
+      const page = data.debug;
+      record("main.snapshot", {
+        build: typeof page?.build === "string" ? page.build.slice(0, 60) : "missing",
+        helper: typeof page?.helper === "string" ? page.helper.slice(0, 20) : "unknown",
+        normalize: typeof page?.normalize === "string" ? page.normalize.slice(0, 20) : "unknown",
+        optionsBuild: typeof page?.optionsBuild === "string" ? page.optionsBuild.slice(0, 60) : "missing",
+        enabled: page?.enabled === true, scene: page?.scene === true,
+        controlling: page?.controlling === true
+      });
+      if (entry?.kind === "debug") {
+        pending.delete(data.requestId); clearTimeout(entry.timer); entry.respond(debugState());
+      }
+      return;
+    }
     if (!entry) {
       if (data.type !== "configured") readPreferences().then((ok) => { if (ok) repair(data); });
       return;
@@ -75,10 +144,13 @@
       if (data.type !== "configured") return;
       pending.delete(data.requestId);
       clearTimeout(entry.timer);
+      record("configure.ack", { applied: data.configKey === entry.key });
       entry.respond({ accepted: true, applied: data.configKey === entry.key });
       return;
     }
     const applied = preferences !== null && data.configKey === JSON.stringify(preferences);
+    record("status", { applied, engineEnabled: typeof data.enabled === "boolean" ? data.enabled : null,
+      desiredEnabled: preferences?.enabled ?? null });
     if (!applied && !entry.retried && repair(data)) {
       // Recover a missed initial configure before returning a stale OFF status.
       // The page handles identical configurations without resetting its job.
@@ -99,9 +171,32 @@
   });
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
     if (sender.id !== chrome.runtime.id) return;
+    if (message?.type === "gst:harvest-debug-set") {
+      setDebug(message.enabled); respond(debugState()); return;
+    }
+    if (message?.type === "gst:harvest-debug-clear") {
+      debugRows.length = 0; lastDebug.clear(); lastFailure = null;
+      respond(debugState()); return;
+    }
+    if (message?.type === "gst:harvest-debug-get") {
+      if (!debugEnabled) { respond(debugState()); return; }
+      record("module.snapshot", moduleState());
+      const requestId = `debug:${++sequence}`;
+      const timer = setTimeout(() => {
+        pending.delete(requestId); record("main.timeout", { received: false }); respond(debugState());
+      }, 800);
+      pending.set(requestId, { timer, respond, kind: "debug" });
+      window.postMessage({ channel: "gst:harvest:v1", type: "diagnostics", requestId }, origin);
+      return true;
+    }
     if (message?.type === "gst:harvest-configure") {
       revision++;
-      configure(message.preferences, respond);
+      try { configure(message.preferences, respond); }
+      catch (error) {
+        failure("runtime.configure", error);
+        readError = typeof globalThis.GSTHarvest?.normalize === "function" ? "HS-CONFIGURE" : "HS-OPTIONS";
+        respond({ accepted: false, applied: false, error: readError });
+      }
       return true;
     }
     if (message?.type !== "gst:harvest-status") return;
@@ -113,7 +208,8 @@
         revision++;
         configure(message.preferences);
         preparation = Promise.resolve(true);
-      } catch {
+      } catch (error) {
+        failure("popup.configure", error);
         readError = typeof globalThis.GSTHarvest?.normalize === "function" ? "HS-CONFIGURE" : "HS-OPTIONS";
         preparation = Promise.resolve(false);
       }
@@ -136,6 +232,7 @@
     return true;
   });
   chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes.harvestDebugEnabled) setDebug(changes.harvestDebugEnabled.newValue);
     if (area === "local" && changes.harvestPreferences) {
       revision++; configure(changes.harvestPreferences.newValue);
     }
@@ -143,7 +240,7 @@
   window.addEventListener("pagehide", () => {
     for (const { timer, respond, kind } of pending.values()) {
       clearTimeout(timer);
-      respond(kind === "configure" ? { accepted: true, applied: false, navigating: true }
+      respond(kind === "debug" ? debugState() : kind === "configure" ? { accepted: true, applied: false, navigating: true }
         : { message: "Đang chuyển trang.", catalog: [], available: false, applied: false });
     }
     pending.clear();
@@ -153,9 +250,12 @@
     if (preferences) configure(preferences);
   });
   const initialRevision = revision;
-  chrome.storage.local.get("harvestPreferences").then((saved) => {
+  chrome.storage.local.get(["harvestPreferences", "harvestDebugEnabled"]).then((saved) => {
+    setDebug(saved.harvestDebugEnabled);
+    record("bridge.start", moduleState());
     if (initialRevision === revision) configure(saved.harvestPreferences);
-  }).catch(() => {
+  }).catch((error) => {
+    failure("bridge.start", error);
     // MAIN starts disabled already. A failed read must not send guessed OFF
     // settings or overwrite a configuration received from the popup.
     if (initialRevision === revision) readError = "HS-INITIAL";

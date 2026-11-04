@@ -371,6 +371,14 @@
   }
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:harvest:v1") return;
+    if (event.data.type === "diagnostics") {
+      window.postMessage({ channel: "gst:harvest-status:v1", type: "diagnostics", requestId: event.data.requestId,
+        debug: { build: "harvest-main-log-1", world: "MAIN", helper: typeof globalThis.GSTHarvest,
+          normalize: typeof globalThis.GSTHarvest?.normalize,
+          optionsBuild: globalThis.__gstHarvestOptionsLoad?.build ?? "missing",
+          enabled: settings.enabled, scene: binding !== null, controlling: job !== null } }, origin);
+      return;
+    }
     if (event.data.type === "status" || event.data.type === "synchronize") {
       try {
         // A synchronized read applies the stored intent before reporting state

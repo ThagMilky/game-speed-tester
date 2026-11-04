@@ -20,4 +20,8 @@
     controls: () => false,
     farmOrigin: () => null
   };
+  // Per-world marker: lets diagnostics distinguish not loaded from overwritten.
+  globalThis.__gstHarvestOptionsLoad = {
+    build: "harvest-options-log-1", normalizeAtLoad: typeof globalThis.GSTHarvest.normalize
+  };
 })();
