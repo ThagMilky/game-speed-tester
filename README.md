@@ -346,3 +346,5 @@ Source nhận t.ents/t.gone để tạo/xóa views; không chứng minh server g
 Tối ưu FPS tách Ẩn hình/bóng boss và Giảm hiệu ứng boss, mặc định OFF. Boss = cls boss hoặc wb true. Các tick ẩn/giảm hiệu ứng quái cũ chuyển thành chỉ quái thường, không tự ẩn boss. Chọn tất cả/bỏ chọn tất cả bao gồm hai tick mới. Tên/thanh máu/cảnh báo giữ điều kiện hiển thị gốc. Không sửa bộ lọc chiến đấu theo checkbox FPS.
 
 Chỉ đối chiếu source và review diff/status. Tests/lint/typecheck/browser/gameplay: NOT RUN; hành vi toàn map, tiếp cận boss, tách hình/FX và tương thích live: UNVERIFIED; CI: NOT CHECKED. Reload extension rồi tải lại game để áp dụng.
+
+Quy tắc tên: menu dùng tiếng Việt dễ hiểu, giữ Auto/FPS/boss/level/map. Code và mã cài đặt dùng tiếng Anh. Nhóm Bí cảnh giữ panel ID realm để bảo toàn thứ tự đã lưu; không đổi realmPreferences. *-page: xử lý game, *-content: cầu nối/storage, *-popup: UI, *-options: chuẩn hóa.
