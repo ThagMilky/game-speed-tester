@@ -1,3 +1,5 @@
+// Canonical helper. Regenerate harvest-main-options.js from this file with:
+// Copy-Item -LiteralPath .\harvest-options.js -Destination .\harvest-main-options.js
 (() => {
   "use strict";
   const bounded = (value, fallback, min, max) => typeof value === "number" && Number.isFinite(value)
@@ -22,6 +24,6 @@
   };
   // Per-world marker: lets diagnostics distinguish not loaded from overwritten.
   globalThis.__gstHarvestOptionsLoad = {
-    build: "harvest-options-log-1", normalizeAtLoad: typeof globalThis.GSTHarvest.normalize
+    build: "harvest-options-log-2-split-worlds", normalizeAtLoad: typeof globalThis.GSTHarvest.normalize
   };
 })();

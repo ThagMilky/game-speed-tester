@@ -4,6 +4,8 @@ Lưu ý cập nhật 2026-11-04: báo cáo bên dưới là kết quả lịch s
 
 ## Kết luận
 
+Log người dùng cung cấp đã xác nhận lỗi trước sửa: ISOLATED không có GSTHarvest/normalize/marker dù manifest khai báo helper; MAIN có helper object/normalize function; storage API tồn tại và timer=true. Đối chiếu mã Chromium cho thấy loại trừ file theo đường dẫn đã inject. Sửa manifest dùng bản helper sinh có đường dẫn MAIN riêng, giữ helper chuẩn làm nguồn duy nhất và đặt trước cầu nối ISOLATED. **Lỗi trước sửa: có bằng chứng log người dùng. Sau sửa: chưa có log runtime. Tests/lint/typecheck/browser/gameplay: NOT RUN. CI: NOT CHECKED.** Không dùng bằng chứng lỗi trước sửa để tuyên bố hành vi sau sửa đã PASS.
+
 Log chẩn đoán HS-OPTIONS: thêm buffer tạm 60 dòng, trạng thái module/marker từng world, nhận diện manifest options ISOLATED, lỗi theo giai đoạn và sao chép/xóa/tắt log trong popup. Không chạy module game để thử, không lưu nội dung log ra storage hoặc gửi mạng. Chỉ review source/diff. **Tests/lint/typecheck/browser/gameplay: NOT RUN. CI: NOT CHECKED.** Đang chờ log thực tế để xác định vì sao normalize vắng ở cầu nối.
 
 Sau báo cáo lỗi đọc cài đặt trong tab: popup gửi cấu hình đã đọc qua thông điệp nội bộ; không bắt buộc lần đọc storage thứ hai trong tab, chặn gửi mặc định trước khi popup tải xong, không gửi OFF khi khởi tạo lỗi và tách mã lỗi từng giai đoạn. Chỉ review source/diff. **Tests/lint/typecheck/browser/gameplay: NOT RUN. Behavior: UNVERIFIED. CI: NOT CHECKED.** Chưa có kết quả runtime sau bản sửa này.

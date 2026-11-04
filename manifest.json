@@ -9,13 +9,13 @@
   "content_scripts": [
     {
       "matches": ["https://nghichthienky.online/*"],
-      "js": ["harvest-options.js", "page.js", "farm-page.js", "harvest-page.js"],
+      "js": ["harvest-main-options.js", "page.js", "farm-page.js", "harvest-page.js"],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
       "matches": ["https://nghichthienky.online/*"],
-      "js": ["content.js", "font-options.js", "font.js", "farm-content.js", "harvest-options.js", "harvest-content.js"],
+      "js": ["harvest-options.js", "content.js", "font-options.js", "font.js", "farm-content.js", "harvest-content.js"],
       "run_at": "document_start",
       "world": "ISOLATED"
     }
