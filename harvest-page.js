@@ -342,6 +342,7 @@
     const here = new Set((scene?.nodes ?? []).filter((n) => !n.ore && typeof n.item === "string")
       .map((n) => n.item.normalize("NFC")));
     window.postMessage({ channel: "gst:harvest-status:v1", requestId, message,
+      enabled: settings.enabled, configKey: JSON.stringify(settings),
       available: names.size > 0,
       catalog: [...names].slice(0, 200).map((name) => ({ name, inMap: here.has(name) })) }, origin);
   }
@@ -351,12 +352,21 @@
       try { status(event.data.requestId); }
       catch {
         window.postMessage({ channel: "gst:harvest-status:v1", requestId: event.data.requestId,
-          message: "Chờ dữ liệu tài nguyên của game.", available: false, catalog: [] }, origin);
+          message: "Chờ dữ liệu tài nguyên của game.", enabled: settings.enabled, configKey: JSON.stringify(settings),
+          available: false, catalog: [] }, origin);
       }
       return;
     }
     if (event.data.type !== "configure") return;
-    settings = GSTHarvest.normalize(event.data.preferences);
+    const next = GSTHarvest.normalize(event.data.preferences);
+    const changed = JSON.stringify(next) !== JSON.stringify(settings);
+    settings = next;
+    if (!changed) {
+      if (settings.enabled) { watch(); discover(); }
+      window.postMessage({ channel: "gst:harvest-status:v1", type: "configured", requestId: event.data.requestId,
+        enabled: settings.enabled, configKey: JSON.stringify(settings) }, origin);
+      return;
+    }
     if (job?.phase === "request" && binding?.scene.harvesting && binding.scene.harvestNode === job.index) {
       job.phase = "harvesting";
     }
@@ -371,6 +381,8 @@
       watch(); discover();
     }
     safeSince = null;
+    window.postMessage({ channel: "gst:harvest-status:v1", type: "configured", requestId: event.data.requestId,
+      enabled: settings.enabled, configKey: JSON.stringify(settings) }, origin);
   });
   function onPointer(event) {
     if (binding && event.isTrusted && event.target === binding.scene.game?.canvas) {

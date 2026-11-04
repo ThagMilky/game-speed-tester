@@ -4,6 +4,8 @@ Lưu ý cập nhật 2026-11-04: báo cáo bên dưới là kết quả lịch s
 
 ## Kết luận
 
+Sửa đồng bộ Tự hái sau báo cáo checkbox bật nhưng trang báo tắt: xác nhận cấu hình MAIN, đối chiếu trạng thái, thử lại có giới hạn, không đặt lại lượt hái với cấu hình trùng, bảo vệ lệnh mới khỏi lỗi storage khởi tạo muộn. Chỉ review source/diff; **tests/lint/typecheck/browser/gameplay: NOT RUN**, behavior **UNVERIFIED**, CI **NOT CHECKED**. Chưa chứng minh xử lý dứt điểm trường hợp live được báo.
+
 Bổ sung chẩn đoán Tự hái đứng yên: tách lý do chặn và đưa thông báo lên đầu nhóm popup. Chỉ review source/diff; **tests/lint/typecheck/browser/gameplay: NOT RUN**. Chưa xác định nguyên nhân báo cáo live nếu chưa có thông báo trạng thái từ tab của người dùng.
 
 Tùy chọn Bỏ qua kiểm tra quái gần (mặc định tắt) đã triển khai. Chỉ review source/diff; **tests/lint/typecheck/browser/gameplay: NOT RUN**, behavior **UNVERIFIED**, CI **NOT CHECKED**. Không dùng QA lịch sử dưới đây để xác nhận tùy chọn này.

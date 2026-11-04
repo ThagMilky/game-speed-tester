@@ -66,7 +66,8 @@
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab?.id) throw new Error("No active tab");
         const result = await chrome.tabs.sendMessage(tab.id, { type: "gst:harvest-configure", preferences });
-        if (!result?.accepted) throw new Error("Not accepted");
+        if (result?.navigating) feedback.textContent = "Đã lưu. Game đang tải lại để áp dụng Tự hái.";
+        else if (!result?.accepted || !result.applied) throw new Error("Page has not confirmed configuration");
       } catch {
         feedback.textContent = "Đã lưu. Tải lại trang game nếu chưa áp dụng được.";
       }

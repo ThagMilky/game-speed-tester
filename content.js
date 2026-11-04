@@ -130,7 +130,7 @@
 
   window.addEventListener("message", (event) => {
     if (event.source === window && event.origin === origin && event.data?.channel === "gst:harvest-status:v1"
-        && !event.data.ready) {
+        && !event.data.ready && event.data.type !== "configured") {
       harvestMessage = typeof event.data.message === "string" ? event.data.message.slice(0, 240) : "Chưa rõ";
       renderOverlay();
       return;
