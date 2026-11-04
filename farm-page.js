@@ -46,6 +46,9 @@
       const binding = scene?.controls?.bindings?.V;
       if (Number.isInteger(binding)) code = binding;
     } catch { /* The default V binding remains guarded while the scene loads. */ }
+    // Let the game's focused key-binding capture validate and assign this key.
+    // Background events still pass through the guard below.
+    if (scene?.keyCapture && !document.hidden && document.hasFocus()) return;
     const customKey = shortcut !== null && event.keyCode === shortcut;
     if (event.keyCode !== code && !customKey) return;
     const editing = [document.activeElement, ...event.composedPath()].some((node) =>
@@ -107,7 +110,10 @@
   function clearFilter() {
     const binding = filterBinding;
     filterBinding = null;
-    if (!binding || binding.scene.autoHost !== binding.wrapper) return;
+    if (!binding) return;
+    binding.scene.events.off("shutdown", clearFilter);
+    binding.scene.events.off("destroy", clearFilter);
+    if (binding.scene.autoHost !== binding.wrapper) return;
     if (binding.descriptor) Object.defineProperty(binding.scene, "autoHost", binding.descriptor);
     else delete binding.scene.autoHost;
   }
@@ -132,6 +138,8 @@
     };
     scene.autoHost = wrapper;
     filterBinding = { scene, descriptor, wrapper };
+    scene.events.on("shutdown", clearFilter);
+    scene.events.on("destroy", clearFilter);
   }
 
   function center(s, point) {
@@ -148,7 +156,9 @@
   }
 
   function stop(reason, block = false) {
-    clearFilter();
+    // Keep the inert filter attached through death/off so the next native
+    // update after revival/re-enable cannot select an unfiltered target.
+    if (block || settings.targetMode === "all") clearFilter();
     if (block) revival = null;
     if (session) {
       const old = session;
@@ -242,7 +252,7 @@
       const scene = sceneNow();
       checkRespawn(scene);
       if (!settings.enabled && settings.targetMode === "all") return;
-      if (compatible(scene) && scene.self && !scene.self.dead && !scene.leaving
+      if (compatible(scene) && scene.self && !scene.leaving
           && connected(scene) && scene.auto !== blockedAuto) syncFilter(scene);
       else clearFilter();
       if (revival && (revival.scene !== scene || revival.auto !== scene?.auto)) revival = null;
@@ -469,15 +479,20 @@
     window.removeEventListener("keydown", guardFarmKey, true);
     suspended = true;
     death = null;
+    revival = null;
     respawnMessage = "";
     if (watcher !== null) clearInterval(watcher);
     watcher = null;
-    stop("Page left; extended range stopped.", true);
+    clearFilter();
+    // A BFCache pause is not a disconnect: retain any existing disconnect
+    // block, but do not create one for the healthy session being suspended.
+    stop("Page left; extended range stopped.");
   });
   window.addEventListener("pageshow", () => {
     window.addEventListener("keydown", guardFarmKey, true);
     suspended = false;
     watch();
+    discover();
   });
   window.postMessage({ channel: "gst:farm-status:v1", ready: true }, origin);
 })();

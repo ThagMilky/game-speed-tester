@@ -57,13 +57,15 @@ Bộ lọc hoạt động độc lập với mở rộng bán kính: tắt mở 
 
 Đối chiếu source `code.txt`, host cung cấp `enemy.lv`, `enemy.cls` và `enemy.wb`; game đặt `cls: "boss"` cho boss thế giới. Extension bọc riêng `scene.autoHost()` để giữ nguyên các chức năng và lọc `enemies()` khi game lựa chọn mục tiêu; cả Auto Farm gốc và phần mở rộng cùng nhận danh sách phù hợp. Chỉ boss khớp `cls === "boss"` hoặc `wb === true`. Không đoán level/boss từ tên hoặc HP; quái thiếu level hợp lệ bị loại trong hai chế độ level. Khi game đang nghỉ hồi máu (`auto.resting`), trả danh sách mối đe dọa đầy đủ để cơ chế rút lui vẫn nhận ra quái ngoài bộ lọc, không dùng việc đó để chọn mục tiêu farm.
 
-Đổi level đặt lại nhịp chọn mục tiêu `think` để game tự bỏ mục tiêu không còn khớp ở lượt xử lý kế tiếp; không hủy ngược kỹ năng đã được game phát hoặc đang chờ thực thi. Không có quái khớp thì game chờ/nhặt loot/quay về theo hành vi gốc; phần mở rộng cũng trả tâm về khi phù hợp. Chọn Tất cả sẽ gỡ wrapper, khôi phục descriptor/hàm gốc nếu vẫn do extension sở hữu. Dừng phiên, chết, mất kết nối hoặc rời trang cũng gỡ wrapper; khi đang chờ bật Auto Farm có thể cài lại wrapper nhưng chưa lọc khi `auto.on` tắt. Không sửa level, HP, damage, packet hoặc tạo bộ chiến đấu mới.
+Đổi level đặt lại nhịp chọn mục tiêu `think` để game tự bỏ mục tiêu không còn khớp ở lượt xử lý kế tiếp; không hủy ngược kỹ năng đã được game phát hoặc đang chờ thực thi. Không có quái khớp thì game chờ/nhặt loot/quay về theo hành vi gốc; phần mở rộng cũng trả tâm về khi phù hợp. Chọn Tất cả sẽ gỡ wrapper, khôi phục descriptor/hàm gốc nếu vẫn do extension sở hữu. Bộ lọc giữ qua lúc chết/hồi sinh hoặc Auto Farm tắt trong cùng scene để lượt chọn mục tiêu đầu tiên khi tiếp tục vẫn được lọc; wrapper trả host gốc khi `auto.on` tắt. Mất kết nối, scene shutdown/destroy hoặc rời trang sẽ gỡ wrapper và các listener riêng của bộ lọc. Không sửa level, HP, damage, packet hoặc tạo bộ chiến đấu mới.
 
 Bộ lọc giới hạn mục tiêu Auto Farm lựa chọn, không sửa vùng tác động của kỹ năng: đòn đánh lan vẫn có thể trúng quái ngoài bộ lọc. Quái phù hợp vẫn phải qua điều kiện chọn mục tiêu, đường đi và chiến đấu gốc; chế độ boss không ép game chọn boss bị cơ chế gốc loại bỏ hoặc chưa được server cung cấp.
 
 Nguồn/interface đã đối chiếu tĩnh và có kiểm tra khi cài wrapper. Việc bắt đầu lọc phụ thuộc phát hiện scene (watcher khoảng 1 giây), không bảo đảm hủy các hành động game đã chọn trước khi wrapper được gắn. Bộ lọc khoảng level/boss mới: **Tests/lint/typecheck/browser/gameplay: NOT RUN. Behavior: UNVERIFIED.** Kết quả harness bộ lọc chính xác cũ không xác minh các chế độ mới.
 
 ### Phím Auto Farm tùy chỉnh
+
+Khi màn hình game đang chờ gán phím (`keyCapture`) và trang đang có focus, extension nhường sự kiện cho bộ chọn phím của game. Các sự kiện phím farm ở tab bị ẩn/mất focus vẫn bị chặn như trước.
 
 Trong popup, chọn **Đặt phím**, sau đó bấm phím muốn dùng. Hỗ trợ một chữ A–Z, số 0–9 hoặc F1–F10 trừ F5, không kèm Ctrl/Alt/Shift/Meta; Esc hủy. Gợi ý **F6**. Lưu riêng ở `farmShortcut`, giữ qua tải lại/đổi map, áp dụng cho các tab game. Nếu cần, URL được thêm `timer` và tải lại một lần để truy cập scene; không bỏ tham số khác.
 
@@ -127,6 +129,10 @@ Chỉ dùng font có sẵn trên máy, mỗi lựa chọn có font dự phòng n
 - Tắt override trước khi tắt/gỡ extension. Chrome không bảo đảm script trong tab cũ được dọn ngay khi extension bị vô hiệu hóa/cập nhật; tải lại tab với override tắt để chắc chắn ngừng script cũ.
 
 ## Tham số timer và điều hướng
+
+- Bấm tắt mở rộng phạm vi hoặc tự hồi sinh chỉ cập nhật cờ tương ứng trên cài đặt đã lưu; không bị chặn bởi level/bán kính đang nhập dở và không tự lưu các bản nháp đó. Nếu lưu thất bại, checkbox trở lại bật và có thông báo lỗi. Các thao tác lưu/bật khác vẫn kiểm tra dữ liệu đầu vào.
+- Khi trang được khôi phục từ bộ nhớ điều hướng (BFCache), extension kiểm tra ngay để gắn lại bộ lọc và phiên mở rộng phù hợp. Tạm rời trang không tạo cờ chặn mất kết nối; cờ chặn do mất kết nối đã có vẫn được giữ. Không tự bật Auto Farm đang tắt.
+- Bốn bản sửa sau review (lệnh tắt, bộ lọc qua hồi sinh, BFCache, bộ chọn phím): chỉ đọc lại source/diff; tests/lint/typecheck/browser/gameplay **NOT RUN**, behavior **UNVERIFIED**, CI **NOT CHECKED**.
 
 Extension không giả định có thể tìm Phaser khi thiếu `window.game`. Nó dựa trên điều kiện đã cung cấp: game chỉ công khai biến này khi trang **được tải** với tham số `timer`.
 

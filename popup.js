@@ -94,22 +94,32 @@ async function refreshFarm() {
   } finally { farmBusy = false; }
 }
 
-async function saveFarm() {
+async function saveFarm(event) {
   if (farmSaving) return;
-  if (!farmEnabled.checked && !farmRadius.checkValidity()) farmRadius.value = "22";
-  if (!farmRadius.reportValidity()) return;
-  const radius = farmRadius.valueAsNumber;
-  if (!Number.isFinite(radius) || radius < 11 || radius > 100) return;
-  const targetMode = ["maxLevel", "minLevel", "boss"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
-  const needsLevel = targetMode === "maxLevel" || targetMode === "minLevel";
-  if (needsLevel && !farmTargetLevel.reportValidity()) return;
-  const targetLevel = farmTargetLevel.valueAsNumber;
-  if (needsLevel && (!Number.isSafeInteger(targetLevel) || targetLevel < 1)) return;
+  const disabling = event?.target === farmEnabled && !farmEnabled.checked ? "enabled"
+    : event?.target === autoRespawn && !autoRespawn.checked ? "autoRespawn" : null;
+  let farmPreferences;
+  if (!disabling) {
+    if (!farmEnabled.checked && !farmRadius.checkValidity()) farmRadius.value = "22";
+    if (!farmRadius.reportValidity()) return;
+    const radius = farmRadius.valueAsNumber;
+    if (!Number.isFinite(radius) || radius < 11 || radius > 100) return;
+    const targetMode = ["maxLevel", "minLevel", "boss"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
+    const needsLevel = targetMode === "maxLevel" || targetMode === "minLevel";
+    if (needsLevel && !farmTargetLevel.reportValidity()) return;
+    const targetLevel = farmTargetLevel.valueAsNumber;
+    if (needsLevel && (!Number.isSafeInteger(targetLevel) || targetLevel < 1)) return;
+    farmPreferences = { enabled: farmEnabled.checked, radius, autoRespawn: autoRespawn.checked,
+      targetMode, targetLevel: Number.isSafeInteger(targetLevel) && targetLevel > 0 ? targetLevel : 1 };
+  }
   farmSaving = true;
   farmControls.disabled = true;
-  const farmPreferences = { enabled: farmEnabled.checked, radius, autoRespawn: autoRespawn.checked,
-    targetMode, targetLevel: Number.isSafeInteger(targetLevel) && targetLevel > 0 ? targetLevel : 1 };
   try {
+    if (disabling) {
+      // An OFF action must not depend on unfinished radius/level drafts.
+      const saved = await chrome.storage.local.get("farmPreferences");
+      farmPreferences = { ...saved.farmPreferences, [disabling]: false };
+    }
     await chrome.storage.local.set({ farmPreferences });
     farmFeedback.textContent = "";
     try {
@@ -122,6 +132,7 @@ async function saveFarm() {
     }
     await refreshFarm();
   } catch {
+    if (disabling) event.target.checked = true;
     farmFeedback.textContent = "Chưa lưu được tùy chọn Auto Farm. Hãy mở lại popup.";
   } finally {
     farmSaving = false;
