@@ -32,7 +32,7 @@
     debugBusy = true;
     try {
       const data = await debugMessage("gst:harvest-debug-get");
-      if (data?.build !== "harvest-bridge-log-1") throw new Error("Old bridge");
+      if (data?.build !== "harvest-bridge-log-2-events") throw new Error("Old bridge");
       const value = JSON.stringify(data, null, 2);
       if (debugOutput.value !== value) debugOutput.value = value;
     } catch {

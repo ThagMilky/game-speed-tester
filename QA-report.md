@@ -4,6 +4,8 @@ Lưu ý cập nhật 2026-11-04: báo cáo bên dưới là kết quả lịch s
 
 ## Kết luận
 
+Người dùng đã xác nhận sau bản tách helper: nhân vật tự di chuyển và hái được; log cho thấy helper/normalize hiện diện ở cả world và cấu hình khớp. Bằng chứng này chỉ xác nhận luồng cơ bản, không xác nhận mọi cây. Báo cáo còn vài lượt fail chưa có sự kiện từng lượt trong log cũ. Bổ sung log start/request/ack/release và chờ cache mục tiêu tối đa 500 ms khi mục tiêu mới đúng cây; chưa tái hiện hoặc xác định nguyên nhân tất cả lượt fail. **Tests/lint/typecheck/browser/gameplay của agent: NOT RUN. Behavior bản sửa cache: UNVERIFIED. CI: NOT CHECKED.**
+
 Log người dùng cung cấp đã xác nhận lỗi trước sửa: ISOLATED không có GSTHarvest/normalize/marker dù manifest khai báo helper; MAIN có helper object/normalize function; storage API tồn tại và timer=true. Đối chiếu mã Chromium cho thấy loại trừ file theo đường dẫn đã inject. Sửa manifest dùng bản helper sinh có đường dẫn MAIN riêng, giữ helper chuẩn làm nguồn duy nhất và đặt trước cầu nối ISOLATED. **Lỗi trước sửa: có bằng chứng log người dùng. Sau sửa: chưa có log runtime. Tests/lint/typecheck/browser/gameplay: NOT RUN. CI: NOT CHECKED.** Không dùng bằng chứng lỗi trước sửa để tuyên bố hành vi sau sửa đã PASS.
 
 Log chẩn đoán HS-OPTIONS: thêm buffer tạm 60 dòng, trạng thái module/marker từng world, nhận diện manifest options ISOLATED, lỗi theo giai đoạn và sao chép/xóa/tắt log trong popup. Không chạy module game để thử, không lưu nội dung log ra storage hoặc gửi mạng. Chỉ review source/diff. **Tests/lint/typecheck/browser/gameplay: NOT RUN. CI: NOT CHECKED.** Đang chờ log thực tế để xác định vì sao normalize vắng ở cầu nối.

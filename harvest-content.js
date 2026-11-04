@@ -19,7 +19,7 @@
         (!script.world || script.world === "ISOLATED") && script.js?.includes("harvest-options.js"));
     } catch { /* Context-invalid diagnostics should still be readable. */ }
     return {
-      build: "harvest-bridge-log-1", world: "ISOLATED",
+      build: "harvest-bridge-log-2-events", world: "ISOLATED",
       helper: typeof globalThis.GSTHarvest, normalize: typeof globalThis.GSTHarvest?.normalize,
       optionsBuild: globalThis.__gstHarvestOptionsLoad?.build ?? "missing",
       normalizeAtLoad: globalThis.__gstHarvestOptionsLoad?.normalizeAtLoad ?? "missing",
@@ -51,10 +51,13 @@
     record("failure", lastFailure);
   }
   function debugState() {
-    return { enabled: debugEnabled, build: "harvest-bridge-log-1", module: moduleState(), lastFailure, rows: [...debugRows] };
+    return { enabled: debugEnabled, build: "harvest-bridge-log-2-events", module: moduleState(), lastFailure, rows: [...debugRows] };
   }
   function setDebug(value) {
-    debugEnabled = value === true;
+    const next = value === true;
+    window.postMessage({ channel: "gst:harvest:v1", type: "debug-configure", enabled: next }, origin);
+    if (next === debugEnabled) return;
+    debugEnabled = next;
     lastDebug.clear();
     if (debugEnabled) record("debug.enabled", moduleState());
     else { debugRows.length = 0; lastFailure = null; }
@@ -118,9 +121,30 @@
   }
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:harvest-status:v1") return;
-    if (event.data.ready) { if (preferences) configure(preferences); return; }
+    if (event.data.ready) {
+      window.postMessage({ channel: "gst:harvest:v1", type: "debug-configure", enabled: debugEnabled }, origin);
+      if (preferences) configure(preferences);
+      return;
+    }
     const entry = pending.get(event.data.requestId);
     const data = event.data;
+    if (data.type === "harvest-event") {
+      if (!["harvest.start", "harvest.request", "harvest.ack", "harvest.release"].includes(data.event)) return;
+      const codes = ["selected", "native_F", "started", "yield", "detach", "yield_native", "blocked",
+        "harvest_ended", "node_unavailable_before_ack", "request_timeout", "target_changed", "danger",
+        "interaction_target_other", "interaction_cache_timeout", "pre_interaction_blocked", "interact_error",
+        "stalled", "approach_timeout", "no_path", "path_blocked", "manual_pointer", "manual_key"];
+      record(data.event, {
+        code: codes.includes(data.code) ? data.code : "unknown",
+        attempt: Number.isSafeInteger(data.attempt) && data.attempt > 0 ? data.attempt : null,
+        node: Number.isSafeInteger(data.node) && data.node >= 0 ? data.node : null,
+        phase: ["moving", "request", "harvesting"].includes(data.phase) ? data.phase : "unknown",
+        elapsedMs: Number.isFinite(data.elapsedMs) ? Math.max(0, Math.min(86400000, data.elapsedMs)) : null,
+        distance: Number.isFinite(data.distance) ? Math.max(0, Math.min(1000000, data.distance)) : null,
+        ready: data.ready === true, fixChanged: typeof data.fixChanged === "boolean" ? data.fixChanged : null
+      });
+      return;
+    }
     if (data.type === "diagnostics") {
       const page = data.debug;
       record("main.snapshot", {
@@ -186,7 +210,7 @@
         pending.delete(requestId); record("main.timeout", { received: false }); respond(debugState());
       }, 800);
       pending.set(requestId, { timer, respond, kind: "debug" });
-      window.postMessage({ channel: "gst:harvest:v1", type: "diagnostics", requestId }, origin);
+      window.postMessage({ channel: "gst:harvest:v1", type: "diagnostics", requestId, enabled: true }, origin);
       return true;
     }
     if (message?.type === "gst:harvest-configure") {

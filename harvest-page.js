@@ -12,6 +12,8 @@
   let lastStep = -Infinity;
   let modalAt = -Infinity;
   let modal = false;
+  let debugEnabled = false;
+  let attempt = 0;
   const skipped = new Map();
   const finite = Number.isFinite;
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -109,7 +111,19 @@
     if (scene.autoY !== y) scene.autoY = y;
     if (job) job.steer = [x, y];
   }
-  function release(reason, cooldown = 0) {
+  function trace(event, code) {
+    if (!debugEnabled || !job || !binding) return;
+    const scene = binding.scene;
+    const distance = dist({ x: scene.px, y: scene.py }, job.node);
+    window.postMessage({ channel: "gst:harvest-status:v1", type: "harvest-event",
+      event, code, attempt: job.attempt, node: job.index, phase: job.phase,
+      elapsedMs: Math.round(performance.now() - job.startAt),
+      distance: finite(distance) ? Math.round(distance * 100) / 100 : null,
+      ready: job.node.ready === true,
+      fixChanged: finite(job.startFix) && finite(scene.self?.fix) ? scene.self.fix !== job.startFix : null }, origin);
+  }
+  function release(reason, cooldown = 0, code = "yield") {
+    trace("harvest.release", code);
     if (job && binding) {
       const scene = binding.scene;
       if (job.steer && scene.autoX === job.steer[0] && scene.autoY === job.steer[1]) {
@@ -123,7 +137,7 @@
     if (reason) message = reason;
   }
   function detach() {
-    release();
+    release(undefined, 0, "detach");
     window.removeEventListener("pointerdown", onPointer, true);
     window.removeEventListener("keydown", onKey, true);
     const old = binding;
@@ -165,7 +179,7 @@
           try {
             if (!blocked(scene) && farmAllowed(scene) && !fighting(scene) && !danger(scene, job.node)) return;
           } catch { /* Yield to the native update if a runtime interface changes. */ }
-          release("Nhường lại cho game; tạm dừng thu hoạch.");
+          release("Nhường lại cho game; tạm dừng thu hoạch.", 0, "yield_native");
         }
         return original.apply(this, args);
       };
@@ -207,16 +221,20 @@
       || (fighting(scene) ? "Chờ Auto Farm kết thúc mục tiêu chiến đấu hiện tại." : null)
       || (!finite(scene.px) || !finite(scene.py) ? "Chờ tọa độ nhân vật hợp lệ." : null);
     if (reason) {
-      release(reason);
+      release(reason, 0, "blocked");
       return;
     }
     if (job?.phase === "request" || job?.phase === "harvesting") {
       steer(scene, 0, 0);
       if (scene.harvesting && scene.harvestNode === job.index) {
-        job.phase = "harvesting";
+        if (job.phase !== "harvesting") {
+          job.phase = "harvesting";
+          trace("harvest.ack", "started");
+        }
         message = `Đang hái ${job.node.item}.`;
-      } else if (job.phase === "harvesting") release("Lượt hái đã kết thúc; đang quan sát lại.", 20000);
-      else if (!job.node.ready || now - job.requestedAt > 4000) release("Chưa xác nhận lượt hái; tạm bỏ qua cây này.", 20000);
+      } else if (job.phase === "harvesting") release("Lượt hái đã kết thúc; đang quan sát lại.", 20000, "harvest_ended");
+      else if (!job.node.ready || now - job.requestedAt > 4000) release("Chưa xác nhận lượt hái; tạm bỏ qua cây này.", 20000,
+        !job.node.ready ? "node_unavailable_before_ack" : "request_timeout");
       return;
     }
     if (scene.harvesting) {
@@ -256,30 +274,39 @@
           : "Chờ khu vực an toàn ổn định 1 giây.";
         return;
       }
-      job = { ...next, phase: "moving", path: [], routeAt: -Infinity, startAt: now,
+      job = { ...next, attempt: ++attempt, startFix: scene.self.fix, phase: "moving", path: [], routeAt: -Infinity, startAt: now,
         progressAt: now, x: scene.px, y: scene.py, steer: null };
+      trace("harvest.start", "selected");
     }
     const node = job.node;
     if (scene.nodes[job.index] !== node || !matches(node) || !node.ready || dist(node, binding.home) > settings.radius) {
-      release("Cây đã thay đổi hoặc không còn phù hợp.", 5000);
+      release("Cây đã thay đổi hoặc không còn phù hợp.", 5000, "target_changed");
       return;
     }
-    if (danger(scene, node)) { release("Có quái gần; nhường lại cho game."); return; }
+    if (danger(scene, node)) { release("Có quái gần; nhường lại cho game.", 0, "danger"); return; }
     const pos = { x: scene.px, y: scene.py };
     if (dist(pos, node) <= settings.reach) {
       steer(scene, 0, 0);
       const picked = scene.pickTarget();
       const cached = scene.target;
-      if (picked?.node !== job.index || cached?.node !== job.index
-          || "gate" in picked || "realm" in picked || "gate" in cached || "realm" in cached) {
-        release("Mục tiêu F chưa đúng cây; bỏ qua để tránh cổng/NPC.", 20000);
+      if (picked?.node !== job.index || "gate" in picked || "realm" in picked) {
+        release("Mục tiêu F chưa đúng cây; bỏ qua để tránh cổng/NPC.", 20000, "interaction_target_other");
         return;
       }
+      if (cached?.node !== job.index || "gate" in cached || "realm" in cached) {
+        job.targetWaitAt ??= now;
+        if (now - job.targetWaitAt > 500) release("Mục tiêu F của game chưa cập nhật đúng cây; tạm bỏ qua.", 20000, "interaction_cache_timeout");
+        else message = "Chờ game cập nhật mục tiêu F đúng cây.";
+        return;
+      }
+      job.targetWaitAt = null;
       // Recheck directly before the native F action; never force scene.target.
-      if (blocked(scene, true) || danger(scene, node) || !node.ready) { release("Tạm dừng tương tác."); return; }
+      if (blocked(scene, true) || danger(scene, node) || !node.ready) { release("Tạm dừng tương tác.", 0, "pre_interaction_blocked"); return; }
       job.phase = "request";
       job.requestedAt = now;
-      scene.interact();
+      trace("harvest.request", "native_F");
+      try { scene.interact(); }
+      catch { release("Lỗi khi gọi tương tác của game; tạm bỏ qua.", 20000, "interact_error"); return; }
       message = `Đã yêu cầu hái ${node.item}; chờ game xác nhận.`;
       return;
     }
@@ -287,7 +314,7 @@
       job.x = pos.x; job.y = pos.y; job.progressAt = now;
     }
     if (now - job.progressAt > 5000 || now - job.startAt > 15000) {
-      release("Không tới được cây; tạm bỏ qua.", 20000);
+      release("Không tới được cây; tạm bỏ qua.", 20000, now - job.progressAt > 5000 ? "stalled" : "approach_timeout");
       return;
     }
     let goal = node;
@@ -295,7 +322,7 @@
       if (!job.path.length || now - job.routeAt > 1500) {
         const path = host.route(pos.x, pos.y, node.x, node.y);
         if (!Array.isArray(path) || !path.length || path.some((p) => !Array.isArray(p) || p.length !== 2 || !p.every(finite))) {
-          release("Không tìm được đường tới cây.", 20000); return;
+          release("Không tìm được đường tới cây.", 20000, "no_path"); return;
         }
         job.path = path.map((p) => [...p]);
         job.previous = null;
@@ -304,7 +331,7 @@
       while (job.path.length > 1 && (dist(pos, { x: job.path[0][0], y: job.path[0][1] }) < 0.5
           || passedPoint(scene, pos, job.path[0], job.path[1], host))) job.path.shift();
       goal = { x: job.path[0][0], y: job.path[0][1] };
-      if (!host.clear(pos.x, pos.y, goal.x, goal.y)) { release("Đường bị chặn; tạm bỏ qua cây.", 20000); return; }
+      if (!host.clear(pos.x, pos.y, goal.x, goal.y)) { release("Đường bị chặn; tạm bỏ qua cây.", 20000, "path_blocked"); return; }
     } else job.path = [];
     const length = dist(pos, goal);
     steer(scene, length > 0.05 ? (goal.x - pos.x) / length : 0, length > 0.05 ? (goal.y - pos.y) / length : 0);
@@ -356,6 +383,7 @@
     }
     if (job?.phase === "request" && binding?.scene.harvesting && binding.scene.harvestNode === job.index) {
       job.phase = "harvesting";
+      trace("harvest.ack", "started");
     }
     if (!settings.enabled) {
       detach();
@@ -371,9 +399,11 @@
   }
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:harvest:v1") return;
+    if (event.data.type === "debug-configure") { debugEnabled = event.data.enabled === true; return; }
     if (event.data.type === "diagnostics") {
+      if (event.data.enabled === true) debugEnabled = true;
       window.postMessage({ channel: "gst:harvest-status:v1", type: "diagnostics", requestId: event.data.requestId,
-        debug: { build: "harvest-main-log-1", world: "MAIN", helper: typeof globalThis.GSTHarvest,
+        debug: { build: "harvest-main-log-2-events", world: "MAIN", helper: typeof globalThis.GSTHarvest,
           normalize: typeof globalThis.GSTHarvest?.normalize,
           optionsBuild: globalThis.__gstHarvestOptionsLoad?.build ?? "missing",
           enabled: settings.enabled, scene: binding !== null, controlling: job !== null } }, origin);
@@ -400,7 +430,7 @@
   function onPointer(event) {
     if (binding && event.isTrusted && event.target === binding.scene.game?.canvas) {
       manualUntil = performance.now() + 3000;
-      release("Tạm dừng 3 giây sau thao tác chuột.");
+      release("Tạm dừng 3 giây sau thao tác chuột.", 0, "manual_pointer");
     }
   }
   function onKey(event) {
@@ -408,7 +438,7 @@
     if (Object.values(binding.scene.controls?.bindings ?? {}).includes(event.keyCode)
         || [37, 38, 39, 40].includes(event.keyCode)) {
       manualUntil = performance.now() + 3000;
-      release("Tạm dừng 3 giây sau thao tác phím trong game.");
+      release("Tạm dừng 3 giây sau thao tác phím trong game.", 0, "manual_key");
     }
   }
   window.addEventListener("pagehide", () => {
