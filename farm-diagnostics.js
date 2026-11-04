@@ -80,8 +80,8 @@
         const snapshot = { ...flags(scene), deaths };
         if (binding?.auto === auto) binding.lastOn = this.on;
         if (this.on) { onAt = performance.now(); record(scene, "on", reason, callers, snapshot); }
-        else queueMicrotask(() => record(scene, "off", deathStop ? "death_limit"
-          : reason === "shortcut" ? reason : scene.clickOrder ? "click_to_move" : reason, callers,
+        else queueMicrotask(() => record(scene, "off", reason === "shortcut" ? reason
+          : deathStop ? "death_limit" : scene.clickOrder ? "click_to_move" : reason, callers,
           { ...snapshot, clickOrder: !!scene.clickOrder }));
       }
       return result;

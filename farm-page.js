@@ -8,7 +8,6 @@
   let filterBinding = null;
   let death = null;
   let respawnMessage = "";
-  let deathLimitAuto = null;
   let watcher = null;
   let session = null;
   let blockedAuto = null;
@@ -89,6 +88,7 @@
     if (scene.chat?.typing || scene.keyCapture || (!scene.auto?.on
         && (scene.self.dead || scene.uiBlocked || !connected(scene)))) return;
     shortcutMessage = "";
+    globalThis.GSTFarmRevivePolicy?.attach(scene);
     const previousAuto = scene.auto;
     const wasOn = previousAuto?.on;
     if (wasOn === false && session) stop("Đã kết thúc phiên hỗ trợ cũ trước khi bật lại Auto Farm.");
@@ -228,7 +228,6 @@
       return;
     }
     if (!death || death.scene !== scene) death = { scene, requested: false };
-    if (scene.auto?.stopOnRevive === true) deathLimitAuto = scene.auto;
     if (!settings.autoRespawn && !harvestRequest) return;
     if (!harvestRequest && !scene.auto?.on) return;
     if ([...document.querySelectorAll('[role="alertdialog"]')].some((el) =>
@@ -297,6 +296,7 @@
     if ((!settings.enabled && !settings.autoRespawn && settings.targetMode === "all") || suspended || session) return;
     try {
       const scene = sceneNow();
+      globalThis.GSTFarmRevivePolicy?.attach(scene);
       globalThis.GSTFarmDiagnostics?.attach(scene);
       checkRespawn(scene);
       if (!settings.enabled && settings.targetMode === "all") return;
@@ -341,7 +341,6 @@
         revival = null;
       }
       const point = { x: scene.auto.ax, y: scene.auto.ay };
-      deathLimitAuto = null;
       session = { scene, auto: scene.auto, home: point, center: { ...point }, at: -Infinity,
         reanchor: false, groundedAt: null, flightRequestedAt: null };
       clearInterval(watcher);
@@ -504,6 +503,7 @@
         targetMinLevel: Number.isSafeInteger(data.targetMinLevel) && data.targetMinLevel > 0 ? data.targetMinLevel : 1,
         targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20 };
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());
+      globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
       if (settings.targetMode === "all") clearFilter();
       if (session) {
         syncFilter(session.scene);
@@ -526,19 +526,16 @@
     if (data.type === "status") {
       let autoOn = null;
       let dead = null;
-      let stoppedAfterDeaths = false;
       let waitReason = "";
       try {
         const scene = sceneNow();
-        stoppedAfterDeaths = deathLimitAuto !== null && scene?.auto === deathLimitAuto;
         if (typeof scene?.auto?.on === "boolean") autoOn = scene.auto.on;
         if (scene?.self) dead = !!scene.self.dead;
         waitReason = nativeWaitReason(scene);
       } catch { /* Read-only status must not start or restart gameplay. */ }
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
-        message: (settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage || (autoOn === false && stoppedAfterDeaths
-          ? "Auto Farm is OFF. The game recorded repeated deaths and may have stopped farming; use its configured shortcut manually to start a new session."
-          : dead && respawnMessage ? respawnMessage : (waitReason || globalThis.GSTFarmSession?.status(sceneNow()) || globalThis.GSTFarmSeals?.status(sceneNow()) || message))),
+        message: (settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage
+          || (dead && respawnMessage ? respawnMessage : (waitReason || globalThis.GSTFarmSession?.status(sceneNow()) || globalThis.GSTFarmSeals?.status(sceneNow()) || message))),
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);
     }
   });

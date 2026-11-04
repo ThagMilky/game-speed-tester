@@ -9,7 +9,7 @@
   "content_scripts": [
     {
       "matches": ["https://nghichthienky.online/*"],
-      "js": ["harvest-main-options.js", "farm-update.js", "farm-input.js", "page.js", "farm-page.js", "farm-diagnostics.js", "farm-session.js", "farm-seals.js", "realm-page.js", "harvest-page.js"],
+      "js": ["harvest-main-options.js", "farm-update.js", "farm-revive-policy.js", "farm-input.js", "page.js", "farm-page.js", "farm-diagnostics.js", "farm-session.js", "farm-seals.js", "realm-page.js", "harvest-page.js"],
       "run_at": "document_start",
       "world": "MAIN"
     },

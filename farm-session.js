@@ -13,9 +13,9 @@
     return !!d && !d.closing && !d.reconnecting && !d.displaced
       && (d.online === false || d.link?.open?.() === true);
   }
-  function save(scene, on, blocked = false) {
+  function save(scene, on) {
     if (typeof scene.profile?.name !== "string") return;
-    intent = { name: scene.profile.name, on, blocked };
+    intent = { name: scene.profile.name, on, blocked: false };
     try { sessionStorage.setItem(storageKey, JSON.stringify(intent)); }
     catch { /* Do not claim persistence when browser storage is unavailable. */ }
     monitorResume();
@@ -51,6 +51,7 @@
       at = now;
       if (!scene.self) { stableAt = null; return; }
       if (intent?.name !== scene.profile?.name) { save(scene, scene.auto.on); stableAt = null; }
+      if (intent?.blocked === true && globalThis.GSTFarmRevivePolicy?.active(scene)) save(scene, true);
       if (scene.driver?.displaced) { if (intent?.on) save(scene, false); stableAt = null; return; }
       if (scene.auto.on) {
         monitorResume();
@@ -62,7 +63,7 @@
       }
       if (binding.pendingToggle) return;
       if (binding.seenOn && !scene.leaving && connected(scene)) {
-        save(scene, false, scene.auto.stopOnRevive === true);
+        save(scene, false);
         binding.seenOn = false;
       }
       if (!keep || !intent?.on || intent.blocked || suspended) return;
@@ -104,7 +105,7 @@
       const original = scene.toggleAutoFarm;
       const descriptor = Object.getOwnPropertyDescriptor(scene, "toggleAutoFarm");
       const wrapper = function (...args) {
-        const owner = binding, before = this.auto.on, deathStop = this.auto.stopOnRevive === true;
+        const owner = binding, before = this.auto.on;
         const result = original.apply(this, args);
         if (owner?.scene !== this || before === this.auto.on || owner.restoring || suspended || this.leaving) return result;
         restoreAttempts.delete(this.auto);
@@ -116,11 +117,11 @@
           queueMicrotask(() => {
             owner.pendingToggle = false;
             if (binding !== owner || suspended || this.leaving) return;
-            if (keep && this.clickOrder && !deathStop && intent?.on) {
+            if (keep && this.clickOrder && intent?.on) {
               pausedUntil = performance.now() + 3000;
               owner.seenOn = false; stableAt = null; attempted = false;
               monitorResume();
-            } else { save(this, false, deathStop); owner.seenOn = false; }
+            } else { save(this, false); owner.seenOn = false; }
           });
         }
         return result;

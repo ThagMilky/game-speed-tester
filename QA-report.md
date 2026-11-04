@@ -1,8 +1,10 @@
 # Kết quả QA extension — 2026-11-03
 
-Lưu ý cập nhật 2026-11-04: kết quả 29 ca bên dưới là lịch sử. Lượt QA tự tắt tab nền mới có 27 ca cục bộ, ghi riêng ở Kết luận; không thay thế bằng chứng browser/gameplay. Các mục cũ ghi NOT RUN vẫn chưa được kiểm chứng nếu không nằm trong lượt QA mới. Lint/typecheck/CI không được kiểm tra trong lượt này.
+Lưu ý cập nhật 2026-11-04: kết quả 29 ca bên dưới là lịch sử. Lượt QA tự tắt tab nền trước có 27 ca cục bộ; lượt chính sách hồi sinh mới có 32 ca, ghi riêng ở Kết luận; không thay thế bằng chứng browser/gameplay. Các mục cũ ghi NOT RUN vẫn chưa được kiểm chứng nếu không nằm trong lượt QA mới. Lint/typecheck/CI không được kiểm tra trong lượt này.
 
 ## Kết luận
+
+**Cập nhật chính sách hồi sinh 2026-11-04: 32/32 PASS cục bộ.** Chạy lại `node work/qa-auto-stop.cjs` từ workspace cha, kết quả `work/qa-auto-stop-results.json`. Bỏ riêng cờ stopOnRevive khi farm ON trong lượt chết/hồi sinh, giữ nguyên lịch sử chết/native respawn và thời gian chờ. Mô phỏng 10 lần chết liên tiếp vẫn ON; hoạt động khi keepFarm tắt; V/F10 OFF trong lượt chết thứ ba vẫn OFF; di trú blocked từ bản cũ; không can thiệp cờ khi farm OFF. Giữ các ca click/phím nền, 30 phút đồng hồ giả, lease Tự hái, scene/page cleanup và giới hạn quyền. Ca game gốc không extension vẫn dừng ở lần thứ ba là bằng chứng đối chiếu, không phải hành vi extension mới. Không thêm timer chính sách hoặc sửa HP/combat/network. Browser/live gameplay **NOT RUN / UNVERIFIED**; lint/typecheck/full historical suite **NOT RUN**; CI **NOT CHECKED**. Các mô tả giữ giới hạn chết bên dưới là lịch sử trước yêu cầu mới, đã được thay thế.
 
 **QA tự tắt Auto Farm, 2026-11-04: 27/27 PASS cục bộ.** Lệnh `node work/qa-auto-stop.cjs` từ workspace cha; kết quả `work/qa-auto-stop-results.json`. Trước sửa, hai ca mong muốn chặn click khi hidden/unfocused FAIL; native startClickOrder thực sự gọi tắt farm trong mô hình dùng đúng method nguồn. Sau thêm guard thực thi và input lease chung, hai ca PASS; click hợp lệ vẫn chạy native, Tự hái bật/tắt 10 vòng không chồng wrapper hoặc tháo guard còn dùng. Có kiểm tra V/F10 nền, repeat, OFF chủ động, 30 phút đồng hồ mô phỏng không tự OFF, native lần chết thứ ba/10 phút vẫn dừng, ON/OFF qua reload/nhân vật khác, cleanup, log 20 mốc, privacy/cầu nối và file/ID/permissions.
 
