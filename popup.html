@@ -16,6 +16,7 @@
   <script src="fps-popup.js" defer></script>
   <script src="realm-time-popup.js" defer></script>
   <script src="chest-popup.js" defer></script>
+  <script src="menu-position.js" defer></script>
   <script src="menu-popup.js" defer></script>
 </head>
 <body>
@@ -218,6 +219,18 @@
           </div>
           <p class="hint">Tự lưu. Bảng nằm phía trên bên phải, lệch trái bản đồ để chừa khoảng cách; màn hình hẹp đặt dưới bản đồ. Độc lập với các tính năng khác.</p>
         </fieldset>
+      </div>
+    </details>
+    <details class="card" data-panel="menu-position">
+      <summary><span><strong>Vị trí nút Menu tool</strong><small>Chọn nhanh hoặc kéo tùy chỉnh</small></span></summary>
+      <div class="card-body">
+        <fieldset id="menuPositionControls" disabled>
+          <label for="menuPosition">Vị trí chọn nhanh (tự lưu)</label>
+          <select id="menuPosition"><option value="top-center">Trên giữa — mặc định</option><option value="top-left">Trên trái</option><option value="top-right">Trên phải</option><option value="bottom-left">Dưới trái</option><option value="bottom-center">Dưới giữa</option><option value="bottom-right">Dưới phải</option><option value="custom">Tùy chỉnh</option></select>
+          <div class="button-row"><button id="editMenuPosition" type="button">Chỉnh vị trí</button><button id="resetMenuPosition" type="button">Về mặc định</button></div>
+          <p class="hint">Chỉnh vị trí sẽ đóng bảng để bạn kéo nút trong game. Kéo xong bấm Lưu vị trí; Hủy/Esc để bỏ thay đổi. Vị trí lưu theo tỷ lệ màn hình, giữ qua đổi map; bảng điều khiển vẫn mở ở giữa.</p>
+        </fieldset>
+        <p id="menuPositionFeedback" class="notice" role="status"></p>
       </div>
     </details>
     <details class="card" data-panel="font">

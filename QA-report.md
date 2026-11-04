@@ -4,6 +4,8 @@ Lưu ý cập nhật 2026-11-04: kết quả 29 ca bên dưới là lịch sử.
 
 ## Kết luận
 
+**Vị trí nút Menu tool, 2026-11-04 — chưa QA.** Thêm preset và x/y chuẩn hóa trong menuPosition, chế độ kéo có Lưu/Hủy/Esc, clamp theo viewport/kích thước nút, ResizeObserver và đồng bộ storage có revision. Chặn click/phím khi chỉnh, không ghi liên tục trong pointermove, không đổi vị trí modal giữa hoặc bảng trạng thái. Chỉ review diff/status. **Tests/lint/typecheck/browser/gameplay: NOT RUN; drag/focus/resize thực tế UNVERIFIED; CI: NOT CHECKED.**
+
 **Sửa tương thích di chuyển/nền, 2026-11-04 — chưa QA.** Bổ sung chest/map/avoid vào guard nhường của speed stabilizer. navigation.js dùng cho private walk, chỉ prune waypoint trung gian có bằng chứng vượt điểm (path/point/fix giữ nguyên, clear tới next), riêng né nhận biết đã đi qua vùng đến. Worker nền standalone chỉ hidden + auto.on=false + thu hoạch hoặc rương trong bí cảnh; dùng headlessStep theo source native backgroundAuto, không bật farm, theo dõi frame để tránh bước trùng, dọn khi tắt/ON native/đổi scene/page và chốt lỗi Worker. Source đích vẫn code.txt bản có sẵn, chưa xác minh phiên bản live. **Tests/lint/typecheck/browser/gameplay: NOT RUN; tương thích Worker/CSP, đi đường tốc độ cao và tab nền thực tế: UNVERIFIED; CI: NOT CHECKED.** QA55 ca bên dưới thuộc trước sửa, không dùng làm bằng chứng sau sửa.
 
 **QA cục bộ UI/Bí cảnh/Thu hoạch, 2026-11-04: 23/23 ca mới + 32/32 ca hồi quy PASS (55/55).** Chạy `node work/qa-realm-features.cjs` và `node work/qa-auto-stop.cjs` từ workspace cha; kết quả `work/qa-realm-features-results.json` và `work/qa-auto-stop-results.json`, ngoài gói extension. Không có thay đổi implementation trong lượt QA này.
