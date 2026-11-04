@@ -17,7 +17,9 @@
   <script src="realm-time-popup.js" defer></script>
   <script src="chest-popup.js" defer></script>
   <script src="quest-popup.js" defer></script>
+  <script src="flight-popup.js" defer></script>
   <script src="menu-position.js" defer></script>
+  <script src="popup-help.js" defer></script>
   <script src="menu-popup.js" defer></script>
 </head>
 <body>
@@ -171,10 +173,15 @@
       </div>
     </details>
     <details class="card" data-panel="speed">
-      <summary><span><strong>Tốc độ di chuyển</strong><small>Chỉnh riêng đi bộ và bay</small></span></summary>
+      <summary><span><strong>Di chuyển</strong><small>Trạng thái bay và tốc độ</small></span></summary>
       <div class="card-body">
+        <label class="switch-row"><span>Luôn giữ trạng thái bay</span><input id="alwaysFlying" class="switch" type="checkbox"></label>
+        <p class="hint">Đã bay thì bỏ qua. Đang đi bộ thì chờ ổn định 1 giây, yêu cầu bay một lần và chờ game xác nhận. Giữ lựa chọn qua đổi map/hồi sinh. Tắt công tắc không ép hạ xuống đi bộ; Auto Farm vẫn có hỗ trợ bay riêng. Nếu bạn tự tắt bay khi công tắc đang bật, tool sẽ bật lại sau khoảng nghỉ. Không spam khi game chưa cho phép bay.</p>
+        <p id="flightStatus" class="hint" role="status">Đang đọc trạng thái bay…</p>
         <fieldset id="controls" disabled aria-label="Tùy chọn tốc độ">
           <label class="switch-row"><span>Bật điều chỉnh tốc độ</span><input id="enabled" class="switch" type="checkbox"></label>
+          <div id="speedSettings" hidden>
+          <p class="field-title">Bình thường</p>
           <div class="two-columns">
             <div><label for="walkingSpeed">Đi bộ</label><input id="walkingSpeed" type="number" min="1" max="6" step="0.001" value="3.5" required></div>
             <div><label for="flyingSpeed">Bay</label><input id="flyingSpeed" type="number" min="1" max="6" step="0.001" value="2" required></div>
@@ -185,6 +192,7 @@
             <div><label for="farmFlyingSpeed">Bay khi farm</label><input id="farmFlyingSpeed" type="number" min="1" max="6" step="0.001" value="1.5" required></div>
           </div>
           <button id="save" type="button" class="primary full">Lưu tốc độ</button>
+          </div>
           <button id="resetGameSpeed" type="button" class="full">Về tốc độ mặc định của game</button>
           <p class="hint">Giới hạn 1–6 cho tốc độ ngoài farm. Khi Auto Farm bật dùng hai mức riêng bên trên (mặc định bay 1.5, đi bộ 2). Bật/tắt farm hoặc đổi bay/đi bộ phải ổn định 1 giây mới đổi tốc độ. Nút về mặc định tắt điều chỉnh tốc độ cả trong và ngoài farm, giữ các mức đã lưu.</p>
         </fieldset>

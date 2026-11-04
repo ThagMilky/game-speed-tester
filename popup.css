@@ -86,3 +86,12 @@ input[type="search"] { width: 100%; min-height: 36px; padding: 7px 9px; font: in
 #harvestDebugOutput, #farmDiagnosticsOutput { width: 100%; resize: vertical; margin: 8px 0; padding: 8px; font: 10px/1.5 Consolas, monospace; color: var(--text); background: var(--subtle); border: 1px solid var(--border); border-radius: 7px; }
 
 body.embedded { width: 100%; max-height: none; min-width: 0; }
+.compact-help-row { display: flex; align-items: center; gap: 7px; margin: 6px 0; min-width: 0; }
+.compact-help-row > :first-child { flex: 1; min-width: 0; margin-block: 0; }
+.compact-help { display: inline-flex; flex-shrink: 0; }
+.compact-help-button { display: inline-flex; align-items: center; justify-content: center; width: 19px; height: 19px; min-height: 0; padding: 0; border-radius: 50%; color: var(--muted); font-size: 11px; }
+.compact-tooltip { position: fixed; z-index: 1000; display: block; box-sizing: border-box; max-height: min(50vh, 280px); overflow: auto; padding: 10px 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 11px; line-height: 1.6; box-shadow: 0 4px 14px #0005; }
+.compact-tooltip[hidden] { display: none; }
+.compact-help-paragraph { display: block; }
+.compact-help-paragraph + .compact-help-paragraph { margin-top: 8px; }
+.field-help[data-open="true"] .help-tooltip { display: block; }

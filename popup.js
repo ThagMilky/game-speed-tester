@@ -207,6 +207,8 @@ async function refresh() {
   globalThis.GSTFpsPopup?.refresh();
   globalThis.GSTChestPopup?.refresh();
   globalThis.GSTQuestPopup?.refresh();
+  globalThis.GSTFlightPopup?.refresh();
+  document.getElementById("speedSettings").hidden = !enabledInput.checked;
   if (busy) return;
   busy = true;
   try {
@@ -250,6 +252,7 @@ async function save() {
 
 document.getElementById("save").addEventListener("click", save);
 enabledInput.addEventListener("change", () => {
+  document.getElementById("speedSettings").hidden = !enabledInput.checked;
   // Disabling must work even when the speed input contains invalid draft text.
   if (!enabledInput.checked) {
     if (!walkingInput.checkValidity()) walkingInput.value = "3.5";
@@ -316,6 +319,7 @@ fontControls.addEventListener("change", async () => {
 
 chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences", "farmPreferences", "farmShortcut"]).then(({ preferences, displayPreferences, fontPreferences, farmPreferences, farmShortcut }) => {
   enabledInput.checked = preferences?.enabled === true;
+  document.getElementById("speedSettings").hidden = !enabledInput.checked;
   for (const [input, fallback] of [[walkingInput, 3.5], [flyingInput, 2], [farmWalkingInput, 2], [farmFlyingInput, 1.5]]) {
     const speed = preferences?.[input.id];
     input.value = typeof speed === "number" && Number.isFinite(speed)

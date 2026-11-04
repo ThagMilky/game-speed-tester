@@ -267,33 +267,10 @@
     return "Đã bấm hồi sinh; chờ game xác nhận rồi tiếp tục Tự hái.";
   }
 
-  function ensureFlying(s, time) {
-    if (s.scene.self.fly) {
-      s.groundedAt = null;
-      s.flightRequestedAt = null;
-      return true;
-    }
-    if (s.flightRequestedAt !== null) {
-      message = time - s.flightRequestedAt < 8
-        ? "Waiting for the game to confirm flight; no repeated toggle sent."
-        : "Flight not confirmed. Check game conditions or press R; no repeated toggle sent.";
-      return false;
-    }
-    if (typeof s.scene.act !== "function") {
-      message = "Flight action unavailable. Enable flight with the game's control.";
-      return false;
-    }
-    if (s.groundedAt === null) s.groundedAt = time;
-    if (time - s.groundedAt < 1) {
-      message = "Preparing to enable flight for Auto Farm.";
-      return false;
-    }
-    // The native R action is a toggle. Send once per grounded episode and wait
-    // for self.fly; never write fly, synthesize a key or resend an unacked toggle.
-    s.flightRequestedAt = time;
-    s.scene.act("fly");
-    message = "Flight requested through the game's action; waiting for confirmation.";
-    return false;
+  function ensureFlying(s) {
+    const ready = globalThis.GSTFlight?.ensure(s.scene) === true;
+    if (!ready) message = globalThis.GSTFlight?.status() ?? "Chờ bộ điều khiển bay.";
+    return ready;
   }
 
   function watch() {
@@ -356,7 +333,7 @@
       }
       const point = { x: scene.auto.ax, y: scene.auto.ay };
       session = { scene, auto: scene.auto, home: point, center: { ...point }, at: -Infinity,
-        reanchor: false, groundedAt: null, flightRequestedAt: null };
+        reanchor: false };
       clearInterval(watcher);
       watcher = null;
       scene.events.on("preupdate", onFrame);
@@ -439,7 +416,6 @@
         s.reanchor = false;
       }
       if (s.auto.resting || host.meditating() || s.scene.pendingSkill || s.scene.aiming || GSTFarmRouting.blocked(s.scene)) {
-        s.groundedAt = null;
         message = "Waiting for built-in healing, skill or UI handling.";
         return;
       }
