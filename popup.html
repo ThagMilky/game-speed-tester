@@ -141,8 +141,14 @@
             <div><label for="walkingSpeed">Đi bộ</label><input id="walkingSpeed" type="number" min="1" max="6" step="0.001" value="3.5" required></div>
             <div><label for="flyingSpeed">Bay</label><input id="flyingSpeed" type="number" min="1" max="6" step="0.001" value="2" required></div>
           </div>
+          <p class="field-title separated">Trong lúc Auto Farm bật</p>
+          <div class="two-columns">
+            <div><label for="farmWalkingSpeed">Đi bộ khi farm</label><input id="farmWalkingSpeed" type="number" min="1" max="6" step="0.001" value="2" required></div>
+            <div><label for="farmFlyingSpeed">Bay khi farm</label><input id="farmFlyingSpeed" type="number" min="1" max="6" step="0.001" value="1.5" required></div>
+          </div>
           <button id="save" type="button" class="primary full">Lưu tốc độ</button>
-          <p class="hint">Giới hạn 1–6 cho tốc độ ngoài farm. Khi Auto Farm bật: bay 1.5, đi bộ 2. Bật/tắt farm hoặc đổi bay/đi bộ phải ổn định 1 giây mới đổi tốc độ. Tắt điều chỉnh tốc độ để trả về tốc độ game.</p>
+          <button id="resetGameSpeed" type="button" class="full">Về tốc độ mặc định của game</button>
+          <p class="hint">Giới hạn 1–6 cho tốc độ ngoài farm. Khi Auto Farm bật dùng hai mức riêng bên trên (mặc định bay 1.5, đi bộ 2). Bật/tắt farm hoặc đổi bay/đi bộ phải ổn định 1 giây mới đổi tốc độ. Nút về mặc định tắt điều chỉnh tốc độ cả trong và ngoài farm, giữ các mức đã lưu.</p>
         </fieldset>
       </div>
     </details>

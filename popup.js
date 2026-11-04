@@ -3,7 +3,9 @@ const controls = document.getElementById("controls");
 const enabledInput = document.getElementById("enabled");
 const walkingInput = document.getElementById("walkingSpeed");
 const flyingInput = document.getElementById("flyingSpeed");
-const speedInputs = [walkingInput, flyingInput];
+const farmWalkingInput = document.getElementById("farmWalkingSpeed");
+const farmFlyingInput = document.getElementById("farmFlyingSpeed");
+const speedInputs = [walkingInput, flyingInput, farmWalkingInput, farmFlyingInput];
 const statusText = document.getElementById("status");
 const feedback = document.getElementById("feedback");
 const displayControls = document.getElementById("displayControls");
@@ -227,11 +229,12 @@ async function save() {
   if (!speedInputs.every((input) => input.reportValidity())) return;
   const walkingSpeed = walkingInput.valueAsNumber;
   const flyingSpeed = flyingInput.valueAsNumber;
-  if (![walkingSpeed, flyingSpeed].every((speed) => Number.isFinite(speed) && speed >= 1 && speed <= 6)) return;
+  if (!speedInputs.map((input) => input.valueAsNumber).every((speed) => Number.isFinite(speed) && speed >= 1 && speed <= 6)) return;
   saving = true;
   controls.disabled = true;
   try {
-    await chrome.storage.local.set({ preferences: { enabled: enabledInput.checked, walkingSpeed, flyingSpeed } });
+    await chrome.storage.local.set({ preferences: { enabled: enabledInput.checked, walkingSpeed, flyingSpeed,
+      farmWalkingSpeed: farmWalkingInput.valueAsNumber, farmFlyingSpeed: farmFlyingInput.valueAsNumber } });
     feedback.textContent = "";
     await refresh();
   } catch {
@@ -248,6 +251,8 @@ enabledInput.addEventListener("change", () => {
   if (!enabledInput.checked) {
     if (!walkingInput.checkValidity()) walkingInput.value = "3.5";
     if (!flyingInput.checkValidity()) flyingInput.value = "2";
+    if (!farmWalkingInput.checkValidity()) farmWalkingInput.value = "2";
+    if (!farmFlyingInput.checkValidity()) farmFlyingInput.value = "1.5";
   }
   save();
 });
@@ -308,7 +313,7 @@ fontControls.addEventListener("change", async () => {
 
 chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences", "farmPreferences", "farmShortcut"]).then(({ preferences, displayPreferences, fontPreferences, farmPreferences, farmShortcut }) => {
   enabledInput.checked = preferences?.enabled === true;
-  for (const [input, fallback] of [[walkingInput, 3.5], [flyingInput, 2]]) {
+  for (const [input, fallback] of [[walkingInput, 3.5], [flyingInput, 2], [farmWalkingInput, 2], [farmFlyingInput, 1.5]]) {
     const speed = preferences?.[input.id];
     input.value = typeof speed === "number" && Number.isFinite(speed)
       ? Math.min(6, Math.max(1, speed)) : fallback;
@@ -354,3 +359,17 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
 });
 const refreshTimer = setInterval(refresh, 1000);
 window.addEventListener("pagehide", () => clearInterval(refreshTimer), { once: true });
+
+// Restore through the existing OFF path, without forcing estimated native speeds.
+document.getElementById("resetGameSpeed").addEventListener("click", async () => {
+  if (saving) return;
+  saving = true; controls.disabled = true;
+  try {
+    const saved = await chrome.storage.local.get("preferences");
+    await chrome.storage.local.set({ preferences: { ...saved.preferences, enabled: false } });
+    enabledInput.checked = false;
+    feedback.textContent = "Đã tắt điều chỉnh tốc độ để dùng tốc độ gốc của game.";
+    await refresh();
+  } catch { feedback.textContent = "Chưa khôi phục được tốc độ. Thử lại."; }
+  finally { saving = false; controls.disabled = false; }
+});

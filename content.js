@@ -118,7 +118,9 @@
     return {
       enabled: value?.enabled === true,
       walkingSpeed: clampSpeed(value?.walkingSpeed, 3.5),
-      flyingSpeed: clampSpeed(value?.flyingSpeed, 2)
+      flyingSpeed: clampSpeed(value?.flyingSpeed, 2),
+      farmWalkingSpeed: clampSpeed(value?.farmWalkingSpeed, 2),
+      farmFlyingSpeed: clampSpeed(value?.farmFlyingSpeed, 1.5)
     };
   }
 

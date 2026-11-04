@@ -7,6 +7,7 @@
   let enabled = false;
   let walkingSpeed = 3.5;
   let flyingSpeed = 2;
+  let farmWalkingSpeed = 2, farmFlyingSpeed = 1.5;
   const modeDelayMs = 1000;
   let activeMode = null;
   let pendingMode = null;
@@ -158,7 +159,7 @@
       pendingMode = null;
     }
     const flying = activeMode.endsWith(":flying");
-    if (activeMode.startsWith("farm:")) return flying ? 1.5 : 2;
+    if (activeMode.startsWith("farm:")) return flying ? farmFlyingSpeed : farmWalkingSpeed;
     return flying ? flyingSpeed : walkingSpeed;
   }
 
@@ -207,7 +208,7 @@
         : !self ? "Waiting for world scene / player."
         : current === null ? "Waiting for a numeric self.ms."
         : pendingMode !== null ? "Waiting for movement / Auto Farm state to remain stable for 1 second."
-        : activeMode?.startsWith("farm:") ? "Auto Farm speed profile active: flying 1.5 / walking 2."
+        : activeMode?.startsWith("farm:") ? `Auto Farm: bay ${farmFlyingSpeed} / đi bộ ${farmWalkingSpeed}.`
         : "Enabled; monitoring movement speed.";
     } catch {
       message ||= "Waiting for an accessible world scene.";
@@ -290,7 +291,11 @@
         || !numeric(data.walkingSpeed) || data.walkingSpeed < 1 || data.walkingSpeed > 6
         || !numeric(data.flyingSpeed) || data.flyingSpeed < 1 || data.flyingSpeed > 6) return;
     const wasEnabled = enabled;
-    const changedSpeed = walkingSpeed !== data.walkingSpeed || flyingSpeed !== data.flyingSpeed;
+    const nextFarmWalking = numeric(data.farmWalkingSpeed) ? Math.max(1, Math.min(6, data.farmWalkingSpeed)) : 2;
+    const nextFarmFlying = numeric(data.farmFlyingSpeed) ? Math.max(1, Math.min(6, data.farmFlyingSpeed)) : 1.5;
+    const changedSpeed = walkingSpeed !== data.walkingSpeed || flyingSpeed !== data.flyingSpeed
+      || farmWalkingSpeed !== nextFarmWalking || farmFlyingSpeed !== nextFarmFlying;
+    farmWalkingSpeed = nextFarmWalking; farmFlyingSpeed = nextFarmFlying;
     enabled = data.enabled;
     walkingSpeed = data.walkingSpeed;
     flyingSpeed = data.flyingSpeed;

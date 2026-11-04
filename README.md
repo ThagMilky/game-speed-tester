@@ -320,3 +320,7 @@ Mỗi lần chuyển bản đồ làm tải trang mới, content script đọc l
 Đã rà source/diff, kiểm tra cú pháp 7 file JavaScript trong lượt QA và kiểm tra lại file page.js sau FIX. Harness cục bộ: **29/29 PASS**. Lint/typecheck/browser QA/E2E: **NOT RUN**. Hành vi trên game/server thật: **UNVERIFIED**. CI: **NOT CHECKED**. Xem [QA-report.md](QA-report.md) để biết các fixture/giới hạn và kết quả trước/sau sửa. Lượt đóng gói không chạy lại gameplay hoặc bộ test.
 
 Nếu tự kiểm tra sau khi có quyền: xác nhận tắt mặc định; thử URL có nhiều tham số và fragment; bật và quan sát tải lại thêm `timer`; đổi tốc độ; chuyển bay/đi bộ và bản đồ; tắt rồi kiểm tra extension không tiếp tục ghi tốc độ. Không dùng kết quả đọc source làm bằng chứng chạy thực tế.
+
+### Tốc độ riêng khi farm (2026-11-04)
+
+Trong Tốc độ di chuyển, nhập Đi bộ khi farm / Bay khi farm (1–6), rồi Lưu tốc độ. Mặc định 2 / 1.5; bật điều chỉnh tốc độ để áp dụng. Ngoài farm dùng hai mức ngoài farm đã lưu. Giữ cơ chế chờ trạng thái ổn định 1 giây khi bật/tắt farm hoặc đổi bay/đi bộ. Nút Về tốc độ mặc định của game tắt override qua cơ chế hoàn trả hiện có, giữ các mức đã lưu, không liên tục ép số mặc định ước lượng. Cài đặt giữ qua đổi map. Đây thay thế mô tả mức farm cố định trong các mục lịch sử. Chỉ review diff/status; tests/lint/typecheck/gameplay NOT RUN, hành vi thực tế UNVERIFIED, CI NOT CHECKED.
