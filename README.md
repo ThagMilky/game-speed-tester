@@ -16,6 +16,10 @@ game-speed-tester/
   font.js        Bật/tắt và áp dụng font giao diện web sau 1 giây
   farm-page.js   Mở rộng tâm tìm kiếm của Auto Farm có sẵn, chạy trong MAIN world
   farm-content.js Storage và cầu nối riêng cho tùy chọn/trạng thái Auto Farm
+  harvest-options.js Tùy chọn Tự hái dùng chung; cầu nối điều phối trong MAIN world
+  harvest-page.js Chọn cây, tìm đường, tương tác gốc và bàn giao với Auto Farm
+  harvest-content.js Storage/cầu nối trạng thái và danh mục cây từ game
+  harvest-popup.js Tìm tên không dấu, tick chọn, lưu tùy chọn Tự hái
   page.js        Truy cập Phaser, tách snapshot dùng cho scene rồi chỉnh ms
   popup.html     Giao diện
   popup.css      Định dạng giao diện
@@ -36,6 +40,24 @@ Không cần build, npm, backend hoặc dependency.
 ## Bố cục popup
 
 Đầu popup có bốn chỉ số: Auto Farm thật của game, trạng thái di chuyển, tốc độ hiện tại và Fix. Bên dưới là bốn nhóm bấm để mở/thu gọn: **Auto Farm** (mở sẵn, gồm bán kính/hồi sinh/phím tắt), **Tốc độ di chuyển**, **Bảng trạng thái**, **Font chữ**. Các thông báo kỹ thuật nằm trong mục chi tiết; lỗi lưu cài đặt vẫn có thông báo riêng. Checkbox hiển thị/font/hồi sinh và phím tắt vẫn tự lưu; nhập bán kính/tốc độ vẫn dùng nút Lưu hoặc Enter như trước. Popup dùng nhãn tiếng Việt, bố cục hai cột cho số liệu/ô tốc độ, hỗ trợ giao diện sáng/tối theo hệ thống. Cài đặt và hành vi game giữ nguyên; chưa chạy kiểm tra giao diện trên trình duyệt thực tế.
+
+## Tự hái cây
+
+Tính năng **đã triển khai**, mặc định tắt, cài đặt riêng ở `chrome.storage.local.harvestPreferences`. Bật **Tự hái**, chờ game tải với `timer`, chọn **Hái tất cả cây** hoặc **Chỉ loại đã chọn**. Ô tìm hỗ trợ không dấu (ví dụ `tho linh`); có thể tick nhiều loại, loại đã chọn lên đầu và giữ qua đổi map. **Bỏ chọn tất cả** xóa toàn bộ lựa chọn, kể cả loại bị ô tìm kiếm ẩn. Chọn riêng nhưng danh sách trống thì không hái. Mọi tên được hiển thị bằng textContent; khớp đúng tên game, không đoán từ ảnh.
+
+Danh mục lấy từ `scene.world.herbs.scenes` game đã tải, trạng thái hiện diện từ `scene.nodes`, chỉ cây `!ore`. Loại đã lưu nhưng không có ở map vẫn hiện với ghi chú. Nếu chưa đọc được game, popup giữ các loại đã chọn và báo chờ dữ liệu, không coi danh sách trống là không có tài nguyên. Không fetch danh mục hoặc hardcode danh sách tên cây.
+
+Ba khoảng cách dùng nút **Lưu khoảng cách**: vùng tìm cây mặc định **6 ô** (1–30), vùng cần sạch quái **4 ô** (2–15) quanh cả nhân vật và cây, khoảng cách hái **1.2 ô** (0.5–1.5, nhỏ hơn tầm nhận diện 1.6 của game). Hai chế độ đều chờ vùng an toàn ổn định 1 giây. Tâm tìm cây được chụp cố định khi gắn scene, hoặc khi bắt đầu một phiên Auto Farm mới; nếu có phiên mở rộng thì lấy tâm farm ban đầu của phiên đó. Không dời tâm theo từng cây. Bật/tắt Tự hái để chọn lại tâm ngoài farm. Bán kính là vùng chọn cây, không phải cam kết mọi đoạn đường vòng đều nằm trong vòng tròn đó.
+
+**Cho phép thu hoạch khi Auto Farm đang bật** mặc định tắt. Tắt checkbox này thì không bắt đầu/tiếp tục đi tới cây trong lúc farm; nếu lượt hái đã được game xác nhận, chờ lượt đó kết thúc. Khi cho phép, chờ mục tiêu chiến đấu, kỹ năng đang chờ, nhặt loot và hồi máu phù hợp kết thúc. Đọc toàn bộ quái trực tiếp từ `scene.views`, không dùng danh sách đã lọc level/boss làm bằng chứng sạch quái. Có quái gần hoặc trạng thái chặn thì nhường lại cho game; không ép đánh quái ngoài bộ lọc để dọn đường.
+
+Module bọc riêng `auto.update` trong lúc Tự hái bật. Chỉ khi đang điều khiển lượt đi/hái an toàn mới tạm nhường nhịp chiến đấu; những lúc khác gọi nguyên hàm gốc, giữ cơ chế chết/hồi sinh/hồi máu. Đọc ngưỡng HP/MP của Auto Farm để nhường cho cơ chế đan dược gốc. Không bật/tắt `auto.on`, không gọi `auto.pause`, không thay `auto.ax/ay`, không dùng `startClickOrder`. Đường đi lấy từ host.route/clear, dùng autoX/autoY để đi qua move/collision gốc. Chỉ giữ đường riêng của việc hái, không đổi native auto.path. Phần mở rộng tâm farm và hỗ trợ tiếp cận tăng tốc tạm nhường khi Tự hái đang điều khiển; speed override hiện có vẫn giữ nguyên. Sau khi nhường lại, Auto Farm tự chọn hành động theo cơ chế gốc.
+
+Tới gần cây, kiểm tra node còn ready, đúng loại, đúng vị trí trong vùng và cả pickTarget() mới lẫn scene.target hiện tại đều chỉ tới đúng index node, không phải cổng/realm. Sau đó gọi scene.interact() gốc tương đương F **một lần**, không sửa target hoặc gửi packet riêng. Chờ tối đa 4 giây để thấy self.harvest cùng harvestNode; chưa xác nhận thì bỏ qua 20 giây. Không dùng ready=false làm bằng chứng chính người chơi hái thành công. Không tiến bộ trong 5 giây hoặc đi quá 15 giây thì bỏ qua cây 20 giây. Cây có cổng/NPC được ưu tiên tương tác sẽ bị bỏ qua thay vì ép tương tác.
+
+Tự hái kiểm tra hộp `[role=alertdialog]` hiển thị, bao gồm hộp kiểm tra người chơi ngoài scene; tạm dừng và chờ người dùng, không xác nhận/ẩn/bỏ qua hộp. Chat/UI, di chuyển tay, câu cá, chết, đổi scene và mất kết nối cũng nhường điều khiển. Bấm chuột lên canvas tạm dừng thu hoạch 3 giây. Tắt Tự hái sẽ dọn điều khiển, khôi phục descriptor auto.update nếu còn sở hữu và dừng watcher/listener scene; không hủy yêu cầu hái game đã nhận. Rời trang dọn tương tự, pageshow/scene mới đọc lại cài đặt. Tối đa một watcher 1 giây lúc chưa có scene; khi có scene dùng preupdate, tìm cây nhịp 200 ms khi rảnh, theo đường mỗi khung hình khi đang đi. Không tạo timer theo từng cây. Bảng góc phải có mục **Thu hoạch** bật/tắt riêng, dùng chung timer đọc trạng thái hiện có; popup dùng chung nhịp refresh.
+
+**Giới hạn:** chưa xác minh server cho hái khi bay hay các điều kiện cấp/vật phẩm, ngắt bởi sát thương và kết quả yêu cầu bị từ chối. Tốc độ cao có thể vượt điểm dừng; đường bị chặn/tới tâm cây không được sẽ bị bỏ qua. Chrome có thể hạn chế tab nền, đặc biệt lúc Auto Farm tắt. Tính năng không tự chạy máy chủ hay tạo combat engine; không thay HP, damage, tốc độ đánh, cooldown, gói tin hoặc cơ chế kiểm tra. Tests/lint/typecheck/browser/gameplay cho Tự hái: **NOT RUN**, behavior **UNVERIFIED**, CI **NOT CHECKED**. Không dùng QA 29/29 lịch sử làm bằng chứng cho tính năng này.
 
 ## Tiếp cận mục tiêu khi đang tăng tốc
 

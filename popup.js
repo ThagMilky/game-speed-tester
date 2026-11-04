@@ -159,6 +159,7 @@ let saving = false;
 
 async function refresh() {
   refreshFarm();
+  globalThis.GSTHarvestPopup?.refresh();
   if (busy) return;
   busy = true;
   try {
@@ -273,7 +274,8 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   controls.disabled = false;
   showOverlay.checked = displayPreferences?.visible !== false;
   for (const input of displayFields) {
-    input.checked = displayPreferences?.fields?.[input.dataset.displayField] !== false;
+    const key = input.dataset.displayField;
+    input.checked = key === "harvest" ? displayPreferences?.fields?.[key] === true : displayPreferences?.fields?.[key] !== false;
   }
   displayControls.disabled = false;
   const font = GSTFont.normalize(fontPreferences);

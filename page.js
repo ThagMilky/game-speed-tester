@@ -54,6 +54,7 @@
 
   function stabilizeApproach() {
     const scene = approachScene;
+    if (GSTHarvest.controls(scene)) { approachPosition = null; return; }
     const auto = scene?.auto;
     const self = scene?.self;
     const previous = approachPosition;

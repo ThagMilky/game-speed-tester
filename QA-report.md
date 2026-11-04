@@ -4,6 +4,8 @@ Lưu ý cập nhật 2026-11-04: báo cáo bên dưới là kết quả lịch s
 
 ## Kết luận
 
+Tự hái cây (2026-11-04) đã triển khai module riêng, bộ lọc tìm/tick tên, phạm vi và quyền phối hợp với Auto Farm. Chỉ review source/diff và trạng thái Git. **Tests/lint/typecheck/smoke/browser/gameplay: NOT RUN. Behavior: UNVERIFIED. CI: NOT CHECKED.** Không dùng các kết quả QA lịch sử bên dưới để xác nhận tính năng Tự hái; chưa xác minh server cho hái khi bay, phản hồi bị từ chối hoặc ngắt bởi sát thương.
+
 Bổ sung sau review 2026-11-04: đã sửa lệnh tắt không phụ thuộc bản nháp level/bán kính, giữ bộ lọc qua hồi sinh, phục hồi sau BFCache và nhường phím cho bộ chọn phím của game. Chỉ review source/diff; **tests/lint/typecheck/browser/gameplay: NOT RUN**, behavior **UNVERIFIED**, CI **NOT CHECKED**. Các kết quả bên dưới không xác minh bốn sửa đổi này.
 
 Sau yêu cầu FIX, đã sửa nhận diện waypoint đi qua trong `page.js`. Kết quả hiện tại: **29 PASS, 0 FAIL**; `node --check` cho file sửa: **PASS**. Hai ca từng thất bại (2 / 20 FPS và 6 / 60 FPS) đều tới mục tiêu và gọi được callback đánh thường trong mô phỏng. Chưa xác nhận hành vi trên bản đồ/gameplay thật.

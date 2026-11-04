@@ -12,17 +12,22 @@
   let displayPreferences = null;
   let displayRevision = 0;
   let autoFarmOn = null;
+  let harvestMessage = "Đang đọc…";
   let farmDisplayTimer = null;
   let displaySuspended = false;
 
   function monitorFarmDisplay() {
-    const needed = !displaySuspended && displayPreferences?.visible && displayPreferences.fields.autoFarm;
+    const needed = !displaySuspended && displayPreferences?.visible
+      && (displayPreferences.fields.autoFarm || displayPreferences.fields.harvest);
     if (!needed && farmDisplayTimer !== null) {
       clearInterval(farmDisplayTimer);
       farmDisplayTimer = null;
     }
     if (needed && farmDisplayTimer === null) {
-      const read = () => window.postMessage({ channel: "gst:farm:v1", type: "status" }, origin);
+      const read = () => {
+        if (displayPreferences?.fields.autoFarm) window.postMessage({ channel: "gst:farm:v1", type: "status" }, origin);
+        if (displayPreferences?.fields.harvest) window.postMessage({ channel: "gst:harvest:v1", type: "status" }, origin);
+      };
       read();
       farmDisplayTimer = setInterval(read, 1000);
     }
@@ -31,8 +36,8 @@
   function normalizeDisplay(value) {
     return {
       visible: value?.visible !== false,
-      fields: Object.fromEntries(["override", "speed", "movement", "autoFarm", "fix", "message"]
-        .map((key) => [key, value?.fields?.[key] !== false]))
+      fields: Object.fromEntries(["override", "speed", "movement", "autoFarm", "harvest", "fix", "message"]
+        .map((key) => [key, key === "harvest" ? value?.fields?.[key] === true : value?.fields?.[key] !== false]))
     };
   }
 
@@ -85,6 +90,7 @@
     if (fields.speed) lines.push(`Tốc độ: ${status?.current ?? "—"}`);
     if (fields.movement) lines.push(`Trạng thái: ${movement}`);
     if (fields.autoFarm) lines.push(`Auto Farm game: ${autoFarmOn === true ? "BẬT" : autoFarmOn === false ? "TẮT" : "CHƯA RÕ"}`);
+    if (fields.harvest) lines.push(`Thu hoạch: ${harvestMessage}`);
     if (fields.fix) lines.push(`Fix (từ lần đổi tốc độ): ${status?.fix ?? "—"}`);
     if (fields.message) {
       lines.push(status?.message ?? "Đang kết nối…");
@@ -123,6 +129,12 @@
   }
 
   window.addEventListener("message", (event) => {
+    if (event.source === window && event.origin === origin && event.data?.channel === "gst:harvest-status:v1"
+        && !event.data.ready) {
+      harvestMessage = typeof event.data.message === "string" ? event.data.message.slice(0, 240) : "Chưa rõ";
+      renderOverlay();
+      return;
+    }
     if (event.source === window && event.origin === origin && event.data?.channel === "gst:farm-status:v1"
         && !event.data.ready) {
       autoFarmOn = typeof event.data.autoOn === "boolean" ? event.data.autoOn : null;

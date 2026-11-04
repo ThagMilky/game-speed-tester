@@ -1,0 +1,377 @@
+(() => {
+  "use strict";
+  const origin = "https://nghichthienky.online";
+  let settings = GSTHarvest.normalize(null);
+  let binding = null;
+  let job = null;
+  let watcher = null;
+  let suspended = false;
+  let message = "Tự hái đang tắt.";
+  let safeSince = null;
+  let manualUntil = 0;
+  let lastStep = -Infinity;
+  let modalAt = -Infinity;
+  let modal = false;
+  const skipped = new Map();
+  const finite = Number.isFinite;
+  const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const sceneNow = () => window.game?.scene?.getScene?.("world")
+    ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
+  const connected = (scene) => {
+    const d = scene?.driver;
+    return !!d && !d.closing && !d.reconnecting && !d.displaced
+      && (d.online === false || d.link?.open?.() === true);
+  };
+  function compatible(scene) {
+    return scene?.sys?.isActive?.() && scene.self && scene.views instanceof Map
+      && Array.isArray(scene.nodes) && typeof scene.auto?.update === "function"
+      && typeof scene.auto.on === "boolean" && typeof scene.autoHost === "function"
+      && typeof scene.now === "function"
+      && typeof scene.pickTarget === "function" && typeof scene.interact === "function"
+      && typeof scene.events?.on === "function" && typeof scene.events.off === "function";
+  }
+  function modalOpen(fresh = false) {
+    if (!fresh && performance.now() - modalAt < 200) return modal;
+    modalAt = performance.now();
+    modal = [...document.querySelectorAll('[role="alertdialog"]')]
+      .some((el) => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden");
+    return modal;
+  }
+  function manualMovement(scene) {
+    return ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"]
+      .some((key) => scene.keys?.[key]?.isDown) || !!scene.joyX || !!scene.joyY || !!scene.clickOrder;
+  }
+  function needsRecovery(scene) {
+    if (!scene.auto.on) return false;
+    // Read the game's existing thresholds; do not change pills or their cooldowns.
+    let hp = 0.4, mp = 0.25;
+    try {
+      const h = Number(localStorage.getItem("tm-auto-hp"));
+      const m = Number(localStorage.getItem("tm-auto-mp"));
+      if ([0.3, 0.4, 0.5, 0.6].includes(h)) hp = h;
+      if ([0.15, 0.25, 0.35, 0.5].includes(m)) mp = m;
+    } catch { /* The native defaults remain conservative. */ }
+    const host = scene.autoHost();
+    if (typeof host.hp !== "function" || typeof host.mp !== "function" || typeof host.pills !== "function") return true;
+    return host.hp?.() < hp || (host.mp?.() < mp
+      && (host.pills?.("mp") ?? []).some((count) => count > 0));
+  }
+  function blocked(scene, fresh = false) {
+    return !settings.enabled || suspended || !compatible(scene) || !connected(scene)
+      || scene.self.dead || scene.leaving || scene.uiBlocked || scene.pendingSkill || scene.aiming
+      || scene.self.med || scene.auto.resting || scene.self.fish || scene.heldAttack || manualMovement(scene)
+      || (scene.auto.on && (scene.auto.moved || scene.now() < scene.auto.pauseUntil))
+      || performance.now() < manualUntil || modalOpen(fresh) || needsRecovery(scene);
+  }
+  function danger(scene, node) {
+    // Read the scene's full monster set, never the level/boss-filtered host.
+    const here = { x: scene.px, y: scene.py };
+    for (const enemy of scene.views.values()) {
+      if (enemy.k !== "m" || enemy.st?.cls === "pet" || enemy.dead) continue;
+      const st = enemy.st;
+      const hostile = !enemy.passive || (st?.hp ?? 0) < (st?.mh ?? 0)
+        || st?.cls === "gu" || st?.cls === "boss" || !!st?.wb;
+      if (!hostile) continue;
+      if (!finite(enemy.x) || !finite(enemy.y)) return true;
+      const radius = settings.clearRadius + (finite(enemy.radius) ? Math.max(0, enemy.radius) : 0);
+      if (dist(enemy, here) <= radius || dist(enemy, node) <= radius) return true;
+    }
+    return false;
+  }
+  function fighting(scene) {
+    if (!scene.auto.on || !scene.auto.target) return false;
+    const target = scene.views.get(scene.auto.target);
+    return !target || !target.dead;
+  }
+  function farmAllowed(scene) {
+    // Revoking permission does not interrupt a harvest already acknowledged by the game.
+    return !scene.auto.on || settings.allowFarm
+      || (job?.phase === "harvesting" && scene.harvesting && scene.harvestNode === job.index);
+  }
+  function steer(scene, x, y) {
+    if (scene.autoX !== x) scene.autoX = x;
+    if (scene.autoY !== y) scene.autoY = y;
+    if (job) job.steer = [x, y];
+  }
+  function release(reason, cooldown = 0) {
+    if (job && binding) {
+      const scene = binding.scene;
+      if (job.steer && scene.autoX === job.steer[0] && scene.autoY === job.steer[1]) {
+        scene.autoX = 0;
+        scene.autoY = 0;
+      }
+      if (cooldown) skipped.set(job.node, performance.now() + cooldown);
+    }
+    job = null;
+    safeSince = null;
+    if (reason) message = reason;
+  }
+  function detach() {
+    release();
+    window.removeEventListener("pointerdown", onPointer, true);
+    window.removeEventListener("keydown", onKey, true);
+    const old = binding;
+    binding = null;
+    if (!old) return;
+    old.scene.events.off("preupdate", onFrame);
+    old.scene.events.off("shutdown", onShutdown);
+    old.scene.events.off("destroy", onShutdown);
+    if (old.auto.update === old.wrapper) {
+      if (old.descriptor) Object.defineProperty(old.auto, "update", old.descriptor);
+      else delete old.auto.update;
+    }
+    skipped.clear();
+  }
+  function onShutdown() {
+    detach();
+    message = "Đã rời scene; chờ map mới.";
+    watch();
+  }
+  function watch() {
+    if (settings.enabled && !suspended && !binding && watcher === null) watcher = setInterval(discover, 1000);
+  }
+  function discover() {
+    if (!settings.enabled || suspended || binding) return;
+    try {
+      const scene = sceneNow();
+      if (!compatible(scene) || !connected(scene) || scene.self.dead || !finite(scene.px) || !finite(scene.py)) {
+        message = scene?.self?.dead ? "Nhân vật đã chết; chờ game hồi sinh." : "Chờ game, kết nối hoặc dữ liệu thu hoạch.";
+        return;
+      }
+      const auto = scene.auto;
+      const original = auto.update;
+      const descriptor = Object.getOwnPropertyDescriptor(auto, "update");
+      const home = GSTHarvest.farmOrigin(scene) ?? (auto.on ? { x: auto.ax, y: auto.ay } : { x: scene.px, y: scene.py });
+      if (!finite(home.x) || !finite(home.y)) { message = "Chờ vị trí gốc hợp lệ."; return; }
+      const wrapper = function (...args) {
+        // Native update remains responsible for combat/death/respawn whenever we yield.
+        if (binding?.auto === this && job) {
+          try {
+            if (!blocked(scene) && farmAllowed(scene) && !fighting(scene) && !danger(scene, job.node)) return;
+          } catch { /* Yield to the native update if a runtime interface changes. */ }
+          release("Nhường lại cho game; tạm dừng thu hoạch.");
+        }
+        return original.apply(this, args);
+      };
+      auto.update = wrapper;
+      binding = { scene, auto, wrapper, descriptor, home: { ...home }, farmOn: auto.on };
+      GSTHarvest.controls = (current) => binding?.scene === current && job !== null;
+      scene.events.on("preupdate", onFrame);
+      scene.events.on("shutdown", onShutdown);
+      scene.events.on("destroy", onShutdown);
+      window.addEventListener("pointerdown", onPointer, true);
+      window.addEventListener("keydown", onKey, true);
+      clearInterval(watcher);
+      watcher = null;
+      lastStep = -Infinity;
+      message = "Đang tìm cây trong vùng đã chọn.";
+    } catch {
+      detach();
+      message = "Chưa tương thích dữ liệu thu hoạch; chờ game.";
+    }
+  }
+  function matches(node) {
+    return node && !node.ore && typeof node.item === "string" && finite(node.x) && finite(node.y)
+      && (settings.mode === "all" || settings.items.includes(node.item.normalize("NFC")));
+  }
+  function canWork(scene) {
+    if (blocked(scene)) return false;
+    return farmAllowed(scene) && !fighting(scene) && finite(scene.px) && finite(scene.py);
+  }
+  function passedPoint(scene, pos, point, next, host) {
+    const previous = job.previous;
+    if (!previous || !finite(scene.self.fix) || scene.self.fix !== previous.fix) return false;
+    const dx = pos.x - previous.x, dy = pos.y - previous.y;
+    const square = dx * dx + dy * dy;
+    if (square < 1e-10) return false;
+    const along = ((point[0] - previous.x) * dx + (point[1] - previous.y) * dy) / square;
+    return along > 0 && along < 1
+      && Math.hypot(previous.x + along * dx - point[0], previous.y + along * dy - point[1]) < 0.5
+      && host.clear(pos.x, pos.y, next[0], next[1]);
+  }
+  function step(scene, now) {
+    if (!canWork(scene)) {
+      release(modalOpen() ? "Chờ bạn xử lý hộp kiểm tra người chơi."
+        : scene.auto.on && !settings.allowFarm ? "Tạm dừng: chưa cho phép hái khi Auto Farm bật."
+          : "Chờ chiến đấu, hồi máu hoặc thao tác tay kết thúc.");
+      return;
+    }
+    if (job?.phase === "request" || job?.phase === "harvesting") {
+      steer(scene, 0, 0);
+      if (scene.harvesting && scene.harvestNode === job.index) {
+        job.phase = "harvesting";
+        message = `Đang hái ${job.node.item}.`;
+      } else if (job.phase === "harvesting") release("Lượt hái đã kết thúc; đang quan sát lại.", 20000);
+      else if (!job.node.ready || now - job.requestedAt > 4000) release("Chưa xác nhận lượt hái; tạm bỏ qua cây này.", 20000);
+      return;
+    }
+    if (scene.harvesting) {
+      release("Chờ lượt thu hoạch hiện tại kết thúc.");
+      return;
+    }
+    if (settings.mode === "selected" && !settings.items.length) {
+      release("Chưa chọn loại cây; không tự hái.");
+      return;
+    }
+    const host = scene.autoHost();
+    if (typeof host?.route !== "function" || typeof host.clear !== "function") {
+      release("Game chưa cung cấp đường đi phù hợp.");
+      return;
+    }
+    if (!job && scene.auto.on && typeof host.loot === "function" && host.loot().some((loot) =>
+      dist(loot, { x: scene.px, y: scene.py }) < 11
+      && !scene.auto.lootSkip?.has(`${loot.x.toFixed(1)},${loot.y.toFixed(1)}`))) {
+      message = "Chờ Auto Farm nhặt chiến lợi phẩm.";
+      safeSince = null;
+      return;
+    }
+    if (!job) {
+      const candidates = scene.nodes.map((node, index) => ({ node, index }))
+        .filter(({ node }) => matches(node) && node.ready && dist(node, binding.home) <= settings.radius
+          && (skipped.get(node) ?? 0) <= now)
+        .sort((a, b) => dist(a.node, { x: scene.px, y: scene.py }) - dist(b.node, { x: scene.px, y: scene.py }));
+      const next = candidates.find(({ node }) => !danger(scene, node));
+      if (!next) {
+        message = candidates.length ? "Chờ sạch quái quanh nhân vật và cây." : "Không có cây phù hợp sẵn sàng trong vùng.";
+        safeSince = null;
+        return;
+      }
+      if (!safeSince || safeSince.node !== next.node) safeSince = { node: next.node, at: now };
+      if (now - safeSince.at < 1000) { message = "Chờ khu vực an toàn ổn định 1 giây."; return; }
+      job = { ...next, phase: "moving", path: [], routeAt: -Infinity, startAt: now,
+        progressAt: now, x: scene.px, y: scene.py, steer: null };
+    }
+    const node = job.node;
+    if (scene.nodes[job.index] !== node || !matches(node) || !node.ready || dist(node, binding.home) > settings.radius) {
+      release("Cây đã thay đổi hoặc không còn phù hợp.", 5000);
+      return;
+    }
+    if (danger(scene, node)) { release("Có quái gần; nhường lại cho game."); return; }
+    const pos = { x: scene.px, y: scene.py };
+    if (dist(pos, node) <= settings.reach) {
+      steer(scene, 0, 0);
+      const picked = scene.pickTarget();
+      const cached = scene.target;
+      if (picked?.node !== job.index || cached?.node !== job.index
+          || "gate" in picked || "realm" in picked || "gate" in cached || "realm" in cached) {
+        release("Mục tiêu F chưa đúng cây; bỏ qua để tránh cổng/NPC.", 20000);
+        return;
+      }
+      // Recheck directly before the native F action; never force scene.target.
+      if (blocked(scene, true) || danger(scene, node) || !node.ready) { release("Tạm dừng tương tác."); return; }
+      job.phase = "request";
+      job.requestedAt = now;
+      scene.interact();
+      message = `Đã yêu cầu hái ${node.item}; chờ game xác nhận.`;
+      return;
+    }
+    if (dist(pos, { x: job.x, y: job.y }) > 0.2) {
+      job.x = pos.x; job.y = pos.y; job.progressAt = now;
+    }
+    if (now - job.progressAt > 5000 || now - job.startAt > 15000) {
+      release("Không tới được cây; tạm bỏ qua.", 20000);
+      return;
+    }
+    let goal = node;
+    if (!host.clear(pos.x, pos.y, node.x, node.y)) {
+      if (!job.path.length || now - job.routeAt > 1500) {
+        const path = host.route(pos.x, pos.y, node.x, node.y);
+        if (!Array.isArray(path) || !path.length || path.some((p) => !Array.isArray(p) || p.length !== 2 || !p.every(finite))) {
+          release("Không tìm được đường tới cây.", 20000); return;
+        }
+        job.path = path.map((p) => [...p]);
+        job.previous = null;
+        job.routeAt = now;
+      }
+      while (job.path.length > 1 && (dist(pos, { x: job.path[0][0], y: job.path[0][1] }) < 0.5
+          || passedPoint(scene, pos, job.path[0], job.path[1], host))) job.path.shift();
+      goal = { x: job.path[0][0], y: job.path[0][1] };
+      if (!host.clear(pos.x, pos.y, goal.x, goal.y)) { release("Đường bị chặn; tạm bỏ qua cây.", 20000); return; }
+    } else job.path = [];
+    const length = dist(pos, goal);
+    steer(scene, length > 0.05 ? (goal.x - pos.x) / length : 0, length > 0.05 ? (goal.y - pos.y) / length : 0);
+    job.previous = { ...pos, fix: scene.self.fix };
+    message = `Đang tới ${node.item}.`;
+  }
+  function onFrame() {
+    try {
+      const scene = binding?.scene;
+      if (sceneNow() !== scene || !compatible(scene) || scene.auto !== binding.auto
+          || scene.auto.update !== binding.wrapper || !connected(scene) || scene.leaving || scene.self.dead) {
+        detach(); message = "Tạm dừng: scene hoặc kết nối thay đổi."; watch(); return;
+      }
+      if (scene.auto.on !== binding.farmOn) {
+        binding.farmOn = scene.auto.on;
+        if (scene.auto.on) {
+          if (job?.phase !== "harvesting") release();
+          binding.home = { ...(GSTHarvest.farmOrigin(scene) ?? { x: scene.auto.ax, y: scene.auto.ay }) };
+        }
+      }
+      const now = performance.now();
+      if (!job && now - lastStep < 200) return;
+      lastStep = now;
+      step(scene, now);
+    } catch {
+      detach(); message = "Lỗi interface thu hoạch; đã dọn điều khiển, chờ game."; watch();
+    }
+  }
+  function status(requestId) {
+    const scene = sceneNow();
+    const names = new Set();
+    for (const area of scene?.world?.herbs?.scenes ?? []) {
+      for (const node of area.nodes ?? []) if (!node.ore && typeof node.item === "string") names.add(node.item.normalize("NFC"));
+    }
+    const here = new Set((scene?.nodes ?? []).filter((n) => !n.ore && typeof n.item === "string")
+      .map((n) => n.item.normalize("NFC")));
+    window.postMessage({ channel: "gst:harvest-status:v1", requestId, message,
+      available: names.size > 0,
+      catalog: [...names].slice(0, 200).map((name) => ({ name, inMap: here.has(name) })) }, origin);
+  }
+  window.addEventListener("message", (event) => {
+    if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:harvest:v1") return;
+    if (event.data.type === "status") {
+      try { status(event.data.requestId); }
+      catch {
+        window.postMessage({ channel: "gst:harvest-status:v1", requestId: event.data.requestId,
+          message: "Chờ dữ liệu tài nguyên của game.", available: false, catalog: [] }, origin);
+      }
+      return;
+    }
+    if (event.data.type !== "configure") return;
+    settings = GSTHarvest.normalize(event.data.preferences);
+    if (job?.phase === "request" && binding?.scene.harvesting && binding.scene.harvestNode === job.index) {
+      job.phase = "harvesting";
+    }
+    if (!settings.enabled) {
+      detach();
+      clearInterval(watcher); watcher = null;
+      message = "Tự hái đã tắt; không hủy lượt hái game đã bắt đầu.";
+    } else {
+      if (job?.phase === "moving" || job?.phase === "request") release("Đã đổi cài đặt; đang quan sát lại.");
+      watch(); discover();
+    }
+    safeSince = null;
+  });
+  function onPointer(event) {
+    if (binding && event.isTrusted && event.target === binding.scene.game?.canvas) {
+      manualUntil = performance.now() + 3000;
+      release("Tạm dừng 3 giây sau thao tác chuột.");
+    }
+  }
+  function onKey(event) {
+    if (!binding || !event.isTrusted || document.hidden || !document.hasFocus()) return;
+    if (Object.values(binding.scene.controls?.bindings ?? {}).includes(event.keyCode)
+        || [37, 38, 39, 40].includes(event.keyCode)) {
+      manualUntil = performance.now() + 3000;
+      release("Tạm dừng 3 giây sau thao tác phím trong game.");
+    }
+  }
+  window.addEventListener("pagehide", () => {
+    suspended = true; detach(); clearInterval(watcher); watcher = null;
+    window.removeEventListener("pointerdown", onPointer, true);
+  });
+  window.addEventListener("pageshow", () => {
+    suspended = false; watch(); discover();
+  });
+  window.postMessage({ channel: "gst:harvest-status:v1", ready: true }, origin);
+})();

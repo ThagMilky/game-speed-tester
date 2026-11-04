@@ -65,3 +65,9 @@ button:disabled, input:disabled, select:disabled { cursor: default; }
 .diagnostic summary { cursor: pointer; }
 .diagnostic p { margin: 8px 0 0; overflow-wrap: anywhere; }
 footer { padding: 0 2px; }
+input[type="search"] { width: 100%; min-height: 36px; padding: 7px 9px; font: inherit; color: var(--text); background: var(--subtle); border: 1px solid var(--border); border-radius: 7px; }
+.harvest-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0; font-size: 11px; }
+.harvest-list { max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: 7px; padding: 6px 9px; }
+.harvest-list .check-row { align-items: flex-start; padding: 5px 0; }
+.harvest-list input { margin-top: 3px; }
+.harvest-list small { display: block; color: var(--muted); font-size: 10px; }

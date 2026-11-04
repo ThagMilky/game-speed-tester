@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="popup.css">
   <script src="font-options.js" defer></script>
   <script src="popup.js" defer></script>
+  <script src="harvest-options.js" defer></script>
+  <script src="harvest-popup.js" defer></script>
 </head>
 <body>
   <header><p class="eyebrow">NGHICHTHIENKY.ONLINE</p><h1>Game Speed Tester</h1><p class="muted">Điều khiển gọn, theo dõi ngay.</p></header>
@@ -49,6 +51,29 @@
       </div>
     </details>
     <details class="card">
+      <summary><span><strong>Tự hái</strong><small>Chọn loại cây và vùng thu hoạch</small></span></summary>
+      <div class="card-body">
+        <fieldset id="harvestControls" disabled aria-label="Tùy chọn Tự hái">
+          <label class="switch-row"><span>Bật Tự hái</span><input id="harvestEnabled" class="switch" type="checkbox"></label>
+          <label class="check-row"><input id="harvestAllowFarm" type="checkbox"><span>Cho phép thu hoạch khi Auto Farm đang bật</span></label>
+          <p class="hint">Mặc định không hái khi farm. Khi cho phép, ưu tiên chiến đấu rồi mới hái lúc khu vực an toàn.</p>
+          <div class="two-columns separated">
+            <div><label for="harvestRadius">Vùng tìm cây (1–30 ô)</label><input id="harvestRadius" type="number" min="1" max="30" step="0.5" value="6" required></div>
+            <div><label for="harvestClearRadius">Vùng sạch quái (2–15 ô)</label><input id="harvestClearRadius" type="number" min="2" max="15" step="0.5" value="4" required></div>
+          </div>
+          <label for="harvestReach" class="separated">Khoảng cách hái (0.5–1.5 ô)</label><input id="harvestReach" type="number" min="0.5" max="1.5" step="0.1" value="1.2" required>
+          <button id="saveHarvestRange" type="button" class="full">Lưu khoảng cách</button>
+          <label for="harvestMode" class="separated">Loại cây</label><select id="harvestMode"><option value="all">Hái tất cả cây</option><option value="selected">Chỉ loại đã chọn</option></select>
+          <label for="harvestSearch" class="separated">Tìm tên cây</label><input id="harvestSearch" type="search" placeholder="Ví dụ: tho linh" autocomplete="off">
+          <div class="harvest-toolbar"><span id="harvestCount">Đã chọn 0 loại</span><button id="clearHarvestItems" type="button" class="quiet">Bỏ chọn tất cả</button></div>
+          <div id="harvestItems" class="harvest-list" aria-label="Danh sách loại cây"></div>
+          <p class="hint">Tìm không dấu, tick nhiều loại; tự lưu. Chọn riêng nhưng chưa tick thì không hái. Cây đã chọn vẫn được giữ khi đổi map. Chỉ hái cây, không đào quặng hoặc tương tác cổng/NPC.</p>
+        </fieldset>
+        <p id="harvestFeedback" class="notice" role="alert"></p>
+        <p id="harvestStatus" class="hint" role="status" aria-live="polite">Đang đọc trạng thái thu hoạch…</p>
+      </div>
+    </details>
+    <details class="card">
       <summary><span><strong>Tốc độ di chuyển</strong><small>Chỉnh riêng đi bộ và bay</small></span></summary>
       <div class="card-body">
         <fieldset id="controls" disabled aria-label="Tùy chọn tốc độ">
@@ -69,6 +94,7 @@
           <label class="switch-row"><span>Hiện bảng trong game</span><input id="showOverlay" class="switch" type="checkbox" checked></label>
           <div class="choice-grid">
             <label class="check-row"><input type="checkbox" data-display-field="autoFarm" checked><span>Auto Farm</span></label>
+            <label class="check-row"><input type="checkbox" data-display-field="harvest"><span>Thu hoạch</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="movement" checked><span>Bay / đi bộ</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="speed" checked><span>Tốc độ</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="fix" checked><span>Bộ đếm Fix</span></label>

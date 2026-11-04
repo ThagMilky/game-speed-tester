@@ -18,6 +18,7 @@
   let message = "Extended range disabled.";
   const finite = (value) => typeof value === "number" && Number.isFinite(value);
   const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  GSTHarvest.farmOrigin = (scene) => session?.scene === scene ? { ...session.home } : null;
   const targetMode = (value) => value === "level" ? "maxLevel"
     : ["maxLevel", "minLevel", "boss"].includes(value) ? value : "all";
   function filterLabel() {
@@ -331,6 +332,10 @@
       }
       const time = s.scene.now();
       syncFilter(s.scene);
+      if (GSTHarvest.controls(s.scene)) {
+        message = "Tạm nhường di chuyển cho Tự hái; giữ nguyên tâm farm.";
+        return;
+      }
       if (!finite(time) || time - s.at < 0.5) return;
       s.at = time;
       const host = s.scene.autoHost();
