@@ -85,7 +85,24 @@
     if (scene.chat?.typing || scene.keyCapture || (!scene.auto?.on
         && (scene.self.dead || scene.uiBlocked || !connected(scene)))) return;
     shortcutMessage = "";
+    const previousAuto = scene.auto;
+    const wasOn = previousAuto?.on;
+    if (wasOn === false && session) stop("Đã kết thúc phiên hỗ trợ cũ trước khi bật lại Auto Farm.");
     scene.toggleAutoFarm();
+    if (wasOn === false && scene.auto === previousAuto && scene.auto.on) {
+      // An explicit new session must not inherit the old extension block or
+      // native navigation failure counters left behind by native toggle().
+      blockedAuto = null;
+      revival = null;
+      const time = typeof scene.now === "function" ? scene.now() : NaN;
+      if (compatible(scene) && finite(time) && finite(scene.px) && finite(scene.py)) {
+        Object.assign(scene.auto, { moved: false, lastX: scene.px, lastY: scene.py,
+          stillSince: time, chaseSince: time, sideUntil: time, sideX: 0, sideY: 0, stuckCount: 0 });
+        scene.auto.reachable.clear();
+      }
+      watch();
+      discover();
+    }
   }
   window.addEventListener("keydown", guardFarmKey, true);
 
@@ -104,6 +121,23 @@
       && Array.isArray(auto.path) && auto.skipped instanceof Map && auto.reachable instanceof Map
       && typeof auto.pick === "function" && typeof auto.target === "number"
       && finite(auto.pauseUntil) && typeof auto.resting === "boolean";
+  }
+
+  function nativeWaitReason(scene) {
+    if (!scene?.auto?.on || !scene.self) return "";
+    if (!connected(scene)) return "Auto Farm đã bật nhưng đang chờ kết nối game.";
+    if (scene.self.dead) return "Nhân vật đã chết; chờ hồi sinh.";
+    if (scene.leaving) return "Đang chuyển map; chờ scene ổn định.";
+    if (scene.keyCapture) return "Đang đặt phím trong game; kết thúc đặt phím để tiếp tục.";
+    if (scene.pendingSkill || scene.aiming) return "Đang chờ/ngắm chiêu tay; kết thúc hoặc hủy ngắm để farm tiếp.";
+    if (scene.self.med && !scene.auto.resting) return "Game vẫn ghi nhận đang bế quan; chờ game xác nhận thoát bế quan để farm tiếp.";
+    if (scene.auto.resting) return "Auto Farm đang rút lui/hồi máu; chưa tiếp tục tìm quái.";
+    if (GSTHarvest.controls(scene)) return "Đang nhường di chuyển cho Tự hái.";
+    if (globalThis.GSTFarmSeals?.controls(scene)) return "Đang nhường di chuyển để phá phong ấn.";
+    if (scene.chat?.typing || scene.inputFieldActive?.()) return "Đang mở chat/ô nhập; phần mở rộng tìm quái đang chờ.";
+    if (scene.panels?.open || scene.overlay?.dialogOpen || scene.uiBlocked) return "Giao diện game đang mở; đóng bảng/hộp thoại nếu farm chưa tiếp tục.";
+    if (typeof scene.now === "function" && scene.now() < scene.auto.pauseUntil) return "Đang tạm dừng sau lệnh di chuyển tay; chờ hết khoảng nghỉ của game.";
+    return "";
   }
 
   function owned(s) {
@@ -474,16 +508,18 @@
       let autoOn = null;
       let dead = null;
       let stoppedAfterDeaths = false;
+      let waitReason = "";
       try {
         const scene = sceneNow();
         stoppedAfterDeaths = deathLimitAuto !== null && scene?.auto === deathLimitAuto;
         if (typeof scene?.auto?.on === "boolean") autoOn = scene.auto.on;
         if (scene?.self) dead = !!scene.self.dead;
+        waitReason = nativeWaitReason(scene);
       } catch { /* Read-only status must not start or restart gameplay. */ }
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
         message: (settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage || (autoOn === false && stoppedAfterDeaths
           ? "Auto Farm is OFF. The game recorded repeated deaths and may have stopped farming; use its configured shortcut manually to start a new session."
-          : dead && respawnMessage ? respawnMessage : (globalThis.GSTFarmSeals?.status(sceneNow()) || message))),
+          : dead && respawnMessage ? respawnMessage : (waitReason || globalThis.GSTFarmSeals?.status(sceneNow()) || message))),
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);
     }
   });
