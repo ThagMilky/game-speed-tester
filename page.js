@@ -141,8 +141,10 @@
     return fixCount;
   }
 
-  function speedFor(self) {
-    const mode = self.fly ? "flying" : "walking";
+  function speedFor(self, scene) {
+    // Debounce the whole speed profile: changing farm and flight together
+    // must settle for one second, without stacking two separate delays.
+    const mode = `${scene.auto?.on === true ? "farm" : "normal"}:${self.fly ? "flying" : "walking"}`;
     const now = performance.now();
     if (activeMode === null) activeMode = mode;
     if (mode === activeMode) {
@@ -154,7 +156,9 @@
       activeMode = mode;
       pendingMode = null;
     }
-    return activeMode === "flying" ? flyingSpeed : walkingSpeed;
+    const flying = activeMode.endsWith(":flying");
+    if (activeMode.startsWith("farm:")) return flying ? 1.5 : 2;
+    return flying ? flyingSpeed : walkingSpeed;
   }
 
   function forgetPlayer() {
@@ -201,7 +205,8 @@
         : !window.game ? "Waiting for window.game (requires timer URL parameter)."
         : !self ? "Waiting for world scene / player."
         : current === null ? "Waiting for a numeric self.ms."
-        : pendingMode !== null ? "Waiting for movement state to remain stable for 1 second."
+        : pendingMode !== null ? "Waiting for movement / Auto Farm state to remain stable for 1 second."
+        : activeMode?.startsWith("farm:") ? "Auto Farm speed profile active: flying 1.5 / walking 2."
         : "Enabled; monitoring movement speed.";
     } catch {
       message ||= "Waiting for an accessible world scene.";
@@ -222,7 +227,7 @@
     // Snapshots replace self frequently; debounce belongs to the mode, not its object.
     if (!self) resetMode();
     if (self && numeric(self.ms)) {
-      const speed = speedFor(self);
+      const speed = speedFor(self, scene);
       const current = self.ms;
       if (lastWritten === null || current !== lastWritten) {
         naturalSpeed = current;

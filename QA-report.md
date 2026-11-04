@@ -1,6 +1,6 @@
 # Kết quả QA extension — 2026-11-03
 
-Lưu ý cập nhật 2026-11-04: báo cáo bên dưới là kết quả lịch sử trước các sửa đổi phím tắt, áp dụng tốc độ theo `preupdate` và bộ lọc ≤ / ≥ / boss. Các thay đổi mới chỉ được đọc lại source/diff; tests, lint, typecheck và browser/gameplay: **NOT RUN**. Hành vi mới: **UNVERIFIED**. CI: **NOT CHECKED**.
+Lưu ý cập nhật 2026-11-04: báo cáo bên dưới là kết quả lịch sử trước các sửa đổi phím tắt, áp dụng tốc độ theo `preupdate`, bộ lọc ≤ / ≥ / boss và mức tốc độ farm riêng (bay 1.5 / đi bộ 2, chuyển ổn định 1 giây). Các thay đổi mới chỉ được đọc lại source/diff; tests, lint, typecheck và browser/gameplay: **NOT RUN**. Hành vi mới: **UNVERIFIED**. CI: **NOT CHECKED**.
 
 ## Kết luận
 
