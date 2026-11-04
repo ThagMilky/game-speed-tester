@@ -36,11 +36,15 @@
           <label class="check-row"><input id="breakSeals" type="checkbox"><span>Tự phá phong ấn khi đánh boss bí cảnh</span></label>
           <p class="hint">Ưu tiên phong ấn còn đòn, dùng đường đi/đánh thường gốc rồi quay lại boss. Nếu số đòn không giảm trong 8 giây thì dừng thử mục tiêu đó, không tăng nhịp đánh.</p>
           <div class="two-columns separated">
-            <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="maxLevel">Level ≤ mức chọn</option><option value="minLevel">Level ≥ mức chọn</option><option value="boss">Chỉ boss</option></select></div>
-            <div><label for="farmTargetLevel">Level quái</label><input id="farmTargetLevel" type="number" min="1" step="1" value="1" required disabled></div>
+            <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="maxLevel">Level ≤ mức chọn</option><option value="minLevel">Level ≥ mức chọn</option><option value="range">Trong khoảng level</option><option value="boss">Chỉ boss</option></select></div>
+            <div id="farmSingleLevel"><label for="farmTargetLevel">Level quái</label><input id="farmTargetLevel" type="number" min="1" step="1" value="1" required disabled></div>
+          </div>
+          <div id="farmLevelRange" class="two-columns separated" hidden>
+            <div><label for="farmTargetMinLevel">Thấp nhất</label><input id="farmTargetMinLevel" type="number" min="1" step="1" value="1" required disabled></div>
+            <div><label for="farmTargetMaxLevel">Cao nhất</label><input id="farmTargetMaxLevel" type="number" min="1" step="1" value="20" required disabled></div>
           </div>
           <button id="saveFarmFilter" type="button" class="full">Lưu lựa chọn quái</button>
-          <p class="hint">≤ 10: level 10 trở xuống. ≥ 10: level 10 trở lên. Chỉ boss gồm boss thường và boss thế giới, không giới hạn level. Bộ lọc dùng được cả với bán kính gốc.</p>
+          <p class="hint">≤ 10: level 10 trở xuống. ≥ 10: level 10 trở lên. Khoảng 10–20: gồm cả level 10 và 20; thấp nhất không được lớn hơn cao nhất. Chỉ boss không giới hạn level. Bộ lọc dùng được cả với bán kính gốc.</p>
           <p class="hint">Bật Auto Farm bằng phím đã chọn. Khi mở rộng bật, nhân vật chưa bay sẽ được yêu cầu bật bay.</p>
         </fieldset>
         <p id="farmFeedback" class="notice" role="alert"></p>

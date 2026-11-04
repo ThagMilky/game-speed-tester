@@ -13,6 +13,7 @@
   }
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { width: 390px; max-height: 580px; overflow-y: auto; margin: 0; padding: 18px 16px 12px; background: var(--bg); color: var(--text); }
 header { margin-bottom: 14px; }
 .eyebrow { color: var(--accent); font-size: 10px; font-weight: 700; letter-spacing: 1.4px; margin: 0 0 4px; }

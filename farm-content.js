@@ -33,8 +33,10 @@
       autoRespawn: value?.autoRespawn === true,
       breakSeals: value?.breakSeals === true,
       targetMode: value?.targetMode === "level" ? "maxLevel"
-        : ["maxLevel", "minLevel", "boss"].includes(value?.targetMode) ? value.targetMode : "all",
+        : ["maxLevel", "minLevel", "range", "boss"].includes(value?.targetMode) ? value.targetMode : "all",
       targetLevel: Number.isSafeInteger(value?.targetLevel) && value.targetLevel > 0 ? value.targetLevel : 1,
+      targetMinLevel: Number.isSafeInteger(value?.targetMinLevel) && value.targetMinLevel > 0 ? value.targetMinLevel : 1,
+      targetMaxLevel: Number.isSafeInteger(value?.targetMaxLevel) && value.targetMaxLevel > 0 ? value.targetMaxLevel : 20,
       radius: typeof value?.radius === "number" && Number.isFinite(value.radius)
         ? Math.max(11, Math.min(100, value.radius)) : 22
     };

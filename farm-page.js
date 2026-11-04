@@ -3,7 +3,7 @@
   const origin = "https://nghichthienky.online";
   const channel = "gst:farm:v1";
   const baseRadius = 11;
-  let settings = { enabled: false, radius: 22, autoRespawn: false, targetMode: "all", targetLevel: 1 };
+  let settings = { enabled: false, radius: 22, autoRespawn: false, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20 };
   let filterBinding = null;
   let death = null;
   let respawnMessage = "";
@@ -22,17 +22,20 @@
   // Both features share the same once-per-death request state.
   GSTHarvest.respawn = (scene) => checkRespawn(scene, true);
   const targetMode = (value) => value === "level" ? "maxLevel"
-    : ["maxLevel", "minLevel", "boss"].includes(value) ? value : "all";
+    : ["maxLevel", "minLevel", "range", "boss"].includes(value) ? value : "all";
   function filterLabel() {
     if (settings.targetMode === "boss") return "Chỉ farm boss";
     if (settings.targetMode === "maxLevel") return `Chỉ farm level ≤ ${settings.targetLevel}`;
     if (settings.targetMode === "minLevel") return `Chỉ farm level ≥ ${settings.targetLevel}`;
+    if (settings.targetMode === "range") return settings.targetMinLevel <= settings.targetMaxLevel
+      ? `Chỉ farm level ${settings.targetMinLevel}–${settings.targetMaxLevel}` : "Khoảng level chưa hợp lệ; không chọn quái";
     return "Farm tất cả quái";
   }
   function matchesTarget(enemy) {
     if (settings.targetMode === "boss") return enemy?.cls === "boss" || enemy?.wb === true;
     if (settings.targetMode === "all") return true;
     if (!finite(enemy?.lv)) return false;
+    if (settings.targetMode === "range") return enemy.lv >= settings.targetMinLevel && enemy.lv <= settings.targetMaxLevel;
     return settings.targetMode === "maxLevel" ? enemy.lv <= settings.targetLevel : enemy.lv >= settings.targetLevel;
   }
 
@@ -482,10 +485,13 @@
     if (data.type === "configure" && typeof data.enabled === "boolean"
         && finite(data.radius) && data.radius >= 11 && data.radius <= 100) {
       const filterChanged = settings.targetMode !== targetMode(data.targetMode)
-        || settings.targetLevel !== data.targetLevel;
+        || settings.targetLevel !== data.targetLevel
+        || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel;
       settings = { enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn === true,
         targetMode: targetMode(data.targetMode),
-        targetLevel: Number.isSafeInteger(data.targetLevel) && data.targetLevel > 0 ? data.targetLevel : 1 };
+        targetLevel: Number.isSafeInteger(data.targetLevel) && data.targetLevel > 0 ? data.targetLevel : 1,
+        targetMinLevel: Number.isSafeInteger(data.targetMinLevel) && data.targetMinLevel > 0 ? data.targetMinLevel : 1,
+        targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20 };
       if (settings.targetMode === "all") clearFilter();
       if (session) {
         syncFilter(session.scene);

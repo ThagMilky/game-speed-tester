@@ -20,6 +20,17 @@ const breakSeals = document.getElementById("breakSeals");
 const farmRadius = document.getElementById("farmRadius");
 const farmTargetMode = document.getElementById("farmTargetMode");
 const farmTargetLevel = document.getElementById("farmTargetLevel");
+const farmTargetMinLevel = document.getElementById("farmTargetMinLevel");
+const farmTargetMaxLevel = document.getElementById("farmTargetMaxLevel");
+const positiveLevel = (value, fallback) => Number.isSafeInteger(value) && value > 0 ? value : fallback;
+function syncFarmLevelInputs() {
+  const range = farmTargetMode.value === "range";
+  document.getElementById("farmSingleLevel").hidden = range;
+  document.getElementById("farmLevelRange").hidden = !range;
+  farmTargetLevel.disabled = !["maxLevel", "minLevel"].includes(farmTargetMode.value);
+  farmTargetMinLevel.disabled = farmTargetMaxLevel.disabled = !range;
+  farmTargetMaxLevel.setCustomValidity("");
+}
 const farmStatus = document.getElementById("farmStatus");
 const autoFarmValue = document.getElementById("autoFarmValue");
 const farmFeedback = document.getElementById("farmFeedback");
@@ -106,13 +117,26 @@ async function saveFarm(event) {
     if (!farmRadius.reportValidity()) return;
     const radius = farmRadius.valueAsNumber;
     if (!Number.isFinite(radius) || radius < 11 || radius > 100) return;
-    const targetMode = ["maxLevel", "minLevel", "boss"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
+    const targetMode = ["maxLevel", "minLevel", "range", "boss"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
     const needsLevel = targetMode === "maxLevel" || targetMode === "minLevel";
     if (needsLevel && !farmTargetLevel.reportValidity()) return;
     const targetLevel = farmTargetLevel.valueAsNumber;
     if (needsLevel && (!Number.isSafeInteger(targetLevel) || targetLevel < 1)) return;
+    const targetMinLevel = farmTargetMinLevel.valueAsNumber;
+    const targetMaxLevel = farmTargetMaxLevel.valueAsNumber;
+    farmTargetMaxLevel.setCustomValidity("");
+    if (targetMode === "range") {
+      if (!farmTargetMinLevel.reportValidity() || !farmTargetMaxLevel.reportValidity()) return;
+      if (![targetMinLevel, targetMaxLevel].every((level) => Number.isSafeInteger(level) && level > 0)) return;
+      if (targetMinLevel > targetMaxLevel) {
+        farmTargetMaxLevel.setCustomValidity("Level cao nhất phải lớn hơn hoặc bằng level thấp nhất.");
+        farmTargetMaxLevel.reportValidity();
+        return;
+      }
+    }
     farmPreferences = { enabled: farmEnabled.checked, radius, autoRespawn: autoRespawn.checked, breakSeals: breakSeals.checked,
-      targetMode, targetLevel: Number.isSafeInteger(targetLevel) && targetLevel > 0 ? targetLevel : 1 };
+      targetMode, targetLevel: positiveLevel(targetLevel, 1),
+      targetMinLevel: positiveLevel(targetMinLevel, 1), targetMaxLevel: positiveLevel(targetMaxLevel, 20) };
   }
   farmSaving = true;
   farmControls.disabled = true;
@@ -143,9 +167,11 @@ async function saveFarm(event) {
 }
 document.getElementById("saveFarm").addEventListener("click", saveFarm);
 document.getElementById("saveFarmFilter").addEventListener("click", saveFarm);
-farmTargetMode.addEventListener("change", () => {
-  farmTargetLevel.disabled = !["maxLevel", "minLevel"].includes(farmTargetMode.value);
-});
+farmTargetMode.addEventListener("change", syncFarmLevelInputs);
+for (const input of [farmTargetMinLevel, farmTargetMaxLevel]) {
+  input.addEventListener("input", () => farmTargetMaxLevel.setCustomValidity(""));
+  input.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
+}
 farmTargetLevel.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
 farmEnabled.addEventListener("change", saveFarm);
 autoRespawn.addEventListener("change", saveFarm);
@@ -290,10 +316,12 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   autoRespawn.checked = farmPreferences?.autoRespawn === true;
   breakSeals.checked = farmPreferences?.breakSeals === true;
   farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
-    : ["maxLevel", "minLevel", "boss"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
+    : ["maxLevel", "minLevel", "range", "boss"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
   farmTargetLevel.value = Number.isSafeInteger(farmPreferences?.targetLevel) && farmPreferences.targetLevel > 0
     ? farmPreferences.targetLevel : 1;
-  farmTargetLevel.disabled = !["maxLevel", "minLevel"].includes(farmTargetMode.value);
+  farmTargetMinLevel.value = positiveLevel(farmPreferences?.targetMinLevel, 1);
+  farmTargetMaxLevel.value = positiveLevel(farmPreferences?.targetMaxLevel, 20);
+  syncFarmLevelInputs();
   farmRadius.value = typeof farmPreferences?.radius === "number" && Number.isFinite(farmPreferences.radius)
     ? Math.max(11, Math.min(100, farmPreferences.radius)) : 22;
   farmControls.disabled = false;
