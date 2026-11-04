@@ -22,6 +22,7 @@
   const debugToggle = byId("harvestDebugEnabled");
   const debugOutput = byId("harvestDebugOutput");
   const debugFeedback = byId("harvestDebugFeedback");
+  const debugDetails = byId("harvestDebugDetails");
   let debugBusy = false;
   async function debugMessage(type, extra = {}) {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -41,6 +42,7 @@
     } finally { debugBusy = false; }
   }
   debugToggle.addEventListener("change", async () => {
+    debugDetails.hidden = !debugToggle.checked;
     debugToggle.disabled = true;
     try {
       await chrome.storage.local.set({ harvestDebugEnabled: debugToggle.checked });
@@ -196,6 +198,7 @@
   });
   chrome.storage.local.get(["harvestPreferences", "harvestDebugEnabled"]).then((saved) => {
     debugToggle.checked = saved.harvestDebugEnabled === true;
+    debugDetails.hidden = !debugToggle.checked;
     debugToggle.disabled = false;
     preferences = GSTHarvest.normalize(saved.harvestPreferences);
     enabled.checked = preferences.enabled;

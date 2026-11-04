@@ -65,10 +65,10 @@
           <p class="hint">Bật để vẫn tới cây và thử hái dù có quái gần. Không tự đánh quái; vùng sạch quái không áp dụng khi bật. Các kiểm tra cổng/NPC, chết và hộp kiểm tra người chơi vẫn giữ.</p>
           <p class="hint">Mặc định không hái khi farm. Khi cho phép, vẫn ưu tiên mục tiêu chiến đấu của Auto Farm.</p>
           <div class="two-columns separated">
-            <div><label for="harvestRadius">Vùng tìm cây (1–30 ô)</label><input id="harvestRadius" type="number" min="1" max="30" step="0.5" value="6" required></div>
-            <div><label for="harvestClearRadius">Vùng sạch quái (2–15 ô)</label><input id="harvestClearRadius" type="number" min="2" max="15" step="0.5" value="4" required></div>
+            <div><label for="harvestRadius" class="help-label">Vùng tìm cây (1–30 ô)<span class="field-help" tabindex="0" aria-label="Giải thích vùng tìm cây" aria-describedby="harvestRadiusHelp">?<span id="harvestRadiusHelp" class="help-tooltip" role="tooltip">Bán kính tìm cây quanh điểm bắt đầu Tự hái, hoặc tâm Auto Farm khi phối hợp. Ví dụ 6 ô: chỉ chọn cây cách tâm tối đa 6 ô, đúng bộ lọc. Đây không phải 6 ô quanh vị trí đang đi; vùng không chạy theo nhân vật. Tăng số để tìm xa hơn.</span></span></label><input id="harvestRadius" type="number" min="1" max="30" step="0.5" value="6" required></div>
+            <div><label for="harvestClearRadius" class="help-label">Vùng sạch quái (2–15 ô)<span class="field-help" tabindex="0" aria-label="Giải thích vùng sạch quái" aria-describedby="harvestClearRadiusHelp">?<span id="harvestClearRadiusHelp" class="help-tooltip" role="tooltip">Khoảng kiểm tra quái nguy hiểm quanh cả nhân vật và cây sắp hái. Ví dụ 4 ô: có quái trong khoảng này thì chờ; quái lớn có thể được tính thêm tầm của nó. Không tự đánh dọn quái. Tăng số thì thận trọng hơn, dễ phải chờ hơn. Không áp dụng khi bật “Bỏ qua kiểm tra quái gần”.</span></span></label><input id="harvestClearRadius" type="number" min="2" max="15" step="0.5" value="4" required></div>
           </div>
-          <label for="harvestReach" class="separated">Khoảng cách hái (0.5–1.5 ô)</label><input id="harvestReach" type="number" min="0.5" max="1.5" step="0.1" value="1.2" required>
+          <label for="harvestReach" class="separated help-label">Khoảng cách hái (0.5–1.5 ô)<span class="field-help" tabindex="0" aria-label="Giải thích khoảng cách hái" aria-describedby="harvestReachHelp">?<span id="harvestReachHelp" class="help-tooltip" role="tooltip">Khoảng cách từ nhân vật tới cây để dừng đi và thử hái. Ví dụ 1.2 ô: đi đến cách cây tối đa 1.2 ô mới tương tác. Số nhỏ phải tới sát hơn. Đây không phải vùng tìm cây và không tăng tầm hái của game; game vẫn phải chọn đúng cây, không phải cổng/NPC. Gợi ý giữ 1.2.</span></span></label><input id="harvestReach" type="number" min="0.5" max="1.5" step="0.1" value="1.2" required>
           <button id="saveHarvestRange" type="button" class="full">Lưu khoảng cách</button>
           <label for="harvestMode" class="separated">Loại cây</label><select id="harvestMode"><option value="all">Hái tất cả cây</option><option value="selected">Chỉ loại đã chọn</option></select>
           <label for="harvestSearch" class="separated">Tìm tên cây</label><input id="harvestSearch" type="search" placeholder="Ví dụ: tho linh" autocomplete="off">
@@ -78,11 +78,13 @@
         </fieldset>
         <p id="harvestFeedback" class="notice" role="alert"></p>
         <details id="harvestDebugPanel" class="diagnostic">
-          <summary>Log chẩn đoán Tự hái (tạm thời)</summary>
-          <label class="check-row"><input id="harvestDebugEnabled" type="checkbox" disabled><span>Bật ghi log chẩn đoán</span></label>
-          <p class="hint">Chỉ giữ tối đa 60 dòng trong bộ nhớ tab. Không ghi phím bấm, tài khoản hoặc danh sách cây đã chọn. Tắt để dừng và xóa log; không ảnh hưởng Tự hái.</p>
-          <textarea id="harvestDebugOutput" readonly rows="7" aria-label="Log chẩn đoán Tự hái" spellcheck="false"></textarea>
-          <div class="button-row"><button id="copyHarvestDebug" type="button">Sao chép log</button><button id="clearHarvestDebug" type="button" class="quiet">Xóa log</button></div>
+          <summary>Hỗ trợ khi gặp lỗi</summary>
+          <label class="check-row"><input id="harvestDebugEnabled" type="checkbox" disabled><span>Ghi chẩn đoán khi cần hỗ trợ</span></label>
+          <div id="harvestDebugDetails" hidden>
+            <p class="hint">Chỉ ghi lỗi hoặc lượt chưa xác nhận, tối đa 60 dòng tạm trong tab. Tắt để dừng và xóa log.</p>
+            <textarea id="harvestDebugOutput" readonly rows="4" aria-label="Log chẩn đoán Tự hái" spellcheck="false"></textarea>
+            <div class="button-row"><button id="copyHarvestDebug" type="button">Sao chép log</button><button id="clearHarvestDebug" type="button" class="quiet">Xóa log</button></div>
+          </div>
           <p id="harvestDebugFeedback" class="notice" role="status"></p>
         </details>
       </div>

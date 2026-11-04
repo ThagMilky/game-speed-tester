@@ -15,9 +15,15 @@
   let modal = false;
   let debugEnabled = false;
   let attempt = 0;
+  let lastResult = null;
   const skipped = new Map();
   const finite = Number.isFinite;
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  function inventoryCount(scene, item) {
+    if (!(scene.inv instanceof Map)) return null;
+    const value = scene.inv.get(item) ?? 0;
+    return typeof value === "number" && finite(value) && value >= 0 ? value : null;
+  }
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const connected = (scene) => {
@@ -177,6 +183,7 @@
   function onShutdown() {
     detach();
     recovery = null;
+    lastResult = null;
     message = "Đã rời scene; chờ map mới.";
     watch();
   }
@@ -302,15 +309,27 @@
       release(reason, 0, "blocked");
       return;
     }
-    if (job?.phase === "request" || job?.phase === "harvesting") {
+    if (["request", "harvesting", "confirming"].includes(job?.phase)) {
       steer(scene, 0, 0);
       if (scene.harvesting && scene.harvestNode === job.index) {
         if (job.phase !== "harvesting") {
           job.phase = "harvesting";
+          job.finishedAt = null;
           trace("harvest.ack", "started");
         }
         message = `Đang hái ${job.node.item}.`;
-      } else if (job.phase === "harvesting") release("Lượt hái đã kết thúc; đang quan sát lại.", 20000, "harvest_ended");
+      } else if (job.phase === "harvesting" || job.phase === "confirming") {
+        job.phase = "confirming";
+        job.finishedAt ??= now;
+        const count = inventoryCount(scene, job.node.item);
+        if (job.inventoryBefore !== null && count !== null && count > job.inventoryBefore
+            && scene.nodes[job.index] === job.node && !job.node.ready) {
+          lastResult = { text: `Thành công: nhận thêm ${count - job.inventoryBefore} ${job.node.item}.`, until: now + 5000 };
+          release("Đang quan sát cây tiếp theo.", 20000, "harvest_success");
+        } else if (now - job.finishedAt >= 1500) {
+          release("Lượt hái đã kết thúc; chưa xác nhận nhận thêm vật phẩm.", 20000, "harvest_unconfirmed");
+        } else message = "Lượt hái kết thúc; chờ cập nhật cây và túi đồ.";
+      }
       else if (!job.node.ready || now - job.requestedAt > 4000) release("Chưa xác nhận lượt hái; tạm bỏ qua cây này.", 20000,
         !job.node.ready ? "node_unavailable_before_ack" : "request_timeout");
       return;
@@ -381,6 +400,7 @@
       // Recheck directly before the native F action; never force scene.target.
       if (blocked(scene, true) || danger(scene, node) || !node.ready) { release("Tạm dừng tương tác.", 0, "pre_interaction_blocked"); return; }
       job.phase = "request";
+      job.inventoryBefore = inventoryCount(scene, node.item);
       job.requestedAt = now;
       trace("harvest.request", "native_F");
       try {
@@ -433,6 +453,7 @@
       }
       if (scene.self.dead) {
         recovery = { scene, home: { ...binding.home }, aliveAt: null };
+        lastResult = null;
         detach(); message = "Đã chết; dừng di chuyển và chờ hồi sinh để tiếp tục hái."; watch(); return;
       }
       if (scene.auto.on !== binding.farmOn) {
@@ -458,7 +479,8 @@
     }
     const here = new Set((scene?.nodes ?? []).filter((n) => !n.ore && typeof n.item === "string")
       .map((n) => n.item.normalize("NFC")));
-    window.postMessage({ channel: "gst:harvest-status:v1", requestId, message,
+    const resultMessage = lastResult && performance.now() < lastResult.until ? `${lastResult.text} ${message}` : message;
+    window.postMessage({ channel: "gst:harvest-status:v1", requestId, message: resultMessage,
       enabled: settings.enabled, configKey: JSON.stringify(settings),
       available: names.size > 0,
       catalog: [...names].slice(0, 200).map((name) => ({ name, inMap: here.has(name) })) }, origin);
@@ -478,6 +500,7 @@
     if (!settings.enabled) {
       detach();
       recovery = null;
+      lastResult = null;
       clearInterval(watcher); watcher = null;
       message = "Tự hái đã tắt; không hủy lượt hái game đã bắt đầu.";
     } else {
@@ -494,7 +517,7 @@
     if (event.data.type === "diagnostics") {
       if (event.data.enabled === true) debugEnabled = true;
       window.postMessage({ channel: "gst:harvest-status:v1", type: "diagnostics", requestId: event.data.requestId,
-        debug: { build: "harvest-main-log-4-revive", world: "MAIN", helper: typeof globalThis.GSTHarvest,
+        debug: { build: "harvest-main-log-5-result", world: "MAIN", helper: typeof globalThis.GSTHarvest,
           normalize: typeof globalThis.GSTHarvest?.normalize,
           optionsBuild: globalThis.__gstHarvestOptionsLoad?.build ?? "missing",
           enabled: settings.enabled, scene: binding !== null, controlling: job !== null } }, origin);
@@ -530,7 +553,7 @@
     }
   }
   window.addEventListener("pagehide", () => {
-    suspended = true; detach(); recovery = null; clearInterval(watcher); watcher = null;
+    suspended = true; detach(); recovery = null; lastResult = null; clearInterval(watcher); watcher = null;
   });
   window.addEventListener("pageshow", () => {
     suspended = false; watch(); discover();

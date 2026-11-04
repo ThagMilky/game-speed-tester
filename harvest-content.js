@@ -12,6 +12,7 @@
   const debugRows = [];
   const lastDebug = new Map();
   let lastFailure = null;
+  let mainSnapshot = null;
   function moduleState() {
     let isolatedDeclared = null;
     try {
@@ -30,6 +31,11 @@
   }
   function record(event, detail) {
     if (!debugEnabled) return;
+    // Normal initialization and successful attempts need no diagnostic history.
+    if (!["failure", "harvest.release", "main.timeout"].includes(event)) return;
+    if (event === "harvest.release" && !["node_unavailable_before_ack", "request_timeout",
+      "interaction_target_other", "interaction_cache_timeout", "interact_error", "stalled",
+      "approach_timeout", "no_path", "path_blocked", "harvest_unconfirmed"].includes(detail?.code)) return;
     const key = JSON.stringify({ event, detail });
     const group = `${event}:${detail?.stage ?? ""}`;
     if (key === lastDebug.get(group)) return;
@@ -51,7 +57,7 @@
     record("failure", lastFailure);
   }
   function debugState() {
-    return { enabled: debugEnabled, build: "harvest-bridge-log-2-events", module: moduleState(), lastFailure, rows: [...debugRows] };
+    return { enabled: debugEnabled, build: "harvest-bridge-log-2-events", module: moduleState(), main: mainSnapshot, lastFailure, rows: [...debugRows] };
   }
   function setDebug(value) {
     const next = value === true;
@@ -60,7 +66,7 @@
     debugEnabled = next;
     lastDebug.clear();
     if (debugEnabled) record("debug.enabled", moduleState());
-    else { debugRows.length = 0; lastFailure = null; }
+    else { debugRows.length = 0; lastFailure = null; mainSnapshot = null; }
   }
   function configure(value, respond) {
     const next = GSTHarvest.normalize(value);
@@ -133,12 +139,13 @@
       const codes = ["selected", "native_F", "started", "yield", "detach", "yield_native", "blocked",
         "harvest_ended", "node_unavailable_before_ack", "request_timeout", "target_changed", "danger",
         "interaction_target_other", "interaction_cache_timeout", "pre_interaction_blocked", "interact_error",
-        "stalled", "approach_timeout", "no_path", "path_blocked", "manual_pointer", "manual_key", "manual_skill"];
+        "stalled", "approach_timeout", "no_path", "path_blocked", "manual_pointer", "manual_key", "manual_skill",
+        "harvest_success", "harvest_unconfirmed"];
       record(data.event, {
         code: codes.includes(data.code) ? data.code : "unknown",
         attempt: Number.isSafeInteger(data.attempt) && data.attempt > 0 ? data.attempt : null,
         node: Number.isSafeInteger(data.node) && data.node >= 0 ? data.node : null,
-        phase: ["moving", "request", "harvesting"].includes(data.phase) ? data.phase : "unknown",
+        phase: ["moving", "request", "harvesting", "confirming"].includes(data.phase) ? data.phase : "unknown",
         elapsedMs: Number.isFinite(data.elapsedMs) ? Math.max(0, Math.min(86400000, data.elapsedMs)) : null,
         distance: Number.isFinite(data.distance) ? Math.max(0, Math.min(1000000, data.distance)) : null,
         ready: data.ready === true, fixChanged: typeof data.fixChanged === "boolean" ? data.fixChanged : null
@@ -147,14 +154,14 @@
     }
     if (data.type === "diagnostics") {
       const page = data.debug;
-      record("main.snapshot", {
+      mainSnapshot = {
         build: typeof page?.build === "string" ? page.build.slice(0, 60) : "missing",
         helper: typeof page?.helper === "string" ? page.helper.slice(0, 20) : "unknown",
         normalize: typeof page?.normalize === "string" ? page.normalize.slice(0, 20) : "unknown",
         optionsBuild: typeof page?.optionsBuild === "string" ? page.optionsBuild.slice(0, 60) : "missing",
         enabled: page?.enabled === true, scene: page?.scene === true,
         controlling: page?.controlling === true
-      });
+      };
       if (entry?.kind === "debug") {
         pending.delete(data.requestId); clearTimeout(entry.timer); entry.respond(debugState());
       }
