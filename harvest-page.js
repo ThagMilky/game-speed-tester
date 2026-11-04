@@ -56,13 +56,28 @@
     return host.hp?.() < hp || (host.mp?.() < mp
       && (host.pills?.("mp") ?? []).some((count) => count > 0));
   }
-  function blocked(scene, fresh = false) {
-    return !settings.enabled || suspended || !compatible(scene) || !connected(scene)
-      || scene.self.dead || scene.leaving || scene.uiBlocked || scene.pendingSkill || scene.aiming
-      || scene.self.med || scene.auto.resting || scene.self.fish || scene.heldAttack || manualMovement(scene)
-      || (scene.auto.on && (scene.auto.moved || scene.now() < scene.auto.pauseUntil))
-      || performance.now() < manualUntil || modalOpen(fresh) || needsRecovery(scene);
+  function blockedReason(scene, fresh = false) {
+    if (!settings.enabled) return "Tự hái đang tắt.";
+    if (suspended) return "Tạm dừng vì trang đang rời đi.";
+    if (!compatible(scene)) return "Chưa đọc đủ interface thu hoạch của game.";
+    if (!connected(scene)) return "Chờ kết nối game ổn định.";
+    if (scene.self.dead) return "Nhân vật đã chết; chờ hồi sinh.";
+    if (scene.leaving) return "Đang chuyển map.";
+    if (modalOpen(fresh)) return "Chờ bạn xử lý hộp kiểm tra người chơi.";
+    if (scene.chat?.typing || scene.inputFieldActive?.()) return "Chờ đóng chat hoặc bỏ chọn ô nhập trong game.";
+    if (scene.keyCapture) return "Chờ kết thúc đổi phím trong game.";
+    if (scene.panels?.open || scene.overlay?.dialogOpen) return "Chờ đóng bảng hoặc hộp thoại trong game.";
+    if (scene.uiBlocked) return "Giao diện game đang chặn thao tác; đóng bảng/ô nhập hoặc xoay ngang nếu dùng điện thoại.";
+    if (scene.pendingSkill || scene.aiming || scene.heldAttack) return "Chờ thả phím đánh hoặc kết thúc ngắm/tung chiêu.";
+    if (scene.self.med || scene.auto.resting) return "Chờ kết thúc bế quan hoặc hồi máu.";
+    if (scene.self.fish) return "Chờ kết thúc câu cá.";
+    if (manualMovement(scene)) return "Chờ nhân vật kết thúc lệnh đi tay; thả WASD/phím mũi tên.";
+    if (scene.auto.on && (scene.auto.moved || scene.now() < scene.auto.pauseUntil)) return "Chờ Auto Farm xử lý lệnh di chuyển tay.";
+    if (performance.now() < manualUntil) return "Tạm dừng 3 giây sau thao tác phím/chuột trong game.";
+    if (needsRecovery(scene)) return "Chờ cơ chế hồi HP/MP của Auto Farm.";
+    return null;
   }
+  const blocked = (scene, fresh = false) => blockedReason(scene, fresh) !== null;
   function danger(scene, node) {
     if (settings.ignoreMonsters) return false;
     // Read the scene's full monster set, never the level/boss-filtered host.
@@ -175,10 +190,6 @@
     return node && !node.ore && typeof node.item === "string" && finite(node.x) && finite(node.y)
       && (settings.mode === "all" || settings.items.includes(node.item.normalize("NFC")));
   }
-  function canWork(scene) {
-    if (blocked(scene)) return false;
-    return farmAllowed(scene) && !fighting(scene) && finite(scene.px) && finite(scene.py);
-  }
   function passedPoint(scene, pos, point, next, host) {
     const previous = job.previous;
     if (!previous || !finite(scene.self.fix) || scene.self.fix !== previous.fix) return false;
@@ -191,10 +202,12 @@
       && host.clear(pos.x, pos.y, next[0], next[1]);
   }
   function step(scene, now) {
-    if (!canWork(scene)) {
-      release(modalOpen() ? "Chờ bạn xử lý hộp kiểm tra người chơi."
-        : scene.auto.on && !settings.allowFarm ? "Tạm dừng: chưa cho phép hái khi Auto Farm bật."
-          : "Chờ chiến đấu, hồi máu hoặc thao tác tay kết thúc.");
+    const reason = blockedReason(scene)
+      || (!farmAllowed(scene) ? "Tạm dừng: chưa cho phép hái khi Auto Farm bật." : null)
+      || (fighting(scene) ? "Chờ Auto Farm kết thúc mục tiêu chiến đấu hiện tại." : null)
+      || (!finite(scene.px) || !finite(scene.py) ? "Chờ tọa độ nhân vật hợp lệ." : null);
+    if (reason) {
+      release(reason);
       return;
     }
     if (job?.phase === "request" || job?.phase === "harvesting") {

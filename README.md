@@ -43,6 +43,8 @@ Không cần build, npm, backend hoặc dependency.
 
 ## Tự hái cây
 
+Dòng **Trạng thái** nằm ngay đầu nhóm Tự hái, phía trên công tắc, để đọc được mà không cuộn qua danh sách cây. Thông báo chặn phân biệt chat/ô nhập, bảng/hộp thoại, đổi phím, đánh/ngắm chiêu, bế quan/hồi máu, câu cá, lệnh đi tay, khoảng chờ sau thao tác, kết nối và điều kiện phối hợp Auto Farm. Đây là chẩn đoán từ trạng thái client, không xác nhận nguyên nhân của mọi báo cáo đứng yên; chưa thay điều kiện chặn hoặc bỏ kiểm tra tương tác.
+
 Tính năng **đã triển khai**, mặc định tắt, cài đặt riêng ở `chrome.storage.local.harvestPreferences`. Bật **Tự hái**, chờ game tải với `timer`, chọn **Hái tất cả cây** hoặc **Chỉ loại đã chọn**. Ô tìm hỗ trợ không dấu (ví dụ `tho linh`); có thể tick nhiều loại, loại đã chọn lên đầu và giữ qua đổi map. **Bỏ chọn tất cả** xóa toàn bộ lựa chọn, kể cả loại bị ô tìm kiếm ẩn. Chọn riêng nhưng danh sách trống thì không hái. Mọi tên được hiển thị bằng textContent; khớp đúng tên game, không đoán từ ảnh.
 
 Danh mục lấy từ `scene.world.herbs.scenes` game đã tải, trạng thái hiện diện từ `scene.nodes`, chỉ cây `!ore`. Loại đã lưu nhưng không có ở map vẫn hiện với ghi chú. Nếu chưa đọc được game, popup giữ các loại đã chọn và báo chờ dữ liệu, không coi danh sách trống là không có tài nguyên. Không fetch danh mục hoặc hardcode danh sách tên cây.

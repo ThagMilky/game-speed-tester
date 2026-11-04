@@ -110,7 +110,7 @@
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab?.id) throw new Error("No active tab");
       const data = await chrome.tabs.sendMessage(tab.id, { type: "gst:harvest-status" });
-      status.textContent = data.message;
+      status.textContent = `Trạng thái: ${data.message}`;
       const next = Array.isArray(data.catalog) ? data.catalog : [];
       if (JSON.stringify(next) !== JSON.stringify(catalog) || available !== (data.available === true)) {
         catalog = next; available = data.available === true; renderList();
