@@ -29,9 +29,7 @@
     if (reason) message = reason;
   }
   function manual(scene) {
-    return scene.clickOrder || scene.joyX || scene.joyY || scene.pendingSkill || scene.aiming || scene.heldAttack
-      || (!scene.chat?.typing && !scene.inputFieldActive?.() && !scene.keyCapture
-        && ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"].some((key) => scene.keys?.[key]?.isDown));
+    return GSTFarmInput.movement(scene) || scene.pendingSkill || scene.aiming || scene.heldAttack;
   }
   function modalOpen(fresh = false) {
     if (!fresh && performance.now() - modalAt < 200) return modal;
@@ -108,11 +106,6 @@
       if (!realm || !Array.isArray(realm.events) || !finite(realm.now) || !finite(realm.retryAt)) {
         release("Chờ game cung cấp danh sách cổng bí cảnh."); return false;
       }
-      if (job?.phase === "request") {
-        scene.autoX = scene.autoY = 0;
-        if (now - job.requestedAt > 8000) release("Chưa xác nhận vào bí cảnh; tạm bỏ cổng này.", true);
-        return job !== null;
-      }
       if (manual(scene) || now < manualUntil || globalThis.GSTFarmSession?.waiting(scene)) {
         release("Tạm nhường thao tác tay hoặc chờ khôi phục Auto Farm."); return false;
       }
@@ -120,9 +113,14 @@
           || scene.auto.resting || scene.self.med || scene.self.fish) { release("Chờ nhân vật/giao diện/lượt hái ổn định."); return false; }
       if (GSTHarvest.needsRecovery(scene)) { release("Nhường cơ chế hồi HP/MP của Auto Farm."); return false; }
       if (scene.auto.on && !preferences.allowFarm) { release("Chưa cho phép vào bí cảnh khi Auto Farm bật."); return false; }
+      if (modalOpen()) { release("Chờ bạn xử lý hộp kiểm tra người chơi."); return false; }
+      if (job?.phase === "request") {
+        scene.autoX = scene.autoY = 0;
+        if (now - job.requestedAt > 8000) release("Chưa xác nhận vào bí cảnh; tạm bỏ cổng này.", true);
+        return job !== null;
+      }
       if (realm.retryAt > realm.now) { release(`Chờ tái nhập bí cảnh · còn ${Math.ceil(realm.retryAt - realm.now)} giây.`); return false; }
       if (!job && now - lastScan < 1000) return false;
-      if (modalOpen()) { release("Chờ bạn xử lý hộp kiểm tra người chơi."); return false; }
       if (!finite(time) || !finite(scene.px) || !finite(scene.py)
           || !["clear", "route", "steer"].every((name) => typeof host?.[name] === "function")) return false;
       const candidates = realm.events.filter((portal) => (typeof portal.id === "string" || Number.isSafeInteger(portal.id)) && portal.host === scene.map.scene
@@ -134,12 +132,17 @@
         for (const [id, until] of skipped) if (until <= now || !candidates.some((portal) => portal.id === id)) skipped.delete(id);
         const next = candidates.filter((portal) => !skipped.has(portal.id)
           && !(lastEntry?.id === portal.id && now < lastEntry.until)).sort((a, b) => distance(a, pos) - distance(b, pos))
-          .find((portal) => captureEntry(scene, portal) !== null);
+          .find((portal) => {
+            const action = captureEntry(scene, portal);
+            // The captured native label already confirms the level band. Combat
+            // temporarily disables entry; keep the job so it can finish combat.
+            return action !== null && (!action.disabled || scene.self.combat);
+          });
         if (!next) { message = "Không có cổng hợp lệ trong map hiện tại; tiếp tục tìm toàn map."; return false; }
         const navigation = Object.assign(Object.create(scene.auto), { path: [], lastX: pos.x, lastY: pos.y,
           stillSince: time, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0, pathAt: -Infinity });
         job = { id: next.id, x: next.x, y: next.y, phase: scene.self.combat ? "finishingCombat" : "moving", navigation,
-          nativeTarget: scene.auto.target, castAt: scene.castAt, startAt: now, progressAt: now, previous: pos, steer: null };
+          nativeTarget: scene.auto.target, castAt: scene.castAt, startAt: now, progressAt: now, steer: null };
       }
       const portal = candidates.find((candidate) => candidate.id === job.id);
       const steeringHost = { ...host, steer: (x, y) => { scene.autoX = x; scene.autoY = y; job.steer = [x, y]; } };
@@ -156,8 +159,8 @@
         message = "Đã thấy cổng; tạm ngừng chọn quái mới, chờ hết giao tranh.";
         return true;
       }
-      if (job.phase === "finishingCombat") { job.phase = "moving"; job.castAt = scene.castAt; job.previous = pos; }
-      if (distance(pos, job.previous) > 0.2) { job.previous = pos; job.progressAt = now; }
+      if (job.phase === "finishingCombat") { job.phase = "moving"; job.castAt = scene.castAt; }
+      if (GSTNavigation.progressed(scene, job, job.navigation.path, portal.x, portal.y, 0.2)) job.progressAt = now;
       if (now - job.progressAt > 5000 || now - job.startAt > 120000) { release("Không tới được cổng; tạm bỏ 30 giây.", true); return false; }
       if (distance(pos, portal) > 2.5 || !host.clear(pos.x, pos.y, portal.x, portal.y)) {
         if (!GSTNavigation.walk(scene, job.navigation, steeringHost, time, pos.x, pos.y, portal.x, portal.y, 2.5)) {

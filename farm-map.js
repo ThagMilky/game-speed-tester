@@ -17,10 +17,8 @@
       && !driver.closing && !driver.reconnecting && !driver.displaced && (driver.online === false || driver.link?.open?.() === true)
       && !GSTFarmRouting.blocked(scene) && !scene.keyCapture && !scene.overlay?.dialogOpen && !scene.harvesting
       && !scene.auto.resting && !scene.self.med && !scene.self.fish && !scene.pendingSkill && !scene.aiming
-      && !scene.heldAttack && !scene.clickOrder && !scene.joyX && !scene.joyY && !scene.auto.moved
-      && scene.now() >= scene.auto.pauseUntil && !(scene.self.realm?.inside?.protection > 0)
-      && ((scene.chat?.typing || scene.inputFieldActive?.())
-        || !["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"].some((key) => scene.keys?.[key]?.isDown));
+      && !scene.heldAttack && !GSTFarmInput.movement(scene) && !scene.auto.moved
+      && scene.now() >= scene.auto.pauseUntil && !(scene.self.realm?.inside?.protection > 0);
   }
   function destination(scene, host, time) {
     const enemies = typeof host.enemies === "function" ? host.enemies() : [];
@@ -87,19 +85,9 @@
         const navigation = Object.assign(Object.create(scene.auto), { path: [], lastX: scene.px, lastY: scene.py,
           stillSince: time, pathAt: -Infinity, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0 });
         job = { id: boss.id, actor: boss.actor, x: boss.x, y: boss.y, navigation, castAt: scene.castAt, progressAt: time,
-          remaining: Math.hypot(scene.px - boss.x, scene.py - boss.y), waypoint: null, fix: scene.self.fix, startedAt: time, steer: null };
+          startedAt: time, steer: null };
       }
-      const waypoint = job.navigation.path?.[0];
-      const alongRoute = job.waypoint && Array.isArray(waypoint)
-        && waypoint[0] === job.waypoint[0] && waypoint[1] === job.waypoint[1]
-        && job.waypointDistance - Math.hypot(scene.px - waypoint[0], scene.py - waypoint[1]) >= 0.5;
-      if (job.fix === scene.self.fix && (alongRoute || job.remaining - Math.hypot(scene.px - boss.x, scene.py - boss.y) >= 0.5)) {
-        job.progressAt = time; job.remaining = Math.hypot(scene.px - boss.x, scene.py - boss.y); job.waypoint = null;
-      }
-      if (job.fix !== scene.self.fix) {
-        job.remaining = Math.hypot(scene.px - boss.x, scene.py - boss.y); job.waypoint = null;
-      }
-      job.fix = scene.self.fix;
+      if (GSTNavigation.progressed(scene, job, job.navigation.path, job.x, job.y)) job.progressAt = time;
       if (time - job.progressAt > 8 || time - job.startedAt > 120) {
         release(); retryAt = time + 15; message = "Chưa tiếp cận được boss; tạm bỏ đường này 15 giây."; return false;
       }
@@ -111,10 +99,6 @@
         release(); retryAt = time + 15; message = "Không có đường tới boss; chờ 15 giây trước khi thử lại."; return false;
       } else message = boss.actor ? "Đang đi tới boss đã biết trên map; tới gần sẽ bàn giao Auto Farm gốc đánh."
         : "Đang tới tọa độ boss bí cảnh bằng đường đi gốc; chưa tự tấn công khi thiếu actor.";
-      const next = owner.navigation.path?.[0];
-      if (Array.isArray(next) && (!owner.waypoint || next[0] !== owner.waypoint[0] || next[1] !== owner.waypoint[1])) {
-        owner.waypoint = [...next]; owner.waypointDistance = Math.hypot(scene.px - next[0], scene.py - next[1]);
-      }
       return true;
     } catch { release(); retryAt = finite(time) ? time + 15 : 0; message = "Dữ liệu đường tới boss chưa phù hợp; đã nhường lại game."; return false; }
   }

@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const previous = new WeakMap(), finite = Number.isFinite;
+  const previous = new WeakMap(), progress = new WeakMap(), finite = Number.isFinite;
   function crossed(scene, nav, point, tolerance) {
     const old = previous.get(nav), fix = scene.self?.fix;
     if (!old || !finite(fix) || old.fix !== fix || !finite(scene.px) || !finite(scene.py)) return false;
@@ -17,6 +17,26 @@
     if (crossed(scene, nav, point, 0.35) && host.clear(scene.px, scene.py, next[0], next[1])) nav.path.shift();
   }
   globalThis.GSTNavigation = {
+    progressed(scene, owner, path, gx, gy, threshold = 0.5) {
+      const x = scene.px, y = scene.py, fix = scene.self?.fix;
+      if (![x, y, gx, gy].every(finite)) return false;
+      const point = path?.[0], valid = Array.isArray(point) && point.length === 2 && point.every(finite);
+      const remaining = Math.hypot(gx - x, gy - y);
+      let old = progress.get(owner), advanced = false;
+      if (old && old.gx === gx && old.gy === gy && old.fix === fix) {
+        advanced = old.remaining - remaining >= threshold || (valid && old.point
+          && point[0] === old.point[0] && point[1] === old.point[1]
+          && old.pointDistance - Math.hypot(point[0] - x, point[1] - y) >= threshold);
+      } else old = null;
+      // Keep the baseline until enough distance accumulates. A correction or a
+      // new goal only rebases; neither counts as successful navigation.
+      if (!old || advanced) old = { gx, gy, fix, remaining, point: null };
+      if (valid && (!old.point || point[0] !== old.point[0] || point[1] !== old.point[1])) {
+        old.point = [...point]; old.pointDistance = Math.hypot(point[0] - x, point[1] - y);
+      }
+      progress.set(owner, old);
+      return advanced;
+    },
     remember(scene, nav, gx, gy) {
       previous.set(nav, { x: scene.px, y: scene.py, fix: scene.self?.fix, path: nav.path,
         point: Array.isArray(nav.path?.[0]) ? [...nav.path[0]] : null, goal: [gx, gy] });

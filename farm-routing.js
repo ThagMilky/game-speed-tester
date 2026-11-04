@@ -19,9 +19,7 @@
     return !!scene.uiBlocked && !(scene.panels?.open || scene.chat?.typing || scene.inputFieldActive?.());
   }
   function manual(scene) {
-    const typing = scene.chat?.typing || scene.inputFieldActive?.() || scene.keyCapture;
-    return scene.clickOrder || scene.joyX || scene.joyY || (!typing
-      && ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"].some((key) => scene.keys?.[key]?.isDown));
+    return GSTFarmInput.movement(scene);
   }
   function otherOwner(scene) {
     return ["GSTHarvest", "GSTFarmBehavior", "GSTFarmMap", "GSTFarmSeals", "GSTRealm", "GSTChest"]

@@ -41,14 +41,12 @@
     if (reason) say(reason);
   }
   function manual(scene) {
-    return scene.clickOrder || scene.joyX || scene.joyY || scene.pendingSkill || scene.aiming || scene.heldAttack
-      || scene.auto.moved || scene.now() < scene.auto.pauseUntil
-      || (!scene.chat?.typing && !scene.inputFieldActive?.() && !scene.keyCapture
-        && ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"].some((key) => scene.keys?.[key]?.isDown));
+    return GSTFarmInput.movement(scene) || scene.pendingSkill || scene.aiming || scene.heldAttack
+      || scene.auto.moved || scene.now() < scene.auto.pauseUntil;
   }
   function blocked(scene) {
     return !scene.auto.on || !scene.self || scene.self.dead || !connected(scene) || scene.leaving
-      || scene.uiBlocked || scene.keyCapture || scene.overlay?.dialogOpen || scene.harvesting
+      || GSTFarmRouting.blocked(scene) || scene.keyCapture || scene.overlay?.dialogOpen || scene.harvesting
       || scene.self.med || scene.self.fish || scene.auto.resting
       || (scene.self.realm?.inside?.protection ?? 0) > 0;
   }

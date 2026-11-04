@@ -2,6 +2,11 @@
   "use strict";
   const bindings = new WeakMap();
   globalThis.GSTFarmInput = {
+    movement(scene) {
+      const typing = scene.chat?.typing || scene.inputFieldActive?.() || scene.keyCapture;
+      return !!scene.clickOrder || !!scene.joyX || !!scene.joyY || (!typing
+        && ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"].some((key) => scene.keys?.[key]?.isDown));
+    },
     add(scene, callback) {
       let entry = bindings.get(scene);
       if (entry && scene.startClickOrder !== entry.wrapper) throw new Error("Click input owner changed");

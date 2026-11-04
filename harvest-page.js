@@ -50,9 +50,7 @@
     return modal;
   }
   function manualMovement(scene) {
-    const keyboardActive = !scene.chat?.typing && !scene.inputFieldActive?.() && !scene.keyCapture;
-    return (keyboardActive && ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"]
-      .some((key) => scene.keys?.[key]?.isDown)) || !!scene.joyX || !!scene.joyY || !!scene.clickOrder;
+    return GSTFarmInput.movement(scene);
   }
   function browsingUI(scene) {
     return !!(scene.panels?.open || scene.chat?.typing || scene.inputFieldActive?.());
@@ -374,7 +372,7 @@
         return;
       }
       job = { ...next, attempt: ++attempt, startFix: scene.self.fix, phase: "moving", path: [], routeAt: -Infinity, startAt: now,
-        progressAt: now, x: scene.px, y: scene.py, steer: null };
+        progressAt: now, steer: null };
       trace("harvest.start", "selected");
     }
     const node = job.node;
@@ -418,9 +416,7 @@
       message = `Đã yêu cầu hái ${node.item}; chờ game xác nhận.`;
       return;
     }
-    if (dist(pos, { x: job.x, y: job.y }) > 0.2) {
-      job.x = pos.x; job.y = pos.y; job.progressAt = now;
-    }
+    if (GSTNavigation.progressed(scene, job, job.path, node.x, node.y, 0.2)) job.progressAt = now;
     if (now - job.progressAt > 5000 || now - job.startAt > 15000) {
       release("Không tới được cây; tạm bỏ qua.", 20000, now - job.progressAt > 5000 ? "stalled" : "approach_timeout");
       return;

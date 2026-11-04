@@ -56,7 +56,7 @@
     if (globalThis.GSTFarmBehavior?.controls(scene)) return "Nhường di chuyển để né quái level cao.";
     if (globalThis.GSTRealm?.controls(scene)) return "Nhường di chuyển để vào bí cảnh.";
     if (!scene.self || scene.self.dead || scene.leaving || !connected(scene)) return "Chờ nhân vật/kết nối ổn định.";
-    if (scene.uiBlocked || scene.keyCapture) return "Chờ đóng giao diện trước khi phá phong ấn.";
+    if (GSTFarmRouting.blocked(scene) || scene.keyCapture) return "Chờ đóng hội thoại/bảng bảo vệ trước khi phá phong ấn.";
     const now = performance.now();
     if (freshModal || now - modalAt >= 200) {
       modalAt = now;
@@ -65,8 +65,7 @@
     }
     if (modal) return "Chờ bạn xử lý hộp kiểm tra người chơi.";
     if (scene.harvesting || scene.self.fish || scene.self.med || scene.auto.resting) return "Nhường lượt hái hoặc hồi phục của game.";
-    if (scene.pendingSkill || scene.aiming || scene.heldAttack || scene.clickOrder || scene.joyX || scene.joyY
-        || ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"].some((name) => scene.keys?.[name]?.isDown)
+    if (scene.pendingSkill || scene.aiming || scene.heldAttack || GSTFarmInput.movement(scene)
         || scene.auto.moved || scene.now() < scene.auto.pauseUntil) return "Nhường thao tác di chuyển/chiến đấu tay.";
     if (job && finite(scene.castAt) && scene.castAt !== job.castAt) manualUntil = scene.now() + 3;
     if (scene.now() < manualUntil) return "Tạm nhường 3 giây sau thao tác chiến đấu tay.";

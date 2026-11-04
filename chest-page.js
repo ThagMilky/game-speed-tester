@@ -16,9 +16,8 @@
     job = null; if (text) message = text;
   }
   function manual(scene) {
-    return scene.pendingSkill || scene.aiming || scene.heldAttack || scene.clickOrder || scene.joyX || scene.joyY
-      || scene.auto.moved || scene.now() < scene.auto.pauseUntil
-      || ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"].some((key) => scene.keys?.[key]?.isDown);
+    return scene.pendingSkill || scene.aiming || scene.heldAttack || GSTFarmInput.movement(scene)
+      || (scene.auto.on && (scene.auto.moved || scene.now() < scene.auto.pauseUntil));
   }
   function blocked(scene) {
     const driver = scene.driver;
@@ -82,8 +81,8 @@
         const navigation = Object.assign(Object.create(scene.auto), { path: [], pathAt: -Infinity,
           lastX: scene.px, lastY: scene.py, stillSince: time, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0 });
         job = { id: next.id, navigation, target: scene.auto.target, castAt: scene.castAt,
-          remaining: Math.hypot(next.x - scene.px, next.y - scene.py), progressAt: time,
-          startedAt: time, waypoint: null, fix: scene.self.fix, replans: 0, replanAt: -Infinity,
+          progressAt: time,
+          startedAt: time, replans: 0, replanAt: -Infinity,
           requestedAt: null, steer: null };
       }
       const chest = chests.find((item) => item.id === job.id);
@@ -95,15 +94,7 @@
         if (time - job.requestedAt > 8) { release("Chưa xác nhận mở rương; bỏ qua 30 giây, không spam F.", true); return false; }
         return true;
       }
-      const waypoint = job.navigation.path?.[0];
-      const alongRoute = job.waypoint && Array.isArray(waypoint)
-        && waypoint[0] === job.waypoint[0] && waypoint[1] === job.waypoint[1]
-        && job.waypointDistance - Math.hypot(scene.px - waypoint[0], scene.py - waypoint[1]) >= 0.5;
-      if (job.fix === scene.self.fix && (job.remaining - distance >= 0.5 || alongRoute)) {
-        job.progressAt = time; job.remaining = distance; job.waypoint = null;
-      }
-      if (job.fix !== scene.self.fix) { job.remaining = distance; job.waypoint = null; }
-      job.fix = scene.self.fix;
+      if (GSTNavigation.progressed(scene, job, job.navigation.path, chest.x, chest.y)) job.progressAt = time;
       if (time - job.progressAt > 8 || time - job.startedAt > 120) {
         release("Chưa tiếp cận/mở được rương trong thời gian cho phép; bỏ qua 30 giây.", true); return false;
       }
@@ -114,10 +105,6 @@
         }
         if (!GSTNavigation.walk(scene, job.navigation, walking, time, scene.px, scene.py, chest.x, chest.y, 1.5)) {
           release("Đường tới rương bị chặn; tạm bỏ qua.", true); return false;
-        }
-        const next = job.navigation.path?.[0];
-        if (Array.isArray(next) && (!job.waypoint || next[0] !== job.waypoint[0] || next[1] !== job.waypoint[1])) {
-          job.waypoint = [...next]; job.waypointDistance = Math.hypot(scene.px - next[0], scene.py - next[1]);
         }
         message = `${time - job.replanAt < 1 ? "Đang tính lại đường tới rương" : "Đang tự đi tới rương bí cảnh"} · còn ${distance.toFixed(1)} ô.`;
         return true;

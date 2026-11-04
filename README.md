@@ -398,3 +398,15 @@ Mở nhóm **Bí cảnh → Tự tìm và mở rương bí cảnh**, bật **B�
 Chỉ mở khi cả mục tiêu F vừa đọc và mục tiêu game lưu đều là realm-chest đúng ID. Giữ kiểm tra quyền sở hữu, quái gần, giao tranh, bảo vệ đầu bí cảnh, hồi phục, UI và thao tác tay; một yêu cầu rồi chờ phản hồi, không spam F. Rương ẩn chưa được game gửi tọa độ không thể tự tìm; rương biến mất chưa chứng minh nhận được đồ. Không tự thoát bí cảnh.
 
 Chỉ đối chiếu source và review diff/status. Tests/lint/typecheck/gameplay **NOT RUN**; tự di chuyển/mở rương trên server **UNVERIFIED**; CI **NOT CHECKED**. Reload extension rồi tải lại game.
+
+### Rà soát và thống nhất logic auto
+
+Các lỗi tìm thấy qua đọc source đã được sửa:
+
+- **High:** Nhặt rương khi Auto Farm OFF vẫn đọc auto.moved/pauseUntil cũ; cờ moved không được native update xóa khi OFF, có thể chờ mãi. Nay chỉ dùng cờ nghỉ của Auto Farm khi farm thực sự ON; lệnh đi tay hiện tại vẫn được ưu tiên.
+- **Medium:** Tới cây/cổng trước đây tính mọi dịch chuyển là tiến triển, kể cả chạy qua lại. Cây, cổng, boss và rương nay dùng chung GSTNavigation.progressed: chỉ tính đủ tiến độ về đích hoặc điểm rẽ hiện tại; self.fix đổi thì đặt lại mốc đo và không ghi nhận tiến triển. Giữ thời hạn từng chế độ; dữ liệu theo job trong WeakMap tự hết khi job bị bỏ.
+- **Medium:** Lượt chờ phản hồi vào cổng xử lý trước một số kiểm tra thao tác tay/UI/hồi phục. Nay kiểm tra các điều kiện đó trước khi tiếp tục chờ, không giữ điều khiển qua lệnh tay hoặc hộp kiểm tra. Chọn cổng dùng callback native đúng bậc level; vẫn cho chờ kết thúc giao tranh, không bỏ qua điều kiện disabled lúc thực sự vào.
+
+GSTFarmInput.movement dùng chung cho hái/đào, cổng, rương, né, tiếp cận boss, ổn định farm và phong ấn: nhận lệnh click/joystick, chỉ coi WASD/mũi tên là di chuyển khi không nhập chat/ô chữ/đặt phím. Né/phong ấn khi Auto Farm ON theo cùng quy tắc UI với farm: xem bảng thông tin không tự chặn; NPC, đặt phím, hộp bảo vệ vẫn chờ. Cổng/rương vẫn không tự tương tác xuyên qua UI đang mở. Không đổi thứ tự ưu tiên dispatcher, cài đặt đã lưu, damage, cooldown, tốc độ hoặc cơ chế collision của game; không thêm timer/dependency.
+
+Đây là review source và cải tiến cục bộ, chưa chứng minh mọi trường hợp kẹt hoặc phối hợp nhiều chế độ trên game thật đã hết. Tests/lint/typecheck/browser/gameplay **NOT RUN**; hành vi thực tế **UNVERIFIED**; CI **NOT CHECKED**. Reload extension và tải lại game để nhận bản sửa.
