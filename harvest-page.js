@@ -3,6 +3,7 @@
   const origin = "https://nghichthienky.online";
   let settings = GSTHarvest.normalize(null);
   let binding = null;
+  let recovery = null;
   let job = null;
   let watcher = null;
   let suspended = false;
@@ -175,6 +176,7 @@
   }
   function onShutdown() {
     detach();
+    recovery = null;
     message = "Đã rời scene; chờ map mới.";
     watch();
   }
@@ -185,14 +187,38 @@
     if (!settings.enabled || suspended || binding) return;
     try {
       const scene = sceneNow();
-      if (!compatible(scene) || !connected(scene) || scene.self.dead || !finite(scene.px) || !finite(scene.py)) {
-        message = scene?.self?.dead ? "Nhân vật đã chết; chờ game hồi sinh." : "Chờ game, kết nối hoặc dữ liệu thu hoạch.";
+      if (recovery && recovery.scene !== scene) recovery = null;
+      if (!compatible(scene) || !connected(scene) || scene.leaving || !finite(scene.px) || !finite(scene.py)) {
+        message = "Chờ game, kết nối hoặc dữ liệu thu hoạch.";
         return;
+      }
+      if (scene.self.dead) {
+        recovery ??= { scene, home: null, aliveAt: null };
+        recovery.aliveAt = null;
+        if (modalOpen(true) || scene.overlay?.dialogOpen || scene.keyCapture) {
+          message = "Đã chết; chờ bạn xử lý hộp thoại trước khi tự hồi sinh.";
+        } else message = settings.autoRespawn ? GSTHarvest.respawn(scene)
+          : "Đã chết; bật Tự hồi sinh rồi tiếp tục hái, hoặc hồi sinh bằng tay.";
+        return;
+      }
+      if (recovery) {
+        GSTHarvest.respawn(scene); // Alive: clear the shared once-per-death request state.
+        if (scene.auto.on && scene.auto.deadAt > 0) {
+          recovery.aliveAt = null;
+          message = "Đã hồi sinh; chờ Auto Farm hoàn tất xử lý hồi sinh.";
+          return;
+        }
+        recovery.aliveAt ??= performance.now();
+        if (performance.now() - recovery.aliveAt < 2000) {
+          message = "Đã hồi sinh; chờ ổn định 2 giây rồi tiếp tục Tự hái.";
+          return;
+        }
       }
       const auto = scene.auto;
       const original = auto.update;
       const descriptor = Object.getOwnPropertyDescriptor(auto, "update");
-      const home = GSTHarvest.farmOrigin(scene) ?? (auto.on ? { x: auto.ax, y: auto.ay } : { x: scene.px, y: scene.py });
+      const home = recovery?.home ?? GSTHarvest.farmOrigin(scene)
+        ?? (auto.on ? { x: auto.ax, y: auto.ay } : { x: scene.px, y: scene.py });
       if (!finite(home.x) || !finite(home.y)) { message = "Chờ vị trí gốc hợp lệ."; return; }
       const wrapper = function (...args) {
         // Native update remains responsible for combat/death/respawn whenever we yield.
@@ -242,6 +268,7 @@
       scene.events.on("shutdown", onShutdown);
       scene.events.on("destroy", onShutdown);
       window.addEventListener("keydown", onKey, true);
+      recovery = null;
       clearInterval(watcher);
       watcher = null;
       lastStep = -Infinity;
@@ -401,8 +428,12 @@
     try {
       const scene = binding?.scene;
       if (sceneNow() !== scene || !compatible(scene) || scene.auto !== binding.auto
-          || scene.auto.update !== binding.wrapper || !connected(scene) || scene.leaving || scene.self.dead) {
+          || scene.auto.update !== binding.wrapper || !connected(scene) || scene.leaving) {
         detach(); message = "Tạm dừng: scene hoặc kết nối thay đổi."; watch(); return;
+      }
+      if (scene.self.dead) {
+        recovery = { scene, home: { ...binding.home }, aliveAt: null };
+        detach(); message = "Đã chết; dừng di chuyển và chờ hồi sinh để tiếp tục hái."; watch(); return;
       }
       if (scene.auto.on !== binding.farmOn) {
         binding.farmOn = scene.auto.on;
@@ -446,6 +477,7 @@
     }
     if (!settings.enabled) {
       detach();
+      recovery = null;
       clearInterval(watcher); watcher = null;
       message = "Tự hái đã tắt; không hủy lượt hái game đã bắt đầu.";
     } else {
@@ -462,7 +494,7 @@
     if (event.data.type === "diagnostics") {
       if (event.data.enabled === true) debugEnabled = true;
       window.postMessage({ channel: "gst:harvest-status:v1", type: "diagnostics", requestId: event.data.requestId,
-        debug: { build: "harvest-main-log-3-ui", world: "MAIN", helper: typeof globalThis.GSTHarvest,
+        debug: { build: "harvest-main-log-4-revive", world: "MAIN", helper: typeof globalThis.GSTHarvest,
           normalize: typeof globalThis.GSTHarvest?.normalize,
           optionsBuild: globalThis.__gstHarvestOptionsLoad?.build ?? "missing",
           enabled: settings.enabled, scene: binding !== null, controlling: job !== null } }, origin);
@@ -498,7 +530,7 @@
     }
   }
   window.addEventListener("pagehide", () => {
-    suspended = true; detach(); clearInterval(watcher); watcher = null;
+    suspended = true; detach(); recovery = null; clearInterval(watcher); watcher = null;
   });
   window.addEventListener("pageshow", () => {
     suspended = false; watch(); discover();

@@ -8,6 +8,7 @@
     normalize(value) {
       return {
         enabled: value?.enabled === true,
+        autoRespawn: value?.autoRespawn === true,
         allowFarm: value?.allowFarm === true,
         ignoreMonsters: value?.ignoreMonsters === true,
         radius: bounded(value?.radius, 6, 1, 30),
@@ -20,7 +21,8 @@
       };
     },
     controls: () => false,
-    farmOrigin: () => null
+    farmOrigin: () => null,
+    respawn: () => "Chưa đọc được cơ chế hồi sinh; chờ game."
   };
   // Per-world marker: lets diagnostics distinguish not loaded from overwritten.
   globalThis.__gstHarvestOptionsLoad = {

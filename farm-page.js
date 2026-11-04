@@ -19,6 +19,8 @@
   const finite = (value) => typeof value === "number" && Number.isFinite(value);
   const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
   GSTHarvest.farmOrigin = (scene) => session?.scene === scene ? { ...session.home } : null;
+  // Both features share the same once-per-death request state.
+  GSTHarvest.respawn = (scene) => checkRespawn(scene, true);
   const targetMode = (value) => value === "level" ? "maxLevel"
     : ["maxLevel", "minLevel", "boss"].includes(value) ? value : "all";
   function filterLabel() {
@@ -178,8 +180,8 @@
     stop("Scene ended; extended range stopped.", true);
   }
 
-  function checkRespawn(scene) {
-    if (!scene?.self || !scene.sys?.isActive?.() || scene.leaving || !connected(scene)) return;
+  function checkRespawn(scene, harvestRequest = false) {
+    if (!scene?.self || !scene.sys?.isActive?.() || scene.leaving || !connected(scene)) return "Chờ kết nối và scene ổn định để hồi sinh.";
     if (!scene.self.dead) {
       death = null;
       respawnMessage = "";
@@ -187,29 +189,30 @@
     }
     if (!death || death.scene !== scene) death = { scene, requested: false };
     if (scene.auto?.stopOnRevive === true) deathLimitAuto = scene.auto;
-    if (!settings.autoRespawn) return;
+    if (!settings.autoRespawn && !harvestRequest) return;
     const button = scene.hud?.deathBtn;
     if (!(button instanceof HTMLButtonElement) || !button.isConnected
         || scene.hud?.death?.style.display === "none") {
       respawnMessage = "Revive button unavailable; waiting for game UI.";
-      return;
+      return "Chờ game hiển thị nút hồi sinh.";
     }
     if (button.disabled) {
       respawnMessage = "Waiting for the game's revival countdown.";
-      return;
+      return "Chờ hết thời gian hồi sinh của game.";
     }
     if (death.requested) {
       respawnMessage = "Revive clicked once; waiting for the game. Manual retry is available.";
-      return;
+      return "Đã bấm hồi sinh một lần; chờ game xác nhận. Có thể thử lại bằng tay nếu cần.";
     }
     // The built-in farm retries every 2 seconds. Do not duplicate its pending attempt.
     if (scene.auto?.on && finite(scene.auto.reviveTry) && scene.auto.reviveTry > scene.now()) {
       respawnMessage = "Built-in Auto Farm already requested revival; waiting.";
-      return;
+      return "Auto Farm đang xử lý hồi sinh; chờ game.";
     }
     death.requested = true;
     button.click();
     respawnMessage = "Clicked the game's ready revive button; waiting for confirmation.";
+    return "Đã bấm hồi sinh; chờ game xác nhận rồi tiếp tục Tự hái.";
   }
 
   function ensureFlying(s, time) {

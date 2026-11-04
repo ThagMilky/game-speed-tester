@@ -3,6 +3,7 @@
   const byId = (id) => document.getElementById(id);
   const controls = byId("harvestControls");
   const enabled = byId("harvestEnabled");
+  const autoRespawn = byId("harvestAutoRespawn");
   const allowFarm = byId("harvestAllowFarm");
   const ignoreMonsters = byId("harvestIgnoreMonsters");
   const mode = byId("harvestMode");
@@ -128,6 +129,7 @@
       feedback.textContent = "Chưa lưu được Tự hái. Hãy mở lại popup.";
     } finally {
       enabled.checked = preferences.enabled;
+      autoRespawn.checked = preferences.autoRespawn;
       allowFarm.checked = preferences.allowFarm;
       ignoreMonsters.checked = preferences.ignoreMonsters;
       mode.value = preferences.mode;
@@ -137,6 +139,7 @@
     }
   }
   enabled.addEventListener("change", () => save({ enabled: enabled.checked }));
+  autoRespawn.addEventListener("change", () => save({ autoRespawn: autoRespawn.checked }));
   allowFarm.addEventListener("change", () => save({ allowFarm: allowFarm.checked }));
   ignoreMonsters.addEventListener("change", () => save({ ignoreMonsters: ignoreMonsters.checked }));
   mode.addEventListener("change", () => save({ mode: mode.value }));
@@ -185,6 +188,7 @@
     if (area !== "local" || !changes.harvestPreferences || saving) return;
     preferences = GSTHarvest.normalize(changes.harvestPreferences.newValue);
     enabled.checked = preferences.enabled;
+    autoRespawn.checked = preferences.autoRespawn;
     allowFarm.checked = preferences.allowFarm;
     ignoreMonsters.checked = preferences.ignoreMonsters;
     mode.value = preferences.mode;
@@ -195,6 +199,7 @@
     debugToggle.disabled = false;
     preferences = GSTHarvest.normalize(saved.harvestPreferences);
     enabled.checked = preferences.enabled;
+    autoRespawn.checked = preferences.autoRespawn;
     allowFarm.checked = preferences.allowFarm;
     ignoreMonsters.checked = preferences.ignoreMonsters;
     mode.value = preferences.mode;
