@@ -10,6 +10,7 @@
   <script src="popup-layout.js" defer></script>
   <script src="harvest-options.js" defer></script>
   <script src="harvest-popup.js" defer></script>
+  <script src="realm-popup.js" defer></script>
 </head>
 <body>
   <header><p class="eyebrow">NGHICHTHIENKY.ONLINE</p><h1>Game Speed Tester</h1><p class="muted">Điều khiển gọn, theo dõi ngay.</p></header>
@@ -32,7 +33,7 @@
             <div><label for="farmRadius">Bán kính <span class="range">11–100 ô</span></label><input id="farmRadius" type="number" min="11" max="100" step="1" value="22" required></div>
             <button id="saveFarm" type="button" class="primary">Lưu bán kính</button>
           </div>
-          <label class="check-row"><input id="autoRespawn" type="checkbox"><span>Tự hồi sinh khi nút sẵn sàng</span></label>
+          <p class="hint">Tự hồi sinh: luôn BẬT khi đang Auto Farm. Chờ nút game sẵn sàng; không bỏ giới hạn chết nhiều lần của game.</p>
           <label class="check-row"><input id="breakSeals" type="checkbox"><span>Tự phá phong ấn khi đánh boss bí cảnh</span></label>
           <p class="hint">Ưu tiên phong ấn còn đòn, dùng đường đi/đánh thường gốc rồi quay lại boss. Nếu số đòn không giảm trong 8 giây thì dừng thử mục tiêu đó, không tăng nhịp đánh.</p>
           <div class="two-columns separated">
@@ -64,7 +65,7 @@
         <p id="harvestStatus" class="hint" role="status" aria-live="polite">Đang đọc trạng thái thu hoạch…</p>
         <fieldset id="harvestControls" disabled aria-label="Tùy chọn Tự hái">
           <label class="switch-row"><span>Bật Tự hái</span><input id="harvestEnabled" class="switch" type="checkbox"></label>
-          <label class="check-row"><input id="harvestAutoRespawn" type="checkbox"><span>Tự hồi sinh rồi tiếp tục hái</span></label>
+          <p class="hint">Tự hồi sinh rồi tiếp tục hái: luôn BẬT khi Tự hái đang bật.</p>
           <p class="hint">Vẫn tự đi/hái khi mở kho, bảng thông tin hoặc gõ chat. Lệnh di chuyển, đánh/tung chiêu hoặc F tay sẽ tạm dừng 3 giây. Hộp thoại NPC và hộp kiểm tra người chơi vẫn tạm dừng.</p>
           <label class="check-row"><input id="harvestAllowFarm" type="checkbox"><span>Cho phép thu hoạch khi Auto Farm đang bật</span></label>
           <label class="check-row"><input id="harvestIgnoreMonsters" type="checkbox"><span>Bỏ qua kiểm tra quái gần</span></label>
@@ -93,6 +94,20 @@
           </div>
           <p id="harvestDebugFeedback" class="notice" role="status"></p>
         </details>
+      </div>
+    </details>
+    <details class="card" data-panel="realm">
+      <summary><span><strong>Tự vào bí cảnh</strong><small>Tìm cổng toàn map và giữ trạng thái farm</small></span></summary>
+      <div class="card-body">
+        <p id="realmStatus" class="hint" role="status" aria-live="polite">Đang đọc trạng thái bí cảnh…</p>
+        <fieldset id="realmControls" disabled aria-label="Tùy chọn bí cảnh">
+          <label class="switch-row"><span>Bật Tự vào bí cảnh</span><input id="realmEnabled" class="switch" type="checkbox"></label>
+          <label class="check-row"><input id="realmAllowFarm" type="checkbox"><span>Cho phép vào khi Auto Farm đang bật</span></label>
+          <label class="check-row"><input id="realmKeepFarm" type="checkbox" checked><span>Giữ Auto Farm qua đổi map</span></label>
+          <p class="hint">Tìm cổng hợp lệ trong toàn map hiện tại, không cần bán kính. Chờ hết giao tranh; tự tới cổng và yêu cầu vào một lần. Bạn di chuyển/tung chiêu thì tạm nhường, chờ 3 giây rồi tiếp tục.</p>
+          <p class="hint">Giữ bộ lọc quái hiện tại; muốn chỉ boss bạn tự đổi. Không tự mở rương, bỏ bảo vệ hay thoát bí cảnh. Chết trong bí cảnh có thể mất đồ của lượt đó.</p>
+        </fieldset>
+        <p id="realmFeedback" class="notice" role="alert"></p>
       </div>
     </details>
     <details class="card" data-panel="speed">

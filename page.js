@@ -54,7 +54,7 @@
 
   function stabilizeApproach() {
     const scene = approachScene;
-      if (GSTHarvest.controls(scene) || globalThis.GSTFarmSeals?.controls(scene)) { approachPosition = null; return; }
+      if (GSTHarvest.controls(scene) || globalThis.GSTFarmSeals?.controls(scene) || globalThis.GSTRealm?.controls(scene)) { approachPosition = null; return; }
     const auto = scene?.auto;
     const self = scene?.self;
     const previous = approachPosition;

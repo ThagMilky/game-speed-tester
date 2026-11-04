@@ -81,6 +81,7 @@
     if (scene.leaving) return "Đang chuyển map.";
     if (modalOpen(fresh)) return "Chờ bạn xử lý hộp kiểm tra người chơi.";
     if (globalThis.GSTFarmSeals?.controls(scene)) return "Nhường Auto Farm xử lý phong ấn của boss.";
+    if (globalThis.GSTRealm?.controls(scene)) return "Nhường di chuyển để tới/vào bí cảnh.";
     if (scene.keyCapture) return "Chờ kết thúc đổi phím trong game.";
     if (scene.overlay?.dialogOpen) return "Chờ đóng hộp thoại tương tác trong game.";
     if (document.body.classList.contains("mobile") && innerHeight > innerWidth) return "Chờ xoay ngang màn hình game.";
@@ -95,6 +96,7 @@
     return null;
   }
   const blocked = (scene, fresh = false) => blockedReason(scene, fresh) !== null;
+  GSTHarvest.needsRecovery = needsRecovery;
   function danger(scene, node) {
     if (settings.ignoreMonsters) return false;
     // Read the scene's full monster set, never the level/boss-filtered host.

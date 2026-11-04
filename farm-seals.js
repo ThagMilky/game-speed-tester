@@ -52,6 +52,7 @@
   }
   function yieldReason(scene, freshModal = false) {
     if (!enabled || suspended || !scene.auto.on) return "";
+    if (globalThis.GSTRealm?.controls(scene)) return "Nhường di chuyển để vào bí cảnh.";
     if (!scene.self || scene.self.dead || scene.leaving || !connected(scene)) return "Chờ nhân vật/kết nối ổn định.";
     if (scene.uiBlocked || scene.keyCapture) return "Chờ đóng giao diện trước khi phá phong ấn.";
     const now = performance.now();

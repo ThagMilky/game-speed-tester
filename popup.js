@@ -15,7 +15,6 @@ const fontFamily = document.getElementById("fontFamily");
 const fontFeedback = document.getElementById("fontFeedback");
 const farmControls = document.getElementById("farmControls");
 const farmEnabled = document.getElementById("farmEnabled");
-const autoRespawn = document.getElementById("autoRespawn");
 const breakSeals = document.getElementById("breakSeals");
 const farmRadius = document.getElementById("farmRadius");
 const farmTargetMode = document.getElementById("farmTargetMode");
@@ -109,7 +108,6 @@ async function refreshFarm() {
 async function saveFarm(event) {
   if (farmSaving) return;
   const disabling = event?.target === farmEnabled && !farmEnabled.checked ? "enabled"
-    : event?.target === autoRespawn && !autoRespawn.checked ? "autoRespawn"
     : event?.target === breakSeals && !breakSeals.checked ? "breakSeals" : null;
   let farmPreferences;
   if (!disabling) {
@@ -134,7 +132,7 @@ async function saveFarm(event) {
         return;
       }
     }
-    farmPreferences = { enabled: farmEnabled.checked, radius, autoRespawn: autoRespawn.checked, breakSeals: breakSeals.checked,
+    farmPreferences = { enabled: farmEnabled.checked, radius, autoRespawn: true, breakSeals: breakSeals.checked,
       targetMode, targetLevel: positiveLevel(targetLevel, 1),
       targetMinLevel: positiveLevel(targetMinLevel, 1), targetMaxLevel: positiveLevel(targetMaxLevel, 20) };
   }
@@ -174,7 +172,6 @@ for (const input of [farmTargetMinLevel, farmTargetMaxLevel]) {
 }
 farmTargetLevel.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
 farmEnabled.addEventListener("change", saveFarm);
-autoRespawn.addEventListener("change", saveFarm);
 breakSeals.addEventListener("change", saveFarm);
 farmRadius.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
 for (const name of Object.keys(GSTFont.families)) {
@@ -189,6 +186,7 @@ let saving = false;
 async function refresh() {
   refreshFarm();
   globalThis.GSTHarvestPopup?.refresh();
+  globalThis.GSTRealmPopup?.refresh();
   if (busy) return;
   busy = true;
   try {
@@ -313,7 +311,6 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   fontFamily.disabled = !font.enabled;
   fontControls.disabled = false;
   farmEnabled.checked = farmPreferences?.enabled === true;
-  autoRespawn.checked = farmPreferences?.autoRespawn === true;
   breakSeals.checked = farmPreferences?.breakSeals === true;
   farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
     : ["maxLevel", "minLevel", "range", "boss"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";

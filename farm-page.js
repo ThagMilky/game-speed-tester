@@ -3,7 +3,8 @@
   const origin = "https://nghichthienky.online";
   const channel = "gst:farm:v1";
   const baseRadius = 11;
-  let settings = { enabled: false, radius: 22, autoRespawn: false, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20 };
+  globalThis.GSTFarmConfigurationReady = false;
+  let settings = { enabled: false, radius: 22, autoRespawn: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20 };
   let filterBinding = null;
   let death = null;
   let respawnMessage = "";
@@ -136,6 +137,7 @@
     if (scene.self.med && !scene.auto.resting) return "Game vẫn ghi nhận đang bế quan; chờ game xác nhận thoát bế quan để farm tiếp.";
     if (scene.auto.resting) return "Auto Farm đang rút lui/hồi máu; chưa tiếp tục tìm quái.";
     if (GSTHarvest.controls(scene)) return "Đang nhường di chuyển cho Tự hái.";
+    if (globalThis.GSTRealm?.controls(scene)) return "Đang nhường di chuyển để tới/vào bí cảnh.";
     if (globalThis.GSTFarmSeals?.controls(scene)) return "Đang nhường di chuyển để phá phong ấn.";
     if (scene.chat?.typing || scene.inputFieldActive?.()) return "Đang mở chat/ô nhập; phần mở rộng tìm quái đang chờ.";
     if (scene.panels?.open || scene.overlay?.dialogOpen || scene.uiBlocked) return "Giao diện game đang mở; đóng bảng/hộp thoại nếu farm chưa tiếp tục.";
@@ -227,6 +229,9 @@
     if (!death || death.scene !== scene) death = { scene, requested: false };
     if (scene.auto?.stopOnRevive === true) deathLimitAuto = scene.auto;
     if (!settings.autoRespawn && !harvestRequest) return;
+    if (!harvestRequest && !scene.auto?.on) return;
+    if ([...document.querySelectorAll('[role="alertdialog"]')].some((el) =>
+      el.getClientRects().length && getComputedStyle(el).visibility !== "hidden")) return "Chờ bạn xử lý hộp kiểm tra người chơi trước khi hồi sinh.";
     const button = scene.hud?.deathBtn;
     if (!(button instanceof HTMLButtonElement) || !button.isConnected
         || scene.hud?.death?.style.display === "none") {
@@ -380,6 +385,10 @@
         message = "Đang hỗ trợ phá phong ấn; giữ nguyên tâm và mục tiêu boss.";
         return;
       }
+      if (globalThis.GSTRealm?.controls(s.scene)) {
+        message = "Tạm nhường di chuyển để tới cổng bí cảnh; giữ nguyên tâm farm.";
+        return;
+      }
       if (!finite(time) || time - s.at < 0.5) return;
       s.at = time;
       const host = s.scene.autoHost();
@@ -487,7 +496,7 @@
       const filterChanged = settings.targetMode !== targetMode(data.targetMode)
         || settings.targetLevel !== data.targetLevel
         || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel;
-      settings = { enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn === true,
+      settings = { enabled: data.enabled, radius: data.radius, autoRespawn: true,
         targetMode: targetMode(data.targetMode),
         targetLevel: Number.isSafeInteger(data.targetLevel) && data.targetLevel > 0 ? data.targetLevel : 1,
         targetMinLevel: Number.isSafeInteger(data.targetMinLevel) && data.targetMinLevel > 0 ? data.targetMinLevel : 1,
@@ -509,6 +518,7 @@
         watch();
         discover();
       }
+      globalThis.GSTFarmConfigurationReady = true;
     }
     if (data.type === "status") {
       let autoOn = null;
@@ -525,7 +535,7 @@
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
         message: (settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage || (autoOn === false && stoppedAfterDeaths
           ? "Auto Farm is OFF. The game recorded repeated deaths and may have stopped farming; use its configured shortcut manually to start a new session."
-          : dead && respawnMessage ? respawnMessage : (waitReason || globalThis.GSTFarmSeals?.status(sceneNow()) || message))),
+          : dead && respawnMessage ? respawnMessage : (waitReason || globalThis.GSTFarmSession?.status(sceneNow()) || globalThis.GSTFarmSeals?.status(sceneNow()) || message))),
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);
     }
   });

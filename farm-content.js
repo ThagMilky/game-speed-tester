@@ -30,7 +30,7 @@
   function configure(value) {
     settings = {
       enabled: value?.enabled === true,
-      autoRespawn: value?.autoRespawn === true,
+      autoRespawn: true,
       breakSeals: value?.breakSeals === true,
       targetMode: value?.targetMode === "level" ? "maxLevel"
         : ["maxLevel", "minLevel", "range", "boss"].includes(value?.targetMode) ? value.targetMode : "all",
@@ -118,5 +118,5 @@
   chrome.storage.local.get(["farmPreferences", "farmShortcut"]).then(({ farmPreferences, farmShortcut }) => {
     if (revision === initialRevision) configure(farmPreferences);
     if (shortcutRevision === initialShortcutRevision) configureShortcut(farmShortcut);
-  }).catch(() => configure(null));
+  }).catch(() => { /* Do not replace saved filters or authorize auto-resume with guessed defaults. */ });
 })();
