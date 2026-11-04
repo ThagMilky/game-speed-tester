@@ -41,6 +41,13 @@
   }
   controls.addEventListener("change", () => save());
   document.getElementById("fpsReset").addEventListener("click", () => save(true));
+  for (const [id, value] of [["fpsSelectAll", true], ["fpsSelectNone", false]]) {
+    document.getElementById(id).addEventListener("click", () => {
+      if (!saved || saving) return;
+      for (const input of inputs) input.checked = value;
+      save();
+    });
+  }
   chrome.storage.local.get("fpsPreferences").then(({ fpsPreferences }) => {
     saved = GSTFpsOptions.normalize(fpsPreferences); render(); controls.disabled = false;
   }).catch(() => { feedback.textContent = "Không đọc được cài đặt FPS. Thử mở lại popup."; });

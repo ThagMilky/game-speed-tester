@@ -324,3 +324,13 @@ Nếu tự kiểm tra sau khi có quyền: xác nhận tắt mặc định; th�
 ### Tốc độ riêng khi farm (2026-11-04)
 
 Trong Tốc độ di chuyển, nhập Đi bộ khi farm / Bay khi farm (1–6), rồi Lưu tốc độ. Mặc định 2 / 1.5; bật điều chỉnh tốc độ để áp dụng. Ngoài farm dùng hai mức ngoài farm đã lưu. Giữ cơ chế chờ trạng thái ổn định 1 giây khi bật/tắt farm hoặc đổi bay/đi bộ. Nút Về tốc độ mặc định của game tắt override qua cơ chế hoàn trả hiện có, giữ các mức đã lưu, không liên tục ép số mặc định ước lượng. Cài đặt giữ qua đổi map. Đây thay thế mô tả mức farm cố định trong các mục lịch sử. Chỉ review diff/status; tests/lint/typecheck/gameplay NOT RUN, hành vi thực tế UNVERIFIED, CI NOT CHECKED.
+
+### Bản đồ tối giản và chọn nhanh FPS (2026-11-04)
+
+Trong Tối ưu FPS có Chọn tất cả/Bỏ chọn tất cả. Hai nút chỉ thay các tick, giữ nguyên công tắc tổng; đang bật thì áp dụng ngay. Khôi phục hình ảnh gốc vẫn bỏ tick và tắt công tắc. Ba tick mới mặc định tắt: Bản đồ tối giản, Ẩn cây cỏ trang trí có chuyển động, Ẩn vật che khuất (nhà/cây lớn nhận diện được). Không có metadata chắc chắn để phân biệt mọi nhà/cây nên giữ tên nhóm theo source sway/occluders; không hứa ẩn hết mọi loại riêng lẻ.
+
+fps-map.js đọc collision.blockedCell và độ phân giải từ cols/map.w, xác nhận rows và phép toPx 32px/ô theo source debug collision. Nền tối là vùng đi được, xám là vùng bị chặn, chưa cộng bán kính nhân vật nên khe hẹp nhìn trống vẫn có thể không đi qua được. Vẽ canvas cache theo vùng 16×16 ô, tối đa 2 vùng mới mỗi frame và 64 vùng lưu; chỉ hiện lớp thay thế khi toàn viewport đã sẵn sàng. Không tạo object cho từng ô, không vẽ lại collision mỗi frame. Khi thiếu interface/viewport quá lớn giữ hình gốc và báo chưa sẵn sàng. Đổi scene/map/collision instance sẽ dựng lại; chưa theo dõi thay đổi bên trong cùng collision instance hoặc xác minh vật cản động.
+
+Chỉ ẩn frame m: của map, nền ground/overview và RenderTexture có depth khớp bakeTiles, cùng sway/occluders. Tài nguyên dùng w: theo placeNodes nên được giữ; không đổi collision, NPC, cổng, cảnh báo, farm/hái hoặc movement. Lớp chưa nhận diện như texture atlas/tone đặc biệt có thể còn hiện. Cache ảnh/texture dọn khi tắt hoặc rời scene. Một số tile streaming mới có thể hiện tối đa khoảng 1 giây trước lần nhận diện kế tiếp. Source game đã có collision debug tương đương; không gọi toggleDebug hoặc sửa source game.
+
+Đã review source/diff/status. Tests/lint/typecheck/browser/gameplay: NOT RUN. Độ khớp runtime, vật cản động và hiệu quả FPS: UNVERIFIED; CI: NOT CHECKED. Reload extension rồi tải lại game để áp dụng.

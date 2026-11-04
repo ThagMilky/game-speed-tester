@@ -2,7 +2,7 @@
   "use strict";
   const origin = "https://nghichthienky.online";
   const fields = ["hidePlayers", "hidePlayerEffects", "hideOwnEffects", "hideMonsterEffects",
-    "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen"];
+    "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings"];
   let settings = {}, measure = false, suspended = false, watcher = null, binding = null;
   let failure = "";
   const sceneNow = () => window.game?.scene?.getScene?.("world")
@@ -77,6 +77,7 @@
     if (!owner || !wanted()) return;
     try {
       const scene = owner.scene;
+      owner.mapReady = GSTFpsMap.update(scene, settings, (value) => mask(owner, value));
       if (on("hidePlayers") || on("hideMonsters") || on("hidePlayerEffects") || on("hideMonsterEffects")) {
         for (const actor of scene.views.values()) {
           const player = actor.k === "p" && actor.id !== scene.you;
@@ -124,6 +125,7 @@
     owner.scene.events.off("destroy", detach);
     restoreMasks(owner);
     restoreDom(owner);
+    GSTFpsMap.clear();
     for (const undo of owner.hooks.reverse()) undo();
   }
   function attach(scene) {
@@ -200,6 +202,7 @@
       active: !!binding, fps: Number.isFinite(fps) && fps > 0 ? Math.round(fps) : null,
       message: failure || (!settings.enabled ? "Tối ưu FPS đang tắt."
         : !wanted() ? "Đã bật; hãy chọn phần hình ảnh cần giảm."
+        : binding && settings.simpleMap && !binding.mapReady ? "Đang chuẩn bị bản đồ tối giản hoặc dữ liệu va chạm chưa tương thích; giữ nền gốc."
         : binding ? "Đang giảm hình ảnh đã chọn; giữ dữ liệu và điều khiển game."
         : "Đang chờ scene game tương thích; chưa thay đổi hình ảnh.") }, origin);
   }
