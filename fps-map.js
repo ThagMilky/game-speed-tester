@@ -36,6 +36,19 @@
         if (!blocked && start >= 0) { context.fillRect(start * unit, row * unit, (col - start) * unit, unit); start = -1; }
       }
     }
+    // One grid cell is one world unit. Bake lines into the cached image,
+    // leaving the collision subcells intact instead of filling whole cells.
+    context.fillStyle = "#34414d";
+    for (let edge = 0; edge < 512; edge += 32) {
+      context.fillRect(edge, 0, 1, 512);
+      context.fillRect(0, edge, 512, 1);
+    }
+    // The last chunk can extend beyond the map; keep that region distinct.
+    const width = Math.max(0, Math.min(512, (owner.map.w - cx * 16) * 32));
+    const height = Math.max(0, Math.min(512, (owner.map.h - cy * 16) * 32));
+    context.fillStyle = "#0b1015";
+    if (width < 512) context.fillRect(width, 0, 512 - width, 512);
+    if (height < 512) context.fillRect(0, height, 512, 512 - height);
     const key = `gst:simple-map:${++serial}`;
     owner.scene.textures.addCanvas(key, canvas);
     const image = owner.scene.add.image(cx * 512, cy * 512, key).setOrigin(0, 0).setDepth(-950).setVisible(false);
