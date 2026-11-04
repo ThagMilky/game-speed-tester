@@ -25,6 +25,7 @@ game-speed-tester/
   popup.html     Giao diện
   popup.css      Định dạng giao diện
   popup.js       Lưu tùy chọn và đọc trạng thái tab đang mở
+  popup-layout.js Kéo thả thứ tự nhóm trong popup, lưu riêng trong storage
   README.md
 ```
 
@@ -40,7 +41,9 @@ Không cần build, npm, backend hoặc dependency.
 
 ## Bố cục popup
 
-Đầu popup có bốn chỉ số: Auto Farm thật của game, trạng thái di chuyển, tốc độ hiện tại và Fix. Bên dưới là bốn nhóm bấm để mở/thu gọn: **Auto Farm** (mở sẵn, gồm bán kính/hồi sinh/phím tắt), **Tốc độ di chuyển**, **Bảng trạng thái**, **Font chữ**. Các thông báo kỹ thuật nằm trong mục chi tiết; lỗi lưu cài đặt vẫn có thông báo riêng. Checkbox hiển thị/font/hồi sinh và phím tắt vẫn tự lưu; nhập bán kính/tốc độ vẫn dùng nút Lưu hoặc Enter như trước. Popup dùng nhãn tiếng Việt, bố cục hai cột cho số liệu/ô tốc độ, hỗ trợ giao diện sáng/tối theo hệ thống. Cài đặt và hành vi game giữ nguyên; chưa chạy kiểm tra giao diện trên trình duyệt thực tế.
+Đầu popup có bốn chỉ số: Auto Farm thật của game, trạng thái di chuyển, tốc độ hiện tại và Fix. Bên dưới là năm nhóm: **Auto Farm**, **Tự hái**, **Tốc độ di chuyển**, **Bảng trạng thái**, **Font chữ**. Mỗi lần mở popup, cả năm nhóm đều thu gọn; bấm tiêu đề để mở. Kéo tay nắm **⠿** ở đầu nhóm lên/xuống và thả khi thấy vạch màu để đổi thứ tự. Ví dụ kéo Tự hái xuống dưới Tốc độ di chuyển để Auto Farm và Tốc độ nằm cạnh nhau. Thứ tự tự lưu riêng ở `popupPanelOrder` trong `chrome.storage.local`, dùng lại khi mở popup; không đổi cài đặt tính năng hoặc tác động game. Có thể dùng bàn phím: đặt focus vào tay nắm rồi bấm Alt + mũi tên lên/xuống.
+
+Các thông báo kỹ thuật nằm trong mục chi tiết; lỗi lưu cài đặt vẫn có thông báo riêng. Checkbox hiển thị/font/hồi sinh và phím tắt vẫn tự lưu; nhập bán kính/tốc độ vẫn dùng nút Lưu hoặc Enter như trước. Popup hỗ trợ giao diện sáng/tối theo hệ thống. Thay đổi bố cục/kéo thả: tests/lint/typecheck/browser **NOT RUN**, hành vi giao diện **UNVERIFIED**, CI **NOT CHECKED**.
 
 ## Tự hái cây
 

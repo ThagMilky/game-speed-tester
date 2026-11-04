@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="popup.css">
   <script src="font-options.js" defer></script>
   <script src="popup.js" defer></script>
+  <script src="popup-layout.js" defer></script>
   <script src="harvest-options.js" defer></script>
   <script src="harvest-popup.js" defer></script>
 </head>
@@ -20,8 +21,9 @@
       <div><dt>Fix từ lần đổi tốc độ</dt><dd id="fix">—</dd></div>
     </dl>
   </section>
-  <main>
-    <details class="card" open>
+  <p id="layoutFeedback" class="layout-hint" role="status">Kéo ⠿ để đổi thứ tự nhóm. Tự lưu.</p>
+  <main id="featurePanels">
+    <details class="card" data-panel="farm">
       <summary><span><strong>Auto Farm</strong><small>Phạm vi, hồi sinh và phím tắt</small></span></summary>
       <div class="card-body">
         <fieldset id="farmControls" disabled aria-label="Tùy chọn Auto Farm">
@@ -50,7 +52,7 @@
         <details class="diagnostic"><summary>Chi tiết Auto Farm</summary><p id="farmStatus" role="status" aria-live="polite">Đang đọc trạng thái…</p></details>
       </div>
     </details>
-    <details class="card">
+    <details class="card" data-panel="harvest">
       <summary><span><strong>Tự hái</strong><small>Chọn loại cây và vùng thu hoạch</small></span></summary>
       <div class="card-body">
         <p id="harvestStatus" class="hint" role="status" aria-live="polite">Đang đọc trạng thái thu hoạch…</p>
@@ -83,7 +85,7 @@
         </details>
       </div>
     </details>
-    <details class="card">
+    <details class="card" data-panel="speed">
       <summary><span><strong>Tốc độ di chuyển</strong><small>Chỉnh riêng đi bộ và bay</small></span></summary>
       <div class="card-body">
         <fieldset id="controls" disabled aria-label="Tùy chọn tốc độ">
@@ -97,7 +99,7 @@
         </fieldset>
       </div>
     </details>
-    <details class="card">
+    <details class="card" data-panel="display">
       <summary><span><strong>Bảng trạng thái</strong><small>Ẩn/hiện và chọn thông tin cần xem</small></span></summary>
       <div class="card-body">
         <fieldset id="displayControls" disabled aria-label="Tùy chọn bảng trạng thái">
@@ -115,7 +117,7 @@
         </fieldset>
       </div>
     </details>
-    <details class="card">
+    <details class="card" data-panel="font">
       <summary><span><strong>Font chữ</strong><small>Chọn font cho giao diện web game</small></span></summary>
       <div class="card-body">
         <fieldset id="fontControls" disabled aria-label="Tùy chọn font">
