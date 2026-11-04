@@ -141,7 +141,7 @@
         if (time - job.startAt > 15) { stopJob("Không tới được phong ấn; tạm bỏ mục tiêu này.", true); return false; }
         const owner = job;
         const walkingHost = { ...host, steer: (x, y) => steer(scene, x, y) };
-        if (!scene.auto.walk.call(owner.navigation, walkingHost, time, pos.x, pos.y, seal.x, seal.y, reach)) {
+        if (!GSTNavigation.walk(scene, owner.navigation, walkingHost, time, pos.x, pos.y, seal.x, seal.y, reach)) {
           stopJob("Đường tới phong ấn bị chặn; tạm bỏ mục tiêu này.", true); return false;
         }
         message = `Đang tới phong ấn · còn ${seal.hits} đòn.`;

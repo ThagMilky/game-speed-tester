@@ -160,7 +160,7 @@
       if (distance(pos, job.previous) > 0.2) { job.previous = pos; job.progressAt = now; }
       if (now - job.progressAt > 5000 || now - job.startAt > 120000) { release("Không tới được cổng; tạm bỏ 30 giây.", true); return false; }
       if (distance(pos, portal) > 2.5 || !host.clear(pos.x, pos.y, portal.x, portal.y)) {
-        if (!scene.auto.walk.call(job.navigation, steeringHost, time, pos.x, pos.y, portal.x, portal.y, 2.5)) {
+        if (!GSTNavigation.walk(scene, job.navigation, steeringHost, time, pos.x, pos.y, portal.x, portal.y, 2.5)) {
           release("Đường tới cổng bị chặn; tạm bỏ 30 giây.", true); return false;
         }
         message = `Đang tới cổng bí cảnh · còn ${distance(pos, portal).toFixed(1)} ô.`;

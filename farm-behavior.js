@@ -153,11 +153,12 @@
           steer: null, primaryDistance: dist(pos, primary) };
       }
       const primary = active.find((actor) => actor.id === job.id);
-      if (!primary || dist(pos, job.point) <= 0.35 || time - job.start > 3
+      if (!primary || GSTNavigation.arrived(scene, job.navigation, host, job.point.x, job.point.y, 0.35) || time - job.start > 3
           || (dist(primary, pos) >= reach(primary) + 0.75 && dist(primary, pos) >= job.primaryDistance + 0.5)) {
         retryAt = time + 3; release("Đã kết thúc lượt né; tiếp tục tìm quái phù hợp."); return false;
       }
       const goal = job.point, owner = job;
+      GSTNavigation.prune(scene, owner.navigation, host);
       while (owner.navigation.path.length > 1 && Math.hypot(pos.x - owner.navigation.path[0][0], pos.y - owner.navigation.path[0][1]) < 0.35) {
         owner.navigation.path.shift();
       }
@@ -184,7 +185,7 @@
           if (job === owner) owner.steer = [x, y];
         }
       };
-      if (!scene.auto.walk.call(owner.navigation, walkingHost, time, pos.x, pos.y, goal.x, goal.y, 0.35) || owner.denied) {
+      if (!GSTNavigation.walk(scene, owner.navigation, walkingHost, time, pos.x, pos.y, goal.x, goal.y, 0.35) || owner.denied) {
         retryAt = time + 3; release("Đường né bị chặn; dừng thử và nhường Auto Farm."); return false;
       }
       say(`Đang né quái level ${primary.st.lv} · lùi tối đa ${settings.avoidDistance} ô.`);

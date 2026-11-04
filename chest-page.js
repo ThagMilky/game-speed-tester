@@ -96,7 +96,7 @@
       if (job.remaining - distance >= 0.5) { job.progressAt = time; job.remaining = distance; }
       if (time - job.progressAt > 8) { release("Không tiến tới được rương; bỏ qua 30 giây.", true); return false; }
       if (distance > 1.8) {
-        if (!scene.auto.walk.call(job.navigation, walking, time, scene.px, scene.py, chest.x, chest.y, 1.5)) {
+        if (!GSTNavigation.walk(scene, job.navigation, walking, time, scene.px, scene.py, chest.x, chest.y, 1.5)) {
           release("Đường tới rương bị chặn; tạm bỏ qua.", true); return false;
         }
         message = "Đang tới rương bí cảnh theo đường gốc."; return true;
@@ -140,7 +140,7 @@
       if (!settings.enabled) { detach(); clearInterval(timer); timer = null; message = "Auto nhặt rương đang tắt."; }
       else { message = "Auto nhặt rương đã bật; chờ vào bí cảnh và có rương phù hợp/an toàn."; watch(); discover(); }
     }
-    window.postMessage({ channel: "gst:chest-status:v1", requestId: data.requestId, message, enabled: settings.enabled }, origin);
+    window.postMessage({ channel: "gst:chest-status:v1", requestId: data.requestId, message: [message, globalThis.GSTBackground?.status()].filter(Boolean).join(" "), enabled: settings.enabled }, origin);
   });
   window.addEventListener("pagehide", () => { suspended = true; detach(); clearInterval(timer); timer = null; });
   window.addEventListener("pageshow", () => { suspended = false; watch(); discover(); });

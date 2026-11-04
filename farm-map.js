@@ -73,7 +73,7 @@
       const walking = { ...host, steer: (x, y) => { scene.autoX = x; scene.autoY = y; owner.steer = [x, y]; } };
       if (Math.hypot(scene.px - boss.x, scene.py - boss.y) <= 6) {
         walking.steer(0, 0); message = "Đã tới gần tọa độ boss; chờ game cung cấp actor boss để Auto Farm chọn mục tiêu.";
-      } else if (!scene.auto.walk.call(owner.navigation, walking, time, scene.px, scene.py, boss.x, boss.y, 5)) {
+      } else if (!GSTNavigation.walk(scene, owner.navigation, walking, time, scene.px, scene.py, boss.x, boss.y, 5)) {
         release(); retryAt = time + 15; message = "Không có đường tới boss; chờ 15 giây trước khi thử lại."; return false;
       } else message = "Đang tới tọa độ boss bí cảnh bằng đường đi gốc; chưa tự tấn công khi thiếu actor.";
       return true;
