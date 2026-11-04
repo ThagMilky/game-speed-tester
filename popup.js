@@ -100,10 +100,11 @@ async function saveFarm() {
   if (!farmRadius.reportValidity()) return;
   const radius = farmRadius.valueAsNumber;
   if (!Number.isFinite(radius) || radius < 11 || radius > 100) return;
-  const targetMode = farmTargetMode.value === "level" ? "level" : "all";
-  if (targetMode === "level" && !farmTargetLevel.reportValidity()) return;
+  const targetMode = ["maxLevel", "minLevel", "boss"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
+  const needsLevel = targetMode === "maxLevel" || targetMode === "minLevel";
+  if (needsLevel && !farmTargetLevel.reportValidity()) return;
   const targetLevel = farmTargetLevel.valueAsNumber;
-  if (targetMode === "level" && (!Number.isSafeInteger(targetLevel) || targetLevel < 1)) return;
+  if (needsLevel && (!Number.isSafeInteger(targetLevel) || targetLevel < 1)) return;
   farmSaving = true;
   farmControls.disabled = true;
   const farmPreferences = { enabled: farmEnabled.checked, radius, autoRespawn: autoRespawn.checked,
@@ -130,7 +131,7 @@ async function saveFarm() {
 document.getElementById("saveFarm").addEventListener("click", saveFarm);
 document.getElementById("saveFarmFilter").addEventListener("click", saveFarm);
 farmTargetMode.addEventListener("change", () => {
-  farmTargetLevel.disabled = farmTargetMode.value !== "level";
+  farmTargetLevel.disabled = !["maxLevel", "minLevel"].includes(farmTargetMode.value);
 });
 farmTargetLevel.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
 farmEnabled.addEventListener("change", saveFarm);
@@ -271,10 +272,11 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   fontControls.disabled = false;
   farmEnabled.checked = farmPreferences?.enabled === true;
   autoRespawn.checked = farmPreferences?.autoRespawn === true;
-  farmTargetMode.value = farmPreferences?.targetMode === "level" ? "level" : "all";
+  farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
+    : ["maxLevel", "minLevel", "boss"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
   farmTargetLevel.value = Number.isSafeInteger(farmPreferences?.targetLevel) && farmPreferences.targetLevel > 0
     ? farmPreferences.targetLevel : 1;
-  farmTargetLevel.disabled = farmTargetMode.value !== "level";
+  farmTargetLevel.disabled = !["maxLevel", "minLevel"].includes(farmTargetMode.value);
   farmRadius.value = typeof farmPreferences?.radius === "number" && Number.isFinite(farmPreferences.radius)
     ? Math.max(11, Math.min(100, farmPreferences.radius)) : 22;
   farmControls.disabled = false;

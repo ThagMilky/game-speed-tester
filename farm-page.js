@@ -18,6 +18,20 @@
   let message = "Extended range disabled.";
   const finite = (value) => typeof value === "number" && Number.isFinite(value);
   const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const targetMode = (value) => value === "level" ? "maxLevel"
+    : ["maxLevel", "minLevel", "boss"].includes(value) ? value : "all";
+  function filterLabel() {
+    if (settings.targetMode === "boss") return "Chỉ farm boss";
+    if (settings.targetMode === "maxLevel") return `Chỉ farm level ≤ ${settings.targetLevel}`;
+    if (settings.targetMode === "minLevel") return `Chỉ farm level ≥ ${settings.targetLevel}`;
+    return "Farm tất cả quái";
+  }
+  function matchesTarget(enemy) {
+    if (settings.targetMode === "boss") return enemy?.cls === "boss" || enemy?.wb === true;
+    if (settings.targetMode === "all") return true;
+    if (!finite(enemy?.lv)) return false;
+    return settings.targetMode === "maxLevel" ? enemy.lv <= settings.targetLevel : enemy.lv >= settings.targetLevel;
+  }
 
   function sceneNow() {
     return window.game?.scene?.getScene?.("world")
@@ -99,7 +113,7 @@
   }
 
   function syncFilter(scene) {
-    if (settings.targetMode !== "level") { clearFilter(); return; }
+    if (settings.targetMode === "all") { clearFilter(); return; }
     if (filterBinding?.scene === scene && scene.autoHost === filterBinding.wrapper) return;
     clearFilter();
     const original = scene.autoHost;
@@ -108,12 +122,12 @@
     const descriptor = Object.getOwnPropertyDescriptor(scene, "autoHost");
     const wrapper = function (...args) {
       const host = original.apply(this, args);
-      if (settings.targetMode !== "level" || !this.auto?.on) return host;
+      if (settings.targetMode === "all" || !this.auto?.on) return host;
       return { ...host, enemies: () => {
         const enemies = typeof host?.enemies === "function" ? host.enemies() : [];
         if (this.auto?.resting) return Array.isArray(enemies) ? enemies : [];
-        // No inferred level when the game has not supplied enemy.lv.
-        return Array.isArray(enemies) ? enemies.filter((enemy) => enemy?.lv === settings.targetLevel) : [];
+        // Use only the native host's level/boss metadata, never names or HP guesses.
+        return Array.isArray(enemies) ? enemies.filter(matchesTarget) : [];
       } };
     };
     scene.autoHost = wrapper;
@@ -217,17 +231,17 @@
   }
 
   function watch() {
-    if ((settings.enabled || settings.autoRespawn || settings.targetMode === "level") && !suspended && !session && watcher === null) {
+    if ((settings.enabled || settings.autoRespawn || settings.targetMode !== "all") && !suspended && !session && watcher === null) {
       watcher = setInterval(discover, 1000);
     }
   }
 
   function discover() {
-    if ((!settings.enabled && !settings.autoRespawn && settings.targetMode !== "level") || suspended || session) return;
+    if ((!settings.enabled && !settings.autoRespawn && settings.targetMode === "all") || suspended || session) return;
     try {
       const scene = sceneNow();
       checkRespawn(scene);
-      if (!settings.enabled && settings.targetMode !== "level") return;
+      if (!settings.enabled && settings.targetMode === "all") return;
       if (compatible(scene) && scene.self && !scene.self.dead && !scene.leaving
           && connected(scene) && scene.auto !== blockedAuto) syncFilter(scene);
       else clearFilter();
@@ -311,7 +325,7 @@
       s.at = time;
       const host = s.scene.autoHost();
       if (!settings.enabled) {
-        message = `Lọc Auto Farm: chỉ level ${settings.targetLevel}; dùng bán kính gốc của game.`;
+        message = `${filterLabel()}; dùng bán kính gốc của game.`;
         return;
       }
       if (!["enemies", "pos", "clear", "route", "inCombat", "level", "loot", "meditating"]
@@ -411,10 +425,10 @@
     }
     if (data.type === "configure" && typeof data.enabled === "boolean"
         && finite(data.radius) && data.radius >= 11 && data.radius <= 100) {
-      const filterChanged = settings.targetMode !== (data.targetMode === "level" ? "level" : "all")
+      const filterChanged = settings.targetMode !== targetMode(data.targetMode)
         || settings.targetLevel !== data.targetLevel;
       settings = { enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn === true,
-        targetMode: data.targetMode === "level" ? "level" : "all",
+        targetMode: targetMode(data.targetMode),
         targetLevel: Number.isSafeInteger(data.targetLevel) && data.targetLevel > 0 ? data.targetLevel : 1 };
       if (settings.targetMode === "all") clearFilter();
       if (session) {
@@ -423,7 +437,7 @@
         if (!settings.enabled) restore(session);
       }
       if (!settings.autoRespawn) respawnMessage = "";
-      if (!settings.enabled && settings.targetMode !== "level") {
+      if (!settings.enabled && settings.targetMode === "all") {
         if (watcher !== null) clearInterval(watcher);
         watcher = null;
         stop("Extended range disabled; original center restored where owned.");
@@ -445,7 +459,7 @@
         if (scene?.self) dead = !!scene.self.dead;
       } catch { /* Read-only status must not start or restart gameplay. */ }
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
-        message: (settings.targetMode === "level" ? `Chỉ farm level ${settings.targetLevel}. ` : "") + (shortcutMessage || (autoOn === false && stoppedAfterDeaths
+        message: (settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage || (autoOn === false && stoppedAfterDeaths
           ? "Auto Farm is OFF. The game recorded repeated deaths and may have stopped farming; use its configured shortcut manually to start a new session."
           : dead && respawnMessage ? respawnMessage : message)),
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);

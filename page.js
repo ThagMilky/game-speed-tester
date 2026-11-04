@@ -25,7 +25,7 @@
   let approachPosition = null;
 
   function detachApproach() {
-    approachScene?.events?.off?.("preupdate", stabilizeApproach);
+    approachScene?.events?.off?.("preupdate", onSpeedFrame);
     approachScene?.events?.off?.("shutdown", detachApproach);
     approachScene?.events?.off?.("destroy", detachApproach);
     approachScene = null;
@@ -37,9 +37,19 @@
     detachApproach();
     if (typeof scene?.events?.on !== "function" || typeof scene.events.off !== "function") return;
     approachScene = scene;
-    scene.events.on("preupdate", stabilizeApproach);
+    scene.events.on("preupdate", onSpeedFrame);
     scene.events.on("shutdown", detachApproach);
     scene.events.on("destroy", detachApproach);
+  }
+
+  function onSpeedFrame() {
+    if (!enabled || suspended) return;
+    try {
+      applySpeed(approachScene);
+      stabilizeApproach();
+    } catch {
+      problem = "World/player temporarily unavailable; retrying.";
+    }
   }
 
   function stabilizeApproach() {
@@ -202,40 +212,45 @@
     }, origin);
   }
 
+  function applySpeed(scene) {
+    if (!enabled || suspended || !scene?.sys?.isActive?.()) return;
+    const self = scene?.self ?? null;
+    if (self !== tracked) {
+      forgetPlayer();
+      tracked = self;
+    }
+    // Snapshots replace self frequently; debounce belongs to the mode, not its object.
+    if (!self) resetMode();
+    if (self && numeric(self.ms)) {
+      const speed = speedFor(self);
+      const current = self.ms;
+      if (lastWritten === null || current !== lastWritten) {
+        naturalSpeed = current;
+        naturalFlying = !!self.fly;
+      }
+      if (current !== speed) {
+        // The game's delta decoder retains its original self object. Mutating
+        // that object pollutes later snapshots when ms is omitted from a delta.
+        // Give the scene its own shallow copy: every value except ms is kept.
+        const overridden = { ...self, ms: speed };
+        scene.self = overridden;
+        tracked = overridden;
+        lastWritten = speed;
+      }
+      if (monitoredSpeed !== speed) {
+        monitoredSpeed = speed;
+        lastRawFix = numeric(self.fix) ? self.fix : null;
+        fixCount = 1;
+      }
+    }
+  }
+
   function tick() {
     if (!enabled || suspended) return;
     try {
       const scene = worldScene();
       attachApproach(scene);
-      const self = scene?.self ?? null;
-      if (self !== tracked) {
-        forgetPlayer();
-        tracked = self;
-      }
-      // Snapshots replace self frequently; debounce belongs to the mode, not its object.
-      if (!self) resetMode();
-      if (self && numeric(self.ms)) {
-        const speed = speedFor(self);
-        const current = self.ms;
-        if (lastWritten === null || current !== lastWritten) {
-          naturalSpeed = current;
-          naturalFlying = !!self.fly;
-        }
-        if (current !== speed) {
-          // The game's delta decoder retains its original self object. Mutating
-          // that object pollutes later snapshots when ms is omitted from a delta.
-          // Give the scene its own shallow copy: every value except ms is kept.
-          const overridden = { ...self, ms: speed };
-          scene.self = overridden;
-          tracked = overridden;
-          lastWritten = speed;
-        }
-        if (monitoredSpeed !== speed) {
-          monitoredSpeed = speed;
-          lastRawFix = numeric(self.fix) ? self.fix : null;
-          fixCount = 1;
-        }
-      }
+      applySpeed(scene);
       problem = null;
     } catch {
       problem = "World/player temporarily unavailable; retrying.";

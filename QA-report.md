@@ -1,5 +1,7 @@
 # Kết quả QA extension — 2026-11-03
 
+Lưu ý cập nhật 2026-11-04: báo cáo bên dưới là kết quả lịch sử trước các sửa đổi phím tắt, áp dụng tốc độ theo `preupdate` và bộ lọc ≤ / ≥ / boss. Các thay đổi mới chỉ được đọc lại source/diff; tests, lint, typecheck và browser/gameplay: **NOT RUN**. Hành vi mới: **UNVERIFIED**. CI: **NOT CHECKED**.
+
 ## Kết luận
 
 Sau yêu cầu FIX, đã sửa nhận diện waypoint đi qua trong `page.js`. Kết quả hiện tại: **29 PASS, 0 FAIL**; `node --check` cho file sửa: **PASS**. Hai ca từng thất bại (2 / 20 FPS và 6 / 60 FPS) đều tới mục tiêu và gọi được callback đánh thường trong mô phỏng. Chưa xác nhận hành vi trên bản đồ/gameplay thật.

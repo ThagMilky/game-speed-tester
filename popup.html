@@ -30,11 +30,11 @@
           </div>
           <label class="check-row"><input id="autoRespawn" type="checkbox"><span>Tự hồi sinh khi nút sẵn sàng</span></label>
           <div class="two-columns separated">
-            <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="level">Đúng level</option></select></div>
+            <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="maxLevel">Level ≤ mức chọn</option><option value="minLevel">Level ≥ mức chọn</option><option value="boss">Chỉ boss</option></select></div>
             <div><label for="farmTargetLevel">Level quái</label><input id="farmTargetLevel" type="number" min="1" step="1" value="1" required disabled></div>
           </div>
           <button id="saveFarmFilter" type="button" class="full">Lưu lựa chọn quái</button>
-          <p class="hint">Đúng level là khớp chính xác, không phải từ level đó trở lên. Bộ lọc dùng được cả với bán kính gốc.</p>
+          <p class="hint">≤ 10: level 10 trở xuống. ≥ 10: level 10 trở lên. Chỉ boss gồm boss thường và boss thế giới, không giới hạn level. Bộ lọc dùng được cả với bán kính gốc.</p>
           <p class="hint">Bật Auto Farm bằng phím đã chọn. Khi mở rộng bật, nhân vật chưa bay sẽ được yêu cầu bật bay.</p>
         </fieldset>
         <p id="farmFeedback" class="notice" role="alert"></p>

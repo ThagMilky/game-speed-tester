@@ -31,13 +31,14 @@
     settings = {
       enabled: value?.enabled === true,
       autoRespawn: value?.autoRespawn === true,
-      targetMode: value?.targetMode === "level" ? "level" : "all",
+      targetMode: value?.targetMode === "level" ? "maxLevel"
+        : ["maxLevel", "minLevel", "boss"].includes(value?.targetMode) ? value.targetMode : "all",
       targetLevel: Number.isSafeInteger(value?.targetLevel) && value.targetLevel > 0 ? value.targetLevel : 1,
       radius: typeof value?.radius === "number" && Number.isFinite(value.radius)
         ? Math.max(11, Math.min(100, value.radius)) : 22
     };
     const url = new URL(location.href);
-    if ((settings.enabled || settings.autoRespawn || settings.targetMode === "level") && !url.searchParams.has("timer")) {
+    if ((settings.enabled || settings.autoRespawn || settings.targetMode !== "all") && !url.searchParams.has("timer")) {
       if (!navigating) {
         navigating = true;
         url.search += `${url.search ? "&" : "?"}timer`;
