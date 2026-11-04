@@ -23,7 +23,7 @@
     const style = document.createElement("style");
     style.textContent = `:host{all:initial!important;position:fixed!important;inset:0!important;z-index:2147483647!important;pointer-events:none!important}
       button{font:14px sans-serif;background:#183a30;color:#e6edf3;border:1px solid #69dfb7;border-radius:8px;padding:9px;cursor:pointer;pointer-events:auto}
-      #launch{position:absolute;right:12px;bottom:12px}
+      #launch{position:absolute;left:50%;top:12px;transform:translateX(-50%)}
       #panel{position:absolute;inset:0;background:#0008;pointer-events:auto;display:flex;align-items:center;justify-content:center}
       #panel[hidden]{display:none}section{display:flex;flex-direction:column;width:min(470px,calc(100vw - 24px));height:min(850px,calc(100vh - 32px));background:#11191f;border:1px solid #69dfb7;border-radius:12px;overflow:hidden}
       header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;color:#e6edf3;font:14px sans-serif}`;
