@@ -365,6 +365,16 @@ background-page.js dùng cùng headlessStep mà backgroundAuto của game dùng:
 
 Không thêm permission, dependency, request mạng hoặc đổi cài đặt Chrome. Chrome/OS có thể đình chỉ tab/Worker; không đảm bảo chạy khi máy ngủ, tab discard hoặc CSP chặn Blob Worker. Cần Reload extension rồi tải lại game. Chỉ đối chiếu source và review diff/status; tests/lint/typecheck/browser/gameplay NOT RUN; hiệu quả vượt waypoint và phối hợp Worker thật UNVERIFIED; CI NOT CHECKED. Kết quả QA55 ca trước sửa không xác minh các thay đổi này.
 
+### Auto Farm: đường đi và thao tác giao diện
+
+Khi bật hỗ trợ Auto Farm, tool theo dõi tiến độ tới các điểm rẽ, thay vì chỉ đo khoảng cách thẳng tới quái. Đi vòng tránh vật cản vẫn được tính là tiến triển. Chỉ bỏ điểm rẽ trung gian đã đi qua khi đường tới điểm kế tiếp được kiểm tra thông thoáng bằng collision của game. Nếu không tiến triển trong 2 giây, yêu cầu game tính lại đường, tối đa hai lần mỗi lượt đuổi; giữ cơ chế đi vòng và bỏ mục tiêu không tới được của game. Một lượt được gia hạn đuổi tối đa 120 giây; không tự tạo hệ thống đánh riêng.
+
+Có thể xem kho, bảng thông tin hoặc nhập chat trong lúc farm: dùng khả năng sẵn có của game, không thay getter uiBlocked. Hội thoại NPC, đặt phím và hộp bảo vệ vẫn tạm dừng điều khiển farm nhưng giữ ON; đóng xong sẽ tự tính lại đường và tiếp tục. Di chuyển/ngắm chiêu tay vẫn được ưu tiên theo thời gian nghỉ của game. Nếu thao tác trang bị yêu cầu tắt Auto Farm, vẫn phải tắt; OFF chủ động không bị tự bật lại bởi phần sửa này. Chết, mất kết nối và đổi scene tiếp tục dùng cơ chế hồi sinh/khôi phục hiện có.
+
+Phần tìm boss theo tọa độ cũng tính tiến độ dọc đường vòng, có giới hạn thời gian để không chạy vòng vô hạn. Các chủ thể di chuyển khác (thu hoạch, cổng, rương, né, phong ấn) vẫn giữ quyền điều khiển riêng. Không đổi tốc độ, sát thương, cooldown, gói mạng hoặc vị trí nhân vật trong phần sửa này. Không thêm timer hoặc dependency.
+
+Chỉ đối chiếu source game được cung cấp và review diff/status. Tests/lint/typecheck/browser/gameplay: **NOT RUN**; độ mượt, hội thoại và kẹt đường trong game thật: **UNVERIFIED**; CI: **NOT CHECKED**. Reload extension rồi tải lại game. Khi Chrome đình chỉ tab hoặc máy ngủ, phần sửa đường đi không bảo đảm Auto Farm tiếp tục chạy.
+
 ### Vị trí nút Menu tool
 
 Nhóm Vị trí nút Menu tool có sáu preset (trên/dưới, trái/giữa/phải), mặc định Trên giữa. Preset tự lưu. Chỉnh vị trí đóng bảng giữa, bật kéo bằng pointer capture; kéo nút rồi bấm Lưu vị trí trên thanh dưới màn hình. Hủy/Esc trả vị trí đã lưu. Tùy chỉnh lưu x/y chuẩn hóa 0–1 trong vùng màn hình còn lại sau kích thước nút và lề12px, không ghi storage mỗi pointermove. Resize/ResizeObserver giữ nút trong viewport; chrome.storage.local menuPosition đồng bộ tab và giữ qua reload/map. Về mặc định đặt lại top-center. Bảng điều khiển vẫn giữa màn hình; không đổi vị trí bảng trạng thái. Khi đang chỉnh vị trí, chặn click/phím truyền tới game. Dọn pointer capture/observer khi rời trang; storage lỗi giữ chỉnh sửa để thử Lưu lại. menu-position.js chỉ dùng popup/ISOLATED, không MAIN. Không đổi quyền hoặc cài đặt game.

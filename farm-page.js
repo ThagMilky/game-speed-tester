@@ -145,8 +145,9 @@
     if (GSTHarvest.controls(scene)) return "Đang nhường di chuyển cho Tự hái.";
     if (globalThis.GSTRealm?.controls(scene)) return "Đang nhường di chuyển để tới/vào bí cảnh.";
     if (globalThis.GSTFarmSeals?.controls(scene)) return "Đang nhường di chuyển để phá phong ấn.";
-    if (scene.chat?.typing || scene.inputFieldActive?.()) return "Đang mở chat/ô nhập; phần mở rộng tìm quái đang chờ.";
-    if (scene.panels?.open || scene.overlay?.dialogOpen || scene.uiBlocked) return "Giao diện game đang mở; đóng bảng/hộp thoại nếu farm chưa tiếp tục.";
+    if (GSTFarmRouting.blocked(scene)) return "Auto Farm vẫn bật; chờ đóng hội thoại NPC hoặc bảng bảo vệ để tiếp tục.";
+    const routing = GSTFarmRouting.status(scene);
+    if (routing) return routing;
     if (typeof scene.now === "function" && scene.now() < scene.auto.pauseUntil) return "Đang tạm dừng sau lệnh di chuyển tay; chờ hết khoảng nghỉ của game.";
     return "";
   }
@@ -305,6 +306,7 @@
       globalThis.GSTFarmRevivePolicy?.attach(scene);
       globalThis.GSTFarmBehavior?.attach(scene);
       globalThis.GSTFarmMap?.attach(scene);
+      globalThis.GSTFarmRouting?.attach(scene);
       globalThis.GSTFarmDiagnostics?.attach(scene);
       checkRespawn(scene);
       if (!settings.enabled && settings.targetMode === "all" && !settings.avoidEnabled) return;
@@ -427,7 +429,7 @@
         s.center = { ...s.home };
         s.reanchor = false;
       }
-      if (s.auto.resting || host.meditating() || s.scene.pendingSkill || s.scene.aiming || s.scene.uiBlocked) {
+      if (s.auto.resting || host.meditating() || s.scene.pendingSkill || s.scene.aiming || GSTFarmRouting.blocked(s.scene)) {
         s.groundedAt = null;
         message = "Waiting for built-in healing, skill or UI handling.";
         return;
@@ -450,17 +452,9 @@
       const target = candidates.find((enemy) => enemy.id === s.auto.target);
       if (target) {
         if (distance(target, s.center) >= baseRadius - 0.5) shiftToward(s, target);
-        if (settings.searchScope === "map" && distance(target, pos) > 8) {
-          const progress = s.mapProgress;
-          if (!progress || progress.id !== target.id) s.mapProgress = { id: target.id, remaining: distance(target, pos) };
-          else if (progress.remaining - distance(target, pos) >= 0.5) {
-            s.auto.chaseSince = time; progress.remaining = distance(target, pos);
-          }
-        } else s.mapProgress = null;
         message = "Keeping the built-in target.";
         return;
       }
-      s.mapProgress = null;
       const local = candidates.filter((enemy) => distance(enemy, s.center) < baseRadius);
       const aggro = host.inCombat() ? local.filter((enemy) => enemy.aggro && distance(enemy, pos) < 3.2) : [];
       // Use the game's picker, including its reachability cache and skip backoff.
@@ -536,11 +530,12 @@
         avoidDistance: finite(data.avoidDistance) ? Math.max(1, Math.min(6, data.avoidDistance)) : 2 };
       globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);
       globalThis.GSTFarmMap?.configure(sceneNow(), settings);
+      globalThis.GSTFarmRouting?.configure(sceneNow(), settings);
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
       if (settings.targetMode === "all" && !settings.avoidEnabled) clearFilter();
       if (session) {
-        if (scopeChanged) { restore(session); session.mapProgress = null; session.at = -Infinity; }
+        if (scopeChanged) { restore(session); session.at = -Infinity; }
         syncFilter(session.scene);
         if (filterChanged) session.auto.think = 0;
         if (!settings.enabled) restore(session);
