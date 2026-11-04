@@ -15,7 +15,10 @@
         || !(d.online === false || d.link?.open?.() === true)) {
       reset(); message = "Chờ nhân vật/kết nối ổn định để kiểm tra bay."; return false;
     }
-    if (scene.self.fly) { reset(); message = "Đang bay."; return true; }
+    if (scene.self.fly) {
+      if (sentScene === scene) { sentScene = null; sentAt = -Infinity; }
+      reset(); message = "Đang bay."; return true;
+    }
     if (requestedAt !== null) {
       message = now - requestedAt < 8000 ? "Đã yêu cầu bay; chờ game xác nhận."
         : "Game chưa xác nhận bay. Kiểm tra điều kiện hoặc tắt/bật Luôn bay để thử lại; không gửi lặp.";
