@@ -39,10 +39,10 @@
           <label class="switch-row"><span>Mở rộng vùng tìm quái</span><input id="farmEnabled" class="switch" type="checkbox"></label>
           <label for="farmSearchScope">Phạm vi tìm quái</label>
           <select id="farmSearchScope"><option value="radius">Theo bán kính</option><option value="map">Toàn map hiện tại</option></select>
-          <p class="hint">Bật Mở rộng vùng tìm quái và bấm Lưu bán kính để lưu phạm vi. Toàn map bỏ giới hạn bán kính, giữ bộ lọc hiện tại. Chỉ tìm quái game đã cung cấp; Chỉ boss có thể dùng tọa độ boss bí cảnh để đi tới gần. Không tự đổi sang farm quái thường sau khi boss chết.</p>
+          <p class="hint">Bật Mở rộng vùng tìm quái và bấm Lưu phạm vi. Toàn map giữ bộ lọc hiện tại. Chỉ boss sẽ đi tới boss đã biết hoặc tọa độ boss bí cảnh, rồi giao cho Auto Farm gốc đánh khi tới gần. Nếu game chưa gửi tọa độ boss thì chưa thể tự tìm. Không tự đổi sang farm quái thường sau khi boss chết.</p>
           <div class="input-action">
             <div><label for="farmRadius">Bán kính <span class="range">11–100 ô</span></label><input id="farmRadius" type="number" min="11" max="100" step="1" value="22" required></div>
-            <button id="saveFarm" type="button" class="primary">Lưu bán kính</button>
+            <button id="saveFarm" type="button" class="primary">Lưu phạm vi</button>
           </div>
           <p class="hint">Tự hồi sinh: luôn BẬT khi đang Auto Farm; tiếp tục farm sau mỗi lần hồi sinh, không giới hạn số lần chết. Vẫn chờ nút game sẵn sàng. Bạn chủ động tắt farm thì giữ TẮT.</p>
           <label class="check-row"><input id="breakSeals" type="checkbox"><span>Tự phá phong ấn khi đánh boss bí cảnh</span></label>

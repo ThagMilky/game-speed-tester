@@ -22,9 +22,32 @@
       && ((scene.chat?.typing || scene.inputFieldActive?.())
         || !["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"].some((key) => scene.keys?.[key]?.isDown));
   }
-  function bossKnown(scene) {
-    return [...scene.views.values()].some((actor) => actor.k === "m" && !actor.dead
+  function destination(scene, host, time) {
+    const enemies = typeof host.enemies === "function" ? host.enemies() : [];
+    if (!Array.isArray(enemies)) return null;
+    const bosses = enemies.filter((enemy) => !enemy.dead && enemy.hostile && finite(enemy.id)
+      && finite(enemy.x) && finite(enemy.y) && (enemy.cls === "boss" || enemy.wb === true));
+    const eligible = bosses.filter((enemy) => !(scene.auto.skipped.get(enemy.id) > time));
+    // Preserve the current eligible target. Otherwise use the nearest known boss.
+    const current = eligible.find((enemy) => enemy.id === scene.auto.target);
+    const pursuing = job?.actor ? eligible.find((enemy) => enemy.id === job.id) : null;
+    const boss = current ?? pursuing ?? eligible.sort((a, b) => Math.hypot(a.x - scene.px, a.y - scene.py)
+      - Math.hypot(b.x - scene.px, b.y - scene.py))[0];
+    if (boss) return { ...boss, actor: true };
+    if (bosses.length) { message = "Boss đang trong thời gian tạm bỏ của game; chờ trước khi tìm đường lại."; return null; }
+    const known = [...scene.views.values()].some((actor) => actor.k === "m" && !actor.dead
       && (actor.st?.cls === "boss" || actor.st?.wb === true));
+    if (known) { message = "Boss đã có dữ liệu nhưng không qua bộ lọc/ngưỡng né hiện tại."; return null; }
+    const metadata = scene.self.realm?.inside?.boss;
+    if (!metadata || !finite(metadata.hp) || metadata.hp <= 0) {
+      message = metadata?.hp === 0 ? "Boss bí cảnh đã bị hạ; giữ bộ lọc Chỉ boss."
+        : "Chưa có tọa độ boss trong dữ liệu game gửi về; chưa thể tự đi tìm boss này.";
+      return null;
+    }
+    if (preferences.avoidEnabled) {
+      message = "Boss chưa có dữ liệu level để áp dụng ngưỡng né; chưa tự đi tới tọa độ boss."; return null;
+    }
+    return { ...metadata, actor: false };
   }
   function guard() {
     const scene = binding?.scene;
@@ -39,29 +62,31 @@
     try {
       if (!scene || !wanted() || suspended || !allowed(scene) || GSTFarmBehavior.controls(scene)) { release(); return false; }
       if (typeof GSTHarvest.needsRecovery !== "function" || GSTHarvest.needsRecovery(scene)) { release(); return false; }
-      if (bossKnown(scene)) { release(); message = ""; return false; }
-      const boss = scene.self.realm?.inside?.boss;
-      if (!boss || !finite(boss.hp) || boss.hp <= 0) {
-        release(); message = boss?.hp === 0 ? "Boss bí cảnh đã bị hạ; giữ bộ lọc Chỉ boss."
-          : "Chưa có boss trong dữ liệu game cung cấp; không tự dò map hoặc đoán tọa độ."; return false;
-      }
-      if (preferences.avoidEnabled) { release(); message = "Boss chưa có dữ liệu level để áp dụng ngưỡng né; chưa tự đi tới tọa độ boss."; return false; }
+      const boss = destination(scene, host, time);
+      if (!boss) { release(); return false; }
       if (!finite(boss.x) || !finite(boss.y) || !finite(scene.map?.w) || !finite(scene.map?.h)
           || boss.x < 0 || boss.y < 0 || boss.x >= scene.map.w || boss.y >= scene.map.h
           || !finite(scene.px) || !finite(scene.py) || !finite(time)
           || !["clear", "route"].every((key) => typeof host[key] === "function")) { release(); return false; }
-      if (time < retryAt) return false;
+      // Merely knowing a distant actor does not mean native pick() can route to it.
+      // Its full route grid is bounded; native walk() can also use shorter hop() routes.
+      const distance = Math.hypot(scene.px - boss.x, scene.py - boss.y);
+      if (boss.actor && distance <= 6) {
+        release(); message = "Đã tới gần boss; bàn giao chọn mục tiêu và chiến đấu cho Auto Farm gốc.";
+        return false;
+      }
+      if (time < retryAt) { message = "Đang chờ hết thời gian thử lại đường tới boss."; return false; }
       if (performance.now() - binding.modalAt >= 250) {
         binding.modalAt = performance.now();
         binding.modal = [...document.querySelectorAll('[role="alertdialog"]')].some((el) => el.getClientRects().length
           && getComputedStyle(el).visibility !== "hidden");
       }
       if (binding.modal) { release(); return false; }
-      if (!job || Math.hypot(job.x - boss.x, job.y - boss.y) > 1) {
+      if (!job || job.id !== boss.id || job.actor !== boss.actor || Math.hypot(job.x - boss.x, job.y - boss.y) > 1) {
         release();
         const navigation = Object.assign(Object.create(scene.auto), { path: [], lastX: scene.px, lastY: scene.py,
           stillSince: time, pathAt: -Infinity, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0 });
-        job = { x: boss.x, y: boss.y, navigation, castAt: scene.castAt, progressAt: time,
+        job = { id: boss.id, actor: boss.actor, x: boss.x, y: boss.y, navigation, castAt: scene.castAt, progressAt: time,
           remaining: Math.hypot(scene.px - boss.x, scene.py - boss.y), waypoint: null, fix: scene.self.fix, startedAt: time, steer: null };
       }
       const waypoint = job.navigation.path?.[0];
@@ -84,7 +109,8 @@
         walking.steer(0, 0); message = "Đã tới gần tọa độ boss; chờ game cung cấp actor boss để Auto Farm chọn mục tiêu.";
       } else if (!GSTNavigation.walk(scene, owner.navigation, walking, time, scene.px, scene.py, boss.x, boss.y, 5)) {
         release(); retryAt = time + 15; message = "Không có đường tới boss; chờ 15 giây trước khi thử lại."; return false;
-      } else message = "Đang tới tọa độ boss bí cảnh bằng đường đi gốc; chưa tự tấn công khi thiếu actor.";
+      } else message = boss.actor ? "Đang đi tới boss đã biết trên map; tới gần sẽ bàn giao Auto Farm gốc đánh."
+        : "Đang tới tọa độ boss bí cảnh bằng đường đi gốc; chưa tự tấn công khi thiếu actor.";
       const next = owner.navigation.path?.[0];
       if (Array.isArray(next) && (!owner.waypoint || next[0] !== owner.waypoint[0] || next[1] !== owner.waypoint[1])) {
         owner.waypoint = [...next]; owner.waypointDistance = Math.hypot(scene.px - next[0], scene.py - next[1]);

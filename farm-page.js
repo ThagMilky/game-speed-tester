@@ -137,6 +137,7 @@
     if (!connected(scene)) return "Auto Farm đã bật nhưng đang chờ kết nối game.";
     if (scene.self.dead) return "Nhân vật đã chết; chờ hồi sinh.";
     if (scene.leaving) return "Đang chuyển map; chờ scene ổn định.";
+    if (!settings.enabled && settings.searchScope === "map") return "Toàn map chưa áp dụng: cần bật Mở rộng vùng tìm quái và lưu phạm vi.";
     if (scene.keyCapture) return "Đang đặt phím trong game; kết thúc đặt phím để tiếp tục.";
     if (scene.pendingSkill || scene.aiming) return "Đang chờ/ngắm chiêu tay; kết thúc hoặc hủy ngắm để farm tiếp.";
     if (scene.self.med && !scene.auto.resting) return "Game vẫn ghi nhận đang bế quan; chờ game xác nhận thoát bế quan để farm tiếp.";
@@ -448,7 +449,10 @@
           : distance(enemy, s.home) < settings.radius)
         && !(s.auto.skipped.has(enemy.id) && s.auto.skipped.get(enemy.id) > time));
       // Match the built-in skipped expiry without deleting its records ourselves.
-      const candidates = eligible.filter((enemy) => !s.auto.skipped.has(enemy.id));
+      const candidates = eligible.filter((enemy) => !s.auto.skipped.has(enemy.id)
+        // The map navigator approaches distant bosses with native walk/hop first.
+        // Probing a full long route with pick() here would repeatedly mark them skipped.
+        && !(settings.searchScope === "map" && settings.targetMode === "boss" && distance(enemy, pos) > 6));
       const target = candidates.find((enemy) => enemy.id === s.auto.target);
       if (target) {
         if (distance(target, s.center) >= baseRadius - 0.5) shiftToward(s, target);
