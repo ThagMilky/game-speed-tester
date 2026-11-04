@@ -64,6 +64,7 @@
       || performance.now() < manualUntil || modalOpen(fresh) || needsRecovery(scene);
   }
   function danger(scene, node) {
+    if (settings.ignoreMonsters) return false;
     // Read the scene's full monster set, never the level/boss-filtered host.
     const here = { x: scene.px, y: scene.py };
     for (const enemy of scene.views.values()) {
@@ -237,7 +238,11 @@
         return;
       }
       if (!safeSince || safeSince.node !== next.node) safeSince = { node: next.node, at: now };
-      if (now - safeSince.at < 1000) { message = "Chờ khu vực an toàn ổn định 1 giây."; return; }
+      if (now - safeSince.at < 1000) {
+        message = settings.ignoreMonsters ? "Chờ 1 giây trước khi tới cây; đang bỏ qua quái gần."
+          : "Chờ khu vực an toàn ổn định 1 giây.";
+        return;
+      }
       job = { ...next, phase: "moving", path: [], routeAt: -Infinity, startAt: now,
         progressAt: now, x: scene.px, y: scene.py, steer: null };
     }
@@ -347,7 +352,9 @@
       clearInterval(watcher); watcher = null;
       message = "Tự hái đã tắt; không hủy lượt hái game đã bắt đầu.";
     } else {
-      if (job?.phase === "moving" || job?.phase === "request") release("Đã đổi cài đặt; đang quan sát lại.");
+      // Keep an outstanding F request until its acknowledgement/timeout even
+      // when options change, so toggling a checkbox cannot resend it early.
+      if (job?.phase === "moving") release("Đã đổi cài đặt; đang quan sát lại.");
       watch(); discover();
     }
     safeSince = null;

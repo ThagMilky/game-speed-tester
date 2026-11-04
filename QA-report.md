@@ -4,6 +4,8 @@ Lưu ý cập nhật 2026-11-04: báo cáo bên dưới là kết quả lịch s
 
 ## Kết luận
 
+Tùy chọn Bỏ qua kiểm tra quái gần (mặc định tắt) đã triển khai. Chỉ review source/diff; **tests/lint/typecheck/browser/gameplay: NOT RUN**, behavior **UNVERIFIED**, CI **NOT CHECKED**. Không dùng QA lịch sử dưới đây để xác nhận tùy chọn này.
+
 Tự hái cây (2026-11-04) đã triển khai module riêng, bộ lọc tìm/tick tên, phạm vi và quyền phối hợp với Auto Farm. Chỉ review source/diff và trạng thái Git. **Tests/lint/typecheck/smoke/browser/gameplay: NOT RUN. Behavior: UNVERIFIED. CI: NOT CHECKED.** Không dùng các kết quả QA lịch sử bên dưới để xác nhận tính năng Tự hái; chưa xác minh server cho hái khi bay, phản hồi bị từ chối hoặc ngắt bởi sát thương.
 
 Bổ sung sau review 2026-11-04: đã sửa lệnh tắt không phụ thuộc bản nháp level/bán kính, giữ bộ lọc qua hồi sinh, phục hồi sau BFCache và nhường phím cho bộ chọn phím của game. Chỉ review source/diff; **tests/lint/typecheck/browser/gameplay: NOT RUN**, behavior **UNVERIFIED**, CI **NOT CHECKED**. Các kết quả bên dưới không xác minh bốn sửa đổi này.

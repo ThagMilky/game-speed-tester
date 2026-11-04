@@ -4,6 +4,7 @@
   const controls = byId("harvestControls");
   const enabled = byId("harvestEnabled");
   const allowFarm = byId("harvestAllowFarm");
+  const ignoreMonsters = byId("harvestIgnoreMonsters");
   const mode = byId("harvestMode");
   const search = byId("harvestSearch");
   const list = byId("harvestItems");
@@ -76,6 +77,7 @@
     } finally {
       enabled.checked = preferences.enabled;
       allowFarm.checked = preferences.allowFarm;
+      ignoreMonsters.checked = preferences.ignoreMonsters;
       mode.value = preferences.mode;
       renderList();
       controls.disabled = false;
@@ -84,6 +86,7 @@
   }
   enabled.addEventListener("change", () => save({ enabled: enabled.checked }));
   allowFarm.addEventListener("change", () => save({ allowFarm: allowFarm.checked }));
+  ignoreMonsters.addEventListener("change", () => save({ ignoreMonsters: ignoreMonsters.checked }));
   mode.addEventListener("change", () => save({ mode: mode.value }));
   search.addEventListener("input", renderList);
   byId("clearHarvestItems").addEventListener("click", () => save({ items: [] }));
@@ -122,6 +125,7 @@
     preferences = GSTHarvest.normalize(saved.harvestPreferences);
     enabled.checked = preferences.enabled;
     allowFarm.checked = preferences.allowFarm;
+    ignoreMonsters.checked = preferences.ignoreMonsters;
     mode.value = preferences.mode;
     for (const [key, input] of ranges) input.value = preferences[key];
     renderList(); controls.disabled = false; refresh();

@@ -7,6 +7,7 @@
       return {
         enabled: value?.enabled === true,
         allowFarm: value?.allowFarm === true,
+        ignoreMonsters: value?.ignoreMonsters === true,
         radius: bounded(value?.radius, 6, 1, 30),
         clearRadius: bounded(value?.clearRadius, 4, 2, 15),
         reach: bounded(value?.reach, 1.2, 0.5, 1.5),
