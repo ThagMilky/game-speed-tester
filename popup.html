@@ -21,12 +21,15 @@
   <script src="menu-position.js" defer></script>
   <script src="popup-help.js" defer></script>
   <script src="menu-popup.js" defer></script>
+  <script src="menu-monitor.js" defer></script>
 </head>
 <body>
   <header><p class="eyebrow">NGHICHTHIENKY.ONLINE</p><h1>Game Speed Tester</h1></header>
   <button id="openGameMenu" type="button" class="full">Mở menu giữa màn hình game</button>
   <section class="overview" aria-label="Trạng thái game hiện tại">
-    <dl>
+    <p class="field-title">Đang bật</p>
+    <div id="activeFeatures" class="active-features" role="status" aria-live="polite">Đang đọc cài đặt…</div>
+    <dl hidden>
       <div><dt>Auto Farm game</dt><dd id="autoFarmValue" data-state="unknown">Chưa rõ</dd></div>
       <div><dt>Di chuyển</dt><dd id="state">Chưa rõ</dd></div>
       <div><dt>Tốc độ hiện tại</dt><dd id="current">—</dd></div>

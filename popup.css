@@ -120,3 +120,23 @@ h1 { font-size: 18px; }
 
 .advanced > summary { cursor: pointer; color: var(--muted); font-size: 12px; }
 .advanced-body { padding-top: 12px; }
+
+/* Larger, readable controls in both extension popup and in-game menu. */
+:root { font-size: 18px; }
+body { width: min(760px, 100vw); max-height: 600px; padding: 18px; }
+body.embedded { width: 100%; max-height: none; }
+h1 { font-size: 24px; }
+label, .field-title, .check-row, .hint, .notice, .diagnostic,
+summary strong, summary small, .save-mode, .layout-hint,
+.harvest-toolbar, .harvest-list small, .feature-status,
+.card-body > p[role="status"], .advanced > summary, .key-label,
+.compact-tooltip, .help-tooltip, .range, dt, dd { font-size: 18px; }
+button { font-size: 18px; min-height: 42px; }
+input[type="number"], input[type="search"], select { font-size: 18px; min-height: 44px; }
+.check-row { min-height: 40px; }
+.card > summary { padding: 14px 16px; }
+.compact-help-button, .field-help { width: 28px; height: 28px; min-height: 28px; font-size: 18px; }
+.active-features { display: flex; flex-wrap: wrap; gap: 8px; font-size: 18px; }
+.active-feature { padding: 6px 10px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent-bg); color: var(--accent); }
+.active-features:empty { display: none; }
+@media (max-width: 480px) { body { padding: 12px; } .two-columns, .choice-grid { grid-template-columns: 1fr; } }

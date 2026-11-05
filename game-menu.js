@@ -65,15 +65,15 @@
     const shadow = root.attachShadow({ mode: "closed" });
     const style = document.createElement("style");
     style.textContent = `:host{all:initial!important;position:fixed!important;inset:0!important;z-index:2147483647!important;pointer-events:none!important}
-      button{font:14px sans-serif;background:#183a30;color:#e6edf3;border:1px solid #69dfb7;border-radius:8px;padding:9px;cursor:pointer;pointer-events:auto}
+      button{font:18px sans-serif;background:#183a30;color:#e6edf3;border:1px solid #69dfb7;border-radius:8px;padding:9px;cursor:pointer;pointer-events:auto}
       #launch{position:absolute;left:50%;top:12px;max-width:calc(100vw - 16px);overflow-wrap:anywhere}
       :host([data-editing="true"]){pointer-events:auto!important}
       :host([data-editing="true"]) #launch{cursor:move;touch-action:none;outline:2px dashed #fff;outline-offset:3px}
       #editor{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:min(440px,calc(100vw - 24px));padding:12px;background:#11191f;border:1px solid #69dfb7;border-radius:8px;pointer-events:auto;color:#e6edf3;font:13px sans-serif}
       #editor[hidden]{display:none}#editor p{margin:0 0 10px}
       #panel{position:absolute;inset:0;background:#0008;pointer-events:auto;display:flex;align-items:center;justify-content:center}
-      #panel[hidden]{display:none}section{display:flex;flex-direction:column;width:min(470px,calc(100vw - 24px));height:min(850px,calc(100vh - 32px));background:#11191f;border:1px solid #69dfb7;border-radius:12px;overflow:hidden}
-      header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;color:#e6edf3;font:14px sans-serif}`;
+      #panel[hidden]{display:none}section{display:flex;flex-direction:column;width:min(760px,calc(100vw - 24px));height:min(960px,calc(100vh - 24px));background:#11191f;border:1px solid #69dfb7;border-radius:12px;overflow:hidden}
+      header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;color:#e6edf3;font:18px sans-serif}`;
     launch = document.createElement("button"); launch.id = "launch"; launch.textContent = "Menu tool"; launch.title = "Mở menu điều khiển extension";
     launch.addEventListener("click", () => { if (!editing) open(); });
     launch.addEventListener("pointerdown", (event) => {

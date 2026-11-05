@@ -203,6 +203,7 @@ let busy = false;
 let saving = false;
 
 async function refresh() {
+  globalThis.GSTMenuMonitor?.render();
   refreshFarm();
   globalThis.GSTHarvestPopup?.refresh();
   globalThis.GSTRealmPopup?.refresh();

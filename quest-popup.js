@@ -45,8 +45,8 @@
   document.getElementById("questClear").addEventListener("click", () => { selected = []; save(); });
   for (const command of ["start", "stop"]) document.getElementById(`quest${command === "start" ? "Start" : "Stop"}`).addEventListener("click", async () => {
     if (commandBusy) return; commandBusy = true; controls.disabled = true;
-    try { if (command === "start") await saving; const result = await send(command); status.textContent = result.message; quests = result.quests ?? quests; render(); }
-    catch (error) { status.textContent = error.message || "Chưa kết nối được Auto Quest."; }
+    try { if (command === "start") await saving; const result = await send(command); status.dataset.running = String(result.running === true); status.textContent = result.message; quests = result.quests ?? quests; render(); }
+    catch (error) { status.dataset.running = "false"; status.textContent = error.message || "Chưa kết nối được Auto Quest."; }
     finally { commandBusy = false; controls.disabled = !ready; }
   });
   chrome.storage.local.get("questPreferences").then((value) => {
@@ -55,8 +55,8 @@
   }).catch(() => { ready = true; controls.disabled = false; status.textContent = "Chưa đọc được lựa chọn đã lưu; vẫn có thể bấm Dừng Auto Quest."; });
   globalThis.GSTQuestPopup = { async refresh() {
     if (!ready || busy || commandBusy) return; busy = true;
-    try { const result = await send("status"); status.textContent = result.message; quests = result.quests ?? []; render(); }
-    catch { status.textContent = "Mở tab game và tải lại extension/trang để đọc quest."; }
+    try { const result = await send("status"); status.dataset.running = String(result.running === true); status.textContent = result.message; quests = result.quests ?? []; render(); }
+    catch { status.dataset.running = "false"; status.textContent = "Mở tab game và tải lại extension/trang để đọc quest."; }
     finally { busy = false; }
   } };
 })();
