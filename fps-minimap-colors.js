@@ -38,6 +38,13 @@
             replace(actor, ["#ff3b2f", "#ffb23a", "#e24a3a"], [1.6, 3], boss ? "#c875ff" : "#ff5353", boss ? 3.5 : 2);
           }
         }
+        const realm = scene.self?.realm?.inside;
+        for (const chest of realm?.chests ?? []) {
+          replace(chest, ["#d5b16d", "#7ff0ff", "#d795ff"], [3], "#ffbe45", 3);
+        }
+        if (realm?.boss) {
+          replace(realm.boss, ["#ff535e"], [4], "#c875ff", 4, realm.boss.hp === 0);
+        }
         const context = canvas.getContext("2d");
         if (!context) return original.apply(this, args);
         const fill = context.fill, descriptor = Object.getOwnPropertyDescriptor(context, "fill");

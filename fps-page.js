@@ -7,7 +7,7 @@
   let failure = "";
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
-  const wanted = () => settings.enabled && fields.some((key) => settings[key]);
+  const wanted = () => settings.enabled && (settings.minimapRange > 1 || fields.some((key) => settings[key]));
   const on = (key) => settings.enabled && settings[key];
 
   const boss = (actor) => actor?.st?.cls === "boss" || actor?.st?.wb === true;
@@ -137,7 +137,9 @@
         || !Number.isInteger(scene.cameras?.main?.id)) return;
     const owner = { scene, masks: new Map(), dom: new Map(), hooks: [], suppressedCast: false };
     binding = owner;
-    wrap(owner, scene.minimap, "draw", GSTFpsMinimap.handler(scene, () => on("simpleMinimap")));
+    const minimapRange = () => settings.enabled ? settings.minimapRange : 1;
+    wrap(owner, scene.minimap, "draw", GSTFpsMinimap.handler(scene, () => on("simpleMinimap"), minimapRange));
+    wrap(owner, scene.minimap, "draw", GSTFpsMinimapZoom.handler(minimapRange));
     wrap(owner, scene.minimap, "draw", GSTFpsMinimapColors.handler(scene,
       () => ({ enabled: on("minimapColors"), selfColor: settings.minimapSelfColor })));
     // Preserve castFx's animation/timing branches. Suppress only its visual factories.
@@ -228,9 +230,10 @@
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:fps:v1") return;
     if (event.data.type === "configure") {
       const next = Object.fromEntries(["enabled", ...fields].map((key) => [key, event.data.preferences?.[key] === true]));
+      next.minimapRange = [1, 2, 3, 4].includes(event.data.preferences?.minimapRange) ? event.data.preferences.minimapRange : 1;
       next.minimapSelfColor = /^#[0-9a-f]{6}$/i.test(event.data.preferences?.minimapSelfColor ?? "")
         ? event.data.preferences.minimapSelfColor : "#fff7da";
-      const changed = ["enabled", ...fields, "minimapSelfColor"].some((key) => settings[key] !== next[key]);
+      const changed = ["enabled", ...fields, "minimapSelfColor", "minimapRange"].some((key) => settings[key] !== next[key]);
       const nextMeasure = event.data.measure === true;
       if (changed) { detach(); failure = ""; settings = next; }
       if (changed || measure !== nextMeasure) { measure = nextMeasure; monitor(); }

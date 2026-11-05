@@ -10,7 +10,7 @@
   "content_scripts": [
     {
       "matches": ["https://nghichthienky.online/*"],
-      "js": ["harvest-main-options.js", "farm-update.js", "farm-combat.js", "navigation.js", "farm-revive-policy.js", "farm-input.js", "farm-routing.js", "flight-page.js", "farm-behavior.js", "farm-map.js", "farm-visual.js", "page.js", "farm-page.js", "farm-diagnostics.js", "farm-session.js", "farm-seals.js", "realm-page.js", "harvest-page.js", "fps-map.js", "fps-minimap.js", "fps-minimap-colors.js", "fps-page.js", "realm-time-page.js", "chest-page.js", "background-page.js", "quest-page.js"],
+      "js": ["harvest-main-options.js", "farm-update.js", "farm-combat.js", "navigation.js", "farm-revive-policy.js", "farm-input.js", "farm-routing.js", "flight-page.js", "farm-behavior.js", "farm-map.js", "farm-visual.js", "page.js", "farm-page.js", "farm-diagnostics.js", "farm-session.js", "farm-seals.js", "realm-page.js", "harvest-page.js", "fps-map.js", "fps-minimap.js", "fps-minimap-zoom.js", "fps-minimap-colors.js", "fps-page.js", "realm-time-page.js", "chest-page.js", "background-page.js", "quest-page.js"],
       "run_at": "document_start",
       "world": "MAIN"
     },

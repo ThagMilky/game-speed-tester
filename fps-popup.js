@@ -2,12 +2,14 @@
   "use strict";
   const controls = document.getElementById("fpsControls");
   const enabled = document.getElementById("fpsEnabled");
+  const range = document.getElementById("minimapRange");
   const inputs = [...document.querySelectorAll("[data-fps-field]")];
   const feedback = document.getElementById("fpsFeedback");
   const status = document.getElementById("fpsStatus");
   let saved = null, busy = false, saving = false;
   function render() {
     enabled.checked = saved.enabled;
+    range.value = String(saved.minimapRange);
     for (const input of inputs) input.checked = saved[input.dataset.fpsField];
   }
   async function refresh() {
@@ -24,6 +26,7 @@
   async function save(reset = false) {
     if (!saved || saving) return;
     const next = reset ? GSTFpsOptions.normalize(null) : GSTFpsOptions.normalize({ enabled: enabled.checked,
+      minimapRange: Number(range.value),
       ...Object.fromEntries(inputs.map((input) => [input.dataset.fpsField, input.checked])) });
     saving = true; controls.disabled = true;
     try {

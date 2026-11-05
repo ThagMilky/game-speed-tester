@@ -219,6 +219,9 @@
           <label class="check-row"><input type="checkbox" data-fps-field="simpleMap"><span>Bản đồ tối giản dạng ô vuông</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="simpleMinimap"><span>Minimap dạng ô vuông</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="minimapColors"><span>Màu dấu trên minimap</span></label>
+          <label for="minimapRange">Vùng nhìn minimap</label>
+          <select id="minimapRange"><option value="1">Mặc định · 32 ô</option><option value="2">Rộng ×2 · 64 ô</option><option value="3">Rộng ×3 · 96 ô</option><option value="4">Rộng ×4 · 128 ô</option></select>
+          <p class="hint">Giữ nguyên kích thước khung, mở rộng vùng nhìn bên trong. Map nhỏ sẽ giới hạn theo kích thước map. Không giúp phát hiện đối tượng game chưa gửi tọa độ; nền ô vuông ở mức rộng sẽ nhỏ hơn.</p>
           <p class="hint">Quái đỏ, boss tím lớn hơn, NPC xanh lá, người chơi khác xanh dương. Bản thân giữ hình mũi tên với màu ngẫu nhiên được lưu lại. Áp dụng cả nền minimap gốc và ô vuông; chỉ hiện đối tượng game đã cung cấp tọa độ, độc lập với ẩn hình quái/player.</p>
           <p class="hint">Đổi nền bản đồ nhỏ ở góc màn hình thành lưới: ô tối đi được, ô xám bị chặn. Giữ dấu nhân vật, quái và vùng an toàn; khung minimap vẫn tròn. Mỗi ô lấy mẫu va chạm ở tâm, không biểu diễn hết vật cản nhỏ hoặc bảo đảm cả ô đều đi được. Độc lập với nền địa hình chính.</p>
           <label class="check-row"><input type="checkbox" data-fps-field="hideVegetation"><span>Ẩn cây cỏ trang trí có chuyển động</span></label>
