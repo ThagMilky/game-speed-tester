@@ -30,6 +30,13 @@ Nếu Wiki thiếu: báo rõ, không bịa nội dung hoặc tuyên bố đã đ
 - Khi được cung cấp asset mới: đọc hệ thống liên quan, cập nhật registry/routing trong Wiki bằng thông tin đã xác minh, giữ entry hữu ích và ghi limitations/version. Nếu chưa có Wiki gốc, xin file trước khi cập nhật.
 - Không tự sửa Wiki chỉ vì extension đổi code mà không có thông tin game-source mới đã xác minh.
 
+## Source game cục bộ do người dùng cung cấp
+- Thư mục source: `C:\Users\Milk\Downloads\Game`. Khi cần source, được đọc trực tiếp các file liên quan tại đây; kiểm tra thư mục này trước khi xin người dùng gửi lại.
+- Đây là snapshot source game hiện được người dùng lưu, không bảo đảm trùng bản game live trong tương lai. Game có thể cập nhật nội dung, tên bundle/hash và tên minified.
+- Không phụ thuộc tên file cố định: liệt kê file hiện có, dùng Wiki để định hướng rồi đối chiếu nội dung, imports/exports và call site để nhận diện đúng hệ thống. `WorldScene.js`/`index.js` có thể là tên người dùng đổi lại.
+- Nếu thiếu file cần thiết, không xác định được file nào tương ứng, hoặc có nghi vấn về tên/phiên bản ảnh hưởng kết quả, hỏi người dùng ngắn gọn và nêu rõ điểm chưa chắc. Không yêu cầu lại toàn bộ source mặc định.
+- Source trong thư mục này phục vụ đọc/đối chiếu; không tự sửa, di chuyển, xóa hoặc đưa các bundle game vào Git extension. Không đọc các thư mục/file không liên quan trong cùng thư mục.
+
 ## Ranh giới implementation
 - Ưu tiên sửa extension; không sửa bundle game/engine bên thứ ba trừ khi có nhu cầu thực sự và quyền phù hợp.
 - Không sửa damage, attack speed, cooldown, packet, authentication hoặc game server trong scope extension này.
