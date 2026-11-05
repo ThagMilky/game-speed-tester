@@ -12,6 +12,7 @@
   let modal = false;
   let thresholdsAt = -Infinity;
   let hpThreshold = 0.4, mpThreshold = 0.25;
+  // Failed seals remain skipped until their hits/position changes or the session resets.
   const skipped = new Map();
   const finite = Number.isFinite;
   const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -33,7 +34,7 @@
   function stopJob(reason, skip = false) {
     if (job && binding) {
       const scene = binding.scene;
-      if (skip) skipped.set(job.key, { hits: job.hits, until: scene.now() + 15 });
+      if (skip) skipped.set(job.key, { hits: job.hits });
       if (job.steer && scene.autoX === job.steer[0] && scene.autoY === job.steer[1]) {
         scene.autoX = 0; scene.autoY = 0;
       }
@@ -110,7 +111,7 @@
       if (!scene || !enabled || suspended || !scene.auto.on) return false;
       const active = seals(scene);
       for (const [id, entry] of skipped) {
-        if (time >= entry.until || !active.some((seal) => key(seal) === id && seal.hits === entry.hits)) skipped.delete(id);
+        if (!active.some((seal) => key(seal) === id && seal.hits === entry.hits)) skipped.delete(id);
       }
       if (!active.length) {
         stopJob(); skipped.clear(); message = "Không có phong ấn cần phá trong bí cảnh."; return false;
@@ -126,7 +127,7 @@
       if (!job) {
         const next = active.filter((seal) => !skipped.has(key(seal)))
           .sort((a, b) => distance(a, pos) - distance(b, pos))[0];
-        if (!next) { holding = true; host.steer(0, 0); message = "Phong ấn chưa xử lý được; chờ tối đa 15 giây rồi thử lại, chưa tiếp tục đánh boss."; return true; }
+        if (!next) { message = "Phong ấn không có tiến triển; đã nhường lại game. Chờ dữ liệu thay đổi hoặc tắt/bật hỗ trợ để thử lại."; return false; }
         // Use native navigation on private state; preserve the boss target/path/center.
         const navigation = Object.assign(Object.create(scene.auto), { path: [], lastX: pos.x, lastY: pos.y,
           stillSince: time, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0, pathAt: -Infinity });
@@ -151,7 +152,7 @@
       steer(scene, 0, 0);
       job.attackAt ??= time;
       if (time - Math.max(job.attackAt, job.progressAt) > 8) {
-        stopJob("Phong ấn không giảm số đòn; chờ rồi thử lại.", true); holding = true; host.steer(0, 0); return true;
+        stopJob("Phong ấn không giảm số đòn; bỏ qua đến khi dữ liệu thay đổi.", true); holding = true; host.steer(0, 0); return true;
       }
       if (time < job.nextAt) return true;
       job.nextAt = time + 0.2; // Native attack decision interval; approach steering stays per-frame.

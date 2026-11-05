@@ -6,7 +6,7 @@
   const inputs = [...document.querySelectorAll("[data-fps-field]")];
   const feedback = document.getElementById("fpsFeedback");
   const status = document.getElementById("fpsStatus");
-  let saved = null, busy = false, saving = false;
+  let saved = null, busy = false, saving = false, revision = 0;
   function render() {
     enabled.checked = saved.enabled;
     range.value = String(saved.minimapRange);
@@ -28,10 +28,12 @@
     const next = reset ? GSTFpsOptions.normalize(null) : GSTFpsOptions.normalize({ enabled: enabled.checked,
       minimapRange: Number(range.value),
       ...Object.fromEntries(inputs.map((input) => [input.dataset.fpsField, input.checked])) });
+    const before = revision;
     saving = true; controls.disabled = true;
     try {
       await chrome.storage.local.set({ fpsPreferences: next });
-      saved = next; render(); feedback.textContent = "";
+      if (revision === before) saved = next;
+      render(); feedback.textContent = "";
       try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab?.id) throw new Error("No tab");
@@ -51,8 +53,16 @@
       save();
     });
   }
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local" || !changes.fpsPreferences) return;
+    revision++;
+    saved = GSTFpsOptions.normalize(changes.fpsPreferences.newValue);
+    render();
+  });
+  const initialRevision = revision;
   chrome.storage.local.get("fpsPreferences").then(({ fpsPreferences }) => {
-    saved = GSTFpsOptions.normalize(fpsPreferences); render(); controls.disabled = false;
+    if (revision === initialRevision) saved = GSTFpsOptions.normalize(fpsPreferences);
+    render(); controls.disabled = false;
   }).catch(() => { feedback.textContent = "Không đọc được cài đặt FPS. Thử mở lại popup."; });
   globalThis.GSTFpsPopup = { refresh };
   refresh();
