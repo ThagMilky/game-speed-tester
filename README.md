@@ -1,6 +1,8 @@
 # Game Speed Tester
 
-**Người dùng không biết code:** mở [HUONG-DAN.html](HUONG-DAN.html) hoặc [BAT-DAU.txt](BAT-DAU.txt). Giải nén ZIP, cài bằng Load unpacked; không cần build, Node hoặc tài khoản GitHub.
+Source đang ở `C:\Users\Milk\Downloads\Work\game-speed-tester`. Dùng trực tiếp bằng Load unpacked tại `chrome://extensions`; chọn thư mục này, nơi có `manifest.json`. Không cần build, Node hoặc giải nén ZIP. Hiện chưa đóng gói để chia sẻ.
+
+Sau khi chuyển từ đường dẫn `outputs\game-speed-tester` cũ, nạp lại extension từ thư mục mới rồi tải lại trang game. Trình duyệt có thể tạo ID khác khi nạp từ đường dẫn mới, nên cài đặt cũ không bảo đảm tự chuyển sang; giữ bản cũ cho tới khi đã đối chiếu cài đặt. Source, lịch sử Git và remote được giữ nguyên. Thư mục `work/` chứa source tham khảo, backup và kết quả QA cũ được giữ cục bộ, không đưa vào commit.
 
 Chrome Extension Manifest V3 phục vụ kiểm thử anti-cheat có sự cho phép, chỉ trên `https://nghichthienky.online/*`. Mặc định **tắt**; tốc độ **đi bộ 3.5**, **bay 2**; mỗi giá trị điều chỉnh trong **1.0–6.0**.
 
