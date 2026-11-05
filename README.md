@@ -480,3 +480,7 @@ Chọn Hiện đường tới mục tiêu rồi Lưu phạm vi: xanh lá là qu�
 Chống vượt điểm rẽ/đích nay áp dụng cả khi Auto Farm gốc đuổi quái, vẫn giữ khoảng dừng và tầm đánh native. Khi nhận thay đổi fix trong lúc đi, hủy hướng cũ, chờ ổn định 0.45 giây và tính lại đường. Không sửa fix, vị trí, tốc độ, cooldown hoặc dữ liệu va chạm; không tự coi quái ngoài bộ lọc thành vật cản. Chưa xác nhận nguyên nhân thực tế của mọi lần giật tới lui.
 
 Reload extension rồi tải lại game để dùng bản mới. Chỉ đọc source và review diff/status trong lượt này. Tests/lint/typecheck/browser/gameplay: NOT RUN. Hành vi trong game, độ mượt và khả năng dò đủ map: UNVERIFIED. CI: NOT CHECKED.
+
+### Giữ nền tối giản ổn định khi di chuyển
+
+Không chuyển lại nền gốc mỗi khi camera tới vùng chưa dựng đủ ô lưới. Một nền màu đơn giản giữ ổn định trong khi từng mảnh lưới được bổ sung; mảnh đã dựng vẫn hiển thị. Giữ giới hạn 64 mảnh và tối đa 2 mảnh mới mỗi frame. Khi zoom rất xa, chỉ dựng tối đa vùng 8 × 8 mảnh gần tâm camera, phần còn lại là nền màu đơn giản. Tắt bản đồ tối giản hoặc rời scene sẽ dọn cả nền và cache. Không thay collision, tải ảnh hay logic streaming của game. Đã đối chiếu source/review diff; tests và gameplay NOT RUN, hết chớp trong runtime UNVERIFIED, CI NOT CHECKED.

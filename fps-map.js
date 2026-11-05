@@ -3,6 +3,7 @@
   let state = null, serial = 0;
   function clear() {
     if (!state) return;
+    state.backdrop.destroy();
     for (const item of state.chunks.values()) { item.image.destroy(); state.scene.textures.remove(item.key); }
     state = null;
   }
@@ -16,7 +17,11 @@
         || typeof collision.blockedCell !== "function" || typeof scene.toPx !== "function") return null;
     const zero = scene.toPx(0, 0), one = scene.toPx(1, 1), scale = one[0] - zero[0];
     if (zero[0] !== 0 || zero[1] !== h * 32 || scale !== 32 || one[1] - zero[1] !== -32) return null;
-    state = { scene, map: scene.map, collision, resolution, chunks: new Map(), visuals: [], scanAt: -Infinity };
+    // Keep one cheap solid surface while detailed grid chunks are being built.
+    // Readiness of a newly visible chunk must never reveal native terrain again.
+    const backdrop = scene.add.graphics().setDepth(-951);
+    backdrop.fillStyle(0x202932, 1).fillRect(0, 0, w * 32, h * 32);
+    state = { scene, map: scene.map, collision, resolution, backdrop, chunks: new Map(), visuals: [], scanAt: -Infinity };
     return state;
   }
   function paint(owner, cx, cy) {
@@ -63,8 +68,16 @@
       const left = Math.max(0, Math.floor(view.x / 512)), top = Math.max(0, Math.floor(view.y / 512));
       const right = Math.min(Math.ceil(owner.map.w / 16) - 1, Math.floor(view.right / 512));
       const bottom = Math.min(Math.ceil(owner.map.h / 16) - 1, Math.floor(view.bottom / 512));
-      if ((right - left + 1) * (bottom - top + 1) <= 64) {
-        for (let y = top; y <= bottom; y++) for (let x = left; x <= right; x++) needed.add(`${x}:${y}`);
+      // Bound work even at extreme zoom: select at most 8 x 8 chunks nearest
+      // the viewport center, with the solid backdrop covering the remainder.
+      const centerX = Math.floor((view.x + view.width / 2) / 512);
+      const centerY = Math.floor((view.y + view.height / 2) / 512);
+      const startX = Math.max(left, Math.min(centerX - 3, right - 7));
+      const startY = Math.max(top, Math.min(centerY - 3, bottom - 7));
+      {
+        for (let y = startY; y <= Math.min(bottom, startY + 7); y++) {
+          for (let x = startX; x <= Math.min(right, startX + 7); x++) needed.add(`${x}:${y}`);
+        }
         for (const [id, item] of owner.chunks) {
           if (!needed.has(id) && owner.chunks.size >= 64) { item.image.destroy(); scene.textures.remove(item.key); owner.chunks.delete(id); }
         }
@@ -73,12 +86,12 @@
           if (owner.chunks.size >= 64) break;
           const [x, y] = id.split(":").map(Number); owner.chunks.set(id, paint(owner, x, y));
         }
-        ready = needed.size > 0 && [...needed].every((id) => owner.chunks.has(id));
+        ready = true;
         for (const [id, item] of owner.chunks) {
-          const visible = ready && needed.has(id);
+          const visible = needed.has(id);
           if (item.image.visible !== visible) item.image.setVisible(visible);
         }
-      } else for (const item of owner.chunks.values()) if (item.image.visible) item.image.setVisible(false);
+      }
     }
     if (preferences.hideVegetation || preferences.simpleMap && ready) for (const item of scene.sway ?? []) mask(item.img);
     if (preferences.hideBuildings || preferences.simpleMap && ready) for (const item of scene.occluders ?? []) mask(item.img);
