@@ -3,6 +3,7 @@
   const origin = "https://nghichthienky.online", pending = new Map();
   let preferences = null, measure = false, revision = 0, displayRevision = 0, sequence = 0, suspended = false;
   let navigating = false;
+  let selfColor = null;
   function configure() {
     if (!preferences || suspended) return;
     const url = new URL(location.href);
@@ -14,7 +15,7 @@
       }
       return;
     }
-    window.postMessage({ channel: "gst:fps:v1", type: "configure", preferences, measure }, origin);
+    window.postMessage({ channel: "gst:fps:v1", type: "configure", preferences: { ...preferences, minimapSelfColor: selfColor }, measure }, origin);
   }
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:fps-status:v1") return;
@@ -45,6 +46,9 @@
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local") return;
+    if (changes.minimapSelfColor && /^#[0-9a-f]{6}$/i.test(changes.minimapSelfColor.newValue ?? "")) {
+      selfColor = changes.minimapSelfColor.newValue; configure();
+    }
     if (changes.fpsPreferences) { revision++; preferences = GSTFpsOptions.normalize(changes.fpsPreferences.newValue); }
     if (changes.displayPreferences) {
       displayRevision++;
@@ -61,7 +65,15 @@
   window.addEventListener("pageshow", () => { suspended = false; configure(); });
   const initialRevision = revision;
   const initialDisplayRevision = displayRevision;
-  chrome.storage.local.get(["fpsPreferences", "displayPreferences"]).then((saved) => {
+  chrome.storage.local.get(["fpsPreferences", "displayPreferences", "minimapSelfColor"]).then(async (saved) => {
+    if (!selfColor) {
+      if (/^#[0-9a-f]{6}$/i.test(saved.minimapSelfColor ?? "")) selfColor = saved.minimapSelfColor;
+      else {
+        const palette = ["#ffe066", "#ffb86c", "#ff9ed2", "#f1f5ff", "#73f5e5"];
+        selfColor = palette[Math.floor(Math.random() * palette.length)];
+        await chrome.storage.local.set({ minimapSelfColor: selfColor }).catch(() => {});
+      }
+    }
     if (revision === initialRevision) preferences = GSTFpsOptions.normalize(saved.fpsPreferences);
     if (displayRevision === initialDisplayRevision) {
       measure = saved.displayPreferences?.visible !== false && saved.displayPreferences?.fields?.fps === true;

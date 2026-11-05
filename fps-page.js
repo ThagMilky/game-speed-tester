@@ -2,7 +2,7 @@
   "use strict";
   const origin = "https://nghichthienky.online";
   const fields = ["hidePlayers", "hidePlayerEffects", "hideOwnEffects", "hideMonsterEffects",
-    "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings", "hideBosses", "hideBossEffects", "simpleMinimap"];
+    "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings", "hideBosses", "hideBossEffects", "simpleMinimap", "minimapColors"];
   let settings = {}, measure = false, suspended = false, watcher = null, binding = null;
   let failure = "";
   const sceneNow = () => window.game?.scene?.getScene?.("world")
@@ -138,6 +138,8 @@
     const owner = { scene, masks: new Map(), dom: new Map(), hooks: [], suppressedCast: false };
     binding = owner;
     wrap(owner, scene.minimap, "draw", GSTFpsMinimap.handler(scene, () => on("simpleMinimap")));
+    wrap(owner, scene.minimap, "draw", GSTFpsMinimapColors.handler(scene,
+      () => ({ enabled: on("minimapColors"), selfColor: settings.minimapSelfColor })));
     // Preserve castFx's animation/timing branches. Suppress only its visual factories.
     wrap(owner, scene, "castFx", function (original, args) {
       const previous = owner.suppressedCast;
@@ -226,7 +228,9 @@
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:fps:v1") return;
     if (event.data.type === "configure") {
       const next = Object.fromEntries(["enabled", ...fields].map((key) => [key, event.data.preferences?.[key] === true]));
-      const changed = ["enabled", ...fields].some((key) => settings[key] !== next[key]);
+      next.minimapSelfColor = /^#[0-9a-f]{6}$/i.test(event.data.preferences?.minimapSelfColor ?? "")
+        ? event.data.preferences.minimapSelfColor : "#fff7da";
+      const changed = ["enabled", ...fields, "minimapSelfColor"].some((key) => settings[key] !== next[key]);
       const nextMeasure = event.data.measure === true;
       if (changed) { detach(); failure = ""; settings = next; }
       if (changed || measure !== nextMeasure) { measure = nextMeasure; monitor(); }
