@@ -484,3 +484,9 @@ Reload extension rồi tải lại game để dùng bản mới. Chỉ đọc so
 ### Giữ nền tối giản ổn định khi di chuyển
 
 Không chuyển lại nền gốc mỗi khi camera tới vùng chưa dựng đủ ô lưới. Một nền màu đơn giản giữ ổn định trong khi từng mảnh lưới được bổ sung; mảnh đã dựng vẫn hiển thị. Giữ giới hạn 64 mảnh và tối đa 2 mảnh mới mỗi frame. Khi zoom rất xa, chỉ dựng tối đa vùng 8 × 8 mảnh gần tâm camera, phần còn lại là nền màu đơn giản. Tắt bản đồ tối giản hoặc rời scene sẽ dọn cả nền và cache. Không thay collision, tải ảnh hay logic streaming của game. Đã đối chiếu source/review diff; tests và gameplay NOT RUN, hết chớp trong runtime UNVERIFIED, CI NOT CHECKED.
+
+### Minimap dạng ô vuông
+
+Bật Tối ưu FPS rồi tick Minimap dạng ô vuông. Tùy chọn mặc định tắt, lưu trong fpsPreferences, độc lập với bản đồ tối giản của nền game. Nền minimap thành các ô tối (đi được) và xám (bị chặn), lấy mẫu collision ở tâm mỗi ô; không bảo đảm cả ô đều thông hoặc biểu diễn đủ vật cản nhỏ. Giữ khung tròn, dấu nhân vật/quái, vùng an toàn, PK, nút ẩn và thao tác mở map/thảo dược gốc. Không sửa bản đồ lớn.
+
+Chỉ thay lượt vẽ ảnh nền đồng bộ trong minimap.draw, khôi phục ngay hàm canvas sau lượt vẽ. Bộ nhớ đệm chỉ chứa vùng nhìn tối đa 34 × 34 ô, cập nhật khi đi qua ô hoặc collision/kích thước map đổi; không dựng ảnh toàn map hoặc thêm timer. Ảnh nền gốc vẫn được game quản lý, kể cả khi tải bất đồng bộ; tắt tùy chọn/rời scene khôi phục wrapper gốc theo cơ chế FPS hiện có. Đối chiếu với source game cục bộ; tests/browser/gameplay NOT RUN, runtime UNVERIFIED, CI NOT CHECKED.

@@ -2,7 +2,7 @@
   "use strict";
   const origin = "https://nghichthienky.online";
   const fields = ["hidePlayers", "hidePlayerEffects", "hideOwnEffects", "hideMonsterEffects",
-    "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings", "hideBosses", "hideBossEffects"];
+    "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings", "hideBosses", "hideBossEffects", "simpleMinimap"];
   let settings = {}, measure = false, suspended = false, watcher = null, binding = null;
   let failure = "";
   const sceneNow = () => window.game?.scene?.getScene?.("world")
@@ -137,6 +137,7 @@
         || !Number.isInteger(scene.cameras?.main?.id)) return;
     const owner = { scene, masks: new Map(), dom: new Map(), hooks: [], suppressedCast: false };
     binding = owner;
+    wrap(owner, scene.minimap, "draw", GSTFpsMinimap.handler(scene, () => on("simpleMinimap")));
     // Preserve castFx's animation/timing branches. Suppress only its visual factories.
     wrap(owner, scene, "castFx", function (original, args) {
       const previous = owner.suppressedCast;
