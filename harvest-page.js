@@ -33,6 +33,14 @@
       && node.x < scene.map?.w && node.y < scene.map?.h;
   }
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  function targetInfo(target) {
+    if (!target) return { type: "none", node: null };
+    if (typeof target !== "object") return { type: "other", node: null };
+    if ("realm" in target) return { type: "realm", node: null };
+    if ("gate" in target) return { type: "gate", node: null };
+    if (Number.isSafeInteger(target.node)) return { type: "resource", node: target.node };
+    return { type: "npc_or_other", node: null };
+  }
   function inventoryCount(scene, item) {
     if (!(scene.inv instanceof Map)) return null;
     const value = scene.inv.get(item) ?? 0;
@@ -159,7 +167,18 @@
         requested: job.requestedAt !== undefined, acknowledged: job.acknowledged === true,
         requests: job.requests ?? 0, attacked: job.attackedAt !== undefined,
         ready: job.node.ready === true, fixChanged: scene ? scene.self?.fix !== job.startFix : null,
-        searchScope: settings.searchScope });
+        searchScope: settings.searchScope,
+        inventoryBefore: finite(job.inventoryBefore) ? job.inventoryBefore : null,
+        inventoryAtLastRequest: finite(job.inventoryAtRequest) ? job.inventoryAtRequest : null,
+        inventoryAfter: scene ? inventoryCount(scene, job.node.item) : null,
+        currentHarvestNode: Number.isSafeInteger(scene?.harvestNode) ? scene.harvestNode : null,
+        nativeHarvesting: scene?.harvesting === true, nodeSame: scene?.nodes?.[job.index] === job.node,
+        freshTarget: job.freshTarget ?? { type: "unobserved", node: null },
+        cachedTarget: job.cachedTarget ?? { type: "unobserved", node: null },
+        closerApproach: job.closerApproach === true,
+        requestedReach: job.interactionReach ?? settings.reach,
+        confirmationWaitMs: job.finishedAt === undefined || job.finishedAt === null ? null : Math.round(performance.now() - job.finishedAt),
+        serverRejectionObserved: false });
       if (recentAttempts.length > 10) recentAttempts.shift();
     }
     trace("harvest.release", code);
@@ -367,10 +386,10 @@
             && scene.nodes[job.index] === job.node && !job.node.ready) {
           lastResult = { text: `Thành công: nhận thêm ${count - job.inventoryBefore} ${job.node.item}.`, until: now + 5000 };
           release("Đang quan sát cây tiếp theo.", 20000, "harvest_success");
-        } else if (job.attackedAt !== undefined && job.node.ready && now - job.finishedAt >= 1500) {
+        } else if (job.attackedAt !== undefined && job.node.ready && now - job.finishedAt >= 3000) {
           job.phase = "moving"; job.finishedAt = null;
           message = "Lượt hái bị gián đoạn; tiếp tục thử trong giới hạn 10 giây.";
-        } else if (now - job.finishedAt >= 1500) {
+        } else if (now - job.finishedAt >= 3000) {
           release("Lượt hái đã kết thúc; chưa xác nhận nhận thêm vật phẩm.", 20000, "harvest_unconfirmed");
         } else message = "Lượt hái kết thúc; chờ cập nhật cây và túi đồ.";
       }
@@ -425,13 +444,25 @@
       return;
     }
     const pos = { x: scene.px, y: scene.py };
-    if (dist(pos, node) <= settings.reach) {
+    const interactionReach = job.interactionReach ?? settings.reach;
+    if (dist(pos, node) <= interactionReach) {
       steer(scene, 0, 0);
       const picked = scene.pickTarget();
       const cached = scene.target;
+      job.freshTarget = targetInfo(picked); job.cachedTarget = targetInfo(cached);
       const isNode = (target) => target && typeof target === "object"
         && target.node === job.index && !("gate" in target) && !("realm" in target);
       if (!isNode(picked) || !isNode(cached)) {
+        // Native F chooses the closest ready node, which can differ in a dense cluster.
+        // Try one closer, collision-checked approach to our selected node, never force F.
+        if (!isNode(picked) && job.freshTarget.type === "resource" && !job.closerApproach
+            && dist(pos, node) > 0.35) {
+          job.closerApproach = true;
+          job.interactionReach = Math.min(0.35, dist(pos, node) / 2);
+          job.targetWaitAt = null; job.progressAt = now;
+          message = "Có nhiều tài nguyên sát nhau; đang tới sát mục tiêu đã chọn hơn.";
+          return;
+        }
         job.targetWaitAt ??= now;
         if (now - job.targetWaitAt > 1500) {
           release(!isNode(picked) ? "Đã tới nơi nhưng mục tiêu F không phải tài nguyên đã chọn; tạm bỏ qua."
@@ -444,7 +475,8 @@
       // Recheck directly before the native F action; never force scene.target.
       if (blocked(scene, true) || !node.ready) { release("Tạm dừng tương tác.", 0, "pre_interaction_blocked"); return; }
       job.phase = "request";
-      job.inventoryBefore = inventoryCount(scene, node.item);
+      job.inventoryAtRequest = inventoryCount(scene, node.item);
+      job.inventoryBefore ??= job.inventoryAtRequest;
       job.requestedAt = now; job.requests = (job.requests ?? 0) + 1;
       trace("harvest.request", "native_F");
       try {
@@ -465,11 +497,11 @@
       release("Không tới được cây; tạm bỏ qua.", 20000, now - job.progressAt > 5000 ? "stalled" : "approach_timeout");
       return;
     }
-    if (settings.searchScope === "map" || settings.radius > 30) {
+    if (settings.searchScope === "map" || settings.radius > 30 || job.closerApproach) {
       job.navigation ??= Object.assign(Object.create(scene.auto), { path: [], pathAt: -Infinity,
         lastX: pos.x, lastY: pos.y, stillSince: scene.now(), stuckCount: 0, sideUntil: 0 });
       if (!GSTNavigation.walk(scene, job.navigation, { ...host, steer: (x, y) => steer(scene, x, y) },
-          scene.now(), pos.x, pos.y, node.x, node.y, settings.reach)) {
+          scene.now(), pos.x, pos.y, node.x, node.y, interactionReach)) {
         release("Không tìm được đường tới tài nguyên; tạm bỏ qua.", 20000, "no_path"); return;
       }
       job.path = job.navigation.path;
