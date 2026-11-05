@@ -19,6 +19,7 @@
   // Per-tab page lifetime. Yielding/manual pauses are not failed attempts.
   const totals = { success: 0, failed: 0, unconfirmed: 0, canceled: 0 };
   let lastOutcome = "";
+  const recentAttempts = [];
   const failedCodes = new Set(["attack_timeout", "stalled", "approach_timeout", "no_path", "path_blocked",
     "interaction_target_other", "interaction_cache_timeout", "interact_error"]);
   const unconfirmedCodes = new Set(["harvest_unconfirmed", "request_timeout", "node_unavailable_before_ack", "target_changed"]);
@@ -164,6 +165,18 @@
       const fallback = code === "detach" ? "Rời scene hoặc bộ điều khiển cần gắn lại."
         : "Đã nhường điều khiển hoặc đổi chế độ tự động.";
       lastOutcome = `Lượt ${job.attempt}: ${reason || fallback}`;
+      const scene = binding?.scene;
+      recentAttempts.push({ at: new Date().toISOString(), attempt: job.attempt,
+        item: String(job.node.item).slice(0, 120), node: job.index, phase: job.phase, code,
+        result: code === "harvest_success" ? "success" : failedCodes.has(code) ? "failed"
+          : unconfirmedCodes.has(code) ? "unconfirmed" : "canceled",
+        reason: reason || fallback, elapsedMs: Math.round(performance.now() - job.startAt),
+        distance: scene ? Math.round(dist({ x: scene.px, y: scene.py }, job.node) * 100) / 100 : null,
+        requested: job.requestedAt !== undefined, acknowledged: job.acknowledged === true,
+        requests: job.requests ?? 0, attacked: job.attackedAt !== undefined,
+        ready: job.node.ready === true, fixChanged: scene ? scene.self?.fix !== job.startFix : null,
+        searchScope: settings.searchScope });
+      if (recentAttempts.length > 10) recentAttempts.shift();
     }
     trace("harvest.release", code);
     if (job && binding) {
@@ -358,7 +371,7 @@
       steer(scene, 0, 0);
       if (scene.harvesting && scene.harvestNode === job.index) {
         if (job.phase !== "harvesting") {
-          job.phase = "harvesting";
+          job.phase = "harvesting"; job.acknowledged = true;
           job.finishedAt = null;
           trace("harvest.ack", "started");
         }
@@ -451,7 +464,7 @@
       if (blocked(scene, true) || danger(scene, node) || !node.ready) { release("Tạm dừng tương tác.", 0, "pre_interaction_blocked"); return; }
       job.phase = "request";
       job.inventoryBefore = inventoryCount(scene, node.item);
-      job.requestedAt = now;
+      job.requestedAt = now; job.requests = (job.requests ?? 0) + 1;
       trace("harvest.request", "native_F");
       try {
         if (scene.panels?.open) {
@@ -544,7 +557,7 @@
       .map((n) => n.item.normalize("NFC")));
     const resultMessage = lastResult && performance.now() < lastResult.until ? `${lastResult.text} ${message}` : message;
     window.postMessage({ channel: "gst:harvest-status:v1", requestId, message: [summary() + ".", lastOutcome, resultMessage, globalThis.GSTBackground?.status()].filter(Boolean).join(" "),
-      enabled: settings.enabled, configKey: JSON.stringify(settings), totals: { ...totals },
+      enabled: settings.enabled, configKey: JSON.stringify(settings), totals: { ...totals }, recentAttempts: [...recentAttempts],
       available: names.size > 0,
       catalog: [...names].slice(0, 200).map((name) => ({ name, inMap: here.has(name), kind: types.get(name) === 2 ? "ore" : types.get(name) === 3 ? "both" : "plant" })) }, origin);
   }
@@ -559,7 +572,7 @@
       return;
     }
     if (job?.phase === "request" && binding?.scene.harvesting && binding.scene.harvestNode === job.index) {
-      job.phase = "harvesting";
+      job.phase = "harvesting"; job.acknowledged = true;
       trace("harvest.ack", "started");
     }
     if (!settings.enabled) {

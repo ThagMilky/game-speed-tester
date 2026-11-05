@@ -151,3 +151,5 @@ input[type="number"], input[type="search"], select { font-size: 18px; min-height
   body[data-orientation="horizontal"] .card { margin-bottom: 0; }
   body[data-orientation="horizontal"] [data-panel="interface"] { grid-column: 1 / -1; }
 }
+
+#harvestHistoryOutput { width: 100%; resize: vertical; padding: 8px; font: 13px/1.5 Consolas, monospace; color: var(--text); background: var(--subtle); border: 1px solid var(--border); border-radius: 7px; }

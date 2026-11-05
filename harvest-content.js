@@ -197,6 +197,22 @@
       ? "Cài đặt đã lưu chưa khớp với trang game. Tải lại trang game để nhận bản extension mới."
       : typeof data.message === "string" ? data.message.slice(0, 240) : "Chờ dữ liệu thu hoạch.",
       enabled: typeof data.enabled === "boolean" ? data.enabled : null, applied,
+      recentAttempts: (Array.isArray(data.recentAttempts) ? data.recentAttempts : []).slice(-10).map((row) => ({
+        at: typeof row?.at === "string" ? row.at.slice(0, 30) : "",
+        attempt: Number.isSafeInteger(row?.attempt) ? row.attempt : null,
+        item: typeof row?.item === "string" ? row.item.slice(0, 120) : "",
+        node: Number.isSafeInteger(row?.node) ? row.node : null,
+        phase: ["moving", "request", "harvesting", "confirming"].includes(row?.phase) ? row.phase : "unknown",
+        result: ["success", "failed", "unconfirmed", "canceled"].includes(row?.result) ? row.result : "unknown",
+        code: typeof row?.code === "string" && /^[a-z_]{1,50}$/.test(row.code) ? row.code : "unknown",
+        reason: typeof row?.reason === "string" ? row.reason.slice(0, 220) : "",
+        elapsedMs: Number.isFinite(row?.elapsedMs) ? Math.max(0, row.elapsedMs) : null,
+        distance: Number.isFinite(row?.distance) ? row.distance : null,
+        requests: Number.isSafeInteger(row?.requests) ? row.requests : 0,
+        requested: row?.requested === true, acknowledged: row?.acknowledged === true,
+        attacked: row?.attacked === true, ready: row?.ready === true, fixChanged: row?.fixChanged === true,
+        searchScope: row?.searchScope === "map" ? "map" : "radius"
+      })),
       available: data.available === true,
       catalog: (Array.isArray(data.catalog) ? data.catalog : [])
         .filter((item) => typeof item?.name === "string" && item.name.length <= 120).slice(0, 200)
@@ -232,7 +248,7 @@
       }
       return true;
     }
-    if (message?.type !== "gst:harvest-status") return;
+    if (!["gst:harvest-status", "gst:harvest-history"].includes(message?.type)) return;
     // The popup has already read storage. Use that authenticated extension
     // message rather than requiring a second storage read in the tab.
     let preparation;

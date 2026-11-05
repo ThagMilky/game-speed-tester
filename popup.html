@@ -139,6 +139,13 @@
           <p class="hint">Tìm không dấu, tick nhiều loại; tự lưu. Chọn riêng nhưng chưa tick thì không hái. Cây đã chọn vẫn được giữ khi đổi map. Loại tài nguyên tuân theo lựa chọn Chỉ hái / Chỉ đào / Hái và đào; không tương tác cổng/NPC.</p>
         </fieldset>
         <p id="harvestFeedback" class="notice" role="alert"></p>
+        <details class="diagnostic">
+          <summary>10 lượt thu hoạch gần nhất</summary>
+          <p class="save-mode">Tự ghi cả thành công và lượt bị bỏ. Giữ tối đa 10 lượt trong tab; tải lại trang sẽ đặt lại.</p>
+          <button id="copyHarvestHistory" type="button" class="full">Sao chép 10 lượt gần nhất</button>
+          <textarea id="harvestHistoryOutput" readonly rows="6" hidden aria-label="Log 10 lượt thu hoạch gần nhất"></textarea>
+          <p id="harvestHistoryFeedback" class="notice" role="status"></p>
+        </details>
         <details id="harvestDebugPanel" class="diagnostic">
           <summary>Hỗ trợ khi gặp lỗi</summary>
           <label class="check-row"><input id="harvestDebugEnabled" type="checkbox" disabled><span>Ghi chẩn đoán khi cần hỗ trợ</span></label>

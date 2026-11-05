@@ -29,6 +29,19 @@
     if (!tab?.id) throw new Error("No active tab");
     return chrome.tabs.sendMessage(tab.id, { type, ...extra });
   }
+  byId("copyHarvestHistory").addEventListener("click", async () => {
+    const button = byId("copyHarvestHistory"), output = byId("harvestHistoryOutput"), feedback = byId("harvestHistoryFeedback");
+    button.disabled = true;
+    try {
+      const data = await debugMessage("gst:harvest-history");
+      if (!Array.isArray(data.recentAttempts)) throw new Error("History unavailable");
+      output.value = JSON.stringify({ build: "harvest-history-1", scope: "Last 10 completed attempts in this game tab; no runtime credentials", attempts: data.recentAttempts }, null, 2);
+      if (!data.recentAttempts.length) { feedback.textContent = "Chưa có lượt kết thúc. Cho Thu hoạch chạy rồi sao chép lại."; return; }
+      try { await navigator.clipboard.writeText(output.value); feedback.textContent = "Đã sao chép. Dán log vào chat để kiểm tra."; }
+      catch { output.hidden = false; output.focus(); output.select(); feedback.textContent = "Đã chọn log; bấm Ctrl+C để sao chép."; }
+    } catch { feedback.textContent = "Chưa đọc được lịch sử. Reload extension rồi tải lại game nếu vừa cập nhật."; }
+    finally { button.disabled = false; }
+  });
   async function refreshDebug() {
     if (debugBusy || !debugToggle.checked || !debugPanel.open) return;
     debugBusy = true;
