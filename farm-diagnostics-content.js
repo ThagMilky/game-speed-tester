@@ -16,6 +16,14 @@
       callers: (Array.isArray(row.callers) ? row.callers : []).filter((value) => typeof value === "string"
         && /^[A-Za-z0-9_.-]+\.js:\d+:\d+$/.test(value)).slice(0, 4) };
   }
+  function cleanBackground(row) {
+    const reasons = ["attach", "state", "frame_gap", "visibility", "focus", "blur", "freeze", "resume", "pagehide", "pageshow", "revive_request", "native_revive_attempt", "worker_failure", "detach"];
+    if (!reasons.includes(row?.reason)) return null;
+    const result = { reason: row.reason, at: typeof row.at === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.at) ? row.at : "" };
+    for (const key of ["hidden", "focused", "auto", "dead", "connected", "reconnecting", "displaced", "active", "paused", "loopRunning", "wasDiscarded"]) result[key] = row[key] === true;
+    for (const key of ["gapMs", "sinceFrameMs"]) result[key] = Number.isFinite(row[key]) ? Math.max(0, Math.min(86400000, row[key])) : null;
+    return result;
+  }
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:farm-debug:v1") return;
     const entry = pending.get(event.data.requestId);
@@ -23,6 +31,7 @@
     pending.delete(event.data.requestId); clearTimeout(entry.timer);
     const data = event.data.diagnostics;
     entry.respond({ build: data?.build === "farm-stop-1" ? data.build : "unknown", tracking: data?.tracking === true,
+      background: { build: "background-log-1", current: cleanBackground(data?.background?.current), events: (Array.isArray(data?.background?.events) ? data.background.events : []).slice(-50).map(cleanBackground).filter(Boolean) },
       current: flags(data?.current), lastStop: clean(data?.lastStop),
       events: (Array.isArray(data?.events) ? data.events : []).slice(-20).map(clean).filter(Boolean) });
   });

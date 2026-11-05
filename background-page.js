@@ -27,6 +27,7 @@
       lastFrame = performance.now();
       current.onerror = () => {
         if (worker !== current) return;
+        globalThis.GSTBackgroundDiagnostics?.record("worker_failure", scene);
         failure = "Không chạy được Worker nền; trình duyệt có thể chặn hoặc đình chỉ tab."; stop();
       };
       current.onmessage = (event) => {
@@ -44,7 +45,7 @@
         // A normal/headless frame already ran: do not advance the game a second time.
         if (delta < 40) return;
         try { game.headlessStep(now, Math.min(50, delta)); }
-        catch { failure = "Nhịp nền không tương thích; đã dừng và nhường lại game."; stop(); }
+        catch { globalThis.GSTBackgroundDiagnostics?.record("worker_failure", scene); failure = "Nhịp nền không tương thích; đã dừng và nhường lại game."; stop(); }
       };
     } catch { failure = "Trình duyệt chặn Worker nền; giữ nhịp game gốc."; stop(); }
   }

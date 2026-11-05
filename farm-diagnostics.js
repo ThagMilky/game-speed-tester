@@ -64,6 +64,7 @@
     owner.displaced = !!scene.driver?.displaced;
   }
   function attach(scene) {
+    globalThis.GSTBackgroundDiagnostics?.attach(scene);
     if (binding && binding.scene === scene && binding.auto === scene?.auto) return;
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.toggle !== "function"
         || typeof scene.startClickOrder !== "function" || !scene.events?.on || !scene.events.off) return;
@@ -104,6 +105,7 @@
     toggleByUser: (scene) => toggle(scene, "shortcut"),
     restore: (scene) => toggle(scene, "restore"),
     snapshot: () => ({ build: "farm-stop-1", tracking: binding !== null,
+      background: globalThis.GSTBackgroundDiagnostics?.snapshot(),
       current: flags(binding?.scene), lastStop: rows.findLast((row) => row.event === "off") ?? null, events: [...rows] })
   };
   window.addEventListener("message", (event) => {

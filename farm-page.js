@@ -262,6 +262,7 @@
       return "Auto Farm đang xử lý hồi sinh; chờ game.";
     }
     death.requested = true;
+    globalThis.GSTBackgroundDiagnostics?.record("revive_request", scene);
     button.click();
     respawnMessage = "Clicked the game's ready revive button; waiting for confirmation.";
     return "Đã bấm hồi sinh; chờ game xác nhận rồi tiếp tục Tự hái.";
