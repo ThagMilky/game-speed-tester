@@ -17,6 +17,8 @@
 6. Trước khi sửa dựa vào implementation game cụ thể, đối chiếu source thật, imports/exports, chữ ký hàm và call site liên quan.
 7. Phân biệt hành vi được source xác nhận, giả định và hành vi runtime chưa kiểm chứng.
 
+Quy tắc xin source trong AGENTS.md này được ưu tiên hơn các câu trong Wiki yêu cầu luôn xin full current source: chỉ xin khi thiếu source cần thiết hoặc phiên bản chưa đủ căn cứ; không xin lại file đã có và phù hợp.
+
 Nếu Wiki thiếu: báo rõ, không bịa nội dung hoặc tuyên bố đã đọc. Có thể tiếp tục phần độc lập bằng source sẵn có; nếu task phụ thuộc routing/thông tin trong Wiki thì xin đúng file này trước.
 
 ## Wiki là bản đồ điều hướng, không phải bằng chứng runtime
@@ -65,4 +67,6 @@ Khi hoàn tất: nêu thay đổi, các file extension sửa (gọn), source gam
 
 ## Trạng thái setup
 - AGENTS.md được tạo từ yêu cầu setup Wiki-driven workflow ngày 2026-11-05.
-- `GAME_ASSET_WIKI_v0.7.md` chưa có trong các vị trí đã kiểm tra khi setup. Chưa đọc hoặc xác minh nội dung Wiki; cần người dùng cung cấp để hoàn tất đối chiếu. Không tạo Wiki giả thay thế.
+- Đã đưa `GAME_ASSET_WIKI_v0.7.md` từ Downloads vào root và đọc toàn bộ ngày 2026-11-05. Giữ nguyên bản gốc trong Downloads và nội dung Wiki.
+- Wiki v0.7 là reconstructed reference edition, có provenance/limitations riêng; các nhãn CONFIRMED trong Wiki là bằng chứng lịch sử của tác giả, không phải xác minh live hoặc toàn bộ source trong lần setup này.
+- Setup workflow đã hoàn tất; chưa triển khai các đề xuất tính năng cũ (auto click, rương, cổng) từ bước setup này.
