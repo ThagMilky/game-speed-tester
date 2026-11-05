@@ -45,8 +45,8 @@
     }
   }
   function attach(scene) {
-    if (!enabled || suspended) { detach(); return; }
-    if (binding?.scene === scene && binding.auto === scene?.auto && scene.auto.walk === binding.wrapper
+    if (!enabled || suspended || !scene?.auto) { detach(); return; }
+    if (binding && binding.scene === scene && binding.auto === scene.auto && scene.auto.walk === binding.wrapper
         && GSTFarmUpdate.attached(scene)) return;
     detach();
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.walk !== "function" || typeof scene.auto.update !== "function"
