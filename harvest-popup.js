@@ -10,6 +10,7 @@
   const list = byId("harvestItems");
   const feedback = byId("harvestFeedback");
   const status = byId("harvestStatus");
+  const scope = byId("harvestSearchScope");
   const ranges = [["radius", byId("harvestRadius")], ["clearRadius", byId("harvestClearRadius")], ["reach", byId("harvestReach")]];
   let preferences = GSTHarvest.normalize(null);
   let catalog = [];
@@ -74,6 +75,8 @@
   kind.addEventListener("change", () => save({ kind: kind.value }));
   function renderList() {
     kind.value = preferences.kind;
+    scope.value = preferences.searchScope;
+    byId("harvestRadius").disabled = preferences.searchScope === "map";
     byId("harvestCount").textContent = `Đã chọn ${preferences.items.length} loại`;
     byId("clearHarvestItems").disabled = !preferences.items.length;
     const focused = document.activeElement?.dataset?.item;
@@ -155,9 +158,10 @@
     if (event.target.checked) items.add(name); else items.delete(name);
     save({ items: [...items] });
   });
+  scope.addEventListener("change", () => save({ searchScope: scope.value }));
   function saveRanges() {
     if (!ranges.every(([, input]) => input.reportValidity())) return;
-    save(Object.fromEntries(ranges.map(([key, input]) => [key, input.valueAsNumber])));
+    save(Object.fromEntries(ranges.filter(([key]) => key !== "radius" || preferences.searchScope !== "map").map(([key, input]) => [key, input.valueAsNumber])));
   }
   byId("saveHarvestRange").addEventListener("click", saveRanges);
   for (const [, input] of ranges) input.addEventListener("keydown", (event) => { if (event.key === "Enter") saveRanges(); });

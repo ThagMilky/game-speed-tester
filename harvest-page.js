@@ -18,6 +18,11 @@
   let lastResult = null;
   const skipped = new Map();
   const finite = Number.isFinite;
+  function inRange(scene, node) {
+    if (settings.searchScope !== "map") return dist(node, binding.home) <= settings.radius;
+    return finite(node.x) && finite(node.y) && node.x >= 0 && node.y >= 0
+      && node.x < scene.map?.w && node.y < scene.map?.h;
+  }
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
   function inventoryCount(scene, item) {
     if (!(scene.inv instanceof Map)) return null;
@@ -146,6 +151,7 @@
     trace("harvest.release", code);
     if (job && binding) {
       const scene = binding.scene;
+      if (job.navigation) GSTNavigation.cancel(scene, job.navigation);
       if (job.steer && scene.autoX === job.steer[0] && scene.autoY === job.steer[1]) {
         scene.autoX = 0;
         scene.autoY = 0;
@@ -266,6 +272,13 @@
         }
         return originalSkill.apply(this, args);
       });
+      if (typeof scene.onEvent === "function") wrapMethod(scene, "onEvent", (original) => function (event, ...rest) {
+        // Observe native damage only; repeated hits never extend this target's deadline.
+        if (job && settings.ignoreMonsters && event?.e === "dmg" && event.kind === "p"
+            && event.id === scene.you && finite(event.v) && event.v > 0
+            && scene.views.get(event.by)?.k === "m") job.attackedAt ??= performance.now();
+        return original.call(this, event, ...rest);
+      });
       binding.removeInput = GSTFarmInput.add(scene, (accepted) => {
         if (accepted && binding?.scene === scene) {
           pauseManual("Tạm dừng 3 giây sau lệnh chuột di chuyển/chiến đấu.", "manual_pointer");
@@ -311,6 +324,12 @@
       release(reason, 0, "blocked");
       return;
     }
+    if (job?.attackedAt !== undefined && now - job.attackedAt >= 10000) {
+      const count = inventoryCount(scene, job.node.item);
+      if (!(job.inventoryBefore !== null && finite(job.inventoryBefore) && count !== null && count > job.inventoryBefore && !job.node.ready)) {
+        release("Bị quái đánh và chưa hái được sau 10 giây; bỏ mục tiêu 60 giây, tìm tài nguyên khác.", 60000, "attack_timeout"); return;
+      }
+    }
     if (["request", "harvesting", "confirming"].includes(job?.phase)) {
       steer(scene, 0, 0);
       if (scene.harvesting && scene.harvestNode === job.index) {
@@ -328,10 +347,14 @@
             && scene.nodes[job.index] === job.node && !job.node.ready) {
           lastResult = { text: `Thành công: nhận thêm ${count - job.inventoryBefore} ${job.node.item}.`, until: now + 5000 };
           release("Đang quan sát cây tiếp theo.", 20000, "harvest_success");
+        } else if (job.attackedAt !== undefined && job.node.ready && now - job.finishedAt >= 1500) {
+          job.phase = "moving"; job.finishedAt = null;
+          message = "Lượt hái bị gián đoạn; tiếp tục thử trong giới hạn 10 giây.";
         } else if (now - job.finishedAt >= 1500) {
           release("Lượt hái đã kết thúc; chưa xác nhận nhận thêm vật phẩm.", 20000, "harvest_unconfirmed");
         } else message = "Lượt hái kết thúc; chờ cập nhật cây và túi đồ.";
       }
+      else if (job.attackedAt !== undefined && job.node.ready && now - job.requestedAt > 4000) { job.phase = "moving"; }
       else if (!job.node.ready || now - job.requestedAt > 4000) release("Chưa xác nhận lượt hái; tạm bỏ qua cây này.", 20000,
         !job.node.ready ? "node_unavailable_before_ack" : "request_timeout");
       return;
@@ -358,7 +381,7 @@
     }
     if (!job) {
       const candidates = scene.nodes.map((node, index) => ({ node, index }))
-        .filter(({ node }) => matches(node) && node.ready && dist(node, binding.home) <= settings.radius
+        .filter(({ node }) => matches(node) && node.ready && inRange(scene, node)
           && (skipped.get(node) ?? 0) <= now)
         .sort((a, b) => dist(a.node, { x: scene.px, y: scene.py }) - dist(b.node, { x: scene.px, y: scene.py }));
       const next = candidates.find(({ node }) => !danger(scene, node));
@@ -378,7 +401,7 @@
       trace("harvest.start", "selected");
     }
     const node = job.node;
-    if (scene.nodes[job.index] !== node || !matches(node) || !node.ready || dist(node, binding.home) > settings.radius) {
+    if (scene.nodes[job.index] !== node || !matches(node) || !node.ready || !inRange(scene, node)) {
       release("Cây đã thay đổi hoặc không còn phù hợp.", 5000, "target_changed");
       return;
     }
@@ -419,9 +442,19 @@
       return;
     }
     if (GSTNavigation.progressed(scene, job, job.path, node.x, node.y, 0.2)) job.progressAt = now;
-    if (now - job.progressAt > 5000 || now - job.startAt > 15000) {
+    if (now - job.progressAt > 5000 || now - job.startAt > (settings.searchScope === "map" || settings.radius > 30 ? 120000 : 15000)) {
       release("Không tới được cây; tạm bỏ qua.", 20000, now - job.progressAt > 5000 ? "stalled" : "approach_timeout");
       return;
+    }
+    if (settings.searchScope === "map" || settings.radius > 30) {
+      job.navigation ??= Object.assign(Object.create(scene.auto), { path: [], pathAt: -Infinity,
+        lastX: pos.x, lastY: pos.y, stillSince: scene.now(), stuckCount: 0, sideUntil: 0 });
+      if (!GSTNavigation.walk(scene, job.navigation, { ...host, steer: (x, y) => steer(scene, x, y) },
+          scene.now(), pos.x, pos.y, node.x, node.y, settings.reach)) {
+        release("Không tìm được đường tới tài nguyên; tạm bỏ qua.", 20000, "no_path"); return;
+      }
+      job.path = job.navigation.path;
+      message = `Đang tới ${node.item} trên map hiện tại.`; return;
     }
     let goal = node;
     if (!host.clear(pos.x, pos.y, node.x, node.y)) {
