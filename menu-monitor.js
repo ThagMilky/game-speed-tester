@@ -7,21 +7,21 @@
   let loaded = false;
   function render() {
     const labels = [];
-    if (document.getElementById("autoFarmValue").dataset.state === "on") labels.push("Auto Farm · game đang bật");
-    if (document.getElementById("questStatus").dataset.running === "true") labels.push("Auto Quest · đang chạy");
+    if (document.getElementById("autoFarmValue").dataset.state === "on") labels.push("Auto Farm");
+    if (document.getElementById("questStatus").dataset.running === "true") labels.push("Auto Quest");
     for (const [key, field, label] of [
-      ["farmPreferences", "enabled", "Mở rộng phạm vi farm"],
-      ["farmPreferences", "breakSeals", "Phá phong ấn"],
-      ["farmPreferences", "avoidEnabled", "Né quái level cao"],
+      ["farmPreferences", "enabled", "Phạm vi farm"],
+      ["farmPreferences", "breakSeals", "Phong ấn"],
+      ["farmPreferences", "avoidEnabled", "Né quái"],
       ["harvestPreferences", "enabled", "Thu hoạch"],
-      ["realmPreferences", "enabled", "Tự vào bí cảnh"],
-      ["chestPreferences", "enabled", "Tự mở rương"],
+      ["realmPreferences", "enabled", "Vào bí cảnh"],
+      ["chestPreferences", "enabled", "Mở rương"],
       ["flightPreferences", "always", "Luôn bay"],
-      ["preferences", "enabled", "Điều chỉnh tốc độ"],
-      ["fpsPreferences", "enabled", "Tối ưu FPS"]
+      ["preferences", "enabled", "Tốc độ"],
+      ["fpsPreferences", "enabled", "FPS"]
     ]) if (values[key]?.[field] === true) labels.push(label);
     if (loaded && values.fontPreferences?.enabled !== false) labels.push("Đổi font");
-    if (values.realmPreferences?.keepFarm !== false && loaded) labels.push("Giữ farm qua đổi map");
+    if (values.realmPreferences?.keepFarm !== false && loaded) labels.push("Giữ farm");
     if (values.displayPreferences?.visible !== false && loaded) labels.push("Bảng trạng thái");
     if (values.realmNotices === true) labels.push("Nhắc bí cảnh");
     const signature = JSON.stringify(labels);
