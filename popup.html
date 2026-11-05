@@ -53,11 +53,12 @@
         </fieldset>
         <fieldset id="farmControls" disabled aria-label="Tùy chọn Auto Farm">
           <p class="save-mode">Công tắc tự lưu · Phạm vi và bộ lọc dùng nút Lưu</p>
-          <label class="switch-row"><span>Mở rộng phạm vi (không bật Auto Farm)</span><input id="farmEnabled" class="switch" type="checkbox"></label>
+          <label class="switch-row"><span>Tìm quái xa hơn khi Auto Farm bật</span><input id="farmEnabled" class="switch" type="checkbox"></label>
+          <p class="save-mode">Cho Auto Farm tìm quái trong bán kính bạn chọn hoặc toàn map. Bật/tắt Auto Farm bằng phím ở trên.</p>
           <p class="hint">Auto Farm tiếp tục đánh khi thiếu HP/hết đan HP, không tự lùi hoặc bế quan vì lý do này. Còn đan vẫn dùng theo cài đặt game. Né quái theo level vẫn theo tùy chọn riêng.</p>
-          <label for="farmSearchScope">Phạm vi tìm quái</label>
-          <select id="farmSearchScope"><option value="radius">Theo bán kính</option><option value="map">Toàn map hiện tại</option></select>
-          <p class="hint">Chọn Theo bán kính để farm quanh tâm, hoặc Toàn map để tìm xa hơn. Bật mở rộng rồi bấm Lưu phạm vi. Tool chỉ tìm được quái trong dữ liệu game; khi chưa thấy quái sẽ dò các điểm có thể đi tới. Vẫn giữ bộ lọc quái đã chọn.</p>
+          <label for="farmSearchScope">Tìm quái trong</label>
+          <select id="farmSearchScope"><option value="radius">Bán kính đã chọn</option><option value="map">Toàn map hiện tại</option></select>
+          <p class="hint">Bật tùy chọn này để tìm xa hơn vùng mặc định 11 ô của game. Chọn Bán kính đã chọn để tìm quanh điểm bắt đầu farm, hoặc Toàn map hiện tại để tìm trên map đang đứng, rồi bấm Lưu phạm vi. Tool vẫn giữ bộ lọc quái và chỉ thấy dữ liệu game cung cấp; khi chưa thấy mục tiêu, chế độ toàn map sẽ dò các điểm có thể đi tới.</p>
           <label class="check-row"><input id="farmShowTargetLine" type="checkbox"><span>Hiện đường tới mục tiêu</span></label>
           <p class="hint">Lưu bằng nút Lưu phạm vi. Xanh lá: quái hoặc tọa độ boss đang tiếp cận. Vàng nét đứt: điểm dò, chưa phải quái. Xanh dương: các điểm rẽ trên đường đi. Đường thẳng tới mục tiêu chỉ để quan sát, không cho đi xuyên vật cản.</p>
           <div class="input-action">
@@ -77,7 +78,7 @@
           </div>
           <button id="saveFarmFilter" type="button" class="full">Lưu lựa chọn quái</button>
           <p class="hint">≤ 10: level 10 trở xuống. ≥ 10: level 10 trở lên. Khoảng 10–20: gồm cả level 10 và 20; thấp nhất không được lớn hơn cao nhất. Chỉ boss không giới hạn level. Bộ lọc dùng được cả với bán kính gốc.</p>
-          <p class="hint">Bật Auto Farm bằng phím đã chọn. Khi mở rộng bật, nhân vật chưa bay sẽ được yêu cầu bật bay.</p>
+          <p class="hint">Bật Auto Farm bằng phím đã chọn ở trên. Khi bật Tìm quái xa hơn, tool cũng yêu cầu bật bay nếu nhân vật đang đi bộ.</p>
           <details class="advanced separated"><summary>Chờ và né quái nâng cao</summary><div class="advanced-body">
             <label for="farmIdleMode">Khi không còn mục tiêu</label>
             <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi đứng chờ tại chỗ</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option></select>
