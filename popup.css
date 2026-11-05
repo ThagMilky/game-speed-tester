@@ -95,3 +95,28 @@ body.embedded { width: 100%; max-height: none; min-width: 0; }
 .compact-help-paragraph { display: block; }
 .compact-help-paragraph + .compact-help-paragraph { margin-top: 8px; }
 .field-help[data-open="true"] .help-tooltip { display: block; }
+
+/* Compact navigation shared by toolbar popup and embedded game menu. */
+body { padding: 12px; }
+header { margin-bottom: 10px; }
+h1 { font-size: 18px; }
+.overview { padding: 9px 11px; margin: 10px 0; }
+.overview dl { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.overview dd { font-size: 14px; }
+.overview-technical { display: none; }
+.menu-tabs { display: flex; gap: 6px; position: sticky; top: 0; z-index: 10; background: var(--bg); padding: 7px 0; }
+.menu-tabs button { flex: 1; }
+.menu-tabs button[aria-pressed="true"] { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+.card > summary { padding: 10px 12px; }
+.card-body { padding: 10px 12px 12px; }
+.subcard { border-bottom: 1px solid var(--border); padding: 9px 0; }
+.subcard > summary { cursor: pointer; }
+.subcard > .card-body { padding: 8px 0; }
+.save-mode { color: var(--muted); font-size: 10px; margin: 0 0 9px; }
+.feature-status, .card-body > p[role="status"] { padding: 8px 10px; margin: 0 0 10px; border-left: 3px solid var(--accent); background: var(--subtle); border-radius: 5px; font-size: 11px; }
+.compact-help-row { align-items: center; }
+.compact-help-button, .field-help { width: 24px; height: 24px; font-size: 12px; border-radius: 50%; }
+.help-tooltip { position: fixed; right: auto; margin: 0; transform: none; z-index: 1000; max-height: min(50vh, 280px); overflow: auto; }
+
+.advanced > summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+.advanced-body { padding-top: 12px; }

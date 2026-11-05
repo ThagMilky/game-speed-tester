@@ -58,6 +58,11 @@ Không cần build, npm, backend hoặc dependency.
 
 ## Bố cục popup
 
+Cập nhật giao diện 2026-11-05: menu chia hai tab **Tự động** (Auto Farm, Thu hoạch, Bí cảnh, Auto Quest) và **Cài đặt** (Tốc độ & bay, Hình ảnh & FPS, Giao diện). Nhóm Giao diện gom bảng trạng thái, font và vị trí nút menu. Mỗi lần mở chọn tab Tự động; thứ tự kéo thả đã lưu tiếp tục áp dụng cho các nhóm còn tồn tại. Các nhóm giao diện cũ được gom vào một nhóm nên không còn thứ tự kéo riêng ở cấp ngoài.
+
+Hướng dẫn nằm trong dấu `?` cạnh tùy chọn; bấm để giữ mở, bấm ngoài hoặc Esc để đóng. Trạng thái hoạt động và lỗi vẫn hiện trực tiếp. Trạng thái Auto Farm/phím tắt đưa lên đầu nhóm; chờ/né quái nằm trong phần nâng cao. Các dòng Tự lưu/Lưu chỉ mô tả cách lưu hiện có, không đổi cơ chế tính năng. Bộ đếm Fix vẫn có trong bảng trạng thái tùy chọn trong game, bỏ khỏi phần tổng quan menu. Thay đổi UI này: tests/browser QA NOT RUN; rendered UI UNVERIFIED; CI NOT CHECKED. Phần mô tả bố cục cũ bên dưới là lịch sử trước lần cập nhật này.
+
+
 Đầu popup có bốn chỉ số: Auto Farm thật của game, trạng thái di chuyển, tốc độ hiện tại và Fix. Bên dưới là sáu nhóm: **Auto Farm**, **Tự hái**, **Tự vào bí cảnh**, **Tốc độ di chuyển**, **Bảng trạng thái**, **Font chữ**. Mỗi lần mở popup, cả sáu nhóm đều thu gọn; bấm tiêu đề để mở. Kéo tay nắm **⠿** ở đầu nhóm lên/xuống và thả khi thấy vạch màu để đổi thứ tự. Ví dụ kéo Tự hái xuống dưới Tốc độ di chuyển để Auto Farm và Tốc độ nằm cạnh nhau. Thứ tự tự lưu riêng ở `popupPanelOrder` trong `chrome.storage.local`, dùng lại khi mở popup; không đổi cài đặt tính năng hoặc tác động game. Có thể dùng bàn phím: đặt focus vào tay nắm rồi bấm Alt + mũi tên lên/xuống.
 
 Các thông báo kỹ thuật nằm trong mục chi tiết; lỗi lưu cài đặt vẫn có thông báo riêng. Checkbox hiển thị/font/bí cảnh và phím tắt vẫn tự lưu; nhập bán kính/tốc độ vẫn dùng nút Lưu hoặc Enter như trước. Popup hỗ trợ giao diện sáng/tối theo hệ thống. Thay đổi bố cục/kéo thả: tests/lint/typecheck/browser **NOT RUN**, hành vi giao diện **UNVERIFIED**, CI **NOT CHECKED**.

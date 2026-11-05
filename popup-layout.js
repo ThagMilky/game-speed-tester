@@ -5,6 +5,13 @@
   const container = document.getElementById("featurePanels");
   const feedback = document.getElementById("layoutFeedback");
   const panels = new Map([...container.children].map((panel) => [panel.dataset.panel, panel]));
+  const tabs = [...document.querySelectorAll("[data-category-tab]")];
+  function selectCategory(category) {
+    for (const panel of panels.values()) panel.hidden = panel.dataset.category !== category;
+    for (const tab of tabs) tab.setAttribute("aria-pressed", String(tab.dataset.categoryTab === category));
+  }
+  for (const tab of tabs) tab.addEventListener("click", () => selectCategory(tab.dataset.categoryTab));
+  selectCategory("auto");
   let dragged = null;
   let dropPanel = null;
   let dropAfter = false;
@@ -44,7 +51,8 @@
       if (!event.altKey || !["ArrowUp", "ArrowDown"].includes(event.key)) return;
       event.preventDefault();
       event.stopPropagation();
-      const sibling = event.key === "ArrowUp" ? panel.previousElementSibling : panel.nextElementSibling;
+      let sibling = event.key === "ArrowUp" ? panel.previousElementSibling : panel.nextElementSibling;
+      while (sibling?.hidden) sibling = event.key === "ArrowUp" ? sibling.previousElementSibling : sibling.nextElementSibling;
       if (!sibling) return;
       container.insertBefore(panel, event.key === "ArrowUp" ? sibling : sibling.nextElementSibling);
       handle.focus();

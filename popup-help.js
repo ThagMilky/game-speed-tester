@@ -11,9 +11,9 @@
     note.tip.style.width = `${width}px`; note.tip.style.left = `${Math.max(12, Math.min(rect.left, innerWidth - width - 12))}px`;
     note.tip.style.top = `${Math.max(8, Math.min(rect.bottom + 6, innerHeight - note.tip.offsetHeight - 8))}px`;
   }
-  for (const hint of document.querySelectorAll('[data-panel="farm"] p.hint, [data-panel="harvest"] p.hint, [data-panel="realm"] p.hint, [data-panel="speed"] p.hint')) {
+  for (const hint of document.querySelectorAll(".card p.hint, footer p.hint")) {
     if (hint.id || hint.hasAttribute("role") || !hint.textContent.trim()) continue;
-    let anchor = hint.previousElementSibling;
+    let anchor = hint.dataset.helpFor ? document.querySelector(hint.dataset.helpFor) : hint.previousElementSibling;
     if (!anchor) continue;
     if (anchor.matches("input, select") && anchor.id) anchor = document.querySelector(`label[for="${anchor.id}"]`) ?? anchor;
     if (anchor.matches("div:not(.compact-help-row)")) anchor = [...anchor.querySelectorAll("label")].at(-1) ?? anchor;
@@ -38,14 +38,18 @@
     const paragraph = document.createElement("span"); paragraph.className = "compact-help-paragraph"; paragraph.textContent = hint.textContent;
     note.tip.append(paragraph); hint.remove();
   }
-  // Existing harvest distance help also supports explicit tap/keyboard opening.
+  // Distance help uses the same viewport positioning as the other help buttons.
   for (const help of document.querySelectorAll(".field-help")) {
+    const tip = help.querySelector(".help-tooltip");
+    const position = () => { if (tip) place({ button: help, tip }); };
+    help.addEventListener("mouseenter", position);
+    help.addEventListener("focus", position);
     help.setAttribute("role", "button"); help.setAttribute("aria-expanded", "false");
     const toggle = (event) => {
       if (event.target.closest(".help-tooltip")) return;
       event.preventDefault(); event.stopPropagation();
       const open = help.dataset.open !== "true"; closeAll();
-      if (open) { help.dataset.open = "true"; help.setAttribute("aria-expanded", "true"); }
+      if (open) { help.dataset.open = "true"; help.setAttribute("aria-expanded", "true"); position(); }
     };
     help.addEventListener("click", toggle);
     help.addEventListener("keydown", (event) => { if (["Enter", " "].includes(event.key)) toggle(event); });
@@ -56,6 +60,8 @@
       closeAll(); event.preventDefault(); event.stopImmediatePropagation();
     }
   }, true);
+  document.addEventListener("toggle", () => closeAll(), true);
+  for (const tab of document.querySelectorAll("[data-category-tab]")) tab.addEventListener("click", () => closeAll());
   window.addEventListener("resize", () => closeAll());
-  document.addEventListener("scroll", (event) => { if (!event.target.closest?.(".compact-tooltip")) closeAll(); }, true);
+  document.addEventListener("scroll", (event) => { if (!event.target.closest?.(".compact-tooltip, .help-tooltip")) closeAll(); }, true);
 })();
