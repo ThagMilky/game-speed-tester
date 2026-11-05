@@ -20,6 +20,7 @@
   const totals = { success: 0, failed: 0, unconfirmed: 0, canceled: 0 };
   let lastOutcome = "";
   const recentAttempts = [];
+  const observations = [];
   const failedCodes = new Set(["attack_timeout", "stalled", "approach_timeout", "no_path", "path_blocked",
     "interaction_target_other", "interaction_cache_timeout", "interact_error"]);
   const unconfirmedCodes = new Set(["harvest_unconfirmed", "request_timeout", "node_unavailable_before_ack", "target_changed"]);
@@ -33,6 +34,37 @@
       && node.x < scene.map?.w && node.y < scene.map?.h;
   }
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  function positionSnapshot(scene, node) {
+    const number = (n) => Number.isFinite(n) ? Math.round(n * 1000) / 1000 : null;
+    return { localX: number(scene.px), localY: number(scene.py),
+      snapshotX: number(scene.self?.x), snapshotY: number(scene.self?.y),
+      snapshotAgeMs: typeof scene.now === "function" && Number.isFinite(scene.selfAt)
+        ? number(Math.max(0, scene.now() - scene.selfAt) * 1000) : null,
+      snapshotDistance: Number.isFinite(scene.self?.x) && Number.isFinite(scene.self?.y)
+        ? number(Math.hypot(scene.self.x - node.x, scene.self.y - node.y)) : null };
+  }
+  function observeReleased(scene) {
+    for (let i = observations.length - 1; i >= 0; i--) {
+      const observation = observations[i], row = observation.row;
+      if (!recentAttempts.includes(row)) { observations.splice(i, 1); continue; }
+      if (job?.requestedAt !== undefined && job.node.item === row.item) {
+        row.followUp = "ambiguous_new_attempt"; observations.splice(i, 1); continue;
+      }
+      const count = inventoryCount(scene, row.item);
+      row.inventoryAfter = count;
+      if (Number.isFinite(row.inventoryBefore) && count !== null && count > row.inventoryBefore
+          && scene.nodes?.[row.node] === observation.node && !observation.node.ready) {
+        totals.canceled--; totals.success++;
+        row.result = "success"; row.code = "harvest_success_after_yield";
+        row.reason = "Đã xác nhận nhận đồ sau khi nhường thao tác tay.";
+        row.followUp = "success";
+        lastOutcome = `Lượt ${row.attempt}: ${row.reason}`;
+        observations.splice(i, 1);
+      } else if (performance.now() >= observation.until) {
+        row.followUp = "unconfirmed_after_8s"; observations.splice(i, 1);
+      }
+    }
+  }
   function targetInfo(target) {
     if (!target) return { type: "none", node: null };
     if (typeof target !== "object") return { type: "other", node: null };
@@ -178,7 +210,16 @@
         closerApproach: job.closerApproach === true,
         requestedReach: job.interactionReach ?? settings.reach,
         confirmationWaitMs: job.finishedAt === undefined || job.finishedAt === null ? null : Math.round(performance.now() - job.finishedAt),
+        requestPosition: job.requestPosition ?? null,
+        endPosition: scene ? positionSnapshot(scene, job.node) : null,
+        gameNotices: [...(job.notices ?? [])],
         serverRejectionObserved: false });
+      const row = recentAttempts[recentAttempts.length - 1];
+      if (["manual_key", "manual_skill", "manual_pointer"].includes(code)
+          && job.acknowledged === true && scene) {
+        row.endedBy = code; row.followUp = "watching_after_yield";
+        observations.push({ row, node: job.node, until: performance.now() + 8000 });
+      }
       if (recentAttempts.length > 10) recentAttempts.shift();
     }
     trace("harvest.release", code);
@@ -200,6 +241,8 @@
     release(undefined, 0, "detach");
     window.removeEventListener("keydown", onKey, true);
     const old = binding;
+    for (const observation of observations) observation.row.followUp = "scene_observation_ended";
+    observations.length = 0;
     binding = null;
     if (!old) return;
     old.scene.events.off("preupdate", onFrame);
@@ -311,6 +354,17 @@
         return originalSkill.apply(this, args);
       });
       if (typeof scene.onEvent === "function") wrapMethod(scene, "onEvent", (original) => function (event, ...rest) {
+        // Only harvest-related native note/toast events; exclude chats and raw transport data.
+        if (["note", "toast"].includes(event?.e) && typeof event.text === "string"
+            && /hái|thu hoạch|quặng|linh thảo|tài nguyên|quá xa|đang giao tranh|đang chiến đấu/i.test(event.text)) {
+          const text = event.text.replace(/https?:\/\/\S+|[\w.+-]+@[\w.-]+|[A-Za-z0-9_\-]{32,}/g, "[REDACTED]").slice(0, 180);
+          const notice = { type: event.e, text };
+          if (job?.requestedAt !== undefined) { job.notices ??= []; job.notices.push(notice); job.notices = job.notices.slice(-3); }
+          for (const observation of observations) {
+            observation.row.gameNotices.push(notice);
+            observation.row.gameNotices = observation.row.gameNotices.slice(-3);
+          }
+        }
         // Observe native damage only; repeated hits never extend this target's deadline.
         if (job && event?.e === "dmg" && event.kind === "p"
             && event.id === scene.you && finite(event.v) && event.v > 0
@@ -477,6 +531,7 @@
       job.phase = "request";
       job.inventoryAtRequest = inventoryCount(scene, node.item);
       job.inventoryBefore ??= job.inventoryAtRequest;
+      job.requestPosition = positionSnapshot(scene, node);
       job.requestedAt = now; job.requests = (job.requests ?? 0) + 1;
       trace("harvest.request", "native_F");
       try {
@@ -535,6 +590,7 @@
           || !GSTFarmUpdate.attached(scene) || !connected(scene) || scene.leaving) {
         detach(); message = "Tạm dừng: scene hoặc kết nối thay đổi."; watch(); return;
       }
+      observeReleased(scene);
       if (scene.self.dead) {
         recovery = { scene, home: { ...binding.home }, aliveAt: null };
         lastResult = null;

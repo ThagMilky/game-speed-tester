@@ -219,6 +219,13 @@
         closerApproach: row?.closerApproach === true,
         requestedReach: Number.isFinite(row?.requestedReach) ? row.requestedReach : null,
         confirmationWaitMs: Number.isFinite(row?.confirmationWaitMs) ? row.confirmationWaitMs : null,
+        requestPosition: cleanPosition(row?.requestPosition), endPosition: cleanPosition(row?.endPosition),
+        gameNotices: (Array.isArray(row?.gameNotices) ? row.gameNotices : []).slice(-3).map((notice) => ({
+          type: notice?.type === "toast" ? "toast" : "note",
+          text: typeof notice?.text === "string" ? notice.text.slice(0, 180) : ""
+        })),
+        endedBy: ["manual_key", "manual_skill", "manual_pointer"].includes(row?.endedBy) ? row.endedBy : null,
+        followUp: ["watching_after_yield", "success", "unconfirmed_after_8s", "scene_observation_ended", "ambiguous_new_attempt"].includes(row?.followUp) ? row.followUp : null,
         serverRejectionObserved: false,
         requested: row?.requested === true, acknowledged: row?.acknowledged === true,
         attacked: row?.attacked === true, ready: row?.ready === true, fixChanged: row?.fixChanged === true,
@@ -229,6 +236,11 @@
         .filter((item) => typeof item?.name === "string" && item.name.length <= 120).slice(0, 200)
         .map((item) => ({ name: item.name, inMap: item.inMap === true, kind: ["plant", "ore", "both"].includes(item.kind) ? item.kind : "unknown" })) });
   });
+  function cleanPosition(value) {
+    if (!value || typeof value !== "object") return null;
+    return Object.fromEntries(["localX", "localY", "snapshotX", "snapshotY", "snapshotAgeMs", "snapshotDistance"]
+      .map((key) => [key, Number.isFinite(value[key]) ? value[key] : null]));
+  }
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
     if (sender.id !== chrome.runtime.id) return;
     if (message?.type === "gst:harvest-debug-set") {
