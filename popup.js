@@ -16,7 +16,6 @@ const fontEnabled = document.getElementById("fontEnabled");
 const fontFamily = document.getElementById("fontFamily");
 const fontFeedback = document.getElementById("fontFeedback");
 const farmControls = document.getElementById("farmControls");
-const farmEnabled = document.getElementById("farmEnabled");
 const breakSeals = document.getElementById("breakSeals");
 const farmSearchScope = document.getElementById("farmSearchScope");
 const farmShowTargetLine = document.getElementById("farmShowTargetLine");
@@ -115,12 +114,12 @@ async function refreshFarm() {
 
 async function saveFarm(event) {
   if (farmSaving) return;
-  const disabling = event?.target === farmEnabled && !farmEnabled.checked ? "enabled"
-    : event?.target === breakSeals && !breakSeals.checked ? "breakSeals"
+  const disabling = event?.target === breakSeals && !breakSeals.checked ? "breakSeals"
     : event?.target === farmAvoidEnabled && !farmAvoidEnabled.checked ? "avoidEnabled" : null;
   let farmPreferences;
   if (!disabling) {
-    if ((!farmEnabled.checked || farmSearchScope.value === "map") && !farmRadius.checkValidity()) farmRadius.value = "22";
+    if (farmSearchScope.value !== "radius" && (!Number.isFinite(farmRadius.valueAsNumber)
+        || farmRadius.valueAsNumber < 11 || farmRadius.valueAsNumber > 100)) farmRadius.value = "22";
     if (!farmRadius.reportValidity()) return;
     const radius = farmRadius.valueAsNumber;
     if (!Number.isFinite(radius) || radius < 11 || radius > 100) return;
@@ -145,7 +144,7 @@ async function saveFarm(event) {
     const avoidLevel = farmAvoidLevel.valueAsNumber, avoidDistance = farmAvoidDistance.valueAsNumber;
     if (farmAvoidEnabled.checked && (!Number.isSafeInteger(avoidLevel) || avoidLevel < 1
         || !Number.isFinite(avoidDistance) || avoidDistance < 1 || avoidDistance > 6)) return;
-    farmPreferences = { enabled: farmEnabled.checked, searchScope: farmSearchScope.value === "map" ? "map" : "radius", radius, autoRespawn: true, breakSeals: breakSeals.checked,
+    farmPreferences = { enabled: farmSearchScope.value !== "native", searchScope: farmSearchScope.value === "map" ? "map" : "radius", radius, autoRespawn: true, breakSeals: breakSeals.checked,
       showTargetLine: farmShowTargetLine.checked,
       idleMode: farmIdleMode.value === "home" ? "home" : "hold", avoidEnabled: farmAvoidEnabled.checked,
       avoidLevel: positiveLevel(avoidLevel, 10),
@@ -190,7 +189,10 @@ for (const input of [farmTargetMinLevel, farmTargetMaxLevel]) {
   input.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
 }
 farmTargetLevel.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
-farmEnabled.addEventListener("change", saveFarm);
+function syncFarmScope() {
+  farmRadius.disabled = farmSearchScope.value !== "radius";
+}
+farmSearchScope.addEventListener("change", syncFarmScope);
 breakSeals.addEventListener("change", saveFarm);
 farmRadius.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
 for (const name of Object.keys(GSTFont.families)) {
@@ -340,8 +342,9 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   fontFamily.value = font.font;
   fontFamily.disabled = !font.enabled;
   fontControls.disabled = false;
-  farmEnabled.checked = farmPreferences?.enabled === true;
-  farmSearchScope.value = farmPreferences?.searchScope === "map" ? "map" : "radius";
+  farmSearchScope.value = farmPreferences?.enabled === true
+    ? (farmPreferences?.searchScope === "map" ? "map" : "radius") : "native";
+  syncFarmScope();
   farmShowTargetLine.checked = farmPreferences?.showTargetLine === true;
   breakSeals.checked = farmPreferences?.breakSeals === true;
   farmIdleMode.value = farmPreferences?.idleMode === "home" ? "home" : "hold";

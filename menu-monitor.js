@@ -7,10 +7,10 @@
   let loaded = false;
   function render() {
     const labels = [];
-    if (document.getElementById("autoFarmValue").dataset.state === "on") labels.push("Auto Farm");
+    if (document.getElementById("autoFarmValue").dataset.state === "on") labels.push("Auto Farm", "Không nghỉ vì hết đan HP");
     if (document.getElementById("questStatus").dataset.running === "true") labels.push("Auto Quest");
+    if (values.farmPreferences?.enabled === true) labels.push(values.farmPreferences.searchScope === "map" ? "Farm toàn map" : "Farm theo bán kính");
     for (const [key, field, label] of [
-      ["farmPreferences", "enabled", "Tìm quái xa"],
       ["farmPreferences", "breakSeals", "Phong ấn"],
       ["farmPreferences", "avoidEnabled", "Né quái"],
       ["harvestPreferences", "enabled", "Thu hoạch"],
