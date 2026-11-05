@@ -17,11 +17,12 @@
   let attempt = 0;
   let lastResult = null;
   // Per-tab page lifetime. Yielding/manual pauses are not failed attempts.
-  const totals = { success: 0, failed: 0, unconfirmed: 0 };
+  const totals = { success: 0, failed: 0, unconfirmed: 0, canceled: 0 };
+  let lastOutcome = "";
   const failedCodes = new Set(["attack_timeout", "stalled", "approach_timeout", "no_path", "path_blocked",
     "interaction_target_other", "interaction_cache_timeout", "interact_error"]);
   const unconfirmedCodes = new Set(["harvest_unconfirmed", "request_timeout", "node_unavailable_before_ack", "target_changed"]);
-  const summary = () => `Thành công ${totals.success} · Thất bại/bỏ qua ${totals.failed} · Chưa xác nhận ${totals.unconfirmed}`;
+  const summary = () => `Thành công ${totals.success} · Thất bại/bỏ qua ${totals.failed} · Chưa xác nhận ${totals.unconfirmed} · Hủy/nhường ${totals.canceled}`;
   GSTHarvest.journey = (scene) => binding?.scene === scene && job ? { x: job.node.x, y: job.node.y, path: job.path } : null;
   const skipped = new Map();
   const finite = Number.isFinite;
@@ -159,6 +160,10 @@
       if (code === "harvest_success") totals.success++;
       else if (failedCodes.has(code)) totals.failed++;
       else if (unconfirmedCodes.has(code)) totals.unconfirmed++;
+      else totals.canceled++;
+      const fallback = code === "detach" ? "Rời scene hoặc bộ điều khiển cần gắn lại."
+        : "Đã nhường điều khiển hoặc đổi chế độ tự động.";
+      lastOutcome = `Lượt ${job.attempt}: ${reason || fallback}`;
     }
     trace("harvest.release", code);
     if (job && binding) {
@@ -251,10 +256,15 @@
       const handler = function () {
         // Native update remains responsible for combat/death/respawn whenever we yield.
         if (binding?.auto === this && job) {
+          let reason = "Interface game thay đổi; tạm nhường điều khiển.";
           try {
-            if (!blocked(scene) && farmAllowed(scene) && !fighting(scene) && !danger(scene, job.node)) return true;
+            reason = blockedReason(scene)
+              || (!farmAllowed(scene) ? "Chưa cho phép thu hoạch cùng Auto Farm." : null)
+              || (fighting(scene) ? "Nhường Auto Farm đánh mục tiêu hiện tại." : null)
+              || (danger(scene, job.node) ? "Có quái gần khi đang bật kiểm tra vùng an toàn." : null);
+            if (!reason) return true;
           } catch { /* Yield to the native update if a runtime interface changes. */ }
-          release("Nhường lại cho game; tạm dừng thu hoạch.", 0, "yield_native");
+          release(reason, 0, "yield_native");
         }
         return false;
       };
@@ -425,14 +435,15 @@
       steer(scene, 0, 0);
       const picked = scene.pickTarget();
       const cached = scene.target;
-      if (picked?.node !== job.index || "gate" in picked || "realm" in picked) {
-        release("Mục tiêu F chưa đúng cây; bỏ qua để tránh cổng/NPC.", 20000, "interaction_target_other");
-        return;
-      }
-      if (cached?.node !== job.index || "gate" in cached || "realm" in cached) {
+      const isNode = (target) => target && typeof target === "object"
+        && target.node === job.index && !("gate" in target) && !("realm" in target);
+      if (!isNode(picked) || !isNode(cached)) {
         job.targetWaitAt ??= now;
-        if (now - job.targetWaitAt > 500) release("Mục tiêu F của game chưa cập nhật đúng cây; tạm bỏ qua.", 20000, "interaction_cache_timeout");
-        else message = "Chờ game cập nhật mục tiêu F đúng cây.";
+        if (now - job.targetWaitAt > 1500) {
+          release(!isNode(picked) ? "Đã tới nơi nhưng mục tiêu F không phải tài nguyên đã chọn; tạm bỏ qua."
+            : "Game chưa cập nhật mục tiêu F đúng tài nguyên sau 1,5 giây; tạm bỏ qua.", 20000,
+            !isNode(picked) ? "interaction_target_other" : "interaction_cache_timeout");
+        } else message = "Đã tới tài nguyên; chờ game xác nhận đúng mục tiêu F (tối đa 1,5 giây).";
         return;
       }
       job.targetWaitAt = null;
@@ -515,6 +526,7 @@
       lastStep = now;
       step(scene, now);
     } catch {
+      release("Lỗi interface khi xử lý mục tiêu; đã dừng lượt để chờ game ổn định.", 0, "interface_error");
       detach(); message = "Lỗi interface thu hoạch; đã dọn điều khiển, chờ game."; watch();
     }
   }
@@ -531,7 +543,7 @@
     const here = new Set((scene?.nodes ?? []).filter((n) => matchesKind(n) && typeof n.item === "string")
       .map((n) => n.item.normalize("NFC")));
     const resultMessage = lastResult && performance.now() < lastResult.until ? `${lastResult.text} ${message}` : message;
-    window.postMessage({ channel: "gst:harvest-status:v1", requestId, message: [summary() + ".", resultMessage, globalThis.GSTBackground?.status()].filter(Boolean).join(" "),
+    window.postMessage({ channel: "gst:harvest-status:v1", requestId, message: [summary() + ".", lastOutcome, resultMessage, globalThis.GSTBackground?.status()].filter(Boolean).join(" "),
       enabled: settings.enabled, configKey: JSON.stringify(settings), totals: { ...totals },
       available: names.size > 0,
       catalog: [...names].slice(0, 200).map((name) => ({ name, inMap: here.has(name), kind: types.get(name) === 2 ? "ore" : types.get(name) === 3 ? "both" : "plant" })) }, origin);
