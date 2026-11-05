@@ -21,17 +21,23 @@
     // Readiness of a newly visible chunk must never reveal native terrain again.
     const backdrop = scene.add.graphics().setDepth(-951);
     backdrop.fillStyle(0x202932, 1).fillRect(0, 0, w * 32, h * 32);
-    state = { scene, map: scene.map, collision, resolution, backdrop, chunks: new Map(), visuals: [], scanAt: -Infinity };
+    state = { scene, map: scene.map, collision, resolution, backdrop, chunks: new Map(), pending: null, visuals: [], scanAt: -Infinity };
     return state;
   }
   function paint(owner, cx, cy) {
-    const canvas = document.createElement("canvas"); canvas.width = canvas.height = 512;
+    if (!owner.pending) {
+      const canvas = document.createElement("canvas"); canvas.width = canvas.height = 512;
+      owner.pending = { id: `${cx}:${cy}`, canvas, row: 0 };
+    }
+    const work = owner.pending, canvas = work.canvas;
     const context = canvas.getContext("2d");
     if (!context) throw new Error("Canvas unavailable");
-    context.fillStyle = "#202932"; context.fillRect(0, 0, 512, 512);
+    if (work.row === 0) { context.fillStyle = "#202932"; context.fillRect(0, 0, 512, 512); }
     context.fillStyle = "#66727e";
     const count = 16 * owner.resolution, unit = 32 / owner.resolution;
-    for (let row = 0; row < count; row++) {
+    const end = Math.min(count, work.row + 16), deadline = performance.now() + 2;
+    for (; work.row < end; work.row++) {
+      const row = work.row;
       let start = -1;
       for (let col = 0; col <= count; col++) {
         const x = cx * 16 + (col + 0.5) / owner.resolution;
@@ -40,7 +46,9 @@
         if (blocked && start < 0) start = col;
         if (!blocked && start >= 0) { context.fillRect(start * unit, row * unit, (col - start) * unit, unit); start = -1; }
       }
+      if (performance.now() >= deadline) { work.row++; break; }
     }
+    if (work.row < count) return null;
     // One grid cell is one world unit. Bake lines into the cached image,
     // leaving the collision subcells intact instead of filling whole cells.
     context.fillStyle = "#34414d";
@@ -57,6 +65,7 @@
     const key = `gst:simple-map:${++serial}`;
     owner.scene.textures.addCanvas(key, canvas);
     const image = owner.scene.add.image(cx * 512, cy * 512, key).setOrigin(0, 0).setDepth(-950).setVisible(false);
+    owner.pending = null;
     return { key, image };
   }
   function update(scene, preferences, mask) {
@@ -81,10 +90,11 @@
         for (const [id, item] of owner.chunks) {
           if (!needed.has(id) && owner.chunks.size >= 64) { item.image.destroy(); scene.textures.remove(item.key); owner.chunks.delete(id); }
         }
-        let budget = 2;
-        for (const id of needed) if (!owner.chunks.has(id) && budget-- > 0) {
-          if (owner.chunks.size >= 64) break;
-          const [x, y] = id.split(":").map(Number); owner.chunks.set(id, paint(owner, x, y));
+        if (owner.pending && !needed.has(owner.pending.id)) owner.pending = null;
+        const id = owner.pending?.id ?? [...needed].find((key) => !owner.chunks.has(key));
+        if (id && owner.chunks.size < 64) {
+          const [x, y] = id.split(":").map(Number), item = paint(owner, x, y);
+          if (item) owner.chunks.set(id, item);
         }
         ready = true;
         for (const [id, item] of owner.chunks) {

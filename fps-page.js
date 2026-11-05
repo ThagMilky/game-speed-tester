@@ -48,9 +48,20 @@
     if (Array.isArray(value)) { for (const item of value) mask(owner, item, depth + 1); return; }
     if (value.scene === owner.scene && Number.isInteger(value.cameraFilter)) {
       const bit = owner.scene.cameras.main.id;
-      if (!Number.isInteger(bit) || owner.masks.has(value) || (value.cameraFilter & bit)) return;
+      if (!Number.isInteger(bit)) return;
+      const tracked = owner.masks.get(value);
+      if (tracked) {
+        tracked.seen = owner.epoch;
+        if (value.cameraFilter !== tracked.applied) {
+          tracked.original = value.cameraFilter & ~bit;
+          tracked.applied = value.cameraFilter | bit;
+          if (value.cameraFilter !== tracked.applied) value.cameraFilter = tracked.applied;
+        }
+        return;
+      }
+      if (value.cameraFilter & bit) return;
       const original = value.cameraFilter, applied = original | bit;
-      owner.masks.set(value, { original, applied });
+      owner.masks.set(value, { original, applied, seen: owner.epoch });
       value.cameraFilter = applied;
       return;
     }
@@ -71,12 +82,12 @@
   function before() {
     if (!binding) return;
     if (sceneNow() !== binding.scene || !binding.scene.sys?.isActive?.()) { detach(); return; }
-    restoreMasks(binding);
   }
   function after() {
     const owner = binding;
     if (!owner || !wanted()) return;
     try {
+      owner.epoch++;
       const scene = owner.scene;
       owner.mapReady = GSTFpsMap.update(scene, settings, (value) => mask(owner, value));
       if (on("hidePlayers") || on("hideMonsters") || on("hideBosses") || on("hideBossEffects") || on("hidePlayerEffects") || on("hideMonsterEffects")) {
@@ -111,6 +122,14 @@
         hideDom(owner, scene.liveSkills?.light);
         hideDom(owner, scene.combatFx?.vignette);
       }
+      // Restore only attachments no longer selected, not every hidden object
+      // on every frame. Discard destroyed objects rather than retaining them.
+      for (const [object, state] of owner.masks) {
+        if (object.scene !== owner.scene || state.seen !== owner.epoch) {
+          if (object.scene && object.cameraFilter === state.applied) object.cameraFilter = state.original;
+          owner.masks.delete(object);
+        }
+      }
     } catch {
       failure = "Một lớp hình ảnh không tương thích; đã ngừng tối ưu. Tắt rồi bật lại để thử.";
       detach();
@@ -135,7 +154,7 @@
     if (!scene?.sys?.isActive?.() || typeof scene.views?.values !== "function"
         || typeof scene.views?.get !== "function" || !scene.events?.on || !scene.events.off
         || !Number.isInteger(scene.cameras?.main?.id)) return;
-    const owner = { scene, masks: new Map(), dom: new Map(), hooks: [], suppressedCast: false };
+    const owner = { scene, masks: new Map(), dom: new Map(), hooks: [], suppressedCast: false, epoch: 0 };
     binding = owner;
     const minimapRange = () => settings.enabled ? settings.minimapRange : 1;
     wrap(owner, scene.minimap, "draw", GSTFpsMinimap.handler(scene, () => on("simpleMinimap"), minimapRange));

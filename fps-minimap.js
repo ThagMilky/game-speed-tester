@@ -12,9 +12,12 @@
         const span = Math.min(32, w, h) * factor, scale = 168 / span;
         const left = Math.max(0, Math.min(worldW - span, x * factor - span / 2));
         const bottom = Math.max(0, Math.min(worldH - span, y * factor - span / 2));
-        const gx = Math.floor(left), gy = Math.ceil(bottom + span), cells = Math.ceil(span) + 2;
-        // Cache just the visible cells, never a bitmap as large as the map.
-        if (!cache || cache.x !== gx || cache.y !== gy || cache.w !== worldW || cache.h !== worldH || cache.cells !== cells
+        const gx = Math.floor(left / 8) * 8, gy = Math.ceil((bottom + span) / 8) * 8, cells = Math.ceil(span) + 16;
+        // Retain a padded viewport while it still covers the visible region.
+        // Camera movement within it needs only a new draw offset, not a repaint.
+        if (!cache || cache.w !== worldW || cache.h !== worldH || cache.cells !== cells
+            || left < cache.x || left + span > cache.x + cache.cells
+            || bottom < cache.y - cache.cells || bottom + span > cache.y
             || cache.collision !== scene.collision) {
           const image = document.createElement("canvas"); image.width = image.height = cells * 8;
           const paint = image.getContext("2d");
@@ -36,8 +39,8 @@
         // Native markers, player indicator, safe zone, PK and controls stay intact.
         context.drawImage = function (source, ...rest) {
           if (source !== base) return draw.call(this, source, ...rest);
-          return draw.call(this, cache.image, (gx - left) * scale, 168 - (gy - bottom) * scale,
-            cells * scale, cells * scale);
+          return draw.call(this, cache.image, (cache.x - left) * scale, 168 - (cache.y - bottom) * scale,
+            cache.cells * scale, cache.cells * scale);
         };
         try { return original.apply(this, args); }
         finally {
