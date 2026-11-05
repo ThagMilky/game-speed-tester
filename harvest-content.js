@@ -15,7 +15,9 @@
   let mainSnapshot = null;
   function moduleState() {
     let isolatedDeclared = null;
+    let storageApi = "unavailable";
     try {
+      storageApi = typeof chrome.storage?.local?.get;
       isolatedDeclared = chrome.runtime.getManifest().content_scripts.some((script) =>
         (!script.world || script.world === "ISOLATED") && script.js?.includes("harvest-options.js"));
     } catch { /* Context-invalid diagnostics should still be readable. */ }
@@ -25,7 +27,7 @@
       optionsBuild: globalThis.__gstHarvestOptionsLoad?.build ?? "missing",
       normalizeAtLoad: globalThis.__gstHarvestOptionsLoad?.normalizeAtLoad ?? "missing",
       isolatedOptionsDeclared: isolatedDeclared,
-      storageApi: typeof chrome.storage?.local?.get, timer: new URL(location.href).searchParams.has("timer"),
+      storageApi, timer: new URL(location.href).searchParams.has("timer"),
       desiredEnabled: preferences?.enabled ?? null
     };
   }

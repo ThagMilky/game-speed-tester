@@ -136,7 +136,7 @@
     blocked,
     configure(scene, value) { enabled = value.enabled === true; detach(); attach(scene); },
     attach,
-    status: (scene) => binding?.scene === scene && scene.auto.on && scene.now() < binding.noteUntil ? binding.note : ""
+    status: (scene) => binding && binding.scene === scene && scene?.auto?.on && scene.now() < binding.noteUntil ? binding.note : ""
   };
   window.addEventListener("pagehide", () => { suspended = true; detach(); });
   window.addEventListener("pageshow", () => { suspended = false; attach(sceneNow()); });

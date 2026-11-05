@@ -1,5 +1,10 @@
 (() => {
   "use strict";
+  const extensionId = chrome.runtime.id;
+  const popupUrl = chrome.runtime.getURL("popup.html?embedded=1");
+  function contextAlive() {
+    try { return chrome.runtime.id === extensionId; } catch { return false; }
+  }
   let root = null, panel = null, frame = null, opened = false, launch = null, editor = null, feedback = null, observer = null;
   let saved = GSTMenuPosition.normalize(null), draft = null, editing = false, dragging = null, saving = false, revision = 0;
   function bounds() {
@@ -42,10 +47,15 @@
     frame?.remove(); frame = null;
   }
   function open() {
+    if (!contextAlive()) {
+      close();
+      if (launch) { launch.textContent = "Tải lại trang để cập nhật tool"; launch.disabled = true; }
+      return;
+    }
     mount(); if (!panel || opened || editing) return;
     opened = true; root.dataset.open = "true"; panel.hidden = false;
     frame = document.createElement("iframe"); frame.title = "Menu Game Speed Tester";
-    frame.src = chrome.runtime.getURL("popup.html?embedded=1");
+    frame.src = popupUrl;
     frame.style.cssText = "border:0;width:100%;flex:1;min-height:0;background:#11191f";
     panel.querySelector("section").append(frame); frame.focus();
   }
@@ -105,7 +115,7 @@
     if (event.key === "Escape") { event.preventDefault(); if (editing) { if (!saving) endEdit(); } else close(); }
   }, true);
   window.addEventListener("message", (event) => {
-    if (frame && event.source === frame.contentWindow && event.origin === `chrome-extension://${chrome.runtime.id}`
+    if (frame && event.source === frame.contentWindow && event.origin === `chrome-extension://${extensionId}`
         && ["gst:menu-close:v1", "gst:menu-edit:v1"].includes(event.data?.channel)) {
       if (event.data.channel === "gst:menu-edit:v1") beginEdit(); else close();
     }

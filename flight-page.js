@@ -7,6 +7,7 @@
   const sceneNow = () => window.game?.scene?.getScene?.("world") ?? window.__ntkScene;
   function reset() { stableAt = null; requestedAt = null; last = -Infinity; }
   function ensure(scene) {
+    if (!scene?.auto) { reset(); message = "Chờ scene world và Auto Farm sẵn sàng để kiểm tra bay."; return false; }
     if (binding?.scene !== scene) discover();
     if (binding?.scene !== scene || suspended) return false;
     if (!(always || farm && scene.auto?.on)) { reset(); message = "Luôn bay đang tắt; Auto Farm giữ hỗ trợ bay riêng khi được bật."; return true; }

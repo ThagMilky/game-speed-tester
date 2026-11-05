@@ -4,6 +4,7 @@
   const bindings = new WeakMap();
   globalThis.GSTFarmUpdate = {
     attached(scene) {
+      if (!scene?.auto) return false;
       const entry = bindings.get(scene.auto);
       return !!entry && scene.auto.update === entry.wrapper;
     },
