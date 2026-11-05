@@ -12,10 +12,8 @@
         kind: ["ore", "both"].includes(value?.kind) ? value.kind : "plant",
         autoRespawn: true,
         allowFarm: value?.allowFarm === true,
-        ignoreMonsters: value?.ignoreMonsters !== false,
         searchScope: value?.searchScope === "map" ? "map" : "radius",
         radius: bounded(value?.radius, 6, 1, 1000),
-        clearRadius: bounded(value?.clearRadius, 4, 2, 15),
         reach: bounded(value?.reach, 1.2, 0.5, 1.5),
         mode: value?.mode === "selected" ? "selected" : "all",
         items: [...new Set((Array.isArray(value?.items) ? value.items : [])

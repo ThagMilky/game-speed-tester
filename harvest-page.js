@@ -114,22 +114,6 @@
   }
   const blocked = (scene, fresh = false) => blockedReason(scene, fresh) !== null;
   GSTHarvest.needsRecovery = needsRecovery;
-  function danger(scene, node) {
-    if (settings.ignoreMonsters) return false;
-    // Read the scene's full monster set, never the level/boss-filtered host.
-    const here = { x: scene.px, y: scene.py };
-    for (const enemy of scene.views.values()) {
-      if (enemy.k !== "m" || enemy.st?.cls === "pet" || enemy.dead) continue;
-      const st = enemy.st;
-      const hostile = !enemy.passive || (st?.hp ?? 0) < (st?.mh ?? 0)
-        || st?.cls === "gu" || st?.cls === "boss" || !!st?.wb;
-      if (!hostile) continue;
-      if (!finite(enemy.x) || !finite(enemy.y)) return true;
-      const radius = settings.clearRadius + (finite(enemy.radius) ? Math.max(0, enemy.radius) : 0);
-      if (dist(enemy, here) <= radius || dist(enemy, node) <= radius) return true;
-    }
-    return false;
-  }
   function fighting(scene) {
     if (!scene.auto.on || !scene.auto.target) return false;
     const target = scene.views.get(scene.auto.target);
@@ -273,8 +257,7 @@
           try {
             reason = blockedReason(scene)
               || (!farmAllowed(scene) ? "Chưa cho phép thu hoạch cùng Auto Farm." : null)
-              || (fighting(scene) ? "Nhường Auto Farm đánh mục tiêu hiện tại." : null)
-              || (danger(scene, job.node) ? "Có quái gần khi đang bật kiểm tra vùng an toàn." : null);
+              || (fighting(scene) ? "Nhường Auto Farm đánh mục tiêu hiện tại." : null);
             if (!reason) return true;
           } catch { /* Yield to the native update if a runtime interface changes. */ }
           release(reason, 0, "yield_native");
@@ -310,7 +293,7 @@
       });
       if (typeof scene.onEvent === "function") wrapMethod(scene, "onEvent", (original) => function (event, ...rest) {
         // Observe native damage only; repeated hits never extend this target's deadline.
-        if (job && settings.ignoreMonsters && event?.e === "dmg" && event.kind === "p"
+        if (job && event?.e === "dmg" && event.kind === "p"
             && event.id === scene.you && finite(event.v) && event.v > 0
             && scene.views.get(event.by)?.k === "m") job.attackedAt ??= performance.now();
         return original.call(this, event, ...rest);
@@ -421,16 +404,15 @@
         .filter(({ node }) => matches(node) && node.ready && inRange(scene, node)
           && (skipped.get(node) ?? 0) <= now)
         .sort((a, b) => dist(a.node, { x: scene.px, y: scene.py }) - dist(b.node, { x: scene.px, y: scene.py }));
-      const next = candidates.find(({ node }) => !danger(scene, node));
+      const next = candidates[0];
       if (!next) {
-        message = candidates.length ? "Chờ sạch quái quanh nhân vật và cây." : "Không có cây phù hợp sẵn sàng trong vùng.";
+        message = "Không có tài nguyên phù hợp sẵn sàng trong vùng.";
         safeSince = null;
         return;
       }
       if (!safeSince || safeSince.node !== next.node) safeSince = { node: next.node, at: now };
       if (now - safeSince.at < 1000) {
-        message = settings.ignoreMonsters ? "Chờ 1 giây trước khi tới cây; đang bỏ qua quái gần."
-          : "Chờ khu vực an toàn ổn định 1 giây.";
+        message = "Chờ 1 giây trước khi tới tài nguyên đã chọn.";
         return;
       }
       job = { ...next, attempt: ++attempt, startFix: scene.self.fix, phase: "moving", path: [], routeAt: -Infinity, startAt: now,
@@ -442,7 +424,6 @@
       release("Cây đã thay đổi hoặc không còn phù hợp.", 5000, "target_changed");
       return;
     }
-    if (danger(scene, node)) { release("Có quái gần; nhường lại cho game.", 0, "danger"); return; }
     const pos = { x: scene.px, y: scene.py };
     if (dist(pos, node) <= settings.reach) {
       steer(scene, 0, 0);
@@ -461,7 +442,7 @@
       }
       job.targetWaitAt = null;
       // Recheck directly before the native F action; never force scene.target.
-      if (blocked(scene, true) || danger(scene, node) || !node.ready) { release("Tạm dừng tương tác.", 0, "pre_interaction_blocked"); return; }
+      if (blocked(scene, true) || !node.ready) { release("Tạm dừng tương tác.", 0, "pre_interaction_blocked"); return; }
       job.phase = "request";
       job.inventoryBefore = inventoryCount(scene, node.item);
       job.requestedAt = now; job.requests = (job.requests ?? 0) + 1;

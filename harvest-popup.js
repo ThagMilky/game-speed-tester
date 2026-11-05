@@ -4,14 +4,13 @@
   const controls = byId("harvestControls");
   const enabled = byId("harvestEnabled");
   const allowFarm = byId("harvestAllowFarm");
-  const ignoreMonsters = byId("harvestIgnoreMonsters");
   const mode = byId("harvestMode");
   const search = byId("harvestSearch");
   const list = byId("harvestItems");
   const feedback = byId("harvestFeedback");
   const status = byId("harvestStatus");
   const scope = byId("harvestSearchScope");
-  const ranges = [["radius", byId("harvestRadius")], ["clearRadius", byId("harvestClearRadius")], ["reach", byId("harvestReach")]];
+  const ranges = [["radius", byId("harvestRadius")], ["reach", byId("harvestReach")]];
   let preferences = GSTHarvest.normalize(null);
   let catalog = [];
   let available = false;
@@ -152,7 +151,6 @@
     } finally {
       enabled.checked = preferences.enabled;
       allowFarm.checked = preferences.allowFarm;
-      ignoreMonsters.checked = preferences.ignoreMonsters;
       mode.value = preferences.mode;
       renderList();
       controls.disabled = false;
@@ -162,7 +160,6 @@
   byId("harvestShowTargetLine").addEventListener("change", (event) => save({ showTargetLine: event.target.checked }));
   enabled.addEventListener("change", () => save({ enabled: enabled.checked }));
   allowFarm.addEventListener("change", () => save({ allowFarm: allowFarm.checked }));
-  ignoreMonsters.addEventListener("change", () => save({ ignoreMonsters: ignoreMonsters.checked }));
   mode.addEventListener("change", () => save({ mode: mode.value }));
   search.addEventListener("input", renderList);
   byId("clearHarvestItems").addEventListener("click", () => save({ items: [] }));
@@ -211,7 +208,6 @@
     preferences = GSTHarvest.normalize(changes.harvestPreferences.newValue);
     enabled.checked = preferences.enabled;
     allowFarm.checked = preferences.allowFarm;
-    ignoreMonsters.checked = preferences.ignoreMonsters;
     mode.value = preferences.mode;
     renderList();
   });
@@ -222,7 +218,6 @@
     preferences = GSTHarvest.normalize(saved.harvestPreferences);
     enabled.checked = preferences.enabled;
     allowFarm.checked = preferences.allowFarm;
-    ignoreMonsters.checked = preferences.ignoreMonsters;
     mode.value = preferences.mode;
     for (const [key, input] of ranges) input.value = preferences[key];
     loaded = true;
