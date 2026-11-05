@@ -143,3 +143,10 @@ input[type="number"], input[type="search"], select { font-size: 18px; min-height
 .overview > .field-title { font-size: 12px; color: var(--muted); margin: 0 0 3px; font-weight: 400; }
 .active-features:empty { display: none; }
 @media (max-width: 480px) { body { padding: 12px; } .two-columns, .choice-grid { grid-template-columns: 1fr; } }
+
+/* Horizontal mode spreads feature groups across the wider in-game panel. */
+@media (min-width: 800px) {
+  body[data-orientation="horizontal"] #featurePanels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+  body[data-orientation="horizontal"] .card { margin-bottom: 0; }
+  body[data-orientation="horizontal"] [data-panel="interface"] { grid-column: 1 / -1; }
+}

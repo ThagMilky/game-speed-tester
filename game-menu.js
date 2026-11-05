@@ -1,5 +1,10 @@
 (() => {
   "use strict";
+  let menuOrientation = "vertical", orientationRevision = 0;
+  const setOrientation = (value) => {
+    menuOrientation = value === "horizontal" ? "horizontal" : "vertical";
+    if (root) root.dataset.orientation = menuOrientation;
+  };
   const extensionId = chrome.runtime.id;
   const popupUrl = chrome.runtime.getURL("popup.html?embedded=1");
   function contextAlive() {
@@ -61,7 +66,7 @@
   }
   function mount() {
     if (root || !document.body) return;
-    root = document.createElement("div"); root.id = "gst-game-menu"; root.dataset.open = "false";
+    root = document.createElement("div"); root.id = "gst-game-menu"; root.dataset.orientation = menuOrientation; root.dataset.open = "false";
     const shadow = root.attachShadow({ mode: "closed" });
     const style = document.createElement("style");
     style.textContent = `:host{all:initial!important;position:fixed!important;inset:0!important;z-index:2147483647!important;pointer-events:none!important}
@@ -73,6 +78,7 @@
       #editor[hidden]{display:none}#editor p{margin:0 0 10px}
       #panel{position:absolute;inset:0;background:#0008;pointer-events:auto;display:flex;align-items:center;justify-content:center}
       #panel[hidden]{display:none}section{display:flex;flex-direction:column;width:min(760px,calc(100vw - 24px));height:min(960px,calc(100vh - 24px));background:#11191f;border:1px solid #69dfb7;border-radius:12px;overflow:hidden}
+      :host([data-orientation="horizontal"]) section{width:min(1120px,calc(100vw - 24px));height:min(720px,calc(100vh - 24px))}
       header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;color:#e6edf3;font:18px sans-serif}`;
     launch = document.createElement("button"); launch.id = "launch"; launch.textContent = "Menu tool"; launch.title = "Mở menu điều khiển extension";
     launch.addEventListener("click", () => { if (!editing) open(); });
@@ -129,6 +135,13 @@
     revision++; saved = GSTMenuPosition.normalize(changes.menuPosition.newValue);
     if (editing) endEdit(); else position();
   });
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes.menuOrientation) { orientationRevision++; setOrientation(changes.menuOrientation.newValue); }
+  });
+  const initialOrientationRevision = orientationRevision;
+  chrome.storage.local.get("menuOrientation").then((value) => {
+    if (orientationRevision === initialOrientationRevision) setOrientation(value.menuOrientation);
+  }).catch(() => {});
   const initialRevision = revision;
   chrome.storage.local.get("menuPosition").then((value) => {
     if (revision !== initialRevision) return;

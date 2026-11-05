@@ -22,6 +22,7 @@
   <script src="popup-help.js" defer></script>
   <script src="menu-popup.js" defer></script>
   <script src="menu-monitor.js" defer></script>
+  <script src="menu-orientation.js" defer></script>
 </head>
 <body>
   <header><p class="eyebrow">NGHICHTHIENKY.ONLINE</p><h1>Game Speed Tester</h1></header>
@@ -252,6 +253,9 @@
     <details class="card" data-panel="interface" data-category="settings">
       <summary><span><strong>Giao diện</strong><small>Bảng trạng thái, font và vị trí menu</small></span></summary>
       <div class="card-body">
+        <label for="menuOrientation">Bố cục menu</label>
+        <select id="menuOrientation" disabled><option value="vertical">Dọc</option><option value="horizontal">Ngang</option></select>
+        <p id="menuOrientationFeedback" class="notice" role="status"></p>
     <details class="subcard" data-panel="display">
       <summary><span><strong>Bảng trạng thái</strong><small>Ẩn/hiện và chọn thông tin cần xem</small></span></summary>
       <div class="card-body">
