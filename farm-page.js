@@ -514,13 +514,13 @@
       shortcutMessage = "";
     }
     if (data.type === "configure" && typeof data.enabled === "boolean"
-        && finite(data.radius) && data.radius >= 11 && data.radius <= 100) {
+        && finite(data.radius) && data.radius >= 11 && data.radius <= 1000) {
       const scopeChanged = settings.searchScope !== (data.searchScope === "map" ? "map" : "radius");
       const filterChanged = settings.searchScope !== data.searchScope || settings.targetMode !== targetMode(data.targetMode)
         || settings.targetLevel !== data.targetLevel
         || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel
         || settings.avoidEnabled !== (data.avoidEnabled === true) || settings.avoidLevel !== data.avoidLevel;
-      settings = { enabled: data.enabled, radius: data.radius, autoRespawn: true,
+      settings = { enabled: data.enabled, radius: data.radius, autoRespawn: true, noRetreat: data.noRetreat !== false,
         showTargetLine: data.showTargetLine === true,
         searchScope: data.searchScope === "map" ? "map" : "radius",
         targetMode: targetMode(data.targetMode),
@@ -530,6 +530,7 @@
         idleMode: data.idleMode === "home" ? "home" : "hold", avoidEnabled: data.avoidEnabled === true,
         avoidLevel: Number.isSafeInteger(data.avoidLevel) && data.avoidLevel > 0 ? data.avoidLevel : 10,
         avoidDistance: finite(data.avoidDistance) ? Math.max(1, Math.min(6, data.avoidDistance)) : 2 };
+      globalThis.GSTFarmCombat?.configure(sceneNow(), settings.noRetreat);
       globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);
       globalThis.GSTFarmMap?.configure(sceneNow(), settings);
       globalThis.GSTFarmVisual?.configure(sceneNow(), settings);

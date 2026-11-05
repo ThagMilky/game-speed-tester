@@ -1,13 +1,15 @@
 (() => {
   "use strict";
-  let binding = null;
+  let binding = null, enabled = true;
   function detach() {
     const old = binding; binding = null;
     if (!old) return;
     old.remove(); old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach);
   }
   globalThis.GSTFarmCombat = {
-    active: (scene) => !!binding && binding.scene === scene && binding.auto === scene.auto && scene.auto.on,
+    keepsFighting: () => enabled,
+    configure(scene, value) { enabled = value !== false; if (!enabled) detach(); else this.attach(scene); },
+    active: (scene) => enabled && !!binding && binding.scene === scene && binding.auto === scene.auto && scene.auto.on,
     host(scene, host) {
       if (!this.active(scene) || typeof host.hp !== "function" || typeof host.pills !== "function"
           || typeof host.inCombat !== "function") return host;
@@ -22,7 +24,7 @@
         inCombat: () => { combat = true; return host.inCombat(); } };
     },
     attach(scene) {
-      if (!scene?.auto) { detach(); return; }
+      if (!enabled || !scene?.auto) { detach(); return; }
       if (binding && binding.scene === scene && binding.auto === scene.auto && GSTFarmUpdate.attached(scene)) return;
       detach();
       if (!scene?.sys?.isActive?.() || typeof scene.auto?.update !== "function" || !scene.events?.on || !scene.events.off) return;

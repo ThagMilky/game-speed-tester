@@ -67,7 +67,8 @@
     } catch { /* The native defaults remain conservative. */ }
     const host = scene.autoHost();
     if (typeof host.hp !== "function" || typeof host.mp !== "function" || typeof host.pills !== "function") return true;
-    return (host.hp?.() < hp && (host.pills("hp") ?? []).some((count) => count > 0)) || (host.mp?.() < mp
+    return (host.hp?.() < hp && (globalThis.GSTFarmCombat?.keepsFighting?.() === false
+      || (host.pills("hp") ?? []).some((count) => count > 0))) || (host.mp?.() < mp
       && (host.pills?.("mp") ?? []).some((count) => count > 0));
   }
   function blockedReason(scene, fresh = false) {

@@ -16,6 +16,7 @@ const fontEnabled = document.getElementById("fontEnabled");
 const fontFamily = document.getElementById("fontFamily");
 const fontFeedback = document.getElementById("fontFeedback");
 const farmControls = document.getElementById("farmControls");
+const farmNoRetreat = document.getElementById("farmNoRetreat");
 const breakSeals = document.getElementById("breakSeals");
 const farmSearchScope = document.getElementById("farmSearchScope");
 const farmShowTargetLine = document.getElementById("farmShowTargetLine");
@@ -47,7 +48,7 @@ let capturingShortcut = false;
 
 async function saveShortcut(code) {
   shortcutControls.disabled = true;
-  const label = code === null ? "Đang dùng phím gốc của game (V)"
+  const label = code === null ? "V (mặc định)"
     : `Phím tùy chỉnh: ${code >= 112 ? `F${code - 111}` : String.fromCharCode(code)}`;
   try {
     await chrome.storage.local.set({ farmShortcut: { code } });
@@ -119,10 +120,10 @@ async function saveFarm(event) {
   let farmPreferences;
   if (!disabling) {
     if (farmSearchScope.value !== "radius" && (!Number.isFinite(farmRadius.valueAsNumber)
-        || farmRadius.valueAsNumber < 11 || farmRadius.valueAsNumber > 100)) farmRadius.value = "22";
+        || farmRadius.valueAsNumber < 11 || farmRadius.valueAsNumber > 1000)) farmRadius.value = "22";
     if (!farmRadius.reportValidity()) return;
     const radius = farmRadius.valueAsNumber;
-    if (!Number.isFinite(radius) || radius < 11 || radius > 100) return;
+    if (!Number.isFinite(radius) || radius < 11 || radius > 1000) return;
     const targetMode = ["maxLevel", "minLevel", "range", "boss"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
     const needsLevel = targetMode === "maxLevel" || targetMode === "minLevel";
     if (needsLevel && !farmTargetLevel.reportValidity()) return;
@@ -144,8 +145,8 @@ async function saveFarm(event) {
     const avoidLevel = farmAvoidLevel.valueAsNumber, avoidDistance = farmAvoidDistance.valueAsNumber;
     if (farmAvoidEnabled.checked && (!Number.isSafeInteger(avoidLevel) || avoidLevel < 1
         || !Number.isFinite(avoidDistance) || avoidDistance < 1 || avoidDistance > 6)) return;
-    farmPreferences = { enabled: farmSearchScope.value !== "native", searchScope: farmSearchScope.value === "map" ? "map" : "radius", radius, autoRespawn: true, breakSeals: breakSeals.checked,
-      showTargetLine: farmShowTargetLine.checked,
+    farmPreferences = { enabled: true, searchScope: farmSearchScope.value === "map" ? "map" : "radius", radius, autoRespawn: true, breakSeals: breakSeals.checked,
+      showTargetLine: farmShowTargetLine.checked, noRetreat: farmNoRetreat.checked,
       idleMode: farmIdleMode.value === "home" ? "home" : "hold", avoidEnabled: farmAvoidEnabled.checked,
       avoidLevel: positiveLevel(avoidLevel, 10),
       avoidDistance: Number.isFinite(avoidDistance) ? Math.max(1, Math.min(6, avoidDistance)) : 2,
@@ -193,6 +194,18 @@ function syncFarmScope() {
   farmRadius.disabled = farmSearchScope.value !== "radius";
 }
 farmSearchScope.addEventListener("change", syncFarmScope);
+// These switches save only their own field, never unfinished range/filter drafts.
+for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmNoRetreat, "noRetreat"]]) {
+  input.addEventListener("change", async () => {
+    const next = input.checked; input.disabled = true;
+    try {
+      const saved = await chrome.storage.local.get("farmPreferences");
+      await chrome.storage.local.set({ farmPreferences: { ...saved.farmPreferences, [key]: next } });
+      farmFeedback.textContent = "";
+    } catch { input.checked = !next; farmFeedback.textContent = "Chưa lưu được lựa chọn. Hãy thử lại."; }
+    finally { input.disabled = false; }
+  });
+}
 breakSeals.addEventListener("change", async () => {
   const next = breakSeals.checked;
   breakSeals.disabled = true;
@@ -351,8 +364,8 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   fontFamily.value = font.font;
   fontFamily.disabled = !font.enabled;
   fontControls.disabled = false;
-  farmSearchScope.value = farmPreferences?.enabled === true
-    ? (farmPreferences?.searchScope === "map" ? "map" : "radius") : "native";
+  farmSearchScope.value = farmPreferences?.enabled === true && farmPreferences?.searchScope === "map" ? "map" : "radius";
+  farmNoRetreat.checked = farmPreferences?.noRetreat !== false;
   syncFarmScope();
   farmShowTargetLine.checked = farmPreferences?.showTargetLine === true;
   breakSeals.checked = farmPreferences?.breakSeals === true;
@@ -370,7 +383,8 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   farmTargetMaxLevel.value = positiveLevel(farmPreferences?.targetMaxLevel, 20);
   syncFarmLevelInputs();
   farmRadius.value = typeof farmPreferences?.radius === "number" && Number.isFinite(farmPreferences.radius)
-    ? Math.max(11, Math.min(100, farmPreferences.radius)) : 22;
+    ? Math.max(11, Math.min(1000, farmPreferences.radius)) : 22;
+  if (farmPreferences?.enabled !== true) farmRadius.value = "11";
   farmControls.disabled = false;
   const shortcutCode = farmShortcut?.code;
   if (Number.isInteger(shortcutCode) && ((shortcutCode >= 48 && shortcutCode <= 57)

@@ -70,6 +70,7 @@
         || scene.auto.moved || scene.now() < scene.auto.pauseUntil) return "Nhường thao tác di chuyển/chiến đấu tay.";
     if (job && finite(scene.castAt) && scene.castAt !== job.castAt) manualUntil = scene.now() + 3;
     if (scene.now() < manualUntil) return "Tạm nhường 3 giây sau thao tác chiến đấu tay.";
+    if (globalThis.GSTFarmCombat?.keepsFighting?.() === false && GSTHarvest.needsRecovery(scene)) return "Nhường hồi phục cho Auto Farm gốc.";
     const host = scene.autoHost();
     if (now - thresholdsAt >= 1000) {
       thresholdsAt = now; hpThreshold = 0.4; mpThreshold = 0.25;

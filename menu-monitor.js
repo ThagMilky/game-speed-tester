@@ -7,9 +7,9 @@
   let loaded = false;
   function render() {
     const labels = [];
-    if (document.getElementById("autoFarmValue").dataset.state === "on") labels.push("Auto Farm", "Không nghỉ vì hết đan HP");
+    if (document.getElementById("autoFarmValue").dataset.state === "on") { labels.push("Auto Farm"); if (values.farmPreferences?.noRetreat !== false) labels.push("Không nghỉ vì hết đan HP"); }
     if (document.getElementById("questStatus").dataset.running === "true") labels.push("Auto Quest");
-    if (values.farmPreferences?.enabled === true) labels.push(values.farmPreferences.searchScope === "map" ? "Farm toàn map" : "Farm theo bán kính");
+    if (values.farmPreferences?.enabled === true) labels.push(values.farmPreferences.searchScope === "map" ? "Farm toàn map" : "Farm tự chọn ô");
     for (const [key, field, label] of [
       ["farmPreferences", "breakSeals", "Phong ấn"],
       ["farmPreferences", "avoidEnabled", "Né quái"],
