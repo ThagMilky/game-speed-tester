@@ -112,6 +112,8 @@
         <fieldset id="harvestControls" disabled aria-label="Tùy chọn Thu hoạch">
           <p class="save-mode">Lựa chọn tự lưu · Đổi khoảng cách rồi bấm Lưu</p>
           <label class="switch-row"><span>Bật Thu hoạch</span><input id="harvestEnabled" class="switch" type="checkbox"></label>
+          <label class="check-row"><input id="harvestShowTargetLine" type="checkbox"><span>Hiện đường tới tài nguyên</span></label>
+          <p class="hint">Tick là hiện, bỏ tick là ẩn; tự lưu. Đường vàng chỉ tài nguyên đang chọn, đường xanh chỉ các điểm rẽ đã có. Đường thẳng chỉ để quan sát, không phải đường đi xuyên vật cản.</p>
           <label for="harvestKind">Loại thu hoạch</label><select id="harvestKind"><option value="plant">Chỉ hái</option><option value="ore">Chỉ đào</option><option value="both">Hái và đào</option></select>
           <p class="hint">Cài đặt cũ giữ Chỉ hái. Danh sách tài nguyên đổi theo loại; các tick đã lưu vẫn được giữ khi chuyển loại.</p>
           <p class="hint">Tự hồi sinh rồi tiếp tục hái: luôn BẬT khi Thu hoạch đang bật.</p>

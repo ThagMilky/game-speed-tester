@@ -8,6 +8,7 @@
     normalize(value) {
       return {
         enabled: value?.enabled === true,
+        showTargetLine: value?.showTargetLine === true,
         kind: ["ore", "both"].includes(value?.kind) ? value.kind : "plant",
         autoRespawn: true,
         allowFarm: value?.allowFarm === true,

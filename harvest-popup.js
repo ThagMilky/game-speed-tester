@@ -74,6 +74,7 @@
   const kind = byId("harvestKind");
   kind.addEventListener("change", () => save({ kind: kind.value }));
   function renderList() {
+    byId("harvestShowTargetLine").checked = preferences.showTargetLine;
     kind.value = preferences.kind;
     scope.value = preferences.searchScope;
     byId("harvestRadius").disabled = preferences.searchScope === "map";
@@ -145,6 +146,7 @@
       saving = false;
     }
   }
+  byId("harvestShowTargetLine").addEventListener("change", (event) => save({ showTargetLine: event.target.checked }));
   enabled.addEventListener("change", () => save({ enabled: enabled.checked }));
   allowFarm.addEventListener("change", () => save({ allowFarm: allowFarm.checked }));
   ignoreMonsters.addEventListener("change", () => save({ ignoreMonsters: ignoreMonsters.checked }));

@@ -16,6 +16,7 @@
   let debugEnabled = false;
   let attempt = 0;
   let lastResult = null;
+  GSTHarvest.journey = (scene) => binding?.scene === scene && job ? { x: job.node.x, y: job.node.y, path: job.path } : null;
   const skipped = new Map();
   const finite = Number.isFinite;
   function inRange(scene, node) {
@@ -163,6 +164,7 @@
     if (reason) message = reason;
   }
   function detach() {
+    globalThis.GSTHarvestVisual?.configure(null, false);
     release(undefined, 0, "detach");
     window.removeEventListener("keydown", onKey, true);
     const old = binding;
@@ -284,6 +286,7 @@
           pauseManual("Tạm dừng 3 giây sau lệnh chuột di chuyển/chiến đấu.", "manual_pointer");
         }
       });
+      globalThis.GSTHarvestVisual?.configure(scene, settings.showTargetLine);
       GSTHarvest.controls = (current) => binding?.scene === current && job !== null;
       scene.events.on("preupdate", onFrame);
       scene.events.on("shutdown", onShutdown);
@@ -525,7 +528,9 @@
   function applyPreferences(value) {
     const next = GSTHarvest.normalize(value);
     const changed = JSON.stringify(next) !== JSON.stringify(settings);
+    const behaviorChanged = JSON.stringify({ ...next, showTargetLine: false }) !== JSON.stringify({ ...settings, showTargetLine: false });
     settings = next;
+    globalThis.GSTHarvestVisual?.configure(binding?.scene, settings.enabled && settings.showTargetLine);
     if (!changed) {
       if (settings.enabled) { watch(); discover(); }
       return;
@@ -543,7 +548,7 @@
     } else {
       // Keep an outstanding F request until its acknowledgement/timeout even
       // when options change, so toggling a checkbox cannot resend it early.
-      if (job?.phase === "moving") release("Đã đổi cài đặt; đang quan sát lại.");
+      if (behaviorChanged && job?.phase === "moving") release("Đã đổi cài đặt; đang quan sát lại.");
       watch(); discover();
     }
     safeSince = null;
