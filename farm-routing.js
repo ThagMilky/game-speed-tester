@@ -36,6 +36,7 @@
   function detach() {
     const old = binding; binding = null;
     if (!old) return;
+    GSTNavigation.cancel(old.scene, old.auto);
     old.remove();
     old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach);
     if (old.auto.walk === old.wrapper) {
@@ -57,7 +58,7 @@
       // Private navigation objects inherit walk(); leave their existing owners in control.
       if (this !== auto || !ready(scene, time) || !auto.target || ![time, x, y, gx, gy, reach].every(Number.isFinite)
           || typeof host.clear !== "function") {
-        if (this === auto) owner.track = null;
+        if (this === auto) { owner.track = null; GSTNavigation.cancel(scene, auto); }
         return original.apply(this, arguments);
       }
       let track = owner.track;
@@ -80,9 +81,13 @@
         if (remaining > 3 && time - track.since < 120) auto.chaseSince = time;
       }
       if (track.fix !== scene.self.fix) {
-        track.remaining = remaining; track.point = null;
+        track.remaining = remaining; track.point = null; track.progressAt = time;
+        track.settleUntil = time + 0.45;
+        auto.path = []; auto.pathAt = -Infinity; auto.sideUntil = 0;
+        owner.note = "Game vừa chỉnh vị trí; đang chờ ổn định rồi tính lại đường."; owner.noteUntil = time + 1;
       }
       track.fix = scene.self.fix;
+      if (time < track.settleUntil) { host.steer(0, 0); return true; }
       if (remaining > reach && time - track.progressAt > 2 && track.retries < 2
           && (!track.replanAt || time - track.replanAt >= 2)) {
         auto.path = []; auto.pathAt = -Infinity;
@@ -97,6 +102,7 @@
       // Skip only a crossed intermediate corner with a collision-clear next segment.
       GSTNavigation.prune(scene, auto, host, true);
       const result = original.apply(this, arguments);
+      if (result) GSTNavigation.schedule(scene, auto, gx, gy, reach);
       GSTNavigation.remember(scene, auto, gx, gy);
       const next = auto.path?.[0];
       if (point(next) && (!track.point || track.point[0] !== next[0] || track.point[1] !== next[1])) {
@@ -106,7 +112,7 @@
     };
     owner.remove = GSTFarmUpdate.add(scene, 1, function (host, time) {
       if (sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== auto) { detach(); return false; }
-      if (!auto.on) { owner.track = null; owner.paused = false; owner.note = ""; return false; }
+      if (!auto.on) { GSTNavigation.cancel(scene, auto); owner.track = null; owner.paused = false; owner.note = ""; return false; }
       if (blocked(scene) && scene.self && !scene.self.dead && !(auto.deadAt > 0)) {
         owner.track = null; host.steer(0, 0);
         owner.paused = true;

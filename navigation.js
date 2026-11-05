@@ -20,11 +20,16 @@
       entry.cleanup = () => detach(scene);
       entry.wrapper = function (delta, ...rest) {
         const intent = entry.intent; entry.intent = null;
+        if (this === scene && intent && scene.self && scene.self.fix !== intent.fix
+            && scene.autoX === intent.x && scene.autoY === intent.y && !GSTFarmInput.movement(scene)) {
+          scene.autoX = scene.autoY = 0;
+          return original.call(this, delta, ...rest);
+        }
         if (this !== scene || !intent || !finite(delta) || delta <= 0 || !scene.self || scene.self.dead
             || scene.leaving || scene.dashT > 0 || GSTFarmInput.movement(scene) || scene.pendingSkill || scene.aiming
             || scene.self.fix !== intent.fix || scene.autoX !== intent.x || scene.autoY !== intent.y
             || Math.hypot(scene.px - intent.point[0], scene.py - intent.point[1]) > 3) return original.call(this, delta, ...rest);
-        // Preserve native movement/collision and ms. Near a private navigation
+        // Preserve native movement/collision and ms. Near a navigation
         // endpoint, split this frame's movement and stop at actual arrival,
         // rather than pretending a crossed, out-of-range point was reached.
         let remaining = delta, result;
@@ -42,7 +47,7 @@
     }
     const point = Array.isArray(nav.path?.[0]) ? nav.path[0] : [gx, gy];
     if (!Array.isArray(point) || point.length !== 2 || !point.every(finite)) return;
-    entry.intent = { x: scene.autoX, y: scene.autoY, fix: scene.self?.fix, point: [...point],
+    entry.intent = { nav, x: scene.autoX, y: scene.autoY, fix: scene.self?.fix, point: [...point],
       reach: Math.hypot(point[0] - gx, point[1] - gy) < 0.01 ? reach : 0.25 };
   }
   function crossed(scene, nav, point, tolerance) {
@@ -61,6 +66,11 @@
     if (crossed(scene, nav, point, 0.35) && host.clear(scene.px, scene.py, next[0], next[1])) nav.path.shift();
   }
   globalThis.GSTNavigation = {
+    schedule,
+    cancel(scene, nav) {
+      const entry = movers.get(scene);
+      if (entry?.intent?.nav === nav) entry.intent = null;
+    },
     progressed(scene, owner, path, gx, gy, threshold = 0.5) {
       const x = scene.px, y = scene.py, fix = scene.self?.fix;
       if (![x, y, gx, gy].every(finite)) return false;

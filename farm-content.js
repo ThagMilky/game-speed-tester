@@ -30,6 +30,7 @@
   function configure(value) {
     settings = {
       enabled: value?.enabled === true,
+      showTargetLine: value?.showTargetLine === true,
       autoRespawn: true,
       searchScope: value?.searchScope === "map" ? "map" : "radius",
       breakSeals: value?.breakSeals === true,

@@ -287,6 +287,7 @@
       globalThis.GSTFarmRevivePolicy?.attach(scene);
       globalThis.GSTFarmBehavior?.attach(scene);
       globalThis.GSTFarmMap?.attach(scene);
+      globalThis.GSTFarmVisual?.attach(scene);
       globalThis.GSTFarmRouting?.attach(scene);
       globalThis.GSTFarmDiagnostics?.attach(scene);
       checkRespawn(scene);
@@ -520,6 +521,7 @@
         || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel
         || settings.avoidEnabled !== (data.avoidEnabled === true) || settings.avoidLevel !== data.avoidLevel;
       settings = { enabled: data.enabled, radius: data.radius, autoRespawn: true,
+        showTargetLine: data.showTargetLine === true,
         searchScope: data.searchScope === "map" ? "map" : "radius",
         targetMode: targetMode(data.targetMode),
         targetLevel: Number.isSafeInteger(data.targetLevel) && data.targetLevel > 0 ? data.targetLevel : 1,
@@ -530,6 +532,7 @@
         avoidDistance: finite(data.avoidDistance) ? Math.max(1, Math.min(6, data.avoidDistance)) : 2 };
       globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);
       globalThis.GSTFarmMap?.configure(sceneNow(), settings);
+      globalThis.GSTFarmVisual?.configure(sceneNow(), settings);
       globalThis.GSTFarmRouting?.configure(sceneNow(), settings);
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());
       globalThis.GSTFarmCombat?.attach(sceneNow());

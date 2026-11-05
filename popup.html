@@ -58,7 +58,9 @@
           <p class="hint">Auto Farm tiếp tục đánh khi thiếu HP/hết đan HP, không tự lùi hoặc bế quan vì lý do này. Còn đan vẫn dùng theo cài đặt game. Né quái theo level vẫn theo tùy chọn riêng.</p>
           <label for="farmSearchScope">Phạm vi tìm quái</label>
           <select id="farmSearchScope"><option value="radius">Theo bán kính</option><option value="map">Toàn map hiện tại</option></select>
-          <p class="hint">Bật Mở rộng vùng tìm quái và bấm Lưu phạm vi. Toàn map giữ bộ lọc hiện tại, tự đi từng chặng tới quái phù hợp đã biết rồi giao Auto Farm gốc đánh khi tới gần. Chỉ boss có thể dùng thêm tọa độ boss bí cảnh. Nếu game chưa gửi tọa độ boss thì chưa thể tự tìm. Không tự đổi sang farm quái thường sau khi boss chết.</p>
+          <p class="hint">Bật Mở rộng vùng tìm quái và bấm Lưu phạm vi. Toàn map tới quái phù hợp đã biết; khi chưa thấy mục tiêu sẽ dò các điểm trên map bằng đường đi gốc, rồi thử lại sau. Điểm không tới được tạm bỏ 60 giây. Chỉ boss vẫn giữ bộ lọc; boss bí cảnh đã chết thì dừng dò. Không bảo đảm tìm mọi quái nếu game thiếu dữ liệu map.</p>
+          <label class="check-row"><input id="farmShowTargetLine" type="checkbox"><span>Hiện đường tới mục tiêu</span></label>
+          <p class="hint">Lưu bằng nút Lưu phạm vi. Xanh lá: quái hoặc tọa độ boss đang tiếp cận. Vàng nét đứt: điểm dò, chưa phải quái. Xanh dương: các điểm rẽ trên đường đi. Đường thẳng tới mục tiêu chỉ để quan sát, không cho đi xuyên vật cản.</p>
           <div class="input-action">
             <div><label for="farmRadius">Bán kính <span class="range">11–100 ô</span></label><input id="farmRadius" type="number" min="11" max="100" step="1" value="22" required></div>
             <button id="saveFarm" type="button" class="primary">Lưu phạm vi</button>
