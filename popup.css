@@ -123,7 +123,8 @@ h1 { font-size: 18px; }
 
 /* Larger, readable controls in both extension popup and in-game menu. */
 :root { font-size: 18px; }
-body { width: min(760px, 100vw); max-height: 600px; padding: 18px; }
+/* Toolbar popup needs an intrinsic width: 100vw depends on its own initial viewport. */
+body { width: 560px; max-height: 600px; padding: 18px; }
 body.embedded { width: 100%; max-height: none; }
 h1 { font-size: 24px; }
 label, .field-title, .check-row, .hint, .notice, .diagnostic,
