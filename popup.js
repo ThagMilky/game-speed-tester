@@ -193,7 +193,16 @@ function syncFarmScope() {
   farmRadius.disabled = farmSearchScope.value !== "radius";
 }
 farmSearchScope.addEventListener("change", syncFarmScope);
-breakSeals.addEventListener("change", saveFarm);
+breakSeals.addEventListener("change", async () => {
+  const next = breakSeals.checked;
+  breakSeals.disabled = true;
+  try {
+    const saved = await chrome.storage.local.get("farmPreferences");
+    await chrome.storage.local.set({ farmPreferences: { ...saved.farmPreferences, breakSeals: next } });
+    farmFeedback.textContent = "";
+  } catch { breakSeals.checked = !next; farmFeedback.textContent = "Chưa lưu được tùy chọn phá phong ấn. Hãy thử lại."; }
+  finally { breakSeals.disabled = false; }
+});
 farmRadius.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
 for (const name of Object.keys(GSTFont.families)) {
   const option = document.createElement("option");
@@ -347,6 +356,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   syncFarmScope();
   farmShowTargetLine.checked = farmPreferences?.showTargetLine === true;
   breakSeals.checked = farmPreferences?.breakSeals === true;
+  breakSeals.disabled = false;
   farmIdleMode.value = farmPreferences?.idleMode === "home" ? "home" : "hold";
   farmAvoidEnabled.checked = farmPreferences?.avoidEnabled === true;
   farmAvoidLevel.value = positiveLevel(farmPreferences?.avoidLevel, 10);
