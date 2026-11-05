@@ -16,6 +16,12 @@
   let debugEnabled = false;
   let attempt = 0;
   let lastResult = null;
+  // Per-tab page lifetime. Yielding/manual pauses are not failed attempts.
+  const totals = { success: 0, failed: 0, unconfirmed: 0 };
+  const failedCodes = new Set(["attack_timeout", "stalled", "approach_timeout", "no_path", "path_blocked",
+    "interaction_target_other", "interaction_cache_timeout", "interact_error"]);
+  const unconfirmedCodes = new Set(["harvest_unconfirmed", "request_timeout", "node_unavailable_before_ack", "target_changed"]);
+  const summary = () => `Thành công ${totals.success} · Thất bại/bỏ qua ${totals.failed} · Chưa xác nhận ${totals.unconfirmed}`;
   GSTHarvest.journey = (scene) => binding?.scene === scene && job ? { x: job.node.x, y: job.node.y, path: job.path } : null;
   const skipped = new Map();
   const finite = Number.isFinite;
@@ -149,6 +155,11 @@
       fixChanged: finite(job.startFix) && finite(scene.self?.fix) ? scene.self.fix !== job.startFix : null }, origin);
   }
   function release(reason, cooldown = 0, code = "yield") {
+    if (job) {
+      if (code === "harvest_success") totals.success++;
+      else if (failedCodes.has(code)) totals.failed++;
+      else if (unconfirmedCodes.has(code)) totals.unconfirmed++;
+    }
     trace("harvest.release", code);
     if (job && binding) {
       const scene = binding.scene;
@@ -520,8 +531,8 @@
     const here = new Set((scene?.nodes ?? []).filter((n) => matchesKind(n) && typeof n.item === "string")
       .map((n) => n.item.normalize("NFC")));
     const resultMessage = lastResult && performance.now() < lastResult.until ? `${lastResult.text} ${message}` : message;
-    window.postMessage({ channel: "gst:harvest-status:v1", requestId, message: [resultMessage, globalThis.GSTBackground?.status()].filter(Boolean).join(" "),
-      enabled: settings.enabled, configKey: JSON.stringify(settings),
+    window.postMessage({ channel: "gst:harvest-status:v1", requestId, message: [summary() + ".", resultMessage, globalThis.GSTBackground?.status()].filter(Boolean).join(" "),
+      enabled: settings.enabled, configKey: JSON.stringify(settings), totals: { ...totals },
       available: names.size > 0,
       catalog: [...names].slice(0, 200).map((name) => ({ name, inMap: here.has(name), kind: types.get(name) === 2 ? "ore" : types.get(name) === 3 ? "both" : "plant" })) }, origin);
   }
