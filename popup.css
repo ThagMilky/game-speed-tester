@@ -2,13 +2,13 @@
   color-scheme: light dark;
   font: 13px/1.5 "Segoe UI", system-ui, sans-serif;
   --bg: #f3f5f7; --surface: #fff; --subtle: #f6f8fa;
-  --text: #182531; --muted: #607080; --border: #dfe5ea;
+  --text: #182531; --muted: #485b6b; --border: #b6c4cf; --switch-off: #778a99;
   --accent: #087b66; --accent-bg: #e5f5ee; --danger: #ae452a;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #11191f; --surface: #1a252e; --subtle: #141f27;
-    --text: #e6edf3; --muted: #a1b2c0; --border: #30414e;
+    --text: #f2f7fb; --muted: #d4e1eb; --border: #6c8191; --switch-off: #718595;
     --accent: #69dfb7; --accent-bg: #183a30; --danger: #ffb19a;
   }
 }
@@ -52,7 +52,7 @@ fieldset:disabled { opacity: .6; }
 label, .field-title { display: block; font-size: 12px; font-weight: 550; margin: 0 0 5px; }
 .switch-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin: 0 0 12px; padding-top: 13px; min-height: 42px; cursor: pointer; }
 input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; flex-shrink: 0; cursor: pointer; }
-input.switch { appearance: none; width: 34px; height: 20px; border: 1px solid var(--border); border-radius: 20px; background: var(--muted); position: relative; }
+input.switch { appearance: none; width: 34px; height: 20px; border: 1px solid var(--border); border-radius: 20px; background: var(--switch-off); position: relative; }
 input.switch::before { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); }
 input.switch:checked { background: var(--accent); border-color: var(--accent); }
 input.switch:checked::before { left: 16px; }
@@ -145,11 +145,13 @@ input[type="number"], input[type="search"], select { font-size: 18px; min-height
 .active-features:empty { display: none; }
 @media (max-width: 480px) { body { padding: 12px; } .two-columns, .choice-grid { grid-template-columns: 1fr; } }
 
-/* Horizontal mode spreads feature groups across the wider in-game panel. */
+/* Expand an open group and arrange its related controls across the game menu. */
 @media (min-width: 800px) {
-  body[data-orientation="horizontal"] #featurePanels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
-  body[data-orientation="horizontal"] .card { margin-bottom: 0; }
-  body[data-orientation="horizontal"] [data-panel="interface"] { grid-column: 1 / -1; }
+  body.embedded[data-orientation="horizontal"] #featurePanels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+  body.embedded[data-orientation="horizontal"] #featurePanels > .card { margin-bottom: 0; min-width: 0; }
+  body.embedded[data-orientation="horizontal"] #featurePanels > .card[open] { grid-column: 1 / -1; }
+  body.embedded[data-orientation="horizontal"] .wide-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; align-items: start; }
+  body.embedded[data-orientation="horizontal"] .wide-group { min-width: 0; }
 }
 
 #harvestHistoryOutput { width: 100%; resize: vertical; padding: 8px; font: 13px/1.5 Consolas, monospace; color: var(--text); background: var(--subtle); border: 1px solid var(--border); border-radius: 7px; }
