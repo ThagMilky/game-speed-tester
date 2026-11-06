@@ -153,3 +153,5 @@ input[type="number"], input[type="search"], select { font-size: 18px; min-height
 }
 
 #harvestHistoryOutput { width: 100%; resize: vertical; padding: 8px; font: 13px/1.5 Consolas, monospace; color: var(--text); background: var(--subtle); border: 1px solid var(--border); border-radius: 7px; }
+
+.history-output { width: 100%; padding: 8px; font: 13px/1.5 Consolas, monospace; background: var(--subtle); color: var(--text); border: 1px solid var(--border); }

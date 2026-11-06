@@ -6,10 +6,12 @@
   const skipped = new Map();
   const sceneNow = () => window.game?.scene?.getScene?.("world") ?? window.__ntkScene;
   const finite = Number.isFinite;
-  function release(text, skip = false) {
+  function release(text, skip = false, outcome = "ended") {
+    if (job) globalThis.GSTRealmHistory?.record("chest", binding?.scene, job, text, outcome);
     if (job && binding) {
       if (skip) skipped.set(job.id, performance.now() + 30000);
       const scene = binding.scene;
+      GSTNavigation.cancel(scene, job.navigation);
       if (scene.auto === binding.auto && job.steer && scene.autoX === job.steer[0] && scene.autoY === job.steer[1]) scene.autoX = scene.autoY = 0;
       if (scene.auto === binding.auto && scene.auto?.on && scene.auto.target === job.target) { scene.auto.chaseSince = scene.now(); scene.auto.think = 0; }
     }
@@ -81,7 +83,7 @@
       if (job && !chests.some((chest) => chest.id === job.id)) {
         const stillExists = list.some((chest) => chest.id === job.id);
         release(stillExists ? "Rương còn nhưng quyền sở hữu/loại/tọa độ không còn phù hợp; đã bỏ mục tiêu."
-          : "Rương không còn trong danh sách game; xem túi bí cảnh để xác nhận chiến lợi phẩm."); return false;
+          : "Rương không còn trong danh sách game; chưa xác nhận nhận đồ.", false, stillExists ? "ended" : "disappeared"); return false;
       }
       if (!job) {
         if (performance.now() - binding.scanAt < 1000) return false; binding.scanAt = performance.now();
@@ -96,7 +98,7 @@
         }
         const navigation = Object.assign(Object.create(scene.auto), { path: [], pathAt: -Infinity,
           lastX: scene.px, lastY: scene.py, stillSince: time, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0 });
-        job = { id: next.id, navigation, target: scene.auto.target, castAt: scene.castAt,
+        job = { id: next.id, point: { x: next.x, y: next.y }, logStartedAt: performance.now(), phase: "moving", navigation, target: scene.auto.target, castAt: scene.castAt,
           progressAt: time,
           startedAt: time, replans: 0, replanAt: -Infinity,
           requestedAt: null, steer: null };
@@ -126,8 +128,12 @@
         return true;
       }
       walking.steer(0, 0);
-      const picked = scene.pickTarget()?.realm, cached = scene.target?.realm;
+      const fresh = scene.pickTarget();
+      job.freshTarget = globalThis.GSTRealmHistory?.target(fresh);
+      const picked = fresh?.realm, cached = scene.target?.realm;
+      job.targetMatched = picked?.action === "realm-chest" && picked.arg === job.id && cached?.action === "realm-chest" && cached.arg === job.id;
       if (picked?.action !== "realm-chest" || picked.arg !== job.id || cached?.action !== "realm-chest" || cached.arg !== job.id) {
+        job.phase = "waiting_target";
         const action = picked?.action ?? "chưa có";
         message = picked?.action === "realm-chest" && picked.arg === job.id
           ? "Đã nhận đúng rương; chờ game cập nhật mục tiêu F đã lưu."
@@ -135,7 +141,7 @@
         return true;
       }
       if (blocked(scene)) { release(); return false; }
-      job.requestedAt = time; scene.interact(); message = "Đã yêu cầu mở đúng rương; chờ game xác nhận."; return true;
+      job.phase = "request"; job.requestedAt = time; scene.interact(); message = "Đã yêu cầu mở đúng rương; chờ game xác nhận."; return true;
     } catch { release("Interface rương chưa phù hợp; nhường lại game.", true); return false; }
   }
   function detach() {
@@ -177,9 +183,11 @@
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:chest:v1") return;
     const data = event.data;
     if (data.type === "configure") {
-      release(); const value = data.preferences;
-      settings = { enabled: value?.enabled === true, allowFarm: value?.allowFarm === true,
+      const value = data.preferences;
+      const next = { enabled: value?.enabled === true, allowFarm: value?.allowFarm === true,
         kind: ["common", "hidden", "treasure"].includes(value?.kind) ? value.kind : "all" };
+      if (JSON.stringify(next) !== JSON.stringify(settings)) release("Đã đổi cài đặt rương.");
+      settings = next;
       if (!settings.enabled) { detach(); clearInterval(timer); timer = null; message = "Auto nhặt rương đang tắt."; }
       else { message = "Auto nhặt rương đã bật; chờ vào bí cảnh và có rương phù hợp/an toàn."; watch(); discover(); }
     }
@@ -189,6 +197,13 @@
         : "Đã bật nhưng chưa gắn được bộ điều khiển rương; kiểm tra timer và tải lại game.";
     } catch { current = "Chưa đọc được điều kiện mở rương của game; tải lại trang để kết nối lại."; }
     window.postMessage({ channel: "gst:chest-status:v1", requestId: data.requestId, message: [current, globalThis.GSTBackground?.status()].filter(Boolean).join(" "), enabled: settings.enabled }, origin);
+  });
+  globalThis.GSTRealmHistory?.register("chest", () => {
+    const scene = binding?.scene;
+    return { enabled: settings.enabled, attached: !!binding, phase: job?.phase || "idle",
+      message, count: Array.isArray(scene?.self?.realm?.inside?.chests) ? scene?.self?.realm?.inside?.chests.length : 0,
+      autoOn: scene?.auto?.on === true, allowFarm: settings.allowFarm,
+      protection: Number.isFinite(scene?.self?.realm?.inside?.protection) ? scene.self.realm.inside.protection : null };
   });
   window.addEventListener("pagehide", () => { suspended = true; detach(); clearInterval(timer); timer = null; });
   window.addEventListener("pageshow", () => { suspended = false; watch(); discover(); });

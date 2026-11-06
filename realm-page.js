@@ -16,9 +16,11 @@
     return !!d && !d.closing && !d.reconnecting && !d.displaced
       && (d.online === false || d.link?.open?.() === true);
   }
-  function release(reason, skip = false) {
+  function release(reason, skip = false, outcome = "ended") {
+    if (job) globalThis.GSTRealmHistory?.record("portal", binding?.scene, job, reason, outcome);
     if (job && binding) {
       const scene = binding.scene;
+      GSTNavigation.cancel(scene, job.navigation);
       if (skip) skipped.set(job.id, performance.now() + 30000);
       if (job.steer && scene.autoX === job.steer[0] && scene.autoY === job.steer[1]) scene.autoX = scene.autoY = 0;
       if (scene.auto.on && scene.auto.target === job.nativeTarget) {
@@ -96,7 +98,7 @@
       if (scene.self?.dead) return false;
       const now = performance.now(), realm = scene.self?.realm;
       if (realm?.inside) {
-        release("Đã ở trong bí cảnh; giữ nguyên bộ lọc farm của bạn.");
+        release("Đã quan sát nhân vật ở trong bí cảnh; không khẳng định cổng nào nếu thiếu định danh.", false, job?.phase === "request" ? "entered" : "ended");
         if (!scene.self.dead && realm.inside.protection > 0 && scene.auto.on) {
           scene.autoX = scene.autoY = 0;
           message = "Đã vào bí cảnh; chờ hết bảo vệ ban đầu rồi tiếp tục farm.";
@@ -142,7 +144,7 @@
         if (!next) { message = "Không có cổng hợp lệ trong map hiện tại; tiếp tục tìm toàn map."; return false; }
         const navigation = Object.assign(Object.create(scene.auto), { path: [], lastX: pos.x, lastY: pos.y,
           stillSince: time, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0, pathAt: -Infinity });
-        job = { id: next.id, x: next.x, y: next.y, phase: scene.self.combat ? "finishingCombat" : "moving", navigation,
+        job = { id: next.id, point: { x: next.x, y: next.y }, logStartedAt: now, x: next.x, y: next.y, phase: scene.self.combat ? "finishingCombat" : "moving", navigation,
           nativeTarget: scene.auto.target, castAt: scene.castAt, startAt: now, progressAt: now, steer: null };
       }
       const portal = candidates.find((candidate) => candidate.id === job.id);
@@ -172,7 +174,10 @@
       }
       steeringHost.steer(0, 0);
       const validTarget = (target) => target?.realm?.action === "realm-enter" && target.realm.arg === portal.id;
-      if (!validTarget(scene.pickTarget()) || !validTarget(scene.target)) {
+      const fresh = scene.pickTarget();
+      job.freshTarget = globalThis.GSTRealmHistory?.target(fresh);
+      job.targetMatched = validTarget(fresh) && validTarget(scene.target);
+      if (!validTarget(fresh) || !validTarget(scene.target)) {
         job.targetAt ??= now;
         if (now - job.targetAt > 1000) release("Game chưa chọn đúng cổng bí cảnh; tạm bỏ qua.", true);
         return job !== null;
@@ -190,7 +195,7 @@
     } catch { release("Interface bí cảnh chưa tương thích; đã nhường điều khiển.", true); return false; }
   }
   function detach() {
-    release();
+    release("Rời scene hoặc dừng bộ điều khiển; yêu cầu trước đó chưa được xác nhận ở scene mới.");
     if (!binding) return;
     const old = binding; binding = null;
     old.remove(); old.scene.events.off("preupdate", guard);
@@ -227,6 +232,13 @@
       window.postMessage({ channel: "gst:realm-status:v1", requestId: event.data.requestId, enabled: preferences.enabled,
         configKey: JSON.stringify(preferences), message }, origin);
     }
+  });
+  globalThis.GSTRealmHistory?.register("portal", () => {
+    const scene = binding?.scene;
+    return { enabled: preferences.enabled, attached: !!binding, phase: job?.phase || "idle",
+      message, count: Array.isArray(scene?.self?.realm?.events) ? scene?.self?.realm?.events.length : 0,
+      autoOn: scene?.auto?.on === true, allowFarm: preferences.allowFarm,
+      protection: Number.isFinite(scene?.self?.realm?.inside?.protection) ? scene.self.realm.inside.protection : null };
   });
   window.addEventListener("pagehide", () => { suspended = true; detach(); clearInterval(watcher); watcher = null; });
   window.addEventListener("pageshow", () => { suspended = false; watch(); discover(); });

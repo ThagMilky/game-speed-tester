@@ -11,6 +11,7 @@
   <script src="harvest-options.js" defer></script>
   <script src="harvest-popup.js" defer></script>
   <script src="realm-popup.js" defer></script>
+  <script src="realm-history-popup.js" defer></script>
   <script src="farm-diagnostics-popup.js" defer></script>
   <script src="fps-options.js" defer></script>
   <script src="fps-popup.js" defer></script>
@@ -185,6 +186,18 @@
         <p class="field-title">Thời gian &amp; thông báo</p>
         <label class="check-row"><input id="realmNotices" type="checkbox" disabled><span>Nhắc trước đợt 5 phút, có cổng mở, còn 2 phút để rút</span></label>
         <p class="hint">Thông báo trong trang, một lần mỗi mốc/đợt theo tab. Cổng thông báo chưa lọc theo bậc cấp; kiểm tra điều kiện vào trong game. Mất dữ liệu thì không đoán lịch.</p>
+        <details class="diagnostic"><summary>10 lượt rương gần nhất</summary>
+          <p class="save-mode">Log các hành trình đã kết thúc trong tab; reload đặt lại. Rương biến mất chưa chứng minh nhận đồ.</p>
+          <button id="copychestHistory" type="button" class="full">Sao chép log rương</button>
+          <textarea id="historychestOutput" class="history-output" hidden readonly rows="6" aria-label="Log rương"></textarea>
+          <p id="historychestFeedback" class="notice" role="status"></p>
+        </details>
+        <details class="diagnostic"><summary>10 lượt cổng bí cảnh gần nhất</summary>
+          <p class="save-mode">Log các hành trình đã kết thúc trong tab; reload đặt lại. Rương biến mất chưa chứng minh nhận đồ.</p>
+          <button id="copyportalHistory" type="button" class="full">Sao chép log cổng bí cảnh</button>
+          <textarea id="historyportalOutput" class="history-output" hidden readonly rows="6" aria-label="Log cổng bí cảnh"></textarea>
+          <p id="historyportalFeedback" class="notice" role="status"></p>
+        </details>
         <p id="realmFeedback" class="notice" role="alert"></p>
       </div>
     </details>
