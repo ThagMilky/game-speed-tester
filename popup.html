@@ -67,7 +67,7 @@
           <p class="save-mode">Số ô tính từ điểm bắt đầu farm. Ví dụ 30: tìm quái cách điểm đó tối đa 30 ô.</p>
           <p class="hint">Tự hồi sinh: luôn BẬT khi đang Auto Farm; tiếp tục farm sau mỗi lần hồi sinh, không giới hạn số lần chết. Vẫn chờ nút game sẵn sàng. Bạn chủ động tắt farm thì giữ TẮT.</p>
           <div class="two-columns separated">
-            <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="maxLevel">Level ≤ mức chọn</option><option value="minLevel">Level ≥ mức chọn</option><option value="range">Trong khoảng level</option><option value="boss">Chỉ boss</option></select></div>
+            <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="bossFirst">Ưu tiên boss, rồi quái thường</option><option value="maxLevel">Level ≤ mức chọn</option><option value="minLevel">Level ≥ mức chọn</option><option value="range">Trong khoảng level</option><option value="boss">Chỉ boss</option></select></div>
             <div id="farmSingleLevel"><label for="farmTargetLevel">Level quái</label><input id="farmTargetLevel" type="number" min="1" step="1" value="1" required disabled></div>
           </div>
           <div id="farmLevelRange" class="two-columns separated" hidden>
@@ -75,7 +75,7 @@
             <div><label for="farmTargetMaxLevel">Cao nhất</label><input id="farmTargetMaxLevel" type="number" min="1" step="1" value="20" required disabled></div>
           </div>
           <button id="saveFarmFilter" type="button" class="full">Lưu lựa chọn quái</button>
-          <p class="hint">≤ 10: level 10 trở xuống. ≥ 10: level 10 trở lên. Khoảng 10–20: gồm cả level 10 và 20; thấp nhất không được lớn hơn cao nhất. Chỉ boss không giới hạn level. Bộ lọc dùng được cả với bán kính gốc.</p>
+          <p class="hint">Ưu tiên boss: chọn boss phù hợp trong vùng farm trước; không có boss hoặc đường bị chặn thì đánh quái thường. Chỉ nhận biết boss game đã cung cấp dữ liệu và vẫn áp dụng ngưỡng né. ≤ 10: level 10 trở xuống. ≥ 10: level 10 trở lên. Khoảng 10–20: gồm cả level 10 và 20; thấp nhất không được lớn hơn cao nhất. Chỉ boss và Ưu tiên boss không giới hạn level. Bộ lọc dùng được cả với bán kính gốc.</p>
           <p class="hint">Chế độ Tự chọn số ô và Toàn map cũng yêu cầu bật bay nếu nhân vật đang đi bộ.</p>
           <div class="separated">
             <label class="switch-row"><span>Không rút lui hồi máu khi hết đan HP</span><input id="farmNoRetreat" class="switch" type="checkbox" checked></label>

@@ -39,7 +39,11 @@
     const nearbyAggro = host.inCombat?.() ? eligible.filter((enemy) => enemy.aggro
       && Math.hypot(enemy.x - scene.px, enemy.y - scene.py) < 3.2)
       .sort((a, b) => Math.hypot(a.x - scene.px, a.y - scene.py) - Math.hypot(b.x - scene.px, b.y - scene.py))[0] : null;
-    const target = current ?? pursuing ?? nearbyAggro ?? eligible.sort((a, b) => Math.hypot(a.x - scene.px, a.y - scene.py)
+    const isBoss = (enemy) => enemy && (enemy.cls === "boss" || enemy.wb === true);
+    const boss = preferences.targetMode === "bossFirst"
+      ? (isBoss(current) ? current : isBoss(pursuing) ? pursuing : eligible.filter(isBoss)
+        .sort((a, b) => Math.hypot(a.x - scene.px, a.y - scene.py) - Math.hypot(b.x - scene.px, b.y - scene.py))[0]) : null;
+    const target = boss ?? current ?? pursuing ?? nearbyAggro ?? eligible.sort((a, b) => Math.hypot(a.x - scene.px, a.y - scene.py)
       - Math.hypot(b.x - scene.px, b.y - scene.py))[0];
     if (target) return { ...target, actor: true };
     if (monsters.length) { message = "Các mục tiêu phù hợp đang được tạm bỏ do cooldown/đường bị chặn; chờ trước khi thử lại."; return null; }

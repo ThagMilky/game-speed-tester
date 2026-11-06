@@ -124,7 +124,7 @@ async function saveFarm(event) {
     if (!farmRadius.reportValidity()) return;
     const radius = farmRadius.valueAsNumber;
     if (!Number.isFinite(radius) || radius < 11 || radius > 1000) return;
-    const targetMode = ["maxLevel", "minLevel", "range", "boss"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
+    const targetMode = ["maxLevel", "minLevel", "range", "boss", "bossFirst"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
     const needsLevel = targetMode === "maxLevel" || targetMode === "minLevel";
     if (needsLevel && !farmTargetLevel.reportValidity()) return;
     const targetLevel = farmTargetLevel.valueAsNumber;
@@ -376,7 +376,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   farmAvoidDistance.value = Number.isFinite(farmPreferences?.avoidDistance)
     ? Math.max(1, Math.min(6, farmPreferences.avoidDistance)) : 2;
   farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
-    : ["maxLevel", "minLevel", "range", "boss"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
+    : ["maxLevel", "minLevel", "range", "boss", "bossFirst"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
   farmTargetLevel.value = Number.isSafeInteger(farmPreferences?.targetLevel) && farmPreferences.targetLevel > 0
     ? farmPreferences.targetLevel : 1;
   farmTargetMinLevel.value = positiveLevel(farmPreferences?.targetMinLevel, 1);

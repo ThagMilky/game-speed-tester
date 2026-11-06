@@ -23,8 +23,9 @@
   // Both features share the same once-per-death request state.
   GSTHarvest.respawn = (scene) => checkRespawn(scene, true);
   const targetMode = (value) => value === "level" ? "maxLevel"
-    : ["maxLevel", "minLevel", "range", "boss"].includes(value) ? value : "all";
+    : ["maxLevel", "minLevel", "range", "boss", "bossFirst"].includes(value) ? value : "all";
   function filterLabel() {
+    if (settings.targetMode === "bossFirst") return "Ưu tiên boss, rồi quái thường";
     if (settings.targetMode === "boss") return "Chỉ farm boss";
     if (settings.targetMode === "maxLevel") return `Chỉ farm level ≤ ${settings.targetLevel}`;
     if (settings.targetMode === "minLevel") return `Chỉ farm level ≥ ${settings.targetLevel}`;
@@ -35,7 +36,7 @@
   function matchesTarget(enemy) {
     if (settings.avoidEnabled && (!finite(enemy?.lv) || enemy.lv >= settings.avoidLevel)) return false;
     if (settings.targetMode === "boss") return enemy?.cls === "boss" || enemy?.wb === true;
-    if (settings.targetMode === "all") return true;
+    if (settings.targetMode === "all" || settings.targetMode === "bossFirst") return true;
     if (!finite(enemy?.lv)) return false;
     if (settings.targetMode === "range") return enemy.lv >= settings.targetMinLevel && enemy.lv <= settings.targetMaxLevel;
     return settings.targetMode === "maxLevel" ? enemy.lv <= settings.targetLevel : enemy.lv >= settings.targetLevel;
@@ -185,8 +186,21 @@
         const enemies = typeof host?.enemies === "function" ? host.enemies() : [];
         if (this.auto?.resting) return Array.isArray(enemies) ? enemies : [];
         // Use only the native host's level/boss metadata, never names or HP guesses.
-        return Array.isArray(enemies) ? enemies.filter((enemy) => matchesTarget(enemy)
+        const filtered = Array.isArray(enemies) ? enemies.filter((enemy) => matchesTarget(enemy)
           && (globalThis.GSTFarmBehavior?.allowsTarget(this, enemy) ?? true)) : [];
+        if (settings.targetMode !== "bossFirst" || typeof this.auto.pick !== "function"
+            || GSTFarmInput.movement(this) || this.now() < this.auto.pauseUntil
+            || this.pendingSkill || this.aiming) return filtered;
+        const time = this.now(), pos = { x: this.px, y: this.py };
+        // Only prioritize bosses that the native controller can select here.
+        // Its picker retains reachability checks and native skip/backoff behavior.
+        const bosses = filtered.filter((enemy) => (enemy.cls === "boss" || enemy.wb === true)
+          && !enemy.dead && enemy.hostile && !(this.auto.skipped.get(enemy.id) > time)
+          && distance(enemy, { x: this.auto.ax, y: this.auto.ay }) < baseRadius
+          && (settings.searchScope === "map" || !session || session.scene !== this
+            || distance(enemy, session.home) < settings.radius));
+        const aggro = host.inCombat() ? bosses.filter((enemy) => enemy.aggro && distance(enemy, pos) < 3.2) : [];
+        return bosses.length && this.auto.pick(host, time, bosses, aggro, pos.x, pos.y) ? bosses : filtered;
       } };
     };
     scene.autoHost = wrapper;
@@ -440,6 +454,15 @@
         // Probing a full long route with pick() here would repeatedly mark them skipped.
         && !(settings.searchScope === "map" && distance(enemy, pos) > 6));
       const target = candidates.find((enemy) => enemy.id === s.auto.target);
+      if (settings.targetMode === "bossFirst" && settings.searchScope !== "map") {
+        const bosses = candidates.filter((enemy) => enemy.cls === "boss" || enemy.wb === true);
+        const boss = bosses.length ? s.auto.pick(host, time, bosses, [], pos.x, pos.y) : null;
+        if (boss) {
+          shiftToward(s, boss);
+          message = "Ưu tiên boss phù hợp trong vùng farm; dùng đường đi và chiến đấu gốc.";
+          return;
+        }
+      }
       if (target) {
         if (distance(target, s.center) >= baseRadius - 0.5) shiftToward(s, target);
         message = "Keeping the built-in target.";
