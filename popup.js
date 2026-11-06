@@ -93,7 +93,17 @@ window.addEventListener("keydown", (event) => {
   saveShortcut(code);
 }, true);
 let farmBusy = false;
-let farmSaving = false;
+let farmSaveQueue = Promise.resolve();
+function updateFarmPreferences(patch) {
+  const save = farmSaveQueue.catch(() => {}).then(() => navigator.locks.request("gst:farm-preferences", async () => {
+    const saved = await chrome.storage.local.get("farmPreferences");
+    const farmPreferences = { ...saved.farmPreferences, ...patch };
+    await chrome.storage.local.set({ farmPreferences });
+    return farmPreferences;
+  }));
+  farmSaveQueue = save;
+  return save;
+}
 
 async function refreshFarm() {
   if (farmBusy) return;
@@ -113,17 +123,16 @@ async function refreshFarm() {
   } finally { farmBusy = false; }
 }
 
-async function saveFarm(event) {
-  if (farmSaving) return;
-  const disabling = event?.target === breakSeals && !breakSeals.checked ? "breakSeals"
-    : event?.target === farmAvoidEnabled && !farmAvoidEnabled.checked ? "avoidEnabled" : null;
-  let farmPreferences;
-  if (!disabling) {
+async function saveFarm(section) {
+  let patch;
+  if (section === "scope") {
     if (farmSearchScope.value !== "radius" && (!Number.isFinite(farmRadius.valueAsNumber)
         || farmRadius.valueAsNumber < 11 || farmRadius.valueAsNumber > 1000)) farmRadius.value = "22";
     if (!farmRadius.reportValidity()) return;
     const radius = farmRadius.valueAsNumber;
     if (!Number.isFinite(radius) || radius < 11 || radius > 1000) return;
+    patch = { enabled: true, searchScope: farmSearchScope.value === "map" ? "map" : "radius", radius };
+  } else if (section === "filter") {
     const targetMode = ["maxLevel", "minLevel", "range", "boss", "bossFirst"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
     const needsLevel = targetMode === "maxLevel" || targetMode === "minLevel";
     if (needsLevel && !farmTargetLevel.reportValidity()) return;
@@ -141,82 +150,54 @@ async function saveFarm(event) {
         return;
       }
     }
+    patch = { targetMode, targetLevel: positiveLevel(targetLevel, 1),
+      targetMinLevel: positiveLevel(targetMinLevel, 1), targetMaxLevel: positiveLevel(targetMaxLevel, 20) };
+  } else {
     if (farmAvoidEnabled.checked && (!farmAvoidLevel.reportValidity() || !farmAvoidDistance.reportValidity())) return;
     const avoidLevel = farmAvoidLevel.valueAsNumber, avoidDistance = farmAvoidDistance.valueAsNumber;
     if (farmAvoidEnabled.checked && (!Number.isSafeInteger(avoidLevel) || avoidLevel < 1
         || !Number.isFinite(avoidDistance) || avoidDistance < 1 || avoidDistance > 6)) return;
-    farmPreferences = { enabled: true, searchScope: farmSearchScope.value === "map" ? "map" : "radius", radius, autoRespawn: true, breakSeals: breakSeals.checked,
-      showTargetLine: farmShowTargetLine.checked, noRetreat: farmNoRetreat.checked,
-      idleMode: farmIdleMode.value === "home" ? "home" : "hold", avoidEnabled: farmAvoidEnabled.checked,
+    patch = { idleMode: farmIdleMode.value === "home" ? "home" : "hold",
       avoidLevel: positiveLevel(avoidLevel, 10),
-      avoidDistance: Number.isFinite(avoidDistance) ? Math.max(1, Math.min(6, avoidDistance)) : 2,
-      targetMode, targetLevel: positiveLevel(targetLevel, 1),
-      targetMinLevel: positiveLevel(targetMinLevel, 1), targetMaxLevel: positiveLevel(targetMaxLevel, 20) };
+      avoidDistance: Number.isFinite(avoidDistance) ? Math.max(1, Math.min(6, avoidDistance)) : 2 };
   }
-  farmSaving = true;
   farmControls.disabled = true;
   try {
-    if (disabling) {
-      // An OFF action must not depend on unfinished radius/level drafts.
-      const saved = await chrome.storage.local.get("farmPreferences");
-      farmPreferences = { ...saved.farmPreferences, [disabling]: false };
-    }
-    await chrome.storage.local.set({ farmPreferences });
+    await updateFarmPreferences(patch);
     farmFeedback.textContent = "";
-    try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.id) throw new Error("No active tab.");
-      const result = await chrome.tabs.sendMessage(tab.id, { type: "gst:farm-configure", preferences: farmPreferences });
-      if (!result?.accepted) throw new Error("Not accepted.");
-    } catch {
-      farmFeedback.textContent = "Đã lưu. Hãy tải lại tab game nếu chưa áp dụng được.";
-    }
     await refreshFarm();
   } catch {
-    if (disabling) event.target.checked = true;
     farmFeedback.textContent = "Chưa lưu được tùy chọn Auto Farm. Hãy mở lại popup.";
   } finally {
-    farmSaving = false;
     farmControls.disabled = false;
   }
 }
-document.getElementById("saveFarm").addEventListener("click", saveFarm);
-document.getElementById("saveFarmFilter").addEventListener("click", saveFarm);
-document.getElementById("saveFarmBehavior").addEventListener("click", saveFarm);
-farmAvoidEnabled.addEventListener("change", saveFarm);
+document.getElementById("saveFarm").addEventListener("click", () => saveFarm("scope"));
+document.getElementById("saveFarmFilter").addEventListener("click", () => saveFarm("filter"));
+document.getElementById("saveFarmBehavior").addEventListener("click", () => saveFarm("behavior"));
 farmTargetMode.addEventListener("change", syncFarmLevelInputs);
 for (const input of [farmTargetMinLevel, farmTargetMaxLevel]) {
   input.addEventListener("input", () => farmTargetMaxLevel.setCustomValidity(""));
-  input.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
+  input.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm("filter"); });
 }
-farmTargetLevel.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
+farmTargetLevel.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm("filter"); });
 function syncFarmScope() {
   farmRadius.disabled = farmSearchScope.value !== "radius";
 }
 farmSearchScope.addEventListener("change", syncFarmScope);
 // These switches save only their own field, never unfinished range/filter drafts.
-for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmNoRetreat, "noRetreat"]]) {
+for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmNoRetreat, "noRetreat"],
+  [breakSeals, "breakSeals"], [farmAvoidEnabled, "avoidEnabled"]]) {
   input.addEventListener("change", async () => {
     const next = input.checked; input.disabled = true;
     try {
-      const saved = await chrome.storage.local.get("farmPreferences");
-      await chrome.storage.local.set({ farmPreferences: { ...saved.farmPreferences, [key]: next } });
+      await updateFarmPreferences({ [key]: next });
       farmFeedback.textContent = "";
     } catch { input.checked = !next; farmFeedback.textContent = "Chưa lưu được lựa chọn. Hãy thử lại."; }
     finally { input.disabled = false; }
   });
 }
-breakSeals.addEventListener("change", async () => {
-  const next = breakSeals.checked;
-  breakSeals.disabled = true;
-  try {
-    const saved = await chrome.storage.local.get("farmPreferences");
-    await chrome.storage.local.set({ farmPreferences: { ...saved.farmPreferences, breakSeals: next } });
-    farmFeedback.textContent = "";
-  } catch { breakSeals.checked = !next; farmFeedback.textContent = "Chưa lưu được tùy chọn phá phong ấn. Hãy thử lại."; }
-  finally { breakSeals.disabled = false; }
-});
-farmRadius.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm(); });
+farmRadius.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm("scope"); });
 for (const name of Object.keys(GSTFont.families)) {
   const option = document.createElement("option");
   option.value = name;
