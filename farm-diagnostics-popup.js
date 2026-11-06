@@ -12,7 +12,7 @@
       output.value = JSON.stringify(data, null, 2); output.hidden = false;
       try {
         await navigator.clipboard.writeText(output.value);
-        feedback.textContent = "Đã sao chép. Dán vào chat để kiểm tra chạy nền, màn hình đen và hồi sinh.";
+        feedback.textContent = "Đã sao chép. Dán vào chat để kiểm tra khựng di chuyển, chạy nền và hồi sinh.";
       } catch {
         output.focus(); output.select(); feedback.textContent = "Đã chọn chẩn đoán; bấm Ctrl+C rồi dán vào chat.";
       }

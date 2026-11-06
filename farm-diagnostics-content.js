@@ -32,6 +32,11 @@
     const data = event.data.diagnostics;
     entry.respond({ build: data?.build === "farm-stop-1" ? data.build : "unknown", tracking: data?.tracking === true,
       background: { build: "background-log-1", current: cleanBackground(data?.background?.current), events: (Array.isArray(data?.background?.events) ? data.background.events : []).slice(-50).map(cleanBackground).filter(Boolean) },
+      movement: { build: data?.movement?.build === "movement-log-1" ? "movement-log-1" : "unavailable",
+        tracking: data?.movement?.tracking === true,
+        scope: "Last 120 observations in this page; reset on reload",
+        current: GSTMovementLogSchema.clean(data?.movement?.current),
+        events: (Array.isArray(data?.movement?.events) ? data.movement.events : []).slice(-120).map(GSTMovementLogSchema.clean).filter(Boolean) },
       current: flags(data?.current), lastStop: clean(data?.lastStop),
       events: (Array.isArray(data?.events) ? data.events : []).slice(-20).map(clean).filter(Boolean) });
   });

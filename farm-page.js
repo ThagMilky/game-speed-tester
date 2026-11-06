@@ -536,6 +536,7 @@
       globalThis.GSTFarmMap?.configure(sceneNow(), settings);
       globalThis.GSTFarmVisual?.configure(sceneNow(), settings);
       globalThis.GSTFarmRouting?.configure(sceneNow(), settings);
+      globalThis.GSTMovementDiagnostics?.configure(settings);
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());
       globalThis.GSTFarmCombat?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
