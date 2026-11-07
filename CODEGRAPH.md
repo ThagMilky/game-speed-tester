@@ -22,7 +22,7 @@
 | Rương, quest | `chest-content.js`, `chest-page.js`, `chest-popup.js`, `quest-content.js`, `quest-page.js`, `quest-popup.js` |
 | FPS / minimap | `fps-content.js`, `fps-page.js`, `fps-popup.js`, `fps-options.js`, `fps-map.js`, `fps-minimap.js`, `fps-minimap-zoom.js`, `fps-minimap-colors.js` |
 | Nền, font, chẩn đoán | `background-page.js`, `background-content.js`, `background-diagnostics.js`, `font.js`, `font-options.js`, `farm-diagnostics.js`, `farm-diagnostics-content.js`, `farm-diagnostics-popup.js`, `movement-diagnostics.js`, `movement-log-schema.js` |
-| Docs / source snapshot | `AGENTS.md`, `README.md`, `GAME_ASSET_WIKI_v0.7.md`, `game-reference/README.md`, `QA-report.md`, `QA-2026-11-05.md` |
+| Docs / source snapshot | `AGENTS.md`, `README.md`, `GAME_ASSET_WIKI_v0.7.md`, `game-reference/README.md` |
 
 Trong MAIN, `harvest-main-options.js` tạo `GSTHarvest`; `farm-update.js`, `navigation.js` và `farm-input.js` được nạp trước các consumer. Trong ISOLATED, `harvest-options.js` đứng trước `harvest-content.js`. Các `*-popup.js` được nạp theo thẻ `<script>` trong `popup.html`, không theo danh sách content script trong manifest.
 

@@ -6,7 +6,7 @@ Sau khi chuyển từ đường dẫn `outputs\game-speed-tester` cũ, nạp l�
 
 Chrome Extension Manifest V3 phục vụ kiểm thử anti-cheat có sự cho phép, chỉ trên `https://nghichthienky.online/*`. Mặc định **tắt**; tốc độ **đi bộ 3.5**, **bay 2**; mỗi giá trị điều chỉnh trong **1.0–6.0**.
 
-Cập nhật 2026-11-04: bộ lọc ≤ / ≥ / boss và áp dụng tốc độ trước bước di chuyển đã triển khai. Tests/lint/typecheck/browser/gameplay cho các thay đổi này: **NOT RUN**; behavior: **UNVERIFIED**; CI: **NOT CHECKED**. Kết quả 29/29 bên dưới là QA lịch sử trước các thay đổi này, xem [QA-report.md](QA-report.md).
+Cập nhật 2026-11-04: bộ lọc ≤ / ≥ / boss và áp dụng tốc độ trước bước di chuyển đã triển khai. Tests/lint/typecheck/browser/gameplay cho các thay đổi này: **NOT RUN**; behavior: **UNVERIFIED**; CI: **NOT CHECKED**. Kết quả 29/29 bên dưới là QA lịch sử trước các thay đổi này, xem [QA-report.md (lịch sử)](https://github.com/ThagMilky/game-speed-tester/blob/036ddbafd3891320039317f7f18dda38db208867/QA-report.md).
 
 ## Cấu trúc
 
@@ -324,7 +324,7 @@ Mỗi lần chuyển bản đồ làm tải trang mới, content script đọc l
 
 ## Trạng thái xác minh lúc bàn giao
 
-Đã rà source/diff, kiểm tra cú pháp 7 file JavaScript trong lượt QA và kiểm tra lại file page.js sau FIX. Harness cục bộ: **29/29 PASS**. Lint/typecheck/browser QA/E2E: **NOT RUN**. Hành vi trên game/server thật: **UNVERIFIED**. CI: **NOT CHECKED**. Xem [QA-report.md](QA-report.md) để biết các fixture/giới hạn và kết quả trước/sau sửa. Lượt đóng gói không chạy lại gameplay hoặc bộ test.
+Đã rà source/diff, kiểm tra cú pháp 7 file JavaScript trong lượt QA và kiểm tra lại file page.js sau FIX. Harness cục bộ: **29/29 PASS**. Lint/typecheck/browser QA/E2E: **NOT RUN**. Hành vi trên game/server thật: **UNVERIFIED**. CI: **NOT CHECKED**. Xem [QA-report.md (lịch sử)](https://github.com/ThagMilky/game-speed-tester/blob/036ddbafd3891320039317f7f18dda38db208867/QA-report.md) để biết các fixture/giới hạn và kết quả trước/sau sửa. Lượt đóng gói không chạy lại gameplay hoặc bộ test.
 
 Nếu tự kiểm tra sau khi có quyền: xác nhận tắt mặc định; thử URL có nhiều tham số và fragment; bật và quan sát tải lại thêm `timer`; đổi tốc độ; chuyển bay/đi bộ và bản đồ; tắt rồi kiểm tra extension không tiếp tục ghi tốc độ. Không dùng kết quả đọc source làm bằng chứng chạy thực tế.
 
