@@ -48,7 +48,8 @@ const farmAvoidLevel = document.getElementById("farmAvoidLevel");
 const farmAvoidDistance = document.getElementById("farmAvoidDistance");
 const positiveLevel = (value, fallback) => Number.isSafeInteger(value) && value > 0 ? value : fallback;
 function syncFarmLevelInputs() {
-  document.getElementById("farmBossSafetyOptions").hidden = farmTargetMode.value !== "boss";
+  document.getElementById("farmBossSafetyOptions").hidden =
+    !["boss", "bossLevel"].includes(farmTargetMode.value);
   const range = farmTargetMode.value === "range";
   document.getElementById("farmSingleLevel").hidden = range;
   document.getElementById("farmLevelRange").hidden = !range;

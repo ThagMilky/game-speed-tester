@@ -53,7 +53,8 @@
     return result;
   }
   function cleanBossSafety(data) {
-    const allowed = ["pill", "retreat", "resume", "hazard", "kite", "no_route", "unsupported", "dash", "dash_result", "flight_drop"];
+    const allowed = ["pill", "retreat", "resume", "hazard", "kite", "no_route", "unsupported",
+      "dash", "dash_result", "flight_drop", "cooldown_wait", "boss_cast"];
     const number = (value) => Number.isFinite(value) ? Math.round(Math.max(0, Math.min(86400, value)) * 1000) / 1000 : null;
     const point = (value) => Array.isArray(value) && value.length === 2 && value.every(Number.isFinite)
       ? value.map((n) => Math.round(Math.max(-1e6, Math.min(1e6, n)) * 100) / 100) : null;
