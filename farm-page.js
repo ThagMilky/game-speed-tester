@@ -435,6 +435,11 @@
       const aligned = globalThis.GSTFarmMap?.consumeCenter?.(s.scene);
       if (aligned && s.auto.ax === aligned.x && s.auto.ay === aligned.y)
         s.center = { ...aligned };
+      if (globalThis.GSTFarmSeals?.pending?.(s.scene)) {
+        message = globalThis.GSTFarmSeals.status(s.scene)
+          || "Còn phong ấn bí cảnh; chờ phá xong trước khi tìm boss.";
+        return;
+      }
       if (globalThis.GSTFarmBehavior?.pendingLoot(s.scene)) {
         message = "Đang ưu tiên nhặt đồ tại bãi vừa đánh trước khi chọn bãi tiếp theo.";
         return;

@@ -6,7 +6,7 @@
   const incidentReasons = ["short_frame_gap", "movement_stall", "owner_change", "routing_correction",
     "routing_replan", "routing_stuck", "map_correction", "map_replan", "map_stuck",
     "portal_combat_yield", "chest_combat_yield", "chest_target_yield", "frame_gap", "correction", "target_switch",
-    "map_handoff", "map_resume", "loot_begin", "loot_done", "loot_skip"];
+    "map_handoff", "map_resume", "loot_begin", "loot_done", "loot_skip", "realm_phase"];
   let binding = null, preferences = {};
   try {
     const previous = JSON.parse(sessionStorage.getItem(uiLogKey) ?? "[]");
@@ -186,6 +186,8 @@
         if (!binding || binding.scene !== scene || !incidentReasons.includes(reason)) return;
         const row = snapshot(scene, reason, binding.before);
         row.lootCount = Number.isSafeInteger(extra.lootCount) && extra.lootCount >= 0 ? extra.lootCount : null;
+        row.realmPhase = ["seals", "boss", "chests", "exit", "unknown"].includes(extra.realmPhase)
+          ? extra.realmPhase : null;
         row.pauseMs = GSTMovementLogSchema.number(extra.pauseMs);
         row.retryMs = GSTMovementLogSchema.number(extra.retryMs);
         row.targetId = Number.isSafeInteger(extra.targetId) && extra.targetId >= 0 ? extra.targetId : null;

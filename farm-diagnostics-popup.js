@@ -64,7 +64,7 @@
     ["switchSource", "source"], ["switchReason", "switchReason"],
     ["lootCount", "lootCount"], ["targetId", "targetId"], ["remaining", "remaining"], ["stuckMs", "stuckMs"], ["attempt", "attempt"],
     ["fromOwner", "fromOwner"], ["toOwner", "toOwner"], ["handoffReason", "handoffReason"],
-    ["replanReason", "replanReason"], ["action", "action"], ["fromOwners", "fromOwners"],
+    ["replanReason", "replanReason"], ["action", "action"], ["realmPhase", "realmPhase"], ["fromOwners", "fromOwners"],
     ["toOwners", "toOwners"], ["ownerScope", "ownerScope"]];
   const bgFlags = ["hidden", "focused", "auto", "dead", "connected", "reconnecting",
     "displaced", "active", "paused", "loopRunning", "wasDiscarded"];

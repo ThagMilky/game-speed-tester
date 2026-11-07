@@ -89,7 +89,7 @@
       job.navigation.path = [];
       job.navigation.pathAt = -Infinity;
       job.navigation.sideUntil = 0;
-      job.checkpoint = null;
+      GSTNavigation.resetLeg(job, true);
       GSTNavigation.cancel(scene, job.navigation);
       host.steer(0, 0);
       routeLog(scene, "map_replan", { targetId: job.id, remaining,
@@ -111,43 +111,24 @@
   }
   const isBoss = (enemy) => enemy?.cls === "boss" || enemy?.wb === true;
   const range = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-  // Prefer a stable, reachable short leg when the native route grid cannot
-  // route directly to a distant camp. Keep it until arrival; do not select
-  // an entirely new hop every animation frame.
+  // Use the same bounded leg selector as seals/chests/realm portals,
+  // with farm-area limits and existing boss avoidance preserved.
   function checkpoint(scene, host, owner, area) {
-    const pos = { x: scene.px, y: scene.py }, goal = { x: owner.x, y: owner.y };
-    if (owner.checkpoint && range(owner.checkpoint, pos) > 1.2) return owner.checkpoint;
-    if (owner.checkpoint) {
-      owner.visited.push(owner.checkpoint);
-      if (owner.visited.length > 6) owner.visited.shift();
-      owner.checkpoint = null;
-      owner.progressAt = scene.now();
-    }
-    const remaining = range(pos, goal), time = scene.now();
-    if (remaining <= 2.2 || time < owner.directUntil) return goal;
-    if (time < owner.checkpointRetryAt) return null;
-    // Pathfinding is expensive: never probe the full remote route each frame.
-    if (host.clear(pos.x, pos.y, goal.x, goal.y)
-        || host.route(pos.x, pos.y, goal.x, goal.y)?.length) {
-      owner.directUntil = time + 2;
-      return goal;
-    }
-    const angle = Math.atan2(goal.y - pos.y, goal.x - pos.x);
-    const radius = Math.min(12, Math.max(3.5, remaining - 3));
-    let best = null, bestScore = Infinity;
-    for (const offset of [0, 0.35, -0.35, 0.7, -0.7, 1.1, -1.1, 1.5, -1.5, 2, -2]) {
-      const candidate = { x: pos.x + Math.cos(angle + offset) * radius,
-        y: pos.y + Math.sin(angle + offset) * radius };
-      if (!withinArea(area, candidate)
-          || owner.visited.some((point) => range(point, candidate) < 3)) continue;
-      if (!host.clear(pos.x, pos.y, candidate.x, candidate.y)
-          && !host.route(pos.x, pos.y, candidate.x, candidate.y)?.length) continue;
-      const score = range(candidate, goal) + Math.abs(offset) * 2;
-      if (score < bestScore) { best = candidate; bestScore = score; }
-    }
-    if (best) owner.checkpoint = best;
-    else owner.checkpointRetryAt = time + 1;
-    return best;
+    const bosses = bossObstacles(scene);
+    const safe = {
+      clear: (x, y, gx, gy) => host.clear(x, y, gx, gy)
+        && (!bosses.length || clearOfBoss({ x, y }, { x: gx, y: gy }, bosses)),
+      route: (x, y, gx, gy) => {
+        const result = bosses.length
+          ? safeBossRoute(scene, host, { x, y }, { x: gx, y: gy }, bosses)
+          : host.route(x, y, gx, gy);
+        if (!Array.isArray(result)) return null;
+        return result.every((point) => Array.isArray(point) && point.length >= 2
+          && withinArea(area, { x: point[0], y: point[1] })) ? result : null;
+      }
+    };
+    return GSTNavigation.leg(scene, owner, safe, owner.x, owner.y,
+      (point) => withinArea(area, point));
   }
   const segmentDistance = (point, start, end) => {
     const dx = end.x - start.x, dy = end.y - start.y;
@@ -227,6 +208,7 @@
     const driver = scene.driver;
     return (!globalThis.GSTQuest?.active(scene) || (!GSTQuest.controls(scene) && preferences.targetMode === "all")) && scene.auto.on && scene.self && !scene.self.dead && !scene.leaving && driver
       && !driver.closing && !driver.reconnecting && !driver.displaced && (driver.online === false || driver.link?.open?.() === true)
+      && !globalThis.GSTFarmSeals?.pending?.(scene)
       && !globalThis.GSTFarmSeals?.controls(scene) && !globalThis.GSTChest?.controls(scene)
       && !globalThis.GSTRealm?.controls(scene) && !globalThis.GSTHarvest?.controls(scene)
       && !GSTFarmRouting.blocked(scene) && !scene.keyCapture && !scene.overlay?.dialogOpen && !scene.harvesting
@@ -365,7 +347,8 @@
           scene.autoX = scene.autoY = 0;
         // Keep the destination, but discard the route calculated from the old position.
         job.navigation.path = []; job.navigation.pathAt = -Infinity;
-        job.navigation.sideUntil = 0; job.progressAt = time; job.checkpoint = null;
+        job.navigation.sideUntil = 0; job.progressAt = time;
+        GSTNavigation.resetLeg(job);
         job.replans = 0; job.lastReplanAt = -Infinity; job.retryUntil = 0; job.steer = null;
         correctionUntil = time + 0.12;
         routeLog(scene, "map_correction", { pauseMs: 120, targetId: job.id, action: "retry" });
@@ -439,7 +422,8 @@
         }
       } else if (Math.hypot(job.x - target.x, job.y - target.y) > 3 && time - job.retargetAt >= 3) {
         // Keep the existing route when a moving monster shifts only a little.
-        job.x = target.x; job.y = target.y; job.retargetAt = time; job.checkpoint = null;
+        job.x = target.x; job.y = target.y; job.retargetAt = time;
+        GSTNavigation.resetLeg(job);
         job.navigation.path = []; job.navigation.pathAt = -Infinity;
       }
       // Reaching a detour checkpoint is progress even if that leg initially
@@ -476,8 +460,13 @@
         }
       }
       owner.denied = false;
-      const next = target.actor && (owner.checkpoint || distance > 2.2)
+      const nearBossMetadata = !target.actor && !target.scout && distance <= 6;
+      const next = !nearBossMetadata && (owner.checkpoint || distance > 2.2)
         ? checkpoint(scene, host, owner, area) : { x: owner.x, y: owner.y };
+      if (owner.legArrived) {
+        owner.progressAt = time;
+        owner.replans = 0; owner.lastReplanAt = -Infinity;
+      }
       // No reachable segment: count as a route failure instead of trying the
       // same blocked 14-unit hop indefinitely.
       if (!next) return recover(scene, host, time, "walk_failed", remaining);

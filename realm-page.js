@@ -6,6 +6,7 @@
   let binding = null, job = null, watcher = null, suspended = false, manualUntil = 0;
   let message = "Tự vào bí cảnh đang tắt.", lastScan = -Infinity;
   let lastEntry = null, exitJob = null, exitRetryAt = 0, bossAttachAt = -Infinity;
+  let lastRealmPhase = null, bossDeadAt = null;
   let lastReviveAt = -Infinity;
   let modalAt = -Infinity, modal = false;
   const skipped = new Map(), finite = Number.isFinite;
@@ -34,6 +35,16 @@
   function manual(scene) {
     return GSTFarmInput.movement(scene) || scene.pendingSkill || scene.aiming || scene.heldAttack;
   }
+  function phase(scene) {
+    const inside = scene?.self?.realm?.inside;
+    if (!inside) return "outside";
+    if (!finite(inside.boss?.hp)) return "unknown";
+    if (inside.boss.hp > 0)
+      return globalThis.GSTFarmSeals?.pending?.(scene) ? "seals" : "boss";
+    if (!Array.isArray(inside.chests)) return "unknown";
+    if (inside.chests.length) return "chests";
+    return Array.isArray(inside.exits) && inside.exits.length ? "exit" : "unknown";
+  }
   function releaseExit() {
     if (!exitJob || !binding) { exitJob = null; return; }
     const scene = binding.scene;
@@ -48,6 +59,14 @@
         || !Array.isArray(inside.chests) || inside.chests.length
         || !Array.isArray(inside.exits) || !inside.exits.length) {
       releaseExit();
+      return false;
+    }
+    // Delayed post-boss chest snapshots must have a chance to arrive.
+    // An empty list immediately after the kill is not proof of no rewards.
+    bossDeadAt ??= now;
+    if (now - bossDeadAt < 3000) {
+      releaseExit();
+      message = "Boss vừa hạ; chờ tối đa 3 giây cho dữ liệu rương xuất hiện.";
       return false;
     }
     if (!finite(time) || !finite(scene.px) || !finite(scene.py) || !connected(scene)
@@ -80,7 +99,13 @@
     const steering = { ...host, steer: (x, y) => {
       scene.autoX = x; scene.autoY = y; owner.steer = [x, y];
     } };
-    if (GSTNavigation.progressed(scene, owner, owner.navigation.path, owner.x, owner.y, 0.2))
+    const needsWalk = distance(pos, owner) > 2.5
+      || !host.clear(pos.x, pos.y, owner.x, owner.y);
+    const next = needsWalk ? GSTNavigation.leg(scene, owner, host, owner.x, owner.y,
+      (point) => finite(point?.x) && finite(point?.y)
+        && point.x >= 0 && point.y >= 0 && point.x < scene.map?.w && point.y < scene.map?.h) : null;
+    const goal = next ?? owner;
+    if (owner.legArrived || GSTNavigation.progressed(scene, owner, owner.navigation.path, goal.x, goal.y, 0.2))
       owner.progressAt = now;
     // Waiting at an exit is intentional; never treat the five-second
     // stationary requirement (or standing mode) as navigation failure.
@@ -90,9 +115,16 @@
       message = "Chưa tới được cổng thoát; nhường điều khiển 6 giây.";
       return false;
     }
-    if (distance(pos, owner) > 2.5 || !host.clear(pos.x, pos.y, owner.x, owner.y)) {
+    if (needsWalk) {
       owner.arrivedAt = null;
-      if (!GSTNavigation.walk(scene, owner.navigation, steering, time, pos.x, pos.y, owner.x, owner.y, 2.5)) {
+      if (!next) {
+        steering.steer(0, 0);
+        message = "Đang tìm chặng đi tới cổng thoát, chưa chọn cổng khác.";
+        return true;
+      }
+      if (!GSTNavigation.walk(scene, owner.navigation, steering, time, pos.x, pos.y,
+        next.x, next.y, owner.checkpoint ? 0.8 : 2.5)) {
+        GSTNavigation.resetLeg(owner, true);
         releaseExit(); exitRetryAt = now + 6000;
         message = "Đường tới cổng thoát bị chặn; thử lại sau 6 giây.";
         return false;
@@ -141,6 +173,14 @@
       if (!scene) return;
       if (sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto
           || !GSTFarmUpdate.attached(scene) || !connected(scene) || scene.leaving) { detach(); watch(); return; }
+      const currentPhase = phase(scene);
+      if (!scene.self?.realm?.inside || finite(scene.self.realm.inside.boss?.hp)
+          && scene.self.realm.inside.boss.hp > 0) bossDeadAt = null;
+      if (currentPhase !== lastRealmPhase) {
+        lastRealmPhase = currentPhase;
+        if (currentPhase !== "outside")
+          globalThis.GSTMovementDiagnostics?.event?.(scene, "realm_phase", { realmPhase: currentPhase });
+      }
       // A discovered portal takes priority over regular farming; do not release the goal.
       if (globalThis.GSTHarvest?.controls(scene) || globalThis.GSTQuest?.controls(scene)) {
         release("Nhường điều khiển đang hoạt động của người chơi/Auto Quest."); return;
@@ -258,15 +298,29 @@
       const portal = candidates.find((candidate) => candidate.id === job.id);
       const steeringHost = { ...host, steer: (x, y) => { scene.autoX = x; scene.autoY = y; job.steer = [x, y]; } };
       // Combat must not delay travel to the portal. Native eligibility is checked at entry.
-      if (GSTNavigation.progressed(scene, job, job.navigation.path, portal.x, portal.y, 0.2)) job.progressAt = now;
-      if (job.phase !== "standing" && (now - job.progressAt > 5000 || now - job.startAt > 120000)) {
+      const needsWalk = distance(pos, portal) > 2.5
+        || !host.clear(pos.x, pos.y, portal.x, portal.y);
+      const next = needsWalk ? GSTNavigation.leg(scene, job, host, portal.x, portal.y,
+        (point) => finite(point?.x) && finite(point?.y)
+          && point.x >= 0 && point.y >= 0 && point.x < scene.map?.w && point.y < scene.map?.h) : null;
+      const goal = next ?? portal;
+      if (job.legArrived || GSTNavigation.progressed(scene, job, job.navigation.path, goal.x, goal.y, 0.2))
+        job.progressAt = now;
+      if (job.phase !== "standing" && (now - job.progressAt > 7500 || now - job.startAt > 120000)) {
         release("Không tới được cổng; tạm bỏ 30 giây.", true); return false;
       }
-      if (distance(pos, portal) > 2.5 || !host.clear(pos.x, pos.y, portal.x, portal.y)) {
+      if (needsWalk) {
         if (job.phase === "standing" || job.phase === "waiting_combat") {
           job.phase = "moving"; job.progressAt = now;
         }
-        if (!GSTNavigation.walk(scene, job.navigation, steeringHost, time, pos.x, pos.y, portal.x, portal.y, 2.5)) {
+        if (!next) {
+          steeringHost.steer(0, 0);
+          message = "Đang tìm chặng có thể đi tới cổng bí cảnh.";
+          return true;
+        }
+        if (!GSTNavigation.walk(scene, job.navigation, steeringHost, time, pos.x, pos.y,
+          next.x, next.y, job.checkpoint ? 0.8 : 2.5)) {
+          GSTNavigation.resetLeg(job, true);
           release("Đường tới cổng bị chặn; tạm bỏ 30 giây.", true); return false;
         }
         message = `Đang tới cổng bí cảnh · còn ${distance(pos, portal).toFixed(1)} ô.`;
@@ -320,7 +374,7 @@
     const old = binding; binding = null;
     old.remove(); old.scene.events.off("preupdate", guard);
     old.scene.events.off("shutdown", shutdown); old.scene.events.off("destroy", shutdown);
-    skipped.clear(); bossAttachAt = -Infinity;
+    skipped.clear(); bossAttachAt = -Infinity; lastRealmPhase = null; bossDeadAt = null;
   }
   function shutdown() { detach(); watch(); }
   function watch() {
@@ -346,7 +400,8 @@
     } catch { detach(); message = "Chưa gắn được hỗ trợ bí cảnh; chờ game."; watch(); }
   }
   globalThis.GSTRealm = {
-    isEnabled: () => preferences.enabled || preferences.seekExit,
+    isEnabled: () => preferences.enabled || preferences.seekExit || preferences.seekBoss,
+    phase,
     seekBoss: (scene) => {
       const boss = scene?.self?.realm?.inside?.boss;
       return preferences.seekBoss && scene?.auto?.on === true

@@ -292,7 +292,11 @@
       const hazards = settings.bossDodge ? hazardZones(scene, time) : [];
       const danger = hazards.some((area) => distance(area, pos) <= area.radius + 0.8
         && area.at <= time + 2.2 && area.until >= time);
-      const cooling = !!boss && offensiveCooldownGap(scene, host, time);
+      // A pending realm seal owns combat before the boss. Keep urgent hazard
+      // dodging and low-HP retreat, but do not kite/spam Q solely for the boss
+      // while the seal handler is trying to approach and break seals.
+      const cooling = !globalThis.GSTFarmSeals?.pending?.(scene)
+        && !!boss && offensiveCooldownGap(scene, host, time);
       const gapDistance = boss ? distance(pos, boss) : Infinity;
       const cooldownKite = cooling && gapDistance <= 10;
       if (settings.bossRetreat && !retreating && boss && hp < threshold) {

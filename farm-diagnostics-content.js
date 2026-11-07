@@ -94,7 +94,7 @@
       "short_frame_gap", "movement_stall", "owner_change", "routing_correction",
       "routing_replan", "routing_stuck", "map_correction", "map_replan", "map_stuck",
       "portal_combat_yield", "chest_combat_yield", "chest_target_yield", "target_switch",
-      "map_handoff", "map_resume", "loot_begin", "loot_done", "loot_skip"];
+      "map_handoff", "map_resume", "loot_begin", "loot_done", "loot_skip", "realm_phase"];
     if (!reasons.includes(row?.reason)) return null;
     const number = (value) => Number.isFinite(value) ? Math.round(Math.max(-1e8, Math.min(1e8, value)) * 1000) / 1000 : null;
     const point = (value) => Array.isArray(value) && value.length === 2 && value.every(Number.isFinite) ? value.map(number) : null;
@@ -103,6 +103,8 @@
     for (const key of ["fix", "elapsedMs", "distance", "stillMs", "pathLength", "radius", "moveMultiplier", "frameGapMs", "pauseMs", "retryMs"]) result[key] = number(row[key]);
     for (const key of ["position", "serverPosition", "targetPosition", "center", "home", "steerBefore", "steerAfter", "waypoint"]) result[key] = point(row[key]);
     result.lootCount = Number.isSafeInteger(row.lootCount) && row.lootCount >= 0 ? row.lootCount : null;
+    result.realmPhase = ["seals", "boss", "chests", "exit", "unknown"].includes(row.realmPhase)
+      ? row.realmPhase : null;
     result.targetId = Number.isSafeInteger(row.targetId) && row.targetId >= 0 ? row.targetId : null;
     result.remaining = number(row.remaining);
     result.stuckMs = number(row.stuckMs);

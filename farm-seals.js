@@ -34,7 +34,8 @@
   function stopJob(reason, skip = false) {
     if (job && binding) {
       const scene = binding.scene;
-      if (skip) skipped.set(job.key, { hits: job.hits });
+      if (skip) skipped.set(job.key, { hits: job.hits, until: performance.now() + 12000 });
+      GSTNavigation.cancel(scene, job.navigation);
       if (job.steer && scene.autoX === job.steer[0] && scene.autoY === job.steer[1]) {
         scene.autoX = 0; scene.autoY = 0;
       }
@@ -113,7 +114,8 @@
       if (!scene || !enabled || suspended || !scene.auto.on) return false;
       const active = seals(scene);
       for (const [id, entry] of skipped) {
-        if (!active.some((seal) => key(seal) === id && seal.hits === entry.hits)) skipped.delete(id);
+        if (performance.now() >= entry.until
+            || !active.some((seal) => key(seal) === id && seal.hits === entry.hits)) skipped.delete(id);
       }
       if (!active.length) {
         stopJob(); skipped.clear(); message = "Không có phong ấn cần phá trong bí cảnh."; return false;
@@ -129,7 +131,13 @@
       if (!job) {
         const next = active.filter((seal) => !skipped.has(key(seal)))
           .sort((a, b) => distance(a, pos) - distance(b, pos))[0];
-        if (!next) { message = "Phong ấn không có tiến triển; đã nhường lại game. Chờ dữ liệu thay đổi hoặc tắt/bật hỗ trợ để thử lại."; return false; }
+        if (!next) {
+          // Do not resume hitting the boss while an active seal remains.
+          // The skip expires after 12 seconds, then the same seal is retried.
+          holding = true; host.steer(0, 0);
+          message = "Phong ấn còn hoạt động nhưng đường/đòn đánh chưa tiến triển; chờ thử lại sau tối đa 12 giây.";
+          return true;
+        }
         // Use native navigation on private state; preserve the boss target/path/center.
         const navigation = Object.assign(Object.create(scene.auto), { path: [], lastX: pos.x, lastY: pos.y,
           stillSince: time, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0, pathAt: -Infinity });
@@ -142,11 +150,28 @@
       job.hits = seal.hits;
       const reach = 1; // Conservative approach distance; never enlarge the game's hit range.
       if (distance(seal, pos) > reach || !host.clear(pos.x, pos.y, seal.x, seal.y)) {
-        if (time - job.startAt > 15) { stopJob("Không tới được phong ấn; tạm bỏ mục tiêu này.", true); holding = true; host.steer(0, 0); return true; }
         const owner = job;
         const walkingHost = { ...host, steer: (x, y) => steer(scene, x, y) };
-        if (!GSTNavigation.walk(scene, owner.navigation, walkingHost, time, pos.x, pos.y, seal.x, seal.y, reach)) {
-          stopJob("Đường tới phong ấn bị chặn; tạm bỏ mục tiêu này.", true); holding = true; host.steer(0, 0); return true;
+        const next = GSTNavigation.leg(scene, owner, host, seal.x, seal.y,
+          (point) => finite(point?.x) && finite(point?.y)
+            && point.x >= 0 && point.y >= 0 && point.x < scene.map?.w && point.y < scene.map?.h);
+        const goal = next ?? { x: seal.x, y: seal.y };
+        if (owner.legArrived || GSTNavigation.progressed(scene, owner, owner.navigation.path, goal.x, goal.y, 0.3))
+          owner.progressAt = time;
+        if (time - owner.progressAt > 7 || time - owner.startAt > 120) {
+          stopJob("Không tiến tới phong ấn; tạm bỏ 12 giây rồi thử lại.", true);
+          holding = true; host.steer(0, 0); return true;
+        }
+        if (!next) {
+          holding = true; host.steer(0, 0);
+          message = "Chưa tìm được chặng tới phong ấn; đang chờ tính lại.";
+          return true;
+        }
+        if (!GSTNavigation.walk(scene, owner.navigation, walkingHost, time, pos.x, pos.y, next.x, next.y,
+          owner.checkpoint ? 0.8 : reach)) {
+          GSTNavigation.resetLeg(owner, true);
+          stopJob("Đường tới phong ấn bị chặn; thử lại sau 12 giây.", true);
+          holding = true; host.steer(0, 0); return true;
         }
         message = `Đang tới phong ấn · còn ${seal.hits} đòn.`;
         return true;
@@ -196,7 +221,9 @@
           || typeof scene.auto?.update !== "function" || typeof scene.autoHost !== "function"
           || typeof scene.now !== "function" || typeof scene.events?.on !== "function"
           || typeof scene.events.off !== "function") return;
-      const remove = GSTFarmUpdate.add(scene, 3.5, update);
+      // Safety Q remains at 1.5; seal objectives preempt routine
+      // farming, loot collection and boss attacks at 1.75.
+      const remove = GSTFarmUpdate.add(scene, 1.75, update);
       binding = { scene, auto: scene.auto, remove };
       scene.events.on("preupdate", guard);
       scene.events.on("shutdown", shutdown);
@@ -206,6 +233,8 @@
     } catch { message = "Chưa gắn được hỗ trợ phong ấn; chờ game."; }
   }
   globalThis.GSTFarmSeals = {
+    pending: (scene) => enabled && !suspended && !!scene?.auto?.on
+      && !!scene.self && !scene.self.dead && seals(scene).length > 0,
     controls: (scene) => binding?.scene === scene && (job !== null || holding),
     status: (scene) => enabled && binding && binding.scene === scene && scene.auto.on && inside(scene) ? message : ""
   };

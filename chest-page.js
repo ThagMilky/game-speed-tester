@@ -37,7 +37,15 @@
     if (scene.self.fish) return "Chờ kết thúc câu cá.";
     // If permitted alongside Auto Farm, chest/nearby-monster handling takes priority over farming.
     // Movement and skill inputs from the player still take priority below.
-    if (GSTFarmSeals?.controls(scene)) return "Đang nhường phá phong ấn.";
+    if (globalThis.GSTFarmSeals?.pending?.(scene)
+        || globalThis.GSTFarmSeals?.controls?.(scene)) return "Còn phong ấn hoạt động; ưu tiên phá phong ấn trước rương.";
+    // Keep standalone chest collection when Auto Farm is OFF. During
+    // boss-focused farming, finish the encounter before collecting rewards.
+    if (scene.auto.on && finite(scene.self.realm.inside.boss?.hp)
+        && scene.self.realm.inside.boss.hp > 0
+        && (globalThis.GSTRealm?.seekBoss?.(scene)
+          || globalThis.GSTFarmPriority?.bossFocus?.()))
+      return "Đang ưu tiên đánh boss bí cảnh; sẽ tìm rương khi boss đã hạ.";
     if (scene.auto.on && !settings.allowFarm) return "Auto Farm đang bật: tick Cho phép nhặt khi Auto Farm bật, hoặc tắt Auto Farm.";
     if (scene.auto.on && GSTHarvest.needsRecovery(scene)) return "Chờ Auto Farm hồi HP/MP theo cài đặt của game.";
     if (manual(scene)) return "Chờ kết thúc lệnh đi tay/ngắm chiêu/giữ phím đánh.";
@@ -76,10 +84,11 @@
       job.navigation.path = []; job.navigation.pathAt = -Infinity;
       job.navigation.stillSince = time; job.navigation.stuckCount = 0;
       job.navigation.lastX = pos.x; job.navigation.lastY = pos.y;
+      GSTNavigation.resetLeg(job);
     }
     job.progressAt = time; // A combat pause is not a pathfinding failure.
-    if (now - job.threatAt > 25000) {
-      release("Quái gần rương chưa bị hạ sau 25 giây; tạm bỏ rương để tránh kẹt.", true);
+    if (now - job.threatAt > 60000) {
+      release("Quái gần rương chưa bị hạ sau 60 giây; tạm bỏ rương để tránh kẹt.", true);
       return false;
     }
     if (scene.pendingSkill || scene.aiming || scene.keyCapture || scene.uiBlocked) {
@@ -93,7 +102,13 @@
       scene.autoX = x; scene.autoY = y; if (job) job.steer = [x, y];
     } };
     if (remaining > reach) {
-      if (!GSTNavigation.walk(scene, job.navigation, walking, time, pos.x, pos.y, enemy.x, enemy.y, reach * 0.8)) {
+      const next = GSTNavigation.leg(scene, job, host, enemy.x, enemy.y,
+        (point) => finite(point?.x) && finite(point?.y)
+          && point.x >= 0 && point.y >= 0 && point.x < scene.map?.w && point.y < scene.map?.h);
+      if (!next) { message = "Chưa tìm được chặng an toàn tới quái chắn rương."; return true; }
+      if (!GSTNavigation.walk(scene, job.navigation, walking, time, pos.x, pos.y, next.x, next.y,
+        job.checkpoint ? 0.8 : reach * 0.8)) {
+        GSTNavigation.resetLeg(job, true);
         release("Không có đường tiếp cận quái chắn rương; tạm bỏ rương.", true);
         return false;
       }
@@ -171,11 +186,17 @@
         job.navigation.pathAt = -Infinity; job.progressAt = time; job.startedAt = time;
         job.navigation.stillSince = time; job.navigation.stuckCount = 0;
         job.navigation.lastX = scene.px; job.navigation.lastY = scene.py;
+        GSTNavigation.resetLeg(job);
       }
       const remaining = Math.hypot(chest.x - scene.px, chest.y - scene.py), owner = job;
       const walking = { ...host, steer: (x, y) => { scene.autoX = x; scene.autoY = y; owner.steer = [x, y]; } };
 
-      if (GSTNavigation.progressed(scene, job, job.navigation.path, chest.x, chest.y)) job.progressAt = time;
+      const next = remaining > 1.8 ? GSTNavigation.leg(scene, job, host, chest.x, chest.y,
+        (point) => finite(point?.x) && finite(point?.y)
+          && point.x >= 0 && point.y >= 0 && point.x < scene.map?.w && point.y < scene.map?.h) : null;
+      const goal = next ?? chest;
+      if (job.legArrived || GSTNavigation.progressed(scene, job, job.navigation.path, goal.x, goal.y))
+        job.progressAt = time;
       if (time - job.progressAt > 8 || time - job.startedAt > 120) {
         release("Chưa tiếp cận/mở được rương trong thời gian cho phép; bỏ qua 30 giây.", true); return false;
       }
@@ -184,7 +205,10 @@
           job.navigation.path = []; job.navigation.pathAt = -Infinity;
           job.replans++; job.replanAt = time;
         }
-        if (!GSTNavigation.walk(scene, job.navigation, walking, time, scene.px, scene.py, chest.x, chest.y, 1.5)) {
+        if (!next) { message = "Đang tìm lại chặng có thể đi tới rương."; walking.steer(0, 0); return true; }
+        if (!GSTNavigation.walk(scene, job.navigation, walking, time, scene.px, scene.py,
+          next.x, next.y, job.checkpoint ? 0.8 : 1.5)) {
+          GSTNavigation.resetLeg(job, true);
           release("Đường tới rương bị chặn; tạm bỏ qua.", true); return false;
         }
         message = `${time - job.replanAt < 1 ? "Đang tính lại đường tới rương" : "Đang tự đi tới rương bí cảnh"} · còn ${remaining.toFixed(1)} ô.`;
