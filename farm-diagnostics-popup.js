@@ -18,7 +18,7 @@
     if (flags.length) result.flags = flags;
     return result;
   }
-  function merged(groups, convert) {
+  function merged(groups, convert, combineMovement = false) {
     const seen = new Set(), rows = [];
     for (const group of groups) for (const row of Array.isArray(group) ? group : []) {
       if (!row || typeof row !== "object") continue;
@@ -27,7 +27,25 @@
       if (seen.has(key)) continue;
       seen.add(key); rows.push(row);
     }
-    return rows.sort((a, b) => (a.at || "").localeCompare(b.at || "")).map(convert);
+    const ordered = rows.sort((a, b) => (a.at || "").localeCompare(b.at || "")).map(convert).filter(Boolean);
+    if (!combineMovement) return ordered;
+    const compact = [], byState = new Map();
+    for (const row of ordered) {
+      if (row.event !== "state" && row.event !== "owner_change") { compact.push(row); continue; }
+      // Same instant, same snapshot; only the event name and ownership transition differ.
+      const common = { ...row };
+      delete common.event; delete common.fromOwners; delete common.toOwners; delete common.ownerScope;
+      const key = JSON.stringify(common), previous = byState.get(key);
+      if (!previous) { compact.push(row); byState.set(key, row); continue; }
+      if (previous.event === row.event || previous.also?.includes(row.event)) continue;
+      if (row.event === "owner_change") {
+        previous.also = [...(previous.also || []), previous.event];
+        previous.event = "owner_change";
+        for (const field of ["fromOwners", "toOwners", "ownerScope"]) if (row[field] !== undefined)
+          previous[field] = row[field];
+      } else previous.also = [...(previous.also || []), row.event];
+    }
+    return compact;
   }
   const farmFlags = ["hidden", "focused", "dead", "clickOrder", "reconnecting", "displaced"];
   const stopFields = [["at", "t"], ["event", "event"], ["cause", "cause"], ["on", "on"],
@@ -43,7 +61,11 @@
     ["center", "center"], ["home", "home"], ["steerBefore", "steerBefore"],
     ["steerAfter", "steerAfter"], ["waypoint", "waypoint"], ["scope", "scope"],
     ["panel", "panel"], ["owners", "owners"], ["fromId", "fromId"], ["toId", "toId"],
-    ["switchSource", "source"], ["switchReason", "switchReason"]];
+    ["switchSource", "source"], ["switchReason", "switchReason"],
+    ["targetId", "targetId"], ["remaining", "remaining"], ["stuckMs", "stuckMs"], ["attempt", "attempt"],
+    ["fromOwner", "fromOwner"], ["toOwner", "toOwner"], ["handoffReason", "handoffReason"],
+    ["replanReason", "replanReason"], ["action", "action"], ["fromOwners", "fromOwners"],
+    ["toOwners", "toOwners"], ["ownerScope", "ownerScope"]];
   const bgFlags = ["hidden", "focused", "auto", "dead", "connected", "reconnecting",
     "displaced", "active", "paused", "loopRunning", "wasDiscarded"];
   const vitalFlags = ["auto", "dead", "hidden", "connected"];
@@ -70,14 +92,14 @@
     const movement = data.movement || {}, bg = data.background || {};
     const boss = data.bossSafety || {}, flight = data.flight || {};
     return {
-      format: "gst-farm-agent-1",
-      legend: "t=UTC; event=reason; flags lists true states (others false); missing fields=null",
+      format: "gst-farm-agent-2",
+      legend: "t=UTC; event=reason; also=other simultaneous events; flags lists true states (others false); missing fields=null; ownerScope=eligibility (not actual move)",
       farm: { tracking: data.tracking === true,
         current: pick(data.current, [["on", "on"], ["deaths", "deaths"]], farmFlags),
         events: (data.events || []).map((row) => pick(row, stopFields, farmFlags)) },
       movement: { build: movement.build, tracking: movement.tracking === true,
         current: move(movement.current),
-        events: merged([movement.events, movement.incidents, movement.uiIncidents], move) },
+        events: merged([movement.events, movement.incidents, movement.uiIncidents], move, true) },
       background: { build: bg.build, generation: bg.generation,
         current: background(bg.current),
         lastAlive: pick(bg.lastAlive, vitalFields, vitalFlags),

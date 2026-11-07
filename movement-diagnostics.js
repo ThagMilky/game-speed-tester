@@ -5,7 +5,8 @@
   const uiLogKey = "gst:movement-ui:v1", incidentKey = "gst:movement-incidents:v1";
   const incidentReasons = ["short_frame_gap", "movement_stall", "owner_change", "routing_correction",
     "routing_replan", "routing_stuck", "map_correction", "map_replan", "map_stuck",
-    "portal_combat_yield", "chest_combat_yield", "chest_target_yield", "frame_gap", "correction", "target_switch"];
+    "portal_combat_yield", "chest_combat_yield", "chest_target_yield", "frame_gap", "correction", "target_switch",
+    "map_handoff", "map_resume"];
   let binding = null, preferences = {};
   try {
     const previous = JSON.parse(sessionStorage.getItem(uiLogKey) ?? "[]");
@@ -137,7 +138,8 @@
       const ownerKey = row.owners.join("|");
       if (owner.ownerKey !== null && owner.ownerKey !== ownerKey && row.auto
           && (owner.ownerKey.includes("GST") || ownerKey.includes("GST"))) {
-        const changed = { ...row, reason: "owner_change" };
+        const changed = { ...row, reason: "owner_change",
+          fromOwners: owner.ownerKey.split("|"), toOwners: [...row.owners], ownerScope: "eligibility" };
         append(changed); appendIncident(changed);
       }
       owner.ownerKey = ownerKey;
@@ -185,6 +187,18 @@
         const row = snapshot(scene, reason, binding.before);
         row.pauseMs = GSTMovementLogSchema.number(extra.pauseMs);
         row.retryMs = GSTMovementLogSchema.number(extra.retryMs);
+        row.targetId = Number.isSafeInteger(extra.targetId) && extra.targetId >= 0 ? extra.targetId : null;
+        row.remaining = GSTMovementLogSchema.number(extra.remaining);
+        row.stuckMs = GSTMovementLogSchema.number(extra.stuckMs);
+        row.attempt = Number.isSafeInteger(extra.attempt) && extra.attempt >= 0 && extra.attempt <= 2 ? extra.attempt : null;
+        row.fromOwner = ["GSTFarmMap", "native_farm_eligible"].includes(extra.fromOwner) ? extra.fromOwner : null;
+        row.toOwner = ["GSTFarmMap", "native_farm_eligible"].includes(extra.toOwner) ? extra.toOwner : null;
+        row.handoffReason = ["near_target", "native_target", "native_engaged", "target_unavailable",
+          "handoff_timeout", "native_out_of_range", "manual_override", "priority_preempt"]
+          .includes(extra.handoffReason) ? extra.handoffReason : null;
+        row.replanReason = ["no_progress", "walk_failed", "blocked", "timeout", "boss_blocked"]
+          .includes(extra.replanReason) ? extra.replanReason : null;
+        row.action = ["retry", "defer"].includes(extra.action) ? extra.action : null;
         row.fromId = Number.isSafeInteger(extra.fromId) && extra.fromId >= 0 ? extra.fromId : null;
         row.toId = Number.isSafeInteger(extra.toId) && extra.toId >= 0 ? extra.toId : null;
         row.switchSource = ["map", "radius"].includes(extra.switchSource) ? extra.switchSource : null;

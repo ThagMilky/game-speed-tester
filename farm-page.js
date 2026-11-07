@@ -426,7 +426,9 @@
       const time = s.scene.now();
       globalThis.GSTFarmBehavior?.attach(s.scene);
       syncFilter(s.scene);
-      if (globalThis.GSTFarmMap?.controls(s.scene)) { message = GSTFarmMap.status(s.scene); return; }
+      if (globalThis.GSTFarmMap?.controls(s.scene) || globalThis.GSTFarmMap?.nativeHandling(s.scene)) {
+        message = GSTFarmMap.status(s.scene); return;
+      }
       if (globalThis.GSTFarmBehavior?.controls(s.scene)) {
         message = globalThis.GSTFarmBehavior.status(s.scene);
         return;
