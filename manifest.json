@@ -10,13 +10,13 @@
   "content_scripts": [
     {
       "matches": ["https://nghichthienky.online/*"],
-      "js": ["harvest-main-options.js", "background-diagnostics.js", "movement-log-schema.js", "movement-diagnostics.js", "farm-update.js", "potion-page.js", "farm-combat.js", "navigation.js", "farm-revive-policy.js", "farm-input.js", "farm-routing.js", "flight-page.js", "farm-behavior.js", "farm-boss-safety.js", "farm-map.js", "farm-visual.js", "page.js", "farm-page.js", "farm-diagnostics.js", "farm-session.js", "farm-seals.js", "realm-history.js", "realm-page.js", "harvest-visual.js", "harvest-page.js", "fps-map.js", "fps-minimap.js", "fps-minimap-zoom.js", "fps-minimap-colors.js", "fps-page.js", "realm-time-page.js", "chest-page.js", "background-page.js", "quest-page.js"],
+      "js": ["harvest-main-options.js", "background-diagnostics.js", "movement-log-schema.js", "movement-diagnostics.js", "farm-update.js", "potion-page.js", "farm-combat.js", "navigation.js", "farm-revive-policy.js", "farm-input.js", "farm-routing.js", "flight-page.js", "farm-behavior.js", "farm-boss-safety.js", "farm-map.js", "farm-visual.js", "area-map-page.js", "page.js", "farm-page.js", "farm-diagnostics.js", "farm-session.js", "farm-seals.js", "realm-history.js", "realm-page.js", "harvest-visual.js", "harvest-page.js", "fps-map.js", "fps-minimap.js", "fps-minimap-zoom.js", "fps-minimap-colors.js", "fps-page.js", "realm-time-page.js", "chest-page.js", "background-page.js", "quest-page.js"],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
       "matches": ["https://nghichthienky.online/*"],
-      "js": ["harvest-options.js", "content.js", "game-panel-scroll.js", "font-options.js", "font.js", "potion-content.js", "farm-content.js", "movement-log-schema.js", "farm-diagnostics-content.js", "harvest-content.js", "realm-content.js", "realm-history-content.js", "fps-options.js", "fps-content.js", "realm-time-content.js", "chest-content.js", "menu-position.js", "game-menu.js", "background-content.js", "quest-content.js", "flight-content.js"],
+      "js": ["harvest-options.js", "content.js", "game-panel-scroll.js", "font-options.js", "font.js", "potion-content.js", "farm-content.js", "movement-log-schema.js", "farm-diagnostics-content.js", "harvest-content.js", "realm-content.js", "realm-history-content.js", "fps-options.js", "fps-content.js", "realm-time-content.js", "chest-content.js", "menu-position.js", "game-menu.js", "area-map-content.js", "background-content.js", "quest-content.js", "flight-content.js"],
       "run_at": "document_start",
       "world": "ISOLATED"
     }

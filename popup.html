@@ -23,6 +23,7 @@
   <script src="menu-position.js" defer></script>
   <script src="popup-help.js" defer></script>
   <script src="menu-popup.js" defer></script>
+  <script src="area-map-popup.js" defer></script>
   <script src="menu-monitor.js" defer></script>
   <script src="menu-orientation.js" defer></script>
 </head>
@@ -360,7 +361,7 @@
       </div>
     </details>
     <details class="card" data-panel="interface" data-category="settings">
-      <summary><span><strong>Giao diện</strong><small>Bảng trạng thái, font và vị trí menu</small></span></summary>
+      <summary><span><strong>Giao diện</strong><small>Bản đồ khu vực, bảng trạng thái, font và menu</small></span></summary>
       <div class="card-body">
         <label for="menuOrientation">Bố cục menu</label>
         <select id="menuOrientation" disabled><option value="vertical">Dọc</option><option value="horizontal">Ngang</option></select>
@@ -382,6 +383,22 @@
             <label class="check-row"><input type="checkbox" data-display-field="message" checked><span>Thông báo</span></label>
           </div>
           <p class="hint">Tự lưu. Bảng nằm phía trên bên phải, lệch trái bản đồ để chừa khoảng cách; màn hình hẹp đặt dưới bản đồ. Độc lập với các tính năng khác.</p>
+        </fieldset>
+      </div>
+    </details>
+    <details class="subcard" data-panel="area-map">
+      <summary><span><strong>Bản đồ toàn khu vực</strong><small>Xem địa hình, bãi quái và đường Auto Farm</small></span></summary>
+      <div class="card-body">
+        <fieldset id="areaMapShortcutControls" disabled aria-label="Tùy chọn phím mở bản đồ khu vực">
+          <p class="field-title">Phím mở bản đồ: <span id="areaMapShortcutLabel">. (mặc định)</span></p>
+          <div class="button-row" style="flex-wrap:wrap">
+            <button id="areaMapOpen" type="button" class="primary">Mở bản đồ</button>
+            <button id="areaMapShortcutCapture" type="button">Đổi phím</button>
+            <button id="areaMapShortcutReset" type="button" class="quiet">Mặc định (.)</button>
+          </div>
+          <p class="hint">Mặc định bấm dấu chấm (.) trong game để mở/đóng. Có thể đổi sang chữ, số, dấu câu hoặc F1–F10 (trừ F5, M, V). Esc đóng bản đồ. Không chiếm phím khi nhập chat hoặc đang mở bảng khác của game.</p>
+          <p class="hint">Bản đồ hiển thị vật cản, cổng và các nhóm quái game cung cấp hoặc đã thấy. Dấu xám là vị trí từng thấy, không xác nhận quái còn sống. Bản đồ này chỉ để xem; chưa thay đổi cách Auto Farm tìm đường.</p>
+          <p id="areaMapFeedback" class="notice" role="status"></p>
         </fieldset>
       </div>
     </details>
