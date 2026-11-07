@@ -426,6 +426,10 @@
       const time = s.scene.now();
       globalThis.GSTFarmBehavior?.attach(s.scene);
       syncFilter(s.scene);
+      if (globalThis.GSTFarmBehavior?.pendingLoot(s.scene)) {
+        message = "Đang ưu tiên nhặt đồ tại bãi vừa đánh trước khi chọn bãi tiếp theo.";
+        return;
+      }
       if (globalThis.GSTFarmMap?.controls(s.scene) || globalThis.GSTFarmMap?.nativeHandling(s.scene)) {
         message = GSTFarmMap.status(s.scene); return;
       }
@@ -499,12 +503,6 @@
         return;
       }
       const pos = { x: position[0], y: position[1] };
-      if (settings.preferLoot && !host.inCombat() && host.loot().some((loot) => finite(loot.x) && finite(loot.y)
-          && distance(loot, pos) < baseRadius && distance(loot, { x: s.auto.ax, y: s.auto.ay }) < baseRadius
-          && !s.auto.lootSkip?.has(`${loot.x.toFixed(1)},${loot.y.toFixed(1)}`))) {
-        message = "Đang ưu tiên nhặt chiến lợi phẩm gần trước khi tìm quái tiếp.";
-        return;
-      }
       const enemies = ranked() && host.allEligibleEnemies ? host.allEligibleEnemies() : host.enemies();
       if (!Array.isArray(enemies)) {
         stop("Invalid Auto Farm enemy data; stopped.", true);

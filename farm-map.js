@@ -311,11 +311,8 @@
         host.steer(0, 0); message = "Game vừa chỉnh vị trí; đang chờ ổn định trước khi tiếp tục."; return true;
       }
       if (nativeBusy(scene, host, area, time)) return false;
-      if (!job && !scene.auto.target && typeof host.loot === "function" && host.loot().some((loot) => finite(loot.x) && finite(loot.y)
-          && Math.hypot(loot.x - scene.px, loot.y - scene.py) < 11
-          && Math.hypot(loot.x - scene.auto.ax, loot.y - scene.auto.ay) < 11
-          && !scene.auto.lootSkip?.has(`${loot.x.toFixed(1)},${loot.y.toFixed(1)}`))) {
-        message = "Chờ game nhặt chiến lợi phẩm gần trước khi tới bãi quái tiếp theo."; return false;
+      if (globalThis.GSTFarmBehavior?.pendingLoot?.(scene)) {
+        release(); message = "Đang nhường nhặt đồ ở bãi vừa đánh trước khi tìm quái mới."; return false;
       }
       const target = destination(scene, host, time, scouting);
       if (!target) { if (scouting || !job?.scout) release(); return false; }

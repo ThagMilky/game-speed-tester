@@ -13,6 +13,7 @@
   <script src="realm-popup.js" defer></script>
   <script src="realm-history-popup.js" defer></script>
   <script src="farm-diagnostics-popup.js" defer></script>
+  <script src="potion-popup.js" defer></script>
   <script src="fps-options.js" defer></script>
   <script src="fps-popup.js" defer></script>
   <script src="realm-time-popup.js" defer></script>
@@ -71,7 +72,7 @@
           </div>
         </section>
     <details class="card" data-category="auto" data-panel="farm">
-      <summary><span><strong>Auto Farm</strong><small>Phạm vi và bộ lọc quái</small></span></summary>
+      <summary><span><strong>Auto Farm</strong><small>Phạm vi, nhặt đồ và tự dùng đan</small></span></summary>
       <div class="card-body">
         <p id="farmStatus" class="feature-status" role="status" aria-live="polite">Đang đọc trạng thái…</p>
         <details class="diagnostic"><summary>Phím tắt Auto Farm · <span id="shortcutLabel">V</span></summary>
@@ -127,7 +128,7 @@
             <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi đứng chờ tại chỗ</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option><option value="seek">Nhặt đồ rồi chủ động tìm quái mới</option></select>
             <p class="hint">Chủ động tìm: dò vị trí mới trong bán kính đã chọn, hoặc dùng cách dò toàn map có sẵn. Vẫn giữ bộ lọc quái, giới hạn vùng tìm và nhường thao tác khác.</p>
             <label class="check-row"><input id="farmPreferLoot" type="checkbox" checked><span>Ưu tiên nhặt đồ sau giao tranh, trước khi chuyển bãi quái</span></label>
-            <p class="hint">Dùng cơ chế nhặt đồ gốc; chỉ nhặt vật phẩm game cho phép. Khi còn giao tranh hoặc đồ bị kẹt, hệ thống nhường xử lý an toàn và giới hạn thời gian thử. Bấm Lưu Tìm / nhặt / né để áp dụng.</p>
+            <p class="hint">Ưu tiên đồ gần bãi vừa đánh, kể cả khi không bật Mở rộng vùng tìm quái. Chờ ngắn để vật phẩm xuất hiện; dùng cơ chế nhặt và giới hạn thử của game. Đồ không thể nhặt sẽ được bỏ qua tạm thời. Bấm Lưu Tìm / nhặt / né để áp dụng.</p>
             <label class="check-row"><input id="farmAvoidEnabled" type="checkbox"><span>Né quái level cao khi Auto Farm bật</span></label>
             <div class="two-columns">
               <div><label for="farmAvoidLevel">Né level ≥</label><input id="farmAvoidLevel" type="number" min="1" step="1" value="10" required></div>
@@ -139,6 +140,25 @@
           </div></div>
         </fieldset>
         <p id="farmFeedback" class="notice" role="alert"></p>
+        <fieldset id="potionControls" class="separated" disabled aria-label="Tự dùng đan HP và MP">
+          <p class="field-title">Tự dùng đan HP/MP · độc lập Auto Farm</p>
+          <p class="hint">Bật riêng từng loại để tự dùng đan ngay cả khi tắt Auto Farm. Ngưỡng bạn đặt thay thế ngưỡng tự dùng đan của game cho loại đó; khi tắt, game hoạt động theo mức gốc.</p>
+          <div class="two-columns">
+            <div>
+              <label class="check-row"><input id="potionHpEnabled" type="checkbox"><span>Tự dùng đan HP</span></label>
+              <label for="potionHpPercent">Khi HP dưới (%)</label>
+              <input id="potionHpPercent" type="number" min="1" max="99" step="1" value="40" required>
+            </div>
+            <div>
+              <label class="check-row"><input id="potionMpEnabled" type="checkbox"><span>Tự dùng đan MP</span></label>
+              <label for="potionMpPercent">Khi MP dưới (%)</label>
+              <input id="potionMpPercent" type="number" min="1" max="99" step="1" value="25" required>
+            </div>
+          </div>
+          <button id="savePotionPreferences" type="button" class="full">Lưu tự dùng đan</button>
+          <p class="hint">Tự chọn ngưỡng 1–99%, mỗi bước 1%. Dùng cơ chế đan, thời gian hồi và số lượng có sẵn của game; ưu tiên HP khi cả hai cùng thấp.</p>
+          <p id="potionFeedback" class="notice" role="status"></p>
+        </fieldset>
         <details class="diagnostic">
           <summary>Hỗ trợ khi gặp lỗi</summary>
 

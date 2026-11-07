@@ -62,7 +62,7 @@
     ["steerAfter", "steerAfter"], ["waypoint", "waypoint"], ["scope", "scope"],
     ["panel", "panel"], ["owners", "owners"], ["fromId", "fromId"], ["toId", "toId"],
     ["switchSource", "source"], ["switchReason", "switchReason"],
-    ["targetId", "targetId"], ["remaining", "remaining"], ["stuckMs", "stuckMs"], ["attempt", "attempt"],
+    ["lootCount", "lootCount"], ["targetId", "targetId"], ["remaining", "remaining"], ["stuckMs", "stuckMs"], ["attempt", "attempt"],
     ["fromOwner", "fromOwner"], ["toOwner", "toOwner"], ["handoffReason", "handoffReason"],
     ["replanReason", "replanReason"], ["action", "action"], ["fromOwners", "fromOwners"],
     ["toOwners", "toOwners"], ["ownerScope", "ownerScope"]];

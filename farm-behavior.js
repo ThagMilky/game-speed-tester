@@ -5,6 +5,7 @@
   let binding = null, job = null, configured = false, suspended = false, manualUntil = 0, retryAt = 0, noteUntil = 0, message = "";
   const hits = new Map();
   let lootTickAt = -Infinity, lootAt = -Infinity;
+  let observedTarget = null, lootGraceUntil = 0, lootActive = false, lootLastCount = 0;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -64,7 +65,8 @@
     if (!scene) return;
     if (sceneNow() !== scene || scene.auto !== binding.auto || !scene.sys?.isActive?.()) { detach(); return; }
     if (!scene.auto.on || scene.self?.dead || !connected(scene) || scene.leaving) {
-      release(); hits.clear(); manualUntil = 0; message = ""; return;
+      release(); hits.clear(); manualUntil = 0; message = "";
+      observedTarget = null; lootGraceUntil = 0; lootActive = false; return;
     }
     if (manual(scene) || (job && scene.castAt !== job.castAt)) {
       manualUntil = performance.now() + 3000;
@@ -191,37 +193,103 @@
       return true;
     } catch { release("Interface né quái chưa phù hợp; đã nhường lại game."); return false; }
   }
-  // Collect eligible nearby drops before seeking the next distant monster.
-  // Reuse the game's own idle()/pickup() checks and its six-second loot timeout.
+  // Track the monster actually fought, not a remote map destination.
+  // Give the game's drop objects a short chance to arrive after that monster dies.
+  function observeKill(scene, time) {
+    if (!finite(scene.px) || !finite(scene.py) || !finite(time)) return;
+    if (observedTarget) {
+      const previous = scene.views.get(observedTarget.id);
+      if (!previous || previous.dead) {
+        if (time - observedTarget.at < 8
+            && Math.hypot(scene.px - observedTarget.x, scene.py - observedTarget.y) < 9)
+          lootGraceUntil = Math.max(lootGraceUntil, time + 0.8);
+        observedTarget = null;
+      } else if (time - observedTarget.at > 8) observedTarget = null;
+    }
+    const actor = scene.views.get(scene.auto.target);
+    if (actor?.k === "m" && !actor.dead && finite(actor.x) && finite(actor.y)
+        && Math.hypot(scene.px - actor.x, scene.py - actor.y) < 7)
+      observedTarget = { id: actor.id, x: actor.x, y: actor.y, at: time };
+  }
+  function lootPlan(scene, host, time) {
+    if (!settings.preferLoot || !scene.auto?.on || blocked(scene) || manual(scene)
+        || !finite(time) || !finite(scene.px) || !finite(scene.py)
+        || typeof host?.loot !== "function" || typeof scene.auto?.idle !== "function"
+        || typeof scene.auto.lootSkip?.has !== "function" || modal(binding)
+        || performance.now() < manualUntil || GSTHarvest.needsRecovery?.(scene)
+        || globalThis.GSTQuest?.active?.(scene)
+        || ["GSTFarmSeals", "GSTChest", "GSTRealm", "GSTHarvest", "GSTQuest"]
+          .some((name) => globalThis[name]?.controls?.(scene))) return null;
+    observeKill(scene, time);
+    const all = host.loot();
+    if (!Array.isArray(all)) return null;
+    const nearby = all.filter((item) => finite(item.x) && finite(item.y)
+      && Math.hypot(item.x - scene.px, item.y - scene.py) < 11);
+    const eligible = nearby.filter((item) => !scene.auto.lootSkip.has(
+      item.x.toFixed(1) + "," + item.y.toFixed(1)));
+    const waiting = eligible.length === 0 && time < lootGraceUntil;
+    if (!eligible.length && !waiting)
+      return { eligible, waiting: false, skipped: nearby.length > 0 };
+    // Avoid scanning every monster on every frame when no loot is available.
+    // A combat flag can outlive the last monster, but an actual nearby threat cannot.
+    const list = typeof host.gstRawEnemies === "function" ? host.gstRawEnemies()
+      : typeof host.enemies === "function" ? host.enemies() : [];
+    const monsters = Array.isArray(list) ? list.filter((enemy) => !enemy.dead && enemy.hostile
+      && finite(enemy.x) && finite(enemy.y)) : [];
+    if (monsters.some((enemy) => Math.hypot(enemy.x - scene.px, enemy.y - scene.py) < 3.5
+        || host.inCombat?.() && Math.hypot(enemy.x - scene.px, enemy.y - scene.py) < 7)) return null;
+    eligible.sort((a, b) => Math.hypot(a.x - scene.px, a.y - scene.py)
+      - Math.hypot(b.x - scene.px, b.y - scene.py));
+    return { eligible, skipped: false, waiting };
+  }
+  function collecting(scene) {
+    if (!binding || binding.scene !== scene || !scene?.auto?.on || suspended) return false;
+    try {
+      const plan = lootPlan(scene, scene.autoHost(), scene.now());
+      return !!plan && (plan.eligible.length > 0 || plan.waiting);
+    } catch { return false; }
+  }
+  // Priority 2.5: collect drops before native target selection or map traversal.
+  // Keep the native idle/walk/pickup path, six-second loot timeout and lootSkip.
   function collectLoot(host, time) {
     const scene = binding?.scene;
     try {
-      if (!scene || !settings.enabled || !settings.preferLoot || suspended || !finite(time)
-          || blocked(scene) || manual(scene) || modal(binding) || performance.now() < manualUntil
-          || typeof host?.loot !== "function" || typeof host.inCombat !== "function"
-          || typeof scene.auto?.idle !== "function"
-          || host.inCombat() || GSTHarvest.needsRecovery?.(scene)
-          || globalThis.GSTQuest?.active?.(scene)
-          || ["GSTFarmSeals", "GSTChest", "GSTRealm", "GSTHarvest", "GSTQuest"]
-            .some((name) => globalThis[name]?.controls?.(scene))) return false;
-      const x = scene.px, y = scene.py, ax = scene.auto.ax, ay = scene.auto.ay;
-      if (![x, y, ax, ay].every(finite)) return false;
-      const current = scene.views.get(scene.auto.target);
-      if (current?.k === "m" && !current.dead && finite(current.x) && finite(current.y)
-          && Math.hypot(current.x - x, current.y - y) < 3.5) return false;
-      const loot = host.loot();
-      if (!Array.isArray(loot) || !loot.some((item) => finite(item.x) && finite(item.y)
-          && Math.hypot(item.x - x, item.y - y) < 11
-          && Math.hypot(item.x - ax, item.y - ay) < 11
-          && !scene.auto.lootSkip?.has(`${item.x.toFixed(1)},${item.y.toFixed(1)}`))) return false;
-      // Avoid repeatedly sending pickup actions on every animation frame.
-      if (time < lootTickAt) return true;
+      if (!scene) return false;
+      const plan = lootPlan(scene, host, time);
+      if (!plan || !plan.eligible.length && !plan.waiting) {
+        if (lootActive) {
+          globalThis.GSTMovementDiagnostics?.event?.(scene,
+            !plan || plan.skipped ? "loot_skip" : "loot_done", { lootCount: lootLastCount });
+          lootActive = false; lootLastCount = 0;
+        }
+        return false;
+      }
+      if (!lootActive) {
+        lootActive = true;
+        globalThis.GSTMovementDiagnostics?.event?.(scene, "loot_begin",
+          { lootCount: plan.eligible.length });
+      }
+      lootLastCount = plan.eligible.length;
       globalThis.GSTFarmMap?.pauseForLoot?.(scene);
+      if (plan.waiting) {
+        host.steer(0, 0);
+        return true;
+      }
+      if (time < lootTickAt) return true;
       lootTickAt = time + 0.3;
-      scene.auto.idle(host, time, x, y);
+      const item = plan.eligible[0], auto = scene.auto;
+      const ax = auto.ax, ay = auto.ay;
+      // The last farm center may already belong to the NEXT pack. Redirect
+      // native idle temporarily so it can see drops at the pack just killed.
+      try {
+        auto.ax = item.x; auto.ay = item.y;
+        auto.idle({ ...host, loot: () => plan.eligible }, time, scene.px, scene.py);
+      } finally {
+        auto.ax = ax; auto.ay = ay;
+      }
       lootAt = performance.now();
       return true;
-    } catch { return false; } // Never interrupt the game's native Auto Farm on malformed data.
+    } catch { return false; } // Never interrupt native farming on malformed data.
   }
   function wrap(owner, object, key, factory) {
     const original = object[key], descriptor = Object.getOwnPropertyDescriptor(object, key);
@@ -239,10 +307,11 @@
       for (const undo of old.undo.reverse()) undo();
     }
     hits.clear(); retryAt = 0; manualUntil = 0; lootTickAt = -Infinity; lootAt = -Infinity;
+    observedTarget = null; lootGraceUntil = 0; lootActive = false; lootLastCount = 0;
   }
   function attach(scene) {
     if (!configured || suspended || (settings.idleMode !== "hold" && !settings.avoidEnabled
-        && !(settings.enabled && settings.preferLoot))) { detach(); return; }
+        && !settings.preferLoot)) { detach(); return; }
     if (binding && binding.scene === scene && binding.auto === scene?.auto && GSTFarmUpdate.attached(scene)) return;
     detach();
     if (!scene?.sys?.isActive?.() || !scene.self || !connected(scene) || typeof scene.auto?.idle !== "function"
@@ -283,6 +352,7 @@
     },
     attach(scene) { try { attach(scene); } catch { detach(); say("Chưa gắn được hành vi chờ/né quái."); } },
     controls: (scene) => !!binding && binding.scene === scene && job !== null,
+    pendingLoot: collecting,
     status(scene) {
       if (!scene?.auto?.on) return "";
       if (!binding || binding.scene !== scene) return settings.avoidEnabled ? "Chưa gắn được cơ chế né quái; chưa có lệnh né." : "";
