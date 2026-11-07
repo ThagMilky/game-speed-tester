@@ -36,11 +36,11 @@ Nếu Wiki thiếu: báo rõ, không bịa nội dung hoặc tuyên bố đã đ
 
 ## Source game cục bộ do người dùng cung cấp
 
-- Thư mục source: `C:\Users\Milk\Downloads\Game`. Khi cần source, được đọc trực tiếp các file liên quan tại đây; kiểm tra thư mục này trước khi xin người dùng gửi lại.
+- Ưu tiên đọc source đã có trong `game-reference/` của repository. Chỉ kiểm tra `C:\Users\Milk\Downloads\Game` khi Agent thực sự có quyền truy cập máy cục bộ; không giả định ChatGPT/GitHub connector đọc được đường dẫn này.
 - Đây là snapshot source game hiện được người dùng lưu, không bảo đảm trùng bản game live trong tương lai. Game có thể cập nhật nội dung, tên bundle/hash và tên minified.
 - Không phụ thuộc tên file cố định: liệt kê file hiện có, dùng Wiki để định hướng rồi đối chiếu nội dung, imports/exports và call site để nhận diện đúng hệ thống. `WorldScene.js`/`index.js` có thể là tên người dùng đổi lại.
 - Nếu thiếu file cần thiết, không xác định được file nào tương ứng, hoặc có nghi vấn về tên/phiên bản ảnh hưởng kết quả, hỏi người dùng ngắn gọn và nêu rõ điểm chưa chắc. Không yêu cầu lại toàn bộ source mặc định.
-  -Source trong thư mục cục bộ phục vụ đọc/đối chiếu; không tự sửa, di chuyển hoặc xóa. Chỉ lưu bản sao vào game-reference/ khi được người dùng cho phép rõ ràng và repository đích phù hợp về quyền phân phối.
+- Source trong thư mục cục bộ phục vụ đọc/đối chiếu; không tự sửa, di chuyển hoặc xóa. Chỉ lưu bản sao vào `game-reference/` khi được người dùng cho phép rõ ràng và repository đích phù hợp về quyền phân phối.
 
 ## Ranh giới implementation
 
