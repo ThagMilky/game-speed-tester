@@ -15,7 +15,7 @@
 | Entry / UI | `manifest.json`, `popup.html`, `popup.css`, `popup.js`, `popup-layout.js`, `popup-help.js` |
 | Menu trong game | `game-menu.js`, `menu-position.js`, `menu-popup.js`, `menu-monitor.js`, `menu-orientation.js` |
 | Speed, bay | `content.js`, `page.js`, `flight-content.js`, `flight-page.js`, `flight-popup.js` |
-| Auto Farm | `farm-page.js`, `farm-content.js`, `farm-session.js`, `farm-behavior.js`, `farm-map.js`, `farm-visual.js`, `farm-seals.js`, `farm-combat.js`, `farm-revive-policy.js` |
+| Auto Farm | `farm-page.js`, `farm-content.js`, `farm-session.js`, `farm-behavior.js`, `farm-boss-safety.js`, `farm-map.js`, `farm-visual.js`, `farm-seals.js`, `farm-combat.js`, `farm-revive-policy.js` |
 | Điều phối / navigation | `farm-update.js`, `farm-input.js`, `farm-routing.js`, `navigation.js` |
 | Tự hái | `harvest-main-options.js`, `harvest-options.js`, `harvest-content.js`, `harvest-page.js`, `harvest-popup.js`, `harvest-visual.js` |
 | Bí cảnh / history | `realm-content.js`, `realm-page.js`, `realm-popup.js`, `realm-history.js`, `realm-history-content.js`, `realm-history-popup.js`, `realm-time-page.js`, `realm-time-content.js`, `realm-time-popup.js` |
@@ -65,6 +65,7 @@ flowchart TD
 | -1 | `farm-combat.js` |
 | 0 | `farm-revive-policy.js` |
 | 1 | `farm-routing.js` |
+| 1.5 | `farm-boss-safety.js` (boss bí cảnh: né vùng skill; boss: HP thấp chờ hồi đan) |
 | 2 | `farm-behavior.js` (né quái) |
 | 2.5 | `farm-behavior.js` (ưu tiên nhặt vật phẩm) |
 | 3 | `quest-page.js` |
@@ -88,6 +89,7 @@ flowchart TD
 - `farm-map.js` dùng thêm `GSTFarmPriority` từ `farm-page.js` để xếp thứ tự mục tiêu ở chế độ tìm toàn map; đường vòng tránh boss tận dụng `host.clear`/`host.route` gốc thay vì thêm pathfinder mới.
 - `background-diagnostics.js` xuất log build `background-log-2`: mốc bắt đầu trang (`boot`), HP/vị trí trước khi chết, thay đổi vị trí lớn, mất nhịp, kết nối và trạng thái Auto Farm; giữ 80 sự kiện và 24 mốc quan trọng trong `sessionStorage` của cùng tab để đối chiếu qua navigation. `farm-content.js` chỉ ghi dấu `extension_timer` khi chính extension thêm tham số timer. `farm-diagnostics-content.js` lọc trường trước khi xuất log, không truyền URL, packet hoặc thông tin tài khoản.
 - `farm-behavior.js` ưu tiên nhặt đồ hợp lệ qua `scene.auto.idle()` ở priority 2.5 (sau né quái, trước các chuyến tìm bãi); `farm-map.js` có `pauseForLoot(scene)` để nhường đường và dùng sẵn `GSTNavigation` cho chế độ `idleMode: seek` trong bán kính tâm farm hoặc toàn map. Tùy chọn `preferLoot` và `idleMode` đi từ `popup.js` → `farm-content.js` → `farm-page.js`.
+- `farm-boss-safety.js` dùng `GSTFarmUpdate.add` priority 1.5, chỉ kích hoạt với `targetMode: boss`: né các vùng `scene.self.realm.inside.hazards` khi tọa độ và thời gian server còn mới; dưới 30% HP lùi an toàn, dùng `scene.auto.wait()/drink()` gốc (cooldown từ `pillWait('hp')`), trở lại đánh khi ≥ 40%. Có `controls()` cho map/seals nhường quyền, `status()` và `snapshot()` qua `farm-diagnostics.js`. Bản game tham chiếu chỉ xác nhận vùng hazard cho boss bí cảnh; không mặc định boss ngoài map có hazard.
 
 ## 5. Bảng định tuyến theo yêu cầu
 

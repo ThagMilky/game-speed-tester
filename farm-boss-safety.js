@@ -1,0 +1,282 @@
+(() => {
+  "use strict";
+  // Boss-only safety. Native Auto Farm remains responsible for combat, pills and paths.
+  const finite = Number.isFinite, distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const log = [], logKey = "gst:boss-safety:v1", threshold = 0.3, recovered = 0.4;
+  // Keep a bounded record through same-tab reloads (no packet, URL or account data).
+  try {
+    const rows = JSON.parse(sessionStorage.getItem(logKey) ?? "[]");
+    const allowed = ["pill", "retreat", "resume", "hazard", "kite", "no_route", "unsupported"];
+    if (Array.isArray(rows)) log.push(...rows.slice(-30).filter((row) => allowed.includes(row?.type)
+      && typeof row.at === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.at))
+      .map((row) => ({ at: row.at, type: row.type,
+        hp: finite(row.hp) ? Math.max(0, Math.min(1, row.hp)) : null,
+        position: Array.isArray(row.position) && row.position.length === 2 && row.position.every(finite)
+          ? row.position.map((v) => Math.max(-1e6, Math.min(1e6, v))) : null,
+        cooldown: finite(row.cooldown) ? Math.max(0, Math.min(86400, row.cooldown)) : null })));
+  } catch { /* Optional log, never influence Auto Farm. */ }
+  let settings = {}, binding = null, job = null, retreating = false, suspended = false;
+  let retryAt = 0, message = "", noteUntil = 0;
+  const sceneNow = () => window.game?.scene?.getScene?.("world")
+    ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
+  function note(scene, type, text, extra = {}) {
+    message = text; noteUntil = performance.now() + 2500;
+    if (!scene || type === null) return;
+    log.push({ at: new Date().toISOString(), type, hp: finite(scene.self?.hp) && finite(scene.self?.mh) && scene.self.mh > 0
+      ? Math.round(scene.self.hp / scene.self.mh * 1000) / 1000 : null,
+      position: [scene.px, scene.py].every(finite) ? [scene.px, scene.py].map((n) => Math.round(n * 100) / 100) : null,
+      cooldown: finite(extra.cooldown) ? Math.round(Math.max(0, extra.cooldown) * 10) / 10 : null });
+    if (log.length > 30) log.shift();
+    try { sessionStorage.setItem(logKey, JSON.stringify(log)); } catch { /* Optional diagnostics. */ }
+  }
+  function release() {
+    const old = job; job = null;
+    if (!old || !binding) return;
+    GSTNavigation.cancel(binding.scene, old.navigation);
+    if (old.steer && binding.scene.autoX === old.steer[0] && binding.scene.autoY === old.steer[1]) {
+      binding.scene.autoX = 0; binding.scene.autoY = 0;
+    }
+  }
+  function enabled() { return settings.targetMode === "boss" && (settings.bossDodge || settings.bossRetreat); }
+  function connected(scene) {
+    const d = scene.driver;
+    return !!d && !d.closing && !d.reconnecting && !d.displaced
+      && (d.online === false || d.link?.open?.() === true);
+  }
+  function blocked(scene) {
+    return suspended || !scene?.auto?.on || !scene.self || scene.self.dead || scene.leaving
+      || !scene.sys?.isActive?.() || !connected(scene) || GSTFarmRouting.blocked(scene)
+      || GSTFarmInput.movement(scene) || scene.auto.moved || scene.now() < scene.auto.pauseUntil
+      || scene.pendingSkill || scene.aiming || scene.heldAttack || scene.harvesting
+      || scene.auto.resting || scene.self.med || scene.self.fish || scene.keyCapture
+      || globalThis.GSTQuest?.active?.(scene)
+      || ["GSTRealm", "GSTChest", "GSTHarvest"].some((name) => globalThis[name]?.controls?.(scene))
+      || (scene.self.realm?.inside?.protection ?? 0) > 0;
+  }
+  const bossActor = (actor) => actor?.k === "m" && !actor.dead
+    && (actor.st?.cls === "boss" || actor.st?.wb === true)
+    && finite(actor.x) && finite(actor.y);
+  function nearbyBoss(scene, pos) {
+    const current = scene.views?.get?.(scene.auto.target);
+    if (bossActor(current) && (retreating || scene.self.combat || distance(pos, current) < 12)) return current;
+    const meta = scene.self?.realm?.inside?.boss;
+    if (finite(meta?.hp) && meta.hp > 0 && finite(meta.x) && finite(meta.y)
+        && (retreating || scene.self.combat || distance(pos, meta) < 12)) return meta;
+    if (!scene.self.combat) return null;
+    return [...(scene.views?.values?.() ?? [])].filter(bossActor)
+      .sort((a, b) => distance(a, pos) - distance(b, pos)).find((actor) => distance(actor, pos) < 12) ?? null;
+  }
+  function zone(scene) {
+    const w = scene.map?.w, h = scene.map?.h, radius = settings.enabled ? settings.radius : 11;
+    const home = GSTHarvest.farmOrigin(scene) ?? { x: scene.auto.ax, y: scene.auto.ay };
+    if (![w, h, radius, home.x, home.y].every(finite) || w <= 0 || h <= 0 || radius < 11) return null;
+    return { w, h, home, radius: settings.enabled && settings.searchScope === "map" ? Infinity : radius };
+  }
+  function inside(zone, pos) {
+    return finite(pos?.x) && finite(pos?.y) && pos.x >= 0 && pos.y >= 0
+      && pos.x < zone.w && pos.y < zone.h && distance(pos, zone.home) <= zone.radius;
+  }
+  function hazardZones(scene) {
+    const raw = scene.self?.realm?.inside?.hazards;
+    // Source snapshot uses server seconds, scene.clockOffset translates local monotonic seconds.
+    if (!Array.isArray(raw) || !finite(scene.clockOffset)
+        || !finite(scene.selfAt) || scene.now() - scene.selfAt > 3) return [];
+    const serverNow = performance.now() / 1000 + scene.clockOffset;
+    return raw.filter((area) => [area.x, area.y, area.radius, area.at, area.until].every(finite)
+      && area.radius > 0 && area.radius < 20 && area.until >= serverNow - 0.15
+      && area.at <= serverNow + 2.2 && area.until > area.at);
+  }
+  function segmentDistance(point, from, to) {
+    const dx = to.x - from.x, dy = to.y - from.y, len = dx * dx + dy * dy;
+    const t = len ? Math.max(0, Math.min(1, ((point.x - from.x) * dx + (point.y - from.y) * dy) / len)) : 0;
+    return Math.hypot(from.x + dx * t - point.x, from.y + dy * t - point.y);
+  }
+  function clearOfHazards(start, end, hazards) {
+    return hazards.every((area) => {
+      const radius = area.radius + 0.6, current = distance(start, area), destination = distance(end, area);
+      // When already in the marked circle, allow only an outward escape leg.
+      return current < radius ? destination > current + 0.15
+        : segmentDistance(area, start, end) >= radius;
+    });
+  }
+  function pathSafe(scene, start, points, zone, hazards) {
+    if (!Array.isArray(points) || !points.length || points.length > 40) return false;
+    let prior = start, length = 0;
+    for (const coords of points) {
+      if (!Array.isArray(coords) || coords.length < 2 || !coords.slice(0, 2).every(finite)) return false;
+      const point = { x: coords[0], y: coords[1] };
+      length += distance(prior, point);
+      if (length > 20 || !inside(zone, point) || !clearOfHazards(prior, point, hazards)) return false;
+      prior = point;
+    }
+    return true;
+  }
+  function destination(scene, host, pos, boss, hazards, lowHp, zone) {
+    const danger = hazards.filter((area) => distance(area, pos) <= area.radius + 1);
+    const origin = danger[0] ?? boss;
+    const baseAngle = origin ? Math.atan2(pos.y - origin.y, pos.x - origin.x) : 0;
+    let best = null, score = Infinity;
+    for (const step of [3, 5, 7, 9]) for (const turn of [0, 0.6, -0.6, 1.2, -1.2, 1.8, -1.8, Math.PI]) {
+      const angle = baseAngle + turn;
+      const point = { x: pos.x + Math.cos(angle) * step, y: pos.y + Math.sin(angle) * step };
+      if (!inside(zone, point) || hazards.some((area) => distance(area, point) <= area.radius + 0.7)) continue;
+      if (lowHp && boss && distance(point, boss) < Math.max(7, distance(pos, boss) + 0.5)) continue;
+      if (!lowHp && boss && distance(point, boss) < Math.max(2, distance(pos, boss) - 0.5)) continue;
+      const route = host.clear(pos.x, pos.y, point.x, point.y)
+        ? [[point.x, point.y]] : host.route(pos.x, pos.y, point.x, point.y);
+      if (!pathSafe(scene, pos, route, zone, hazards)) continue;
+      const value = route.reduce((total, waypoint, index) => {
+        const before = index ? { x: route[index - 1][0], y: route[index - 1][1] } : pos;
+        return total + distance(before, { x: waypoint[0], y: waypoint[1] });
+      }, 0) + Math.abs(turn) * 0.1;
+      if (value < score) { score = value; best = { point, path: route }; }
+    }
+    return best;
+  }
+  function drinkIfReady(scene, host, time, hp) {
+    const pills = host.pills?.("hp");
+    if (!Array.isArray(pills) || pills.length < 2 || !pills.slice(0, 2).every(finite)
+        || pills[0] + pills[1] <= 0 || typeof host.pillWait !== "function"
+        || typeof scene.auto.wait !== "function" || typeof scene.auto.drink !== "function") return false;
+    const cd = scene.auto.wait(host, "hp", time);
+    if (!finite(cd) || cd > 0 || !(time > scene.auto.pillAt)) return false;
+    // Native selection and native pill action; no invented cooldown or duplicate input.
+    scene.auto.drink(host, "hp", pills, hp, time);
+    note(scene, "pill", "Đang dùng đan HP bằng cơ chế gốc.");
+    return true;
+  }
+  function update(host, time) {
+    const scene = binding?.scene;
+    try {
+      if (!scene || !enabled() || blocked(scene) || !finite(time)
+          || !["steer", "route", "clear", "hp", "pills"].every((key) => typeof host?.[key] === "function")) {
+        release(); retreating = false; return false;
+      }
+      const pos = { x: scene.px, y: scene.py }, bounds = zone(scene);
+      if (!bounds || !inside(bounds, pos) || !finite(scene.self.hp) || !finite(scene.self.mh) || scene.self.mh <= 0
+          || !finite(scene.selfAt) || scene.now() - scene.selfAt > 3) {
+        release(); retreating = false; return false;
+      }
+      const boss = nearbyBoss(scene, pos), hp = scene.self.hp / scene.self.mh;
+      const hazards = settings.bossDodge ? hazardZones(scene) : [];
+      const danger = hazards.some((area) => distance(area, pos) <= area.radius + 0.8);
+      if (settings.bossRetreat && !retreating && boss && hp < threshold) {
+        retreating = true;
+        note(scene, "retreat", "HP dưới 30%; ưu tiên giữ khoảng cách và chờ đan HP.",
+          { cooldown: typeof host.pillWait === "function" ? host.pillWait("hp") : null });
+      }
+      if (retreating && (hp >= recovered || !boss)) {
+        retreating = false; release(); note(scene, "resume", "HP đã hồi an toàn hoặc boss không còn; tiếp tục Auto Farm.");
+        return false;
+      }
+      if (!danger && !retreating) { release(); return false; }
+      if (retreating && host.pills("hp")?.every((n) => n === 0) && settings.noRetreat === false) {
+        release(); retreating = false; return false; // Hand back native resting when pills are exhausted.
+      }
+      if (retreating) drinkIfReady(scene, host, time, hp);
+      if (retreating && !danger && boss && distance(pos, boss) >= 8) {
+        release(); host.steer(0, 0);
+        const cd = typeof host.pillWait === "function" ? host.pillWait("hp") : null;
+        const pills = host.pills("hp");
+        const empty = Array.isArray(pills) && pills.slice(0, 2).every((n) => n === 0);
+        if (performance.now() > noteUntil) note(scene, null, empty
+          ? "Hết đan HP; đang cố giữ khoảng cách với boss."
+          : finite(cd) && cd > 0 ? `Đang giữ khoảng cách; đan HP còn hồi ${cd.toFixed(1)} giây.`
+            : "Đang giữ khoảng cách với boss để hồi HP.");
+        return true;
+      }
+      if (job && (!inside(bounds, job.point) || hazards.some((area) => distance(area, job.point) <= area.radius + 0.7)
+          || !pathSafe(scene, pos, job.navigation.path.length ? job.navigation.path : [[job.point.x, job.point.y]], bounds, hazards)
+          || (retreating && boss && distance(job.point, boss) < 7))) release();
+      if (!job && time >= retryAt) {
+        const next = destination(scene, host, pos, boss, hazards, retreating, bounds);
+        if (next) {
+          const navigation = Object.assign(Object.create(scene.auto), { path: next.path.slice(),
+            goalX: next.point.x, goalY: next.point.y, pathAt: time, lastX: pos.x, lastY: pos.y,
+            stillSince: time, sideUntil: 0, sideX: 0, sideY: 0, stuckCount: 0 });
+          job = { ...next, navigation, startedAt: time, progressAt: time, steer: null };
+          note(scene, danger ? "hazard" : "kite", danger ? "Đang né vùng skill boss." : "Đang lùi xa boss khi HP thấp.");
+        } else {
+          retryAt = time + 1.5;
+          if (performance.now() > noteUntil) note(scene, "no_route", "Không có đường né boss an toàn trong vùng farm.");
+        }
+      }
+      if (!job) { host.steer(0, 0); return true; }
+      const owner = job;
+      if (GSTNavigation.progressed(scene, owner, owner.navigation.path, owner.point.x, owner.point.y, 0.3)) owner.progressAt = time;
+      if (distance(pos, owner.point) < 0.7 || time - owner.progressAt > 3 || time - owner.startedAt > 6) {
+        release(); retryAt = time + 0.5; host.steer(0, 0); return true;
+      }
+      const walking = { ...host,
+        clear: (x, y, gx, gy) => host.clear(x, y, gx, gy)
+          && inside(bounds, { x: gx, y: gy }) && clearOfHazards({ x, y }, { x: gx, y: gy }, hazards),
+        route: (x, y, gx, gy) => {
+          const route = host.route(x, y, gx, gy);
+          return pathSafe(scene, { x, y }, route, bounds, hazards) ? route : null;
+        },
+        steer: (x, y) => {
+          const next = { x: pos.x + x * 0.25, y: pos.y + y * 0.25 };
+          if (!finite(x) || !finite(y) || !inside(bounds, next)
+              || !clearOfHazards(pos, next, hazards)) {
+            owner.denied = true; x = 0; y = 0;
+          }
+          scene.autoX = x; scene.autoY = y;
+          if (job === owner) owner.steer = [x, y];
+        }
+      };
+      owner.denied = false;
+      if (!GSTNavigation.walk(scene, owner.navigation, walking, time, pos.x, pos.y,
+          owner.point.x, owner.point.y, 0.5) || owner.denied) {
+        release(); retryAt = time + 1.5; host.steer(0, 0);
+      }
+      return true;
+    } catch {
+      release(); retreating = false; note(scene, "unsupported", "Dữ liệu né boss không phù hợp; đã nhường Auto Farm.");
+      return false;
+    }
+  }
+  function guard() {
+    const scene = binding?.scene;
+    if (!scene) return;
+    if (sceneNow() !== scene || binding.auto !== scene.auto || !scene.sys?.isActive?.()) { detach(); return; }
+    if (blocked(scene)) { release(); retreating = false; }
+  }
+  function detach() {
+    release(); retreating = false; retryAt = 0;
+    const old = binding; binding = null;
+    if (!old) return;
+    old.remove(); old.scene.events.off("preupdate", guard);
+    old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach);
+  }
+  function attach(scene) {
+    if (!enabled() || suspended || !scene?.auto) { detach(); return; }
+    if (binding?.scene === scene && binding.auto === scene.auto && GSTFarmUpdate.attached(scene)) return;
+    detach();
+    if (!scene?.sys?.isActive?.() || typeof scene.auto?.update !== "function" || !scene.events?.on
+        || !scene.events.off || typeof scene.auto?.walk !== "function") return;
+    const owner = { scene, auto: scene.auto, remove: GSTFarmUpdate.add(scene, 1.5, update) };
+    binding = owner;
+    scene.events.on("preupdate", guard);
+    scene.events.on("shutdown", detach); scene.events.on("destroy", detach);
+  }
+  globalThis.GSTFarmBossSafety = {
+    configure(scene, value) {
+      settings = { targetMode: value.targetMode, bossDodge: value.bossDodge !== false,
+        bossRetreat: value.bossRetreat !== false, enabled: value.enabled === true,
+        radius: value.radius, searchScope: value.searchScope, noRetreat: value.noRetreat !== false };
+      detach(); this.attach(scene);
+    },
+    attach(scene) { try { attach(scene); } catch { detach(); } },
+    controls: (scene) => !!binding && binding.scene === scene && (job !== null || retreating),
+    status(scene) {
+      if (binding?.scene !== scene || !scene?.auto?.on) return "";
+      if (performance.now() < noteUntil) return message;
+      if (retreating) return "HP thấp: đang né boss và chờ đan HP, chưa tiếp tục đánh.";
+      return job ? "Đang di chuyển tránh vùng skill boss." : "";
+    },
+    snapshot: () => ({ build: "boss-safety-1", active: !!job, retreating,
+      events: log.slice(-30).map((row) => ({ ...row })) })
+  };
+  window.addEventListener("pagehide", () => { suspended = true; detach(); });
+  window.addEventListener("pageshow", () => { suspended = false; GSTFarmBossSafety.attach(sceneNow()); });
+})();

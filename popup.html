@@ -109,6 +109,12 @@
           <label class="check-row"><input id="farmExcludeBoss" type="checkbox"><span>Không chọn boss làm mục tiêu</span></label>
           <p class="hint">Tự lưu. Lọc boss theo dữ liệu game cung cấp; kỹ năng đánh lan vẫn có thể trúng boss gần đó. Không tự tránh đường đi gần boss. Nếu chọn Chỉ boss cùng lúc, Auto Farm sẽ không chọn mục tiêu.</p>
           <p class="hint">Boss trước: ưu tiên boss có dữ liệu và phù hợp bộ lọc, sau đó tới quái level cao nhất còn tiếp cận được. Level cao → thấp và Level thấp → cao chỉ chọn quái thường. ≤ 10: level 10 trở xuống; ≥ 10: level 10 trở lên; khoảng 10–20 gồm cả hai đầu. Các chế độ ưu tiên không đặt giới hạn level; vẫn áp dụng tùy chọn né quái. Bộ lọc dùng được cả với bán kính gốc.</p>
+          <div id="farmBossSafetyOptions" class="separated" hidden>
+            <p class="field-title">Tự bảo vệ khi chỉ đánh boss</p>
+            <label class="check-row"><input id="farmBossDodge" type="checkbox" checked><span>Né vùng skill boss khi game có tọa độ cảnh báo</span></label>
+            <label class="check-row"><input id="farmBossRetreat" type="checkbox" checked><span>HP dưới 30%: lùi giữ khoảng cách, chờ dùng đan (đánh lại khi HP ≥ 40%)</span></label>
+            <p class="hint">Chỉ áp dụng cho Chỉ boss. Né skill cần dữ liệu vùng nguy hiểm từ game (đã thấy ở boss bí cảnh). Thời gian hồi đan lấy từ game, không đặt cố định 10 giây. Bấm Lưu lựa chọn quái để áp dụng.</p>
+          </div>
           <p class="hint">Chế độ Tự chọn số ô và Toàn map cũng yêu cầu bật bay nếu nhân vật đang đi bộ.</p>
           </div><div class="wide-group">
           <div class="separated">

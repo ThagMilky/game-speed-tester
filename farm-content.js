@@ -35,6 +35,8 @@
       showTargetLine: value?.showTargetLine === true,
       autoRespawn: true,
       noRetreat: value?.noRetreat !== false,
+      bossDodge: value?.bossDodge !== false,
+      bossRetreat: value?.bossRetreat !== false,
       searchScope: value?.searchScope === "map" ? "map" : "radius",
       breakSeals: value?.breakSeals === true,
       idleMode: ["home", "seek"].includes(value?.idleMode) ? value.idleMode : "hold",

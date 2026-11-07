@@ -52,6 +52,19 @@
     result.persisted = typeof row.persisted === "boolean" ? row.persisted : null;
     return result;
   }
+  function cleanBossSafety(data) {
+    const allowed = ["pill", "retreat", "resume", "hazard", "kite", "no_route", "unsupported"];
+    const number = (value) => Number.isFinite(value) ? Math.round(Math.max(0, Math.min(86400, value)) * 1000) / 1000 : null;
+    const point = (value) => Array.isArray(value) && value.length === 2 && value.every(Number.isFinite)
+      ? value.map((n) => Math.round(Math.max(-1e6, Math.min(1e6, n)) * 100) / 100) : null;
+    const entries = (Array.isArray(data?.events) ? data.events : []).slice(-30).filter((row) => allowed.includes(row?.type));
+    return { build: data?.build === "boss-safety-1" ? "boss-safety-1" : "unavailable",
+      active: data?.active === true, retreating: data?.retreating === true,
+      events: entries.map((row) => ({
+        at: typeof row.at === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.at) ? row.at : "",
+        type: row.type, hp: number(row.hp), position: point(row.position), cooldown: number(row.cooldown)
+      })) };
+  }
   // Isolated-world log collection must still work if the shared schema was not
   // initialized in this page; preserve its field allowlist on that fallback.
   function cleanMovement(row) {
@@ -85,6 +98,7 @@
         lastObserved: cleanVitals(data?.background?.lastObserved),
         events: (Array.isArray(data?.background?.events) ? data.background.events : []).slice(-80).map(cleanBackground).filter(Boolean),
         incidents: (Array.isArray(data?.background?.incidents) ? data.background.incidents : []).slice(-24).map(cleanBackground).filter(Boolean) },
+      bossSafety: cleanBossSafety(data?.bossSafety),
       movement: { build: data?.movement?.build === "movement-log-1" ? "movement-log-1" : "unavailable",
         tracking: data?.movement?.tracking === true,
         scope: "Last 120 observations in this page; reset on reload",

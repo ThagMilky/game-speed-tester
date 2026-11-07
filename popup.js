@@ -35,6 +35,8 @@ const farmSearchScope = document.getElementById("farmSearchScope");
 const farmShowTargetLine = document.getElementById("farmShowTargetLine");
 const farmRadius = document.getElementById("farmRadius");
 const farmTargetMode = document.getElementById("farmTargetMode");
+const farmBossDodge = document.getElementById("farmBossDodge");
+const farmBossRetreat = document.getElementById("farmBossRetreat");
 const farmExcludeBoss = document.getElementById("farmExcludeBoss");
 const farmTargetLevel = document.getElementById("farmTargetLevel");
 const farmTargetMinLevel = document.getElementById("farmTargetMinLevel");
@@ -46,6 +48,7 @@ const farmAvoidLevel = document.getElementById("farmAvoidLevel");
 const farmAvoidDistance = document.getElementById("farmAvoidDistance");
 const positiveLevel = (value, fallback) => Number.isSafeInteger(value) && value > 0 ? value : fallback;
 function syncFarmLevelInputs() {
+  document.getElementById("farmBossSafetyOptions").hidden = farmTargetMode.value !== "boss";
   const range = farmTargetMode.value === "range";
   document.getElementById("farmSingleLevel").hidden = range;
   document.getElementById("farmLevelRange").hidden = !range;
@@ -166,7 +169,8 @@ async function saveFarm(section) {
       }
     }
     patch = { targetMode, targetLevel: positiveLevel(targetLevel, 1),
-      targetMinLevel: positiveLevel(targetMinLevel, 1), targetMaxLevel: positiveLevel(targetMaxLevel, 20) };
+      targetMinLevel: positiveLevel(targetMinLevel, 1), targetMaxLevel: positiveLevel(targetMaxLevel, 20),
+      bossDodge: farmBossDodge.checked, bossRetreat: farmBossRetreat.checked };
     if (targetMode === "boss") { patch.excludeBoss = false; farmExcludeBoss.checked = false; }
   } else {
     if (farmAvoidEnabled.checked && (!farmAvoidLevel.reportValidity() || !farmAvoidDistance.reportValidity())) return;
@@ -374,6 +378,8 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   fontControls.disabled = false;
   farmSearchScope.value = farmPreferences?.enabled === true && farmPreferences?.searchScope === "map" ? "map" : "radius";
   farmNoRetreat.checked = farmPreferences?.noRetreat !== false;
+  farmBossDodge.checked = farmPreferences?.bossDodge !== false;
+  farmBossRetreat.checked = farmPreferences?.bossRetreat !== false;
   syncFarmScope();
   farmShowTargetLine.checked = farmPreferences?.showTargetLine === true;
   breakSeals.checked = farmPreferences?.breakSeals === true;

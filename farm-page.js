@@ -5,7 +5,8 @@
   const baseRadius = 11;
   globalThis.GSTFarmConfigurationReady = false;
   let settings = { enabled: false, radius: 22, autoRespawn: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
-    searchScope: "radius", idleMode: "hold", preferLoot: true, avoidEnabled: false, excludeBoss: false, avoidLevel: 10, avoidDistance: 2 };
+    searchScope: "radius", idleMode: "hold", preferLoot: true, avoidEnabled: false, excludeBoss: false, avoidLevel: 10, avoidDistance: 2,
+    bossDodge: true, bossRetreat: true };
   let filterBinding = null;
   let death = null;
   let respawnMessage = "";
@@ -320,6 +321,7 @@
       globalThis.GSTFarmCombat?.attach(scene);
       globalThis.GSTFarmRevivePolicy?.attach(scene);
       globalThis.GSTFarmBehavior?.attach(scene);
+      globalThis.GSTFarmBossSafety?.attach(scene);
       globalThis.GSTFarmMap?.attach(scene);
       globalThis.GSTFarmVisual?.attach(scene);
       globalThis.GSTFarmRouting?.attach(scene);
@@ -555,6 +557,7 @@
       globalThis.GSTFarmCombat?.attach(scene);
       globalThis.GSTFarmRevivePolicy?.attach(scene);
       globalThis.GSTFarmBehavior?.attach(scene);
+      globalThis.GSTFarmBossSafety?.attach(scene);
       globalThis.GSTFarmRouting?.attach(scene);
     }
   };
@@ -577,6 +580,7 @@
         || settings.avoidEnabled !== (data.avoidEnabled === true) || settings.excludeBoss !== (data.excludeBoss === true)
         || settings.avoidLevel !== data.avoidLevel;
       settings = { enabled: data.enabled, radius: data.radius, autoRespawn: true, noRetreat: data.noRetreat !== false,
+        bossDodge: data.bossDodge !== false, bossRetreat: data.bossRetreat !== false,
         showTargetLine: data.showTargetLine === true,
         searchScope: data.searchScope === "map" ? "map" : "radius",
         targetMode: targetMode(data.targetMode),
@@ -588,6 +592,7 @@
         avoidLevel: Number.isSafeInteger(data.avoidLevel) && data.avoidLevel > 0 ? data.avoidLevel : 10,
         avoidDistance: finite(data.avoidDistance) ? Math.max(1, Math.min(6, data.avoidDistance)) : 2 };
       globalThis.GSTFarmCombat?.configure(sceneNow(), settings.noRetreat);
+      globalThis.GSTFarmBossSafety?.configure(sceneNow(), settings);
       globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);
       globalThis.GSTFarmMap?.configure(sceneNow(), settings);
       globalThis.GSTFarmVisual?.configure(sceneNow(), settings);
@@ -628,7 +633,7 @@
       } catch { /* Read-only status must not start or restart gameplay. */ }
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
         message: (settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage
-          || (dead && respawnMessage ? respawnMessage : (waitReason || globalThis.GSTFarmMap?.status(sceneNow()) || globalThis.GSTFarmBehavior?.status(sceneNow())
+          || (dead && respawnMessage ? respawnMessage : (globalThis.GSTFarmBossSafety?.status(sceneNow()) || waitReason || globalThis.GSTFarmMap?.status(sceneNow()) || globalThis.GSTFarmBehavior?.status(sceneNow())
             || globalThis.GSTFarmSession?.status(sceneNow()) || globalThis.GSTFarmSeals?.status(sceneNow()) || message))),
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);
     }

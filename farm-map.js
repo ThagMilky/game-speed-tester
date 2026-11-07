@@ -180,14 +180,16 @@
     const scene = binding?.scene;
     if (!scene) return;
     if (sceneNow() !== scene || binding.auto !== scene.auto || !scene.sys?.isActive?.()) { detach(); return; }
-    if (job && (!allowed(scene) || scene.castAt !== job.castAt || GSTFarmBehavior.controls(scene))) {
+    if (job && (!allowed(scene) || scene.castAt !== job.castAt || GSTFarmBehavior.controls(scene)
+        || globalThis.GSTFarmBossSafety?.controls(scene))) {
       release(); retryAt = scene.now() + 3;
     }
   }
   function update(host, time, scouting = false) {
     const scene = binding?.scene;
     try {
-      if (!scene || !wanted() || suspended || !allowed(scene) || GSTFarmBehavior.controls(scene)) { release(); return false; }
+      if (!scene || !wanted() || suspended || !allowed(scene) || GSTFarmBehavior.controls(scene)
+          || globalThis.GSTFarmBossSafety?.controls(scene)) { release(); return false; }
       const area = searchArea(scene);
       if (!area) { release(); return false; }
       if (typeof GSTHarvest.needsRecovery !== "function" || GSTHarvest.needsRecovery(scene)) { release(); return false; }

@@ -108,6 +108,7 @@
     snapshot: () => ({ build: "farm-stop-1", tracking: binding !== null,
       background: globalThis.GSTBackgroundDiagnostics?.snapshot(),
       movement: globalThis.GSTMovementDiagnostics?.snapshot(),
+      bossSafety: globalThis.GSTFarmBossSafety?.snapshot(),
       current: flags(binding?.scene), lastStop: rows.findLast((row) => row.event === "off") ?? null, events: [...rows] })
   };
   window.addEventListener("message", (event) => {
