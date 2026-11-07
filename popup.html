@@ -116,16 +116,18 @@
             <p class="save-mode">Tự lưu · chỉ áp dụng khi Auto Farm bật · mặc định BẬT</p>
             <p class="hint">BẬT: khi máu thấp và hết cả hai loại đan HP, tool bỏ bước tự rút lui/bế quan hồi máu để Auto Farm tiếp tục chiến đấu. TẮT: game tự rút lui/bế quan và tiếp tục farm khi hồi đủ 95% HP. Còn đan thì game vẫn dùng theo cài đặt. Không bỏ qua chết, choáng, mất kết nối hoặc trạng thái game chặn hành động; Né quái level cao vẫn là tùy chọn riêng.</p>
           </div>
-          <details class="advanced separated"><summary>Chờ và né quái nâng cao</summary><div class="advanced-body">
+          <details class="advanced separated"><summary>Khi hết mục tiêu · nhặt đồ · né quái</summary><div class="advanced-body">
             <label for="farmIdleMode">Khi không còn mục tiêu</label>
-            <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi đứng chờ tại chỗ</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option></select>
-            <p class="hint">Giữ nguyên tâm và bán kính tìm quái. Rút lui hồi máu vẫn do game xử lý. Thu hoạch/Tự vào bí cảnh có thể di chuyển nếu bạn bật riêng.</p>
+            <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi đứng chờ tại chỗ</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option><option value="seek">Nhặt đồ rồi chủ động tìm quái mới</option></select>
+            <p class="hint">Chủ động tìm: dò vị trí mới trong bán kính đã chọn, hoặc dùng cách dò toàn map có sẵn. Vẫn giữ bộ lọc quái, giới hạn vùng tìm và nhường thao tác khác.</p>
+            <label class="check-row"><input id="farmPreferLoot" type="checkbox" checked><span>Ưu tiên nhặt đồ sau giao tranh, trước khi chuyển bãi quái</span></label>
+            <p class="hint">Dùng cơ chế nhặt đồ gốc; chỉ nhặt vật phẩm game cho phép. Khi còn giao tranh hoặc đồ bị kẹt, hệ thống nhường xử lý an toàn và giới hạn thời gian thử. Bấm Lưu Tìm / nhặt / né để áp dụng.</p>
             <label class="check-row"><input id="farmAvoidEnabled" type="checkbox"><span>Né quái level cao khi Auto Farm bật</span></label>
             <div class="two-columns">
               <div><label for="farmAvoidLevel">Né level ≥</label><input id="farmAvoidLevel" type="number" min="1" step="1" value="10" required></div>
               <div><label for="farmAvoidDistance">Lùi mỗi lượt (1–6 ô)</label><input id="farmAvoidDistance" type="number" min="1" max="6" step="0.5" value="2" required></div>
             </div>
-            <button id="saveFarmBehavior" type="button" class="full">Lưu cách chờ / né quái</button>
+            <button id="saveFarmBehavior" type="button" class="full">Lưu tìm quái / nhặt đồ / né quái</button>
             <p class="hint">Chỉ hoạt động khi Auto Farm đang BẬT. Quái từ mức né trở lên không được chọn để chủ động đánh, kể cả khi chọn Tất cả/Chỉ boss. Chỉ lùi sau đòn có nguồn xác định; không đoán từ con gần nhất. Chờ 3 giây giữa lượt né; ra xa thì tiếp tục farm quái phù hợp. 2 ô không bảo đảm thoát đòn đánh xa. Không có đường ngắn an toàn thì nhường xử lý gốc.</p>
           </div></details>
           </div></div>
@@ -392,7 +394,7 @@
     <div class="save-dock-buttons">
       <button type="button" data-trigger-save="saveFarm">Phạm vi</button>
       <button type="button" data-trigger-save="saveFarmFilter">Bộ lọc quái</button>
-      <button type="button" data-trigger-save="saveFarmBehavior">Chờ / né</button>
+      <button type="button" data-trigger-save="saveFarmBehavior">Tìm / nhặt / né</button>
     </div>
   </div>
   <footer>

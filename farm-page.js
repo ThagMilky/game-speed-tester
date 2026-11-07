@@ -5,7 +5,7 @@
   const baseRadius = 11;
   globalThis.GSTFarmConfigurationReady = false;
   let settings = { enabled: false, radius: 22, autoRespawn: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
-    searchScope: "radius", idleMode: "hold", avoidEnabled: false, excludeBoss: false, avoidLevel: 10, avoidDistance: 2 };
+    searchScope: "radius", idleMode: "hold", preferLoot: true, avoidEnabled: false, excludeBoss: false, avoidLevel: 10, avoidDistance: 2 };
   let filterBinding = null;
   let death = null;
   let respawnMessage = "";
@@ -466,12 +466,22 @@
       }
       if (!ensureFlying(s, time)) return;
       const position = host.pos();
-      const enemies = ranked() && host.allEligibleEnemies ? host.allEligibleEnemies() : host.enemies();
-      if (!Array.isArray(position) || !position.every(finite) || position.length !== 2 || !Array.isArray(enemies)) {
-        stop("Invalid Auto Farm runtime data; stopped.", true);
+      if (!Array.isArray(position) || !position.every(finite) || position.length !== 2) {
+        stop("Invalid Auto Farm position data; stopped.", true);
         return;
       }
       const pos = { x: position[0], y: position[1] };
+      if (settings.preferLoot && !host.inCombat() && host.loot().some((loot) => finite(loot.x) && finite(loot.y)
+          && distance(loot, pos) < baseRadius && distance(loot, { x: s.auto.ax, y: s.auto.ay }) < baseRadius
+          && !s.auto.lootSkip?.has(`${loot.x.toFixed(1)},${loot.y.toFixed(1)}`))) {
+        message = "Đang ưu tiên nhặt chiến lợi phẩm gần trước khi tìm quái tiếp.";
+        return;
+      }
+      const enemies = ranked() && host.allEligibleEnemies ? host.allEligibleEnemies() : host.enemies();
+      if (!Array.isArray(enemies)) {
+        stop("Invalid Auto Farm enemy data; stopped.", true);
+        return;
+      }
       const eligible = enemies.filter((enemy) => finite(enemy?.id) && finite(enemy.x) && finite(enemy.y)
         && !enemy.dead && enemy.hostile && (settings.searchScope === "map" ? finite(s.scene.map?.w) && finite(s.scene.map?.h)
           && enemy.x >= 0 && enemy.y >= 0 && enemy.x < s.scene.map.w && enemy.y < s.scene.map.h
@@ -536,6 +546,7 @@
       } else {
         center(s, s.home);
         message = settings.idleMode === "hold" ? "Không có quái phù hợp; nhặt đồ rồi đứng chờ trong vùng farm."
+          : settings.idleMode === "seek" ? (globalThis.GSTFarmMap?.status(s.scene) || "Đang dò vùng tìm quái mới sau khi nhặt đồ.")
           : "Không có quái phù hợp; Auto Farm quay về tâm farm gốc.";
       }
     } catch {
@@ -591,7 +602,8 @@
         targetLevel: Number.isSafeInteger(data.targetLevel) && data.targetLevel > 0 ? data.targetLevel : 1,
         targetMinLevel: Number.isSafeInteger(data.targetMinLevel) && data.targetMinLevel > 0 ? data.targetMinLevel : 1,
         targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20,
-        idleMode: data.idleMode === "home" ? "home" : "hold", avoidEnabled: data.avoidEnabled === true, excludeBoss: data.excludeBoss === true,
+        idleMode: ["home", "seek"].includes(data.idleMode) ? data.idleMode : "hold",
+        preferLoot: data.preferLoot !== false, avoidEnabled: data.avoidEnabled === true, excludeBoss: data.excludeBoss === true,
         avoidLevel: Number.isSafeInteger(data.avoidLevel) && data.avoidLevel > 0 ? data.avoidLevel : 10,
         avoidDistance: finite(data.avoidDistance) ? Math.max(1, Math.min(6, data.avoidDistance)) : 2 };
       globalThis.GSTFarmCombat?.configure(sceneNow(), settings.noRetreat);

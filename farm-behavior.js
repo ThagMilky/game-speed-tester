@@ -1,9 +1,10 @@
 (() => {
   "use strict";
   const finite = Number.isFinite;
-  let settings = { idleMode: "hold", avoidEnabled: false, avoidLevel: 10, avoidDistance: 2, enabled: false, radius: 22 };
+  let settings = { idleMode: "hold", preferLoot: true, avoidEnabled: false, avoidLevel: 10, avoidDistance: 2, enabled: false, radius: 22 };
   let binding = null, job = null, configured = false, suspended = false, manualUntil = 0, retryAt = 0, noteUntil = 0, message = "";
   const hits = new Map();
+  let lootTickAt = -Infinity, lootAt = -Infinity;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -190,6 +191,38 @@
       return true;
     } catch { release("Interface né quái chưa phù hợp; đã nhường lại game."); return false; }
   }
+  // Collect eligible nearby drops before seeking the next distant monster.
+  // Reuse the game's own idle()/pickup() checks and its six-second loot timeout.
+  function collectLoot(host, time) {
+    const scene = binding?.scene;
+    try {
+      if (!scene || !settings.enabled || !settings.preferLoot || suspended || !finite(time)
+          || blocked(scene) || manual(scene) || modal(binding) || performance.now() < manualUntil
+          || typeof host?.loot !== "function" || typeof host.inCombat !== "function"
+          || typeof scene.auto?.idle !== "function"
+          || host.inCombat() || GSTHarvest.needsRecovery?.(scene)
+          || globalThis.GSTQuest?.active?.(scene)
+          || ["GSTFarmSeals", "GSTChest", "GSTRealm", "GSTHarvest", "GSTQuest"]
+            .some((name) => globalThis[name]?.controls?.(scene))) return false;
+      const x = scene.px, y = scene.py, ax = scene.auto.ax, ay = scene.auto.ay;
+      if (![x, y, ax, ay].every(finite)) return false;
+      const current = scene.views.get(scene.auto.target);
+      if (current?.k === "m" && !current.dead && finite(current.x) && finite(current.y)
+          && Math.hypot(current.x - x, current.y - y) < 3.5) return false;
+      const loot = host.loot();
+      if (!Array.isArray(loot) || !loot.some((item) => finite(item.x) && finite(item.y)
+          && Math.hypot(item.x - x, item.y - y) < 11
+          && Math.hypot(item.x - ax, item.y - ay) < 11
+          && !scene.auto.lootSkip?.has(`${item.x.toFixed(1)},${item.y.toFixed(1)}`))) return false;
+      // Avoid repeatedly sending pickup actions on every animation frame.
+      if (time < lootTickAt) return true;
+      globalThis.GSTFarmMap?.pauseForLoot?.(scene);
+      lootTickAt = time + 0.3;
+      scene.auto.idle(host, time, x, y);
+      lootAt = performance.now();
+      return true;
+    } catch { return false; } // Never interrupt the game's native Auto Farm on malformed data.
+  }
   function wrap(owner, object, key, factory) {
     const original = object[key], descriptor = Object.getOwnPropertyDescriptor(object, key);
     const wrapper = factory(original); object[key] = wrapper;
@@ -205,10 +238,11 @@
       old.scene.events.off("preupdate", guard); old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach);
       for (const undo of old.undo.reverse()) undo();
     }
-    hits.clear(); retryAt = 0; manualUntil = 0;
+    hits.clear(); retryAt = 0; manualUntil = 0; lootTickAt = -Infinity; lootAt = -Infinity;
   }
   function attach(scene) {
-    if (!configured || suspended || (settings.idleMode !== "hold" && !settings.avoidEnabled)) { detach(); return; }
+    if (!configured || suspended || (settings.idleMode !== "hold" && !settings.avoidEnabled
+        && !(settings.enabled && settings.preferLoot))) { detach(); return; }
     if (binding && binding.scene === scene && binding.auto === scene?.auto && GSTFarmUpdate.attached(scene)) return;
     detach();
     if (!scene?.sys?.isActive?.() || !scene.self || !connected(scene) || typeof scene.auto?.idle !== "function"
@@ -233,12 +267,14 @@
       return result;
     });
     owner.undo.push(GSTFarmUpdate.add(scene, 2, update));
+    owner.undo.push(GSTFarmUpdate.add(scene, 2.5, collectLoot));
     scene.events.on("preupdate", guard); scene.events.on("shutdown", detach); scene.events.on("destroy", detach);
   }
   globalThis.GSTFarmBehavior = {
     configure(scene, value) {
       configured = true;
-      const next = { idleMode: value.idleMode === "home" ? "home" : "hold", avoidEnabled: value.avoidEnabled === true,
+      const next = { idleMode: ["home", "seek"].includes(value.idleMode) ? value.idleMode : "hold",
+        preferLoot: value.preferLoot !== false, avoidEnabled: value.avoidEnabled === true,
         avoidLevel: Number.isSafeInteger(value.avoidLevel) && value.avoidLevel > 0 ? value.avoidLevel : 10,
         avoidDistance: finite(value.avoidDistance) ? Math.max(1, Math.min(6, value.avoidDistance)) : 2,
         enabled: value.enabled === true, radius: value.radius, searchScope: value.searchScope };
@@ -251,6 +287,7 @@
       if (!scene?.auto?.on) return "";
       if (!binding || binding.scene !== scene) return settings.avoidEnabled ? "Chưa gắn được cơ chế né quái; chưa có lệnh né." : "";
       if (performance.now() < noteUntil) return message;
+      if (performance.now() - lootAt < 1500) return "Đang ưu tiên nhặt đồ tại bãi vừa đánh.";
       return performance.now() - binding.idleAt < 1500
         ? "Hết mục tiêu phù hợp và đồ cần nhặt; đang đứng chờ quái xuất hiện." : "";
     },

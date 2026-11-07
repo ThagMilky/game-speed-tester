@@ -40,6 +40,7 @@ const farmTargetLevel = document.getElementById("farmTargetLevel");
 const farmTargetMinLevel = document.getElementById("farmTargetMinLevel");
 const farmTargetMaxLevel = document.getElementById("farmTargetMaxLevel");
 const farmIdleMode = document.getElementById("farmIdleMode");
+const farmPreferLoot = document.getElementById("farmPreferLoot");
 const farmAvoidEnabled = document.getElementById("farmAvoidEnabled");
 const farmAvoidLevel = document.getElementById("farmAvoidLevel");
 const farmAvoidDistance = document.getElementById("farmAvoidDistance");
@@ -172,7 +173,8 @@ async function saveFarm(section) {
     const avoidLevel = farmAvoidLevel.valueAsNumber, avoidDistance = farmAvoidDistance.valueAsNumber;
     if (farmAvoidEnabled.checked && (!Number.isSafeInteger(avoidLevel) || avoidLevel < 1
         || !Number.isFinite(avoidDistance) || avoidDistance < 1 || avoidDistance > 6)) return;
-    patch = { idleMode: farmIdleMode.value === "home" ? "home" : "hold",
+    patch = { idleMode: ["home", "seek"].includes(farmIdleMode.value) ? farmIdleMode.value : "hold",
+      preferLoot: farmPreferLoot.checked,
       avoidLevel: positiveLevel(avoidLevel, 10),
       avoidDistance: Number.isFinite(avoidDistance) ? Math.max(1, Math.min(6, avoidDistance)) : 2 };
   }
@@ -376,7 +378,8 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   farmShowTargetLine.checked = farmPreferences?.showTargetLine === true;
   breakSeals.checked = farmPreferences?.breakSeals === true;
   breakSeals.disabled = false;
-  farmIdleMode.value = farmPreferences?.idleMode === "home" ? "home" : "hold";
+  farmIdleMode.value = ["home", "seek"].includes(farmPreferences?.idleMode) ? farmPreferences.idleMode : "hold";
+  farmPreferLoot.checked = farmPreferences?.preferLoot !== false;
   farmAvoidEnabled.checked = farmPreferences?.avoidEnabled === true;
   farmExcludeBoss.checked = farmPreferences?.excludeBoss === true;
   farmAvoidLevel.value = positiveLevel(farmPreferences?.avoidLevel, 10);

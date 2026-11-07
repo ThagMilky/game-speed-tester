@@ -65,7 +65,8 @@ flowchart TD
 | -1 | `farm-combat.js` |
 | 0 | `farm-revive-policy.js` |
 | 1 | `farm-routing.js` |
-| 2 | `farm-behavior.js` |
+| 2 | `farm-behavior.js` (né quái) |
+| 2.5 | `farm-behavior.js` (ưu tiên nhặt vật phẩm) |
 | 3 | `quest-page.js` |
 | 3.5 | `farm-seals.js` |
 | 4 | `farm-map.js` (đi mục tiêu) |
@@ -85,6 +86,7 @@ flowchart TD
 - `popup.js` cung cấp `GSTClipboard.write(text)` cho các nút sao chép log; popup nhúng trong iframe sẽ chọn nội dung để người dùng bấm Ctrl+C nếu quyền clipboard bị chặn. `farm-diagnostics-content.js` có bộ làm sạch log dự phòng nếu `GSTMovementLogSchema` không khả dụng trong ISOLATED world.
 - `popup-layout.js` điều hướng một trang chức năng tại mỗi thời điểm, ghi nhớ trang bằng `popupActivePage`, chuyển các nút log hiện có sang trang Chẩn đoán và dùng nút Lưu cố định gọi lại handler Auto Farm cũ; không còn dùng kéo/sắp xếp `popupPanelOrder`. `menu-monitor.js` cập nhật thẻ trạng thái trang Tổng quan.
 - `farm-map.js` dùng thêm `GSTFarmPriority` từ `farm-page.js` để xếp thứ tự mục tiêu ở chế độ tìm toàn map; đường vòng tránh boss tận dụng `host.clear`/`host.route` gốc thay vì thêm pathfinder mới.
+- `farm-behavior.js` ưu tiên nhặt đồ hợp lệ qua `scene.auto.idle()` ở priority 2.5 (sau né quái, trước các chuyến tìm bãi); `farm-map.js` có `pauseForLoot(scene)` để nhường đường và dùng sẵn `GSTNavigation` cho chế độ `idleMode: seek` trong bán kính tâm farm hoặc toàn map. Tùy chọn `preferLoot` và `idleMode` đi từ `popup.js` → `farm-content.js` → `farm-page.js`.
 
 ## 5. Bảng định tuyến theo yêu cầu
 

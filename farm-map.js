@@ -57,7 +57,20 @@
   }
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
-  const wanted = () => preferences.enabled && preferences.searchScope === "map";
+  const wanted = () => preferences.enabled && (preferences.searchScope === "map"
+    || (preferences.searchScope === "radius" && preferences.idleMode === "seek"));
+  function searchArea(scene) {
+    const w = scene.map?.w, h = scene.map?.h;
+    if (![w, h].every(finite) || w <= 0 || h <= 0) return null;
+    if (preferences.searchScope === "map") return { minX: 0, minY: 0, maxX: w, maxY: h, home: null };
+    const home = globalThis.GSTHarvest?.farmOrigin?.(scene), radius = preferences.radius;
+    if (!home || ![home.x, home.y, radius].every(finite) || radius < 11) return null;
+    return { minX: Math.max(0, home.x - radius), maxX: Math.min(w, home.x + radius),
+      minY: Math.max(0, home.y - radius), maxY: Math.min(h, home.y + radius), home, radius };
+  }
+  const withinArea = (area, point) => area && finite(point?.x) && finite(point?.y)
+    && point.x >= 0 && point.y >= 0 && point.x < area.maxX && point.y < area.maxY && point.x >= area.minX && point.y >= area.minY
+    && (!area.home || range(point, area.home) <= area.radius);
   function release() {
     if (job && binding) GSTNavigation.cancel(binding.scene, job.navigation);
     if (job && binding && job.steer && binding.scene.autoX === job.steer[0] && binding.scene.autoY === job.steer[1]) {
@@ -77,12 +90,13 @@
       && scene.now() >= scene.auto.pauseUntil && !(scene.self.realm?.inside?.protection > 0);
   }
   function destination(scene, host, time, scouting) {
+    const area = searchArea(scene);
+    if (!area) return null;
     const enemies = typeof host.enemies === "function" ? host.enemies() : [];
     if (!Array.isArray(enemies)) return null;
     for (const [id, until] of deferred) if (until <= time) deferred.delete(id);
     const monsters = enemies.filter((enemy) => !enemy.dead && enemy.hostile && finite(enemy.id)
-      && finite(enemy.x) && finite(enemy.y) && finite(scene.map?.w) && finite(scene.map?.h)
-      && enemy.x >= 0 && enemy.y >= 0 && enemy.x < scene.map.w && enemy.y < scene.map.h);
+      && withinArea(area, enemy));
     const eligible = monsters.filter((enemy) => !(scene.auto.skipped.get(enemy.id) > time) && !deferred.has(enemy.id));
     // Keep a valid target/journey stable before considering a different actor.
     const current = eligible.find((enemy) => enemy.id === scene.auto.target);
@@ -119,30 +133,35 @@
     if (preferences.avoidEnabled) {
       message = "Boss chưa có dữ liệu level để áp dụng ngưỡng né; chưa tự đi tới tọa độ boss."; return null;
     }
+    if (!withinArea(area, metadata)) {
+      message = "Tọa độ boss nằm ngoài vùng farm đã chọn; không tự đi tới."; return null;
+    }
     return { ...metadata, actor: false };
   }
   function scout(scene, time) {
-    if (job?.scout && Math.hypot(scene.px - job.x, scene.py - job.y) > 1.2) {
+    const area = searchArea(scene);
+    if (!area) { message = "Chưa xác định được phạm vi tìm quái an toàn."; return null; }
+    if (job?.scout && withinArea(area, job) && Math.hypot(scene.px - job.x, scene.py - job.y) > 1.2) {
       return { id: job.id, x: job.x, y: job.y, actor: false, scout: true };
     }
     if (job?.scout) { explored.set(job.id, Infinity); release(); }
     if (time < scanAt) { message = "Chưa thấy quái phù hợp; chờ nhịp dò vùng tiếp theo."; return null; }
     scanAt = time + 1;
-    const { w, h } = scene.map ?? {};
-    if (![w, h, scene.px, scene.py].every(finite) || w <= 0 || h <= 0
-        || typeof scene.collision?.blockedCell !== "function") {
+    if (![scene.px, scene.py].every(finite) || typeof scene.collision?.blockedCell !== "function") {
       message = "Thiếu dữ liệu va chạm để dò map an toàn."; return null;
     }
-    // Bounded spatial sampling, not a second pathfinder. Native walk/hop
-    // validates each journey and retains the game's collision rules.
-    const columns = Math.min(32, Math.ceil(w / 10)), rows = Math.min(32, Math.ceil(h / 10));
+    // Sample only inside the selected map/radius; native walk/hop still owns routes.
+    const width = area.maxX - area.minX, height = area.maxY - area.minY;
+    const columns = Math.min(32, Math.ceil(width / 10)), rows = Math.min(32, Math.ceil(height / 10));
+    if (columns < 1 || rows < 1) return null;
     let best = null, distance = Infinity;
     for (let row = 0; row < rows; row++) {
-      const y = (row + 0.5) * h / rows;
+      const y = area.minY + (row + 0.5) * height / rows;
       for (let col = 0; col < columns; col++) {
-        const x = (col + 0.5) * w / columns;
+        const x = area.minX + (col + 0.5) * width / columns;
         const id = `scout:${x}:${y}`, d = Math.hypot(x - scene.px, y - scene.py);
-        if (d < 2 || explored.get(id) > time || scene.collision.blockedCell(x, y)) continue;
+        if (!withinArea(area, { x, y }) || d < 2 || explored.get(id) > time
+            || scene.collision.blockedCell(x, y)) continue;
         if (d < distance) { best = { id, x, y, actor: false, scout: true }; distance = d; }
       }
     }
@@ -173,6 +192,8 @@
     const scene = binding?.scene;
     try {
       if (!scene || !wanted() || suspended || !allowed(scene) || GSTFarmBehavior.controls(scene)) { release(); return false; }
+      const area = searchArea(scene);
+      if (!area) { release(); return false; }
       if (typeof GSTHarvest.needsRecovery !== "function" || GSTHarvest.needsRecovery(scene)) { release(); return false; }
       if (lastFix !== undefined && lastFix !== scene.self.fix && job) {
         release(); correctionUntil = time + 0.45;
@@ -248,19 +269,35 @@
           owner.navigation.path = []; owner.navigation.pathAt = -Infinity;
         }
       }
+      owner.denied = false;
       const walking = { ...host,
-        clear: (x, y, gx, gy) => host.clear(x, y, gx, gy)
+        clear: (x, y, gx, gy) => (!area.home
+            || withinArea(area, { x, y }) && withinArea(area, { x: gx, y: gy }))
+          && host.clear(x, y, gx, gy)
           && (!bosses.length || clearOfBoss({ x, y }, { x: gx, y: gy }, bosses)),
-        route: (x, y, gx, gy) => bosses.length
-          ? safeBossRoute(scene, host, { x, y }, { x: gx, y: gy }, bosses)
-          : host.route(x, y, gx, gy),
-        steer: (x, y) => { scene.autoX = x; scene.autoY = y; owner.steer = [x, y]; } };
+        route: (x, y, gx, gy) => {
+          if (area.home && (!withinArea(area, { x, y }) || !withinArea(area, { x: gx, y: gy }))) return null;
+          const route = bosses.length
+            ? safeBossRoute(scene, host, { x, y }, { x: gx, y: gy }, bosses)
+            : host.route(x, y, gx, gy);
+          if (!area.home || route === null) return route;
+          return Array.isArray(route) && route.every((point) => Array.isArray(point) && point.length >= 2
+            && withinArea(area, { x: point[0], y: point[1] })) ? route : null;
+        },
+        steer: (x, y) => {
+          if (area.home && (!finite(x) || !finite(y)
+              || !withinArea(area, { x: scene.px + x * 0.25, y: scene.py + y * 0.25 }))) {
+            owner.denied = true; x = 0; y = 0;
+          }
+          scene.autoX = x; scene.autoY = y; owner.steer = [x, y];
+        } };
       if (target.scout && Math.hypot(scene.px - target.x, scene.py - target.y) <= 1.2) {
         explored.set(target.id, Infinity); release(); walking.steer(0, 0);
         message = "Đã tới điểm dò; đang tìm quái đúng bộ lọc.";
       } else if (!target.scout && Math.hypot(scene.px - target.x, scene.py - target.y) <= 6) {
         walking.steer(0, 0); message = "Đã tới gần tọa độ boss; chờ game cung cấp actor boss để Auto Farm chọn mục tiêu.";
-      } else if (!GSTNavigation.walk(scene, owner.navigation, walking, time, scene.px, scene.py, target.x, target.y, target.scout ? 1 : 5)) {
+      } else if (!GSTNavigation.walk(scene, owner.navigation, walking, time, scene.px, scene.py, target.x, target.y, target.scout ? 1 : 5)
+          || owner.denied) {
         const delay = job.scout ? 60 : 15;
         defer(time); message = `Đường tới mục tiêu bị chặn; tạm bỏ ${delay} giây và xét mục tiêu khác.`; return false;
       } else message = target.scout ? `Đang dò vùng mới tìm quái đúng bộ lọc · còn ${distance.toFixed(1)} ô.`
@@ -291,6 +328,10 @@
     // Exploration has lower priority than portals/chests/harvest. It must not
     // advertise a lock that prevents those earlier handlers from starting.
     controls: (scene) => !!binding && binding.scene === scene && job !== null && !job.scout,
+    pauseForLoot(scene) {
+      if (!binding || binding.scene !== scene || !job) return;
+      release(); retryAt = scene.now() + 0.3;
+    },
     journey: (scene) => binding?.scene === scene && job ? {
       id: job.id, x: job.x, y: job.y, scout: job.scout, path: job.navigation.path
     } : null,
