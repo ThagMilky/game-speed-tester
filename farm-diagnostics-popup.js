@@ -2,6 +2,94 @@
   "use strict";
   const button = document.getElementById("copyFarmDiagnostics");
   const output = document.getElementById("farmDiagnosticsOutput"), feedback = document.getElementById("farmDiagnosticsFeedback");
+
+  // Compact only at export: collection, retention and the sanitized bridge remain unchanged.
+  // In each record, flags lists true states; states absent from flags are false.
+  function pick(row, fields, flagNames = []) {
+    if (!row || typeof row !== "object") return null;
+    const result = {};
+    for (const [source, name] of fields) {
+      const value = row[source];
+      if (value === null || value === undefined || value === ""
+          || (Array.isArray(value) && value.length === 0)) continue;
+      result[name] = value;
+    }
+    const flags = flagNames.filter((name) => row[name] === true);
+    if (flags.length) result.flags = flags;
+    return result;
+  }
+  function merged(groups, convert) {
+    const seen = new Set(), rows = [];
+    for (const group of groups) for (const row of Array.isArray(group) ? group : []) {
+      if (!row || typeof row !== "object") continue;
+      // A record may exist in both recent events and persisted incidents.
+      const key = JSON.stringify(row);
+      if (seen.has(key)) continue;
+      seen.add(key); rows.push(row);
+    }
+    return rows.sort((a, b) => (a.at || "").localeCompare(b.at || "")).map(convert);
+  }
+  const farmFlags = ["hidden", "focused", "dead", "clickOrder", "reconnecting", "displaced"];
+  const stopFields = [["at", "t"], ["event", "event"], ["cause", "cause"], ["on", "on"],
+    ["deaths", "deaths"], ["uptimeMs", "uptimeMs"], ["callers", "callers"]];
+  const moveFlags = ["auto", "manual", "clickOrder", "paused", "moved", "dead", "stunned",
+    "rooted", "slowed", "moveLocked", "harvesting", "pendingSkill", "aiming", "resting",
+    "target", "targetChanged", "hidden", "focused", "littleProgress", "panelOpen", "uiBlocked"];
+  const moveFields = [["at", "t"], ["reason", "event"], ["fix", "fix"],
+    ["elapsedMs", "elapsedMs"], ["distance", "distance"], ["stillMs", "stillMs"],
+    ["pathLength", "pathLength"], ["radius", "radius"], ["moveMultiplier", "speed"],
+    ["frameGapMs", "frameGapMs"], ["pauseMs", "pauseMs"], ["retryMs", "retryMs"],
+    ["position", "pos"], ["serverPosition", "serverPos"], ["targetPosition", "targetPos"],
+    ["center", "center"], ["home", "home"], ["steerBefore", "steerBefore"],
+    ["steerAfter", "steerAfter"], ["waypoint", "waypoint"], ["scope", "scope"],
+    ["panel", "panel"], ["owners", "owners"]];
+  const bgFlags = ["hidden", "focused", "auto", "dead", "connected", "reconnecting",
+    "displaced", "active", "paused", "loopRunning", "wasDiscarded"];
+  const vitalFlags = ["auto", "dead", "hidden", "connected"];
+  const vitalFields = [["at", "t"], ["hp", "hp"], ["maxHp", "maxHp"], ["hpPct", "hpPct"],
+    ["position", "pos"], ["serverPosition", "serverPos"], ["fix", "fix"]];
+  const bgFields = [["at", "t"], ["reason", "event"], ["generation", "generation"],
+    ["gapMs", "gapMs"], ["sinceFrameMs", "sinceFrameMs"], ["positionDelta", "positionDelta"],
+    ["hp", "hp"], ["maxHp", "maxHp"], ["hpPct", "hpPct"], ["position", "pos"],
+    ["serverPosition", "serverPos"], ["previousPosition", "previousPos"],
+    ["fix", "fix"], ["previousFix", "previousFix"], ["navigationType", "navigationType"],
+    ["redirectReason", "redirectReason"], ["persisted", "persisted"]];
+  const bossFields = [["at", "t"], ["type", "event"], ["hp", "hp"], ["position", "pos"],
+    ["cooldown", "cooldown"], ["direction", "direction"], ["distance", "distance"]];
+  const flightFlags = ["always", "farm", "wanted", "flying", "auto", "requested",
+    "hasScene", "fresh", "blocked"];
+  const flightFields = [["pendingMs", "pendingMs"], ["retryMs", "retryMs"]];
+  function move(row) { return pick(row, moveFields, moveFlags); }
+  function background(row) {
+    const result = pick(row, bgFields, bgFlags);
+    if (result && row.before) result.before = pick(row.before, vitalFields, vitalFlags);
+    return result;
+  }
+  function compact(data) {
+    const movement = data.movement || {}, bg = data.background || {};
+    const boss = data.bossSafety || {}, flight = data.flight || {};
+    return {
+      format: "gst-farm-agent-1",
+      legend: "t=UTC; event=reason; flags lists true states (others false); missing fields=null",
+      farm: { tracking: data.tracking === true,
+        current: pick(data.current, [["on", "on"], ["deaths", "deaths"]], farmFlags),
+        events: (data.events || []).map((row) => pick(row, stopFields, farmFlags)) },
+      movement: { build: movement.build, tracking: movement.tracking === true,
+        current: move(movement.current),
+        events: merged([movement.events, movement.incidents, movement.uiIncidents], move) },
+      background: { build: bg.build, generation: bg.generation,
+        current: background(bg.current),
+        lastAlive: pick(bg.lastAlive, vitalFields, vitalFlags),
+        lastObserved: pick(bg.lastObserved, vitalFields, vitalFlags),
+        events: merged([bg.events, bg.incidents], background) },
+      boss: { build: boss.build, active: boss.active === true, retreating: boss.retreating === true,
+        events: (boss.events || []).map((row) => pick(row, bossFields, ["flying"])) },
+      flight: { build: flight.build,
+        state: pick(flight, flightFields, flightFlags),
+        events: (flight.events || []).map((row) =>
+          pick(row, [["at", "t"], ["type", "event"]], ["auto", "flying", "always", "farm"])) }
+    };
+  }
   button.addEventListener("click", async () => {
     button.disabled = true;
     try {
@@ -9,11 +97,11 @@
       if (!tab?.id) throw new Error("No tab");
       const data = await chrome.tabs.sendMessage(tab.id, { type: "gst:farm-diagnostics" });
       if (data?.build !== "farm-stop-1" || !data.tracking) throw new Error("No tracker");
-      output.value = JSON.stringify(data, null, 2); output.hidden = false;
+      output.value = JSON.stringify(compact(data)); output.hidden = false;
       if (await GSTClipboard.write(output.value)) {
-        feedback.textContent = "Đã sao chép. Dán vào chat để kiểm tra khựng di chuyển, chạy nền và hồi sinh.";
+        feedback.textContent = "Đã sao chép log một dòng. Dán vào chat để kiểm tra Auto Farm, di chuyển và chạy nền.";
       } else {
-        output.focus(); output.select(); feedback.textContent = "Đã chọn chẩn đoán; bấm Ctrl+C rồi dán vào chat.";
+        output.focus(); output.select(); feedback.textContent = "Đã chọn log một dòng; bấm Ctrl+C rồi dán vào chat.";
       }
     } catch { feedback.textContent = "Chưa đọc được chẩn đoán. Mở tab game, tải lại extension và game nếu vừa cập nhật."; }
     finally { button.disabled = false; }
