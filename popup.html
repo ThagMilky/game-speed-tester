@@ -26,21 +26,50 @@
   <script src="menu-orientation.js" defer></script>
 </head>
 <body>
-  <header><p class="eyebrow">NGHICHTHIENKY.ONLINE</p><h1>Game Speed Tester</h1></header>
-  <button id="openGameMenu" type="button" class="full">Mở menu giữa màn hình game</button>
-  <section class="overview" aria-label="Trạng thái game hiện tại">
-    <p class="field-title">Đang bật</p>
-    <div id="activeFeatures" class="active-features" role="status" aria-live="polite">Đang đọc cài đặt…</div>
-    <dl hidden>
-      <div><dt>Auto Farm game</dt><dd id="autoFarmValue" data-state="unknown">Chưa rõ</dd></div>
-      <div><dt>Di chuyển</dt><dd id="state">Chưa rõ</dd></div>
-      <div><dt>Tốc độ hiện tại</dt><dd id="current">—</dd></div>
-      <div class="overview-technical"><dt>Fix từ lần đổi tốc độ</dt><dd id="fix">—</dd></div>
-    </dl>
-  </section>
-  <p id="layoutFeedback" class="layout-hint" role="status">Kéo ⠿ để đổi thứ tự nhóm. Tự lưu.</p>
-  <nav class="menu-tabs" aria-label="Nhóm chức năng"><button type="button" data-category-tab="auto" aria-pressed="true">Tự động</button><button type="button" data-category-tab="settings" aria-pressed="false">Cài đặt</button></nav>
-  <main id="featurePanels">
+  <header class="app-header">
+    <div><p class="eyebrow">NGHICHTHIENKY.ONLINE</p><h1>Game Speed Tester</h1></div>
+    <button id="openGameMenu" type="button">Mở menu trong game</button>
+  </header>
+  <div class="app-workspace">
+    <nav class="feature-navigation" aria-label="Chọn trang chức năng">
+      <button type="button" class="nav-item" data-nav-panel="overview" aria-current="page">Tổng quan</button>
+      <span class="nav-caption">TỰ ĐỘNG</span>
+      <button type="button" class="nav-item" data-nav-panel="farm">Auto Farm</button>
+      <button type="button" class="nav-item" data-nav-panel="harvest">Thu hoạch</button>
+      <button type="button" class="nav-item" data-nav-panel="realm">Bí cảnh</button>
+      <button type="button" class="nav-item" data-nav-panel="quest">Auto Quest</button>
+      <span class="nav-caption">CÀI ĐẶT</span>
+      <button type="button" class="nav-item" data-nav-panel="speed">Tốc độ &amp; bay</button>
+      <button type="button" class="nav-item" data-nav-panel="fps">Hình ảnh &amp; FPS</button>
+      <button type="button" class="nav-item" data-nav-panel="interface">Giao diện</button>
+      <button type="button" class="nav-item" data-nav-panel="diagnostics">Chẩn đoán</button>
+    </nav>
+    <div class="app-content">
+      <main id="featurePanels">
+        <section id="overviewPage" class="dashboard-page" aria-labelledby="overviewTitle">
+          <div class="dashboard-heading">
+            <h2 id="overviewTitle">Tổng quan</h2>
+            <p>Xem trạng thái và chọn nhanh chức năng cần chỉnh.</p>
+          </div>
+          <section class="overview" aria-label="Trạng thái các tính năng đang bật">
+            <p class="field-title">Các tính năng đang bật</p>
+            <div id="activeFeatures" class="active-features" role="status" aria-live="polite">Đang đọc cài đặt…</div>
+            <dl hidden>
+              <div><dt>Auto Farm game</dt><dd id="autoFarmValue" data-state="unknown">Chưa rõ</dd></div>
+              <div><dt>Di chuyển</dt><dd id="state">Chưa rõ</dd></div>
+              <div><dt>Tốc độ hiện tại</dt><dd id="current">—</dd></div>
+              <div class="overview-technical"><dt>Fix từ lần đổi tốc độ</dt><dd id="fix">—</dd></div>
+            </dl>
+          </section>
+          <div class="dashboard-grid" aria-label="Mở nhanh tính năng">
+            <button type="button" class="dashboard-tile" data-open-panel="farm"><strong>Auto Farm</strong><span data-summary-for="farm">Đang đọc trạng thái…</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="harvest"><strong>Thu hoạch</strong><span data-summary-for="harvest">Đang đọc cài đặt…</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="realm"><strong>Bí cảnh &amp; rương</strong><span data-summary-for="realm">Đang đọc cài đặt…</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="quest"><strong>Auto Quest</strong><span data-summary-for="quest">Đang đọc trạng thái…</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="speed"><strong>Tốc độ &amp; bay</strong><span data-summary-for="speed">Đang đọc cài đặt…</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="fps"><strong>Hình ảnh &amp; FPS</strong><span data-summary-for="fps">Đang đọc cài đặt…</span></button>
+          </div>
+        </section>
     <details class="card" data-category="auto" data-panel="farm">
       <summary><span><strong>Auto Farm</strong><small>Phạm vi và bộ lọc quái</small></span></summary>
       <div class="card-body">
@@ -349,11 +378,29 @@
     </details>
       </div>
     </details>
+    <section class="card diagnostics-page" data-panel="diagnostics" hidden aria-labelledby="diagnosticsTitle">
+      <div class="page-heading"><h2 id="diagnosticsTitle">Chẩn đoán</h2><p>Log chỉ dùng khi cần tìm lỗi. Chọn chức năng cần xuất log bên dưới.</p></div>
+      <div class="card-body diagnostics-grid">
+        <section class="diagnostics-group"><h3>Auto Farm</h3><div id="diagnosticsFarm"></div></section>
+        <section class="diagnostics-group"><h3>Thu hoạch</h3><div id="diagnosticsHarvest"></div></section>
+        <section class="diagnostics-group"><h3>Bí cảnh &amp; rương</h3><div id="diagnosticsRealm"></div></section>
+      </div>
+    </section>
   </main>
+  <div id="farmSaveDock" class="save-dock" hidden aria-label="Lưu các nhóm cài đặt Auto Farm">
+    <span class="save-dock-title">Lưu Auto Farm</span>
+    <div class="save-dock-buttons">
+      <button type="button" data-trigger-save="saveFarm">Phạm vi</button>
+      <button type="button" data-trigger-save="saveFarmFilter">Bộ lọc quái</button>
+      <button type="button" data-trigger-save="saveFarmBehavior">Chờ / né</button>
+    </div>
+  </div>
   <footer>
     <p id="feedback" class="notice" role="alert"></p>
     <details class="diagnostic"><summary>Kết nối &amp; thông tin hoạt động</summary><p id="status" role="status" aria-live="polite">Đang tải cài đặt…</p></details>
     <p class="hint">Cài đặt được giữ qua đổi map và áp dụng cho các tab game.</p>
   </footer>
+    </div>
+  </div>
 </body>
 </html>

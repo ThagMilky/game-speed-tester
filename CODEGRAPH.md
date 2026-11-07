@@ -83,6 +83,7 @@ flowchart TD
 - `farm-page.js` quản lý bộ lọc/mở rộng Auto Farm; `farm-session.js` theo dõi ý định ON/OFF; `farm-seals.js`, `harvest-page.js`, `realm-page.js`, `chest-page.js`, `quest-page.js` phối hợp quyền điều khiển tạm thời.
 - API `globalThis` dùng chéo gồm `GSTFarmUpdate`, `GSTNavigation`, `GSTFarmInput`, `GSTFarmRouting`, `GSTHarvest`, `GSTFarmSession`. Kiểm tra chữ ký hàm và call site trước khi thay đổi.
 - `popup.js` cung cấp `GSTClipboard.write(text)` cho các nút sao chép log; popup nhúng trong iframe sẽ chọn nội dung để người dùng bấm Ctrl+C nếu quyền clipboard bị chặn. `farm-diagnostics-content.js` có bộ làm sạch log dự phòng nếu `GSTMovementLogSchema` không khả dụng trong ISOLATED world.
+- `popup-layout.js` điều hướng một trang chức năng tại mỗi thời điểm, ghi nhớ trang bằng `popupActivePage`, chuyển các nút log hiện có sang trang Chẩn đoán và dùng nút Lưu cố định gọi lại handler Auto Farm cũ; không còn dùng kéo/sắp xếp `popupPanelOrder`. `menu-monitor.js` cập nhật thẻ trạng thái trang Tổng quan.
 - `farm-map.js` dùng thêm `GSTFarmPriority` từ `farm-page.js` để xếp thứ tự mục tiêu ở chế độ tìm toàn map; đường vòng tránh boss tận dụng `host.clear`/`host.route` gốc thay vì thêm pathfinder mới.
 
 ## 5. Bảng định tuyến theo yêu cầu
@@ -90,6 +91,7 @@ flowchart TD
 | Muốn sửa | File đọc đầu tiên | Kiểm tra tiếp |
 | --- | --- | --- |
 | Speed đi bộ/bay, khôi phục | `popup.js`, `content.js`, `page.js` | `flight-page.js`, `farm-page.js` |
+| Menu tool và popup: điều hướng từng trang, Tổng quan, Chẩn đoán, nút Lưu cố định | `popup.html`, `popup-layout.js`, `popup.css` | `menu-monitor.js`, `menu-orientation.js`, `game-menu.js` |
 | Auto Farm đứng yên, bật/tắt, lọc quái | `farm-page.js`, `farm-content.js`, `farm-session.js` | `farm-routing.js`, `farm-behavior.js`, `farm-map.js` |
 | Kẹt đường/overshoot | `navigation.js`, `farm-routing.js`, `farm-input.js` | `farm-map.js`, owner liên quan |
 | Xung đột farm/thu hoạch/bí cảnh/rương/quest | `farm-update.js`, `farm-routing.js` | `harvest-page.js`, `realm-page.js`, `chest-page.js`, `quest-page.js`, `farm-seals.js` |

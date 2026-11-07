@@ -5,7 +5,25 @@
   const values = {}, changed = new Set();
   const output = document.getElementById("activeFeatures");
   let loaded = false;
+  function renderSummary() {
+    const farm = document.getElementById("autoFarmValue").dataset.state;
+    const quest = document.getElementById("questStatus").dataset.running;
+    const summaries = {
+      farm: farm === "on" ? "Auto Farm đang bật" : farm === "off" ? "Auto Farm đang tắt" : "Chưa đọc được trạng thái",
+      harvest: !loaded ? "Đang đọc cài đặt…" : values.harvestPreferences?.enabled ? "Đã bật tự thu hoạch" : "Chưa bật thu hoạch",
+      realm: !loaded ? "Đang đọc cài đặt…" : values.realmPreferences?.enabled || values.chestPreferences?.enabled
+        ? "Đã bật tính năng bí cảnh / rương" : "Chưa bật tự động",
+      quest: quest === "true" ? "Auto Quest đang chạy" : "Chưa xác nhận đang chạy",
+      speed: !loaded ? "Đang đọc cài đặt…" : values.preferences?.enabled ? "Đang bật điều chỉnh tốc độ" : "Không điều chỉnh tốc độ",
+      fps: !loaded ? "Đang đọc cài đặt…" : values.fpsPreferences?.enabled ? "Đã bật tối ưu FPS" : "Chưa bật tối ưu FPS"
+    };
+    for (const [id, label] of Object.entries(summaries)) {
+      const item = document.querySelector(`[data-summary-for="${id}"]`);
+      if (item && item.textContent !== label) item.textContent = label;
+    }
+  }
   function render() {
+    renderSummary();
     const labels = [];
     if (document.getElementById("autoFarmValue").dataset.state === "on") { labels.push("Auto Farm"); if (values.farmPreferences?.noRetreat !== false) labels.push("Không nghỉ vì hết đan HP"); }
     if (document.getElementById("questStatus").dataset.running === "true") labels.push("Auto Quest");
@@ -43,5 +61,8 @@
     for (const key of keys) if (!changed.has(key)) values[key] = saved[key];
     loaded = true; render();
   }).catch(() => { output.textContent = "Chưa đọc được cài đặt. Mở lại menu để thử."; });
+  for (const [id, attribute] of [["autoFarmValue", "data-state"], ["questStatus", "data-running"]]) {
+    new MutationObserver(render).observe(document.getElementById(id), { attributes: true, attributeFilter: [attribute] });
+  }
   globalThis.GSTMenuMonitor = { render };
 })();

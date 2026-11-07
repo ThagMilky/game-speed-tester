@@ -145,15 +145,168 @@ input[type="number"], input[type="search"], select { font-size: 18px; min-height
 .active-features:empty { display: none; }
 @media (max-width: 480px) { body { padding: 12px; } .two-columns, .choice-grid { grid-template-columns: 1fr; } }
 
-/* Expand an open group and arrange its related controls across the game menu. */
-@media (min-width: 800px) {
-  body.embedded[data-orientation="horizontal"] #featurePanels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
-  body.embedded[data-orientation="horizontal"] #featurePanels > .card { margin-bottom: 0; min-width: 0; }
-  body.embedded[data-orientation="horizontal"] #featurePanels > .card[open] { grid-column: 1 / -1; }
-  body.embedded[data-orientation="horizontal"] .wide-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; align-items: start; }
-  body.embedded[data-orientation="horizontal"] .wide-group { min-width: 0; }
-}
 
 #harvestHistoryOutput { width: 100%; resize: vertical; padding: 8px; font: 13px/1.5 Consolas, monospace; color: var(--text); background: var(--subtle); border: 1px solid var(--border); border-radius: 7px; }
 
 .history-output { width: 100%; padding: 8px; font: 13px/1.5 Consolas, monospace; background: var(--subtle); color: var(--text); border: 1px solid var(--border); }
+
+/* One-page workspace: tabs in compact/vertical mode, sidebar in wide game menu. */
+body {
+  width: 560px;
+  height: 600px;
+  max-height: 600px;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+body.embedded {
+  width: 100%;
+  height: 100vh;
+  max-height: none;
+  min-width: 0;
+  padding: 0;
+}
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 20px;
+  margin: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.app-header h1 { font-size: 21px; }
+.app-header .eyebrow { font-size: 11px; }
+#openGameMenu { font-size: 14px; max-width: 205px; flex-shrink: 0; }
+.app-workspace, .app-content { display: flex; flex-direction: column; min-height: 0; min-width: 0; flex: 1; }
+.feature-navigation {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 7px;
+  padding: 9px 14px;
+  background: var(--subtle);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.nav-caption { display: none; }
+.feature-navigation .nav-item {
+  flex: 0 0 auto;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 8px 11px;
+  min-height: 40px;
+  text-align: left;
+}
+.feature-navigation .nav-item[aria-current="page"] {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+#featurePanels {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px;
+}
+#featurePanels > .card { margin: 0; overflow: visible; }
+#featurePanels > .card > summary {
+  cursor: default;
+  pointer-events: none;
+  border-bottom: 1px solid var(--border);
+  padding: 15px 18px;
+}
+#featurePanels > .card > summary::after { display: none; }
+#featurePanels > .card > summary strong { font-size: 21px; }
+#featurePanels > .card > summary small { font-size: 14px; line-height: 1.4; }
+#featurePanels > .card > .card-body { padding: 16px 18px 22px; }
+.dashboard-heading { margin-bottom: 16px; }
+.dashboard-heading h2, .page-heading h2 { font-size: 23px; margin: 0 0 6px; line-height: 1.3; }
+.dashboard-heading p, .page-heading p { margin: 0; color: var(--muted); font-size: 15px; }
+.dashboard-page .overview { padding: 14px 17px; margin: 0 0 16px; }
+.dashboard-page .overview .field-title { font-size: 15px; font-weight: 600; margin-bottom: 9px; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.dashboard-tile {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px;
+  min-height: 98px;
+  border-radius: 12px;
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+.dashboard-tile strong { font-size: 17px; }
+.dashboard-tile span { color: var(--muted); font-size: 13px; font-weight: 400; line-height: 1.4; }
+.save-dock {
+  padding: 10px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.save-dock-title { font-size: 13px; font-weight: 600; color: var(--muted); }
+.save-dock-buttons { display: flex; gap: 8px; margin-top: 6px; }
+.save-dock-buttons button { min-width: 0; flex: 1; font-size: 14px; min-height: 38px; padding: 6px 8px; }
+body.layout-ready #saveFarm,
+body.layout-ready #saveFarmFilter,
+body.layout-ready #saveFarmBehavior { display: none; }
+.app-content footer { flex-shrink: 0; padding: 7px 18px; background: var(--surface); border-top: 1px solid var(--border); }
+.app-content footer > .hint { display: none; }
+.app-content footer .diagnostic { margin: 0; }
+.app-content footer .diagnostic summary { font-size: 13px; }
+.app-content footer .notice { margin: 0 0 6px; }
+.diagnostics-page .page-heading { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.diagnostics-grid { display: grid; gap: 16px; }
+.diagnostics-group { min-width: 0; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--subtle); }
+.diagnostics-group h3 { font-size: 17px; margin: 0 0 8px; }
+.diagnostics-group .diagnostic { margin: 0; padding: 10px 0; }
+.diagnostics-group .diagnostic + .diagnostic { border-top: 1px solid var(--border); }
+@media (min-width: 760px) {
+  body.embedded[data-orientation="horizontal"] .app-workspace { flex-direction: row; }
+  body.embedded[data-orientation="horizontal"] .feature-navigation {
+    width: 216px;
+    flex-direction: column;
+    align-items: stretch;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-right: 1px solid var(--border);
+    border-bottom: 0;
+    padding: 16px 11px;
+    gap: 4px;
+  }
+  body.embedded[data-orientation="horizontal"] .nav-caption {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--muted);
+    padding: 16px 11px 4px;
+  }
+  body.embedded[data-orientation="horizontal"] .feature-navigation .nav-item {
+    white-space: normal;
+    padding: 11px 13px;
+    font-size: 16px;
+  }
+  body.embedded[data-orientation="horizontal"] .wide-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; align-items: start; }
+  body.embedded[data-orientation="horizontal"] .wide-group { min-width: 0; }
+  body.embedded[data-orientation="horizontal"] .diagnostics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .app-header { padding: 12px 14px; }
+  #featurePanels { padding: 12px; }
+  #featurePanels > .card > .card-body { padding: 13px 12px; }
+  .dashboard-tile { min-height: 82px; }
+  .save-dock-buttons button { font-size: 12px; }
+}
