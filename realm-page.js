@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const origin = "https://nghichthienky.online";
-  let preferences = { enabled: false, allowFarm: false, keepFarm: true };
+  let preferences = { enabled: false, allowFarm: false, keepFarm: true, entryMode: "enter" };
   let binding = null, job = null, watcher = null, suspended = false, manualUntil = 0;
   let message = "Tự vào bí cảnh đang tắt.", lastScan = -Infinity;
   let lastEntry = null;
@@ -46,8 +46,10 @@
       if (!scene) return;
       if (sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto
           || !GSTFarmUpdate.attached(scene) || !connected(scene) || scene.leaving) { detach(); watch(); return; }
-      if (globalThis.GSTFarmMap?.controls(scene)) { release("Nhường di chuyển để tiếp cận mục tiêu farm."); return false; }
-      if (globalThis.GSTFarmBehavior?.controls(scene)) { release("Nhường di chuyển để né quái level cao."); return; }
+      // A discovered portal takes priority over regular farming; do not release the goal.
+      if (globalThis.GSTHarvest?.controls(scene) || globalThis.GSTQuest?.controls(scene)) {
+        release("Nhường điều khiển đang hoạt động của người chơi/Auto Quest."); return;
+      }
       if (scene.self.dead) {
         if (performance.now() - lastReviveAt >= 1000) {
           lastReviveAt = performance.now();
@@ -55,7 +57,7 @@
         }
         return;
       }
-      if (manual(scene) || (job && job.phase !== "finishingCombat" && finite(scene.castAt) && scene.castAt !== job.castAt)) {
+      if (manual(scene)) {
         manualUntil = performance.now() + 3000;
         release("Tạm nhường thao tác tay; tự tiếp tục sau 3 giây.");
       }
@@ -93,8 +95,8 @@
       const scene = binding?.scene;
       if (!scene || !preferences.enabled || suspended) return false;
       if (globalThis.GSTQuest?.active(scene)) { release("Nhường cho Auto Quest đang chạy."); return false; }
-      if (globalThis.GSTFarmMap?.controls(scene)) { release("Nhường di chuyển để tiếp cận mục tiêu farm."); return false; }
-      if (globalThis.GSTFarmBehavior?.controls(scene)) { release("Nhường di chuyển để né quái level cao."); return false; }
+      // Realm portals preempt target scouting and routine farming while present.
+      if (globalThis.GSTHarvest?.controls(scene)) { release("Nhường thao tác thu hoạch đang hoạt động."); return false; }
       if (scene.self?.dead) return false;
       const now = performance.now(), realm = scene.self?.realm;
       if (realm?.inside) {
@@ -137,35 +139,27 @@
           && !(lastEntry?.id === portal.id && now < lastEntry.until)).sort((a, b) => distance(a, pos) - distance(b, pos))
           .find((portal) => {
             const action = captureEntry(scene, portal);
-            // The captured native label already confirms the level band. Combat
-            // temporarily disables entry; keep the job so it can finish combat.
+            // The native action may be disabled by combat or level eligibility.
+            // We can still travel during combat; only the native action can authorize entry.
             return action !== null && (!action.disabled || scene.self.combat);
           });
         if (!next) { message = "Không có cổng hợp lệ trong map hiện tại; tiếp tục tìm toàn map."; return false; }
         const navigation = Object.assign(Object.create(scene.auto), { path: [], lastX: pos.x, lastY: pos.y,
           stillSince: time, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0, pathAt: -Infinity });
-        job = { id: next.id, point: { x: next.x, y: next.y }, logStartedAt: now, x: next.x, y: next.y, phase: scene.self.combat ? "finishingCombat" : "moving", navigation,
+        job = { id: next.id, point: { x: next.x, y: next.y }, logStartedAt: now, x: next.x, y: next.y, phase: "moving", navigation,
           nativeTarget: scene.auto.target, castAt: scene.castAt, startAt: now, progressAt: now, steer: null };
       }
       const portal = candidates.find((candidate) => candidate.id === job.id);
       const steeringHost = { ...host, steer: (x, y) => { scene.autoX = x; scene.autoY = y; job.steer = [x, y]; } };
-      if (scene.self.combat) {
-        job.phase = "finishingCombat";
-        if (now - job.startAt > 120000) { release("Giao tranh kéo dài; tạm bỏ cổng này.", true); return false; }
-        job.progressAt = now;
-        const target = scene.views?.get(scene.auto.target);
-        if (scene.auto.on && target && !target.dead) {
-          message = "Đã thấy cổng; chờ đánh xong mục tiêu hiện tại.";
-          return false;
-        }
-        steeringHost.steer(0, 0);
-        message = "Đã thấy cổng; tạm ngừng chọn quái mới, chờ hết giao tranh.";
-        return true;
-      }
-      if (job.phase === "finishingCombat") { job.phase = "moving"; job.castAt = scene.castAt; }
+      // Combat must not delay travel to the portal. Native eligibility is checked at entry.
       if (GSTNavigation.progressed(scene, job, job.navigation.path, portal.x, portal.y, 0.2)) job.progressAt = now;
-      if (now - job.progressAt > 5000 || now - job.startAt > 120000) { release("Không tới được cổng; tạm bỏ 30 giây.", true); return false; }
+      if (job.phase !== "standing" && (now - job.progressAt > 5000 || now - job.startAt > 120000)) {
+        release("Không tới được cổng; tạm bỏ 30 giây.", true); return false;
+      }
       if (distance(pos, portal) > 2.5 || !host.clear(pos.x, pos.y, portal.x, portal.y)) {
+        if (job.phase === "standing" || job.phase === "waiting_combat") {
+          job.phase = "moving"; job.progressAt = now;
+        }
         if (!GSTNavigation.walk(scene, job.navigation, steeringHost, time, pos.x, pos.y, portal.x, portal.y, 2.5)) {
           release("Đường tới cổng bị chặn; tạm bỏ 30 giây.", true); return false;
         }
@@ -173,6 +167,19 @@
         return true;
       }
       steeringHost.steer(0, 0);
+      if (preferences.entryMode === "stand") {
+        job.phase = "standing";
+        job.progressAt = now;
+        message = "Đã đứng cạnh cổng bí cảnh; chờ lựa chọn tiếp theo, không tự vào.";
+        return true;
+      }
+      if (scene.self.combat) {
+        job.phase = "waiting_combat";
+        job.progressAt = now;
+        message = "Đã tới cổng; game không cho vào khi còn giao tranh, đang chờ đủ điều kiện.";
+        return true;
+      }
+      job.phase = "entering";
       const validTarget = (target) => target?.realm?.action === "realm-enter" && target.realm.arg === portal.id;
       const fresh = scene.pickTarget();
       job.freshTarget = globalThis.GSTRealmHistory?.target(fresh);
@@ -212,7 +219,8 @@
           || typeof scene.realmUI?.interact !== "function" || typeof scene.panels?.show !== "function"
           || typeof scene.pickTarget !== "function" || typeof scene.sendMove !== "function"
           || typeof scene.now !== "function" || !scene.events?.on || !scene.events?.off) return;
-      const remove = GSTFarmUpdate.add(scene, 5, update);
+      // After recovery (-1), before route/farm/avoid handlers. No second movement loop.
+      const remove = GSTFarmUpdate.add(scene, 0.5, update);
       binding = { scene, auto: scene.auto, remove };
       scene.events.on("preupdate", guard); scene.events.on("shutdown", shutdown); scene.events.on("destroy", shutdown);
       clearInterval(watcher); watcher = null; lastScan = -Infinity; lastReviveAt = -Infinity;
@@ -224,7 +232,8 @@
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:realm:v1") return;
     if (event.data.type === "configure") {
       const value = event.data.preferences;
-      preferences = { enabled: value?.enabled === true, allowFarm: value?.allowFarm === true, keepFarm: value?.keepFarm !== false };
+      preferences = { enabled: value?.enabled === true, allowFarm: value?.allowFarm === true,
+        keepFarm: value?.keepFarm !== false, entryMode: value?.entryMode === "stand" ? "stand" : "enter" };
       if (!preferences.enabled) { detach(); clearInterval(watcher); watcher = null; message = "Tự vào bí cảnh đang tắt."; }
       else { watch(); discover(); }
     }
@@ -237,7 +246,7 @@
     const scene = binding?.scene;
     return { enabled: preferences.enabled, attached: !!binding, phase: job?.phase || "idle",
       message, count: Array.isArray(scene?.self?.realm?.events) ? scene?.self?.realm?.events.length : 0,
-      autoOn: scene?.auto?.on === true, allowFarm: preferences.allowFarm,
+      autoOn: scene?.auto?.on === true, allowFarm: preferences.allowFarm, entryMode: preferences.entryMode,
       protection: Number.isFinite(scene?.self?.realm?.inside?.protection) ? scene.self.realm.inside.protection : null };
   });
   window.addEventListener("pagehide", () => { suspended = true; detach(); clearInterval(watcher); watcher = null; });

@@ -3,11 +3,16 @@
   const controls = document.getElementById("realmControls");
   const status = document.getElementById("realmStatus"), feedback = document.getElementById("realmFeedback");
   const fields = [["enabled", document.getElementById("realmEnabled")],
-    ["allowFarm", document.getElementById("realmAllowFarm")], ["keepFarm", document.getElementById("realmKeepFarm")]];
+    ["allowFarm", document.getElementById("realmAllowFarm")], ["keepFarm", document.getElementById("realmKeepFarm")],
+    ["entryMode", document.getElementById("realmEntryMode")]];
   let preferences = null, busy = false, saving = false;
   let revision = 0;
-  const normalize = (value) => ({ enabled: value?.enabled === true, allowFarm: value?.allowFarm === true, keepFarm: value?.keepFarm !== false });
-  function render() { for (const [key, input] of fields) input.checked = preferences[key]; }
+  const normalize = (value) => ({ enabled: value?.enabled === true, allowFarm: value?.allowFarm === true,
+    keepFarm: value?.keepFarm !== false, entryMode: value?.entryMode === "stand" ? "stand" : "enter" });
+  function render() { for (const [key, input] of fields) {
+    if (key === "entryMode") input.value = preferences[key];
+    else input.checked = preferences[key];
+  } }
   async function send(type) {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) throw new Error("No active tab");
@@ -26,7 +31,8 @@
   controls.addEventListener("change", async () => {
     if (saving || !preferences) return;
     const previous = preferences;
-    preferences = Object.fromEntries(fields.map(([key, input]) => [key, input.checked]));
+    preferences = Object.fromEntries(fields.map(([key, input]) =>
+      [key, key === "entryMode" ? input.value : input.checked]));
     controls.disabled = true; saving = true;
     try {
       await chrome.storage.local.set({ realmPreferences: preferences });

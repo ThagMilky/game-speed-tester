@@ -35,8 +35,8 @@
     if (scene.harvesting) return "Game đang ghi nhận một lượt thu hoạch; chờ kết thúc.";
     if (scene.self.med || scene.auto.resting) return "Chờ kết thúc bế quan/hồi phục của game.";
     if (scene.self.fish) return "Chờ kết thúc câu cá.";
-    if (GSTFarmBehavior.controls(scene)) return "Đang nhường lượt né quái.";
-    if (GSTFarmMap.controls(scene)) return "Đang nhường di chuyển tới mục tiêu farm. Dừng Auto Farm nếu muốn chỉ mở rương.";
+    // If permitted alongside Auto Farm, chest/nearby-monster handling takes priority over farming.
+    // Movement and skill inputs from the player still take priority below.
     if (GSTFarmSeals?.controls(scene)) return "Đang nhường phá phong ấn.";
     if (scene.auto.on && !settings.allowFarm) return "Auto Farm đang bật: tick Cho phép nhặt khi Auto Farm bật, hoặc tắt Auto Farm.";
     if (scene.auto.on && GSTHarvest.needsRecovery(scene)) return "Chờ Auto Farm hồi HP/MP theo cài đặt của game.";
@@ -49,14 +49,65 @@
     try {
       const scene = binding?.scene; if (!scene) return;
       if (sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto) { detach(); watch(); return; }
-      if (manual(scene) || job && scene.castAt !== job.castAt) { manualUntil = performance.now() + 3000; release("Nhường thao tác tay; tiếp tục sau 3 giây."); }
+      if (manual(scene)) { manualUntil = performance.now() + 3000; release("Nhường thao tác tay; tiếp tục sau 3 giây."); }
       if (job && blocked(scene)) release(blockedReason(scene));
       if (scene.self?.dead && settings.enabled) GSTHarvest.respawn(scene);
     } catch { detach(); watch(); }
   }
-  function danger(scene, chest) {
-    return [...scene.views.values()].some((actor) => actor.k === "m" && !actor.dead && actor.st?.cls !== "pet"
-      && Math.min(Math.hypot(actor.x - scene.px, actor.y - scene.py), Math.hypot(actor.x - chest.x, actor.y - chest.y)) < 6);
+  const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  function nearThreat(enemies, scene, chest) {
+    const pos = { x: scene.px, y: scene.py };
+    return enemies.filter((enemy) => !enemy.dead && enemy.hostile
+        && Number.isSafeInteger(enemy.id) && finite(enemy.x) && finite(enemy.y)
+        && (distance(enemy, pos) < 3.5 || distance(enemy, chest) < 3.5
+          || (enemy.aggro && (distance(enemy, pos) < 6 || distance(enemy, chest) < 6))))
+      .sort((a, b) => Math.min(distance(a, pos), distance(a, chest))
+        - Math.min(distance(b, pos), distance(b, chest)))[0] ?? null;
+  }
+  function clearThreat(scene, host, time, enemy, enemies, chest) {
+    const now = performance.now(), pos = { x: scene.px, y: scene.py };
+    if (job.phase !== "clearing" || job.threatId !== enemy.id) {
+      job.phase = "clearing"; job.threatId = enemy.id; job.threatAt = now;
+      job.navigation.path = []; job.navigation.pathAt = -Infinity;
+      job.navigation.stillSince = time; job.navigation.stuckCount = 0;
+      job.navigation.lastX = pos.x; job.navigation.lastY = pos.y;
+    }
+    job.progressAt = time; // A combat pause is not a pathfinding failure.
+    if (now - job.threatAt > 25000) {
+      release("Quái gần rương chưa bị hạ sau 25 giây; tạm bỏ rương để tránh kẹt.", true);
+      return false;
+    }
+    if (scene.pendingSkill || scene.aiming || scene.keyCapture || scene.uiBlocked) {
+      message = "Đang chờ game hoàn tất chiêu/giao diện trước khi dọn quái chắn rương.";
+      return false;
+    }
+    const radius = finite(enemy.radius) ? enemy.radius : 0.5;
+    const reach = 1.3 + radius;
+    const remaining = distance(pos, enemy);
+    const walking = { ...host, steer: (x, y) => {
+      scene.autoX = x; scene.autoY = y; if (job) job.steer = [x, y];
+    } };
+    if (remaining > reach) {
+      if (!GSTNavigation.walk(scene, job.navigation, walking, time, pos.x, pos.y, enemy.x, enemy.y, reach * 0.8)) {
+        release("Không có đường tiếp cận quái chắn rương; tạm bỏ rương.", true);
+        return false;
+      }
+      message = `Đang tới quái chắn rương · cách ${remaining.toFixed(1)} ô.`;
+      return true;
+    }
+    walking.steer(0, 0);
+    if (typeof host.face !== "function" || typeof host.basic !== "function") {
+      release("Game không hỗ trợ thao tác đánh quái độc lập; không tự bấm phím.", true);
+      return false;
+    }
+    host.face(enemy.x, enemy.y, enemy.id);
+    // Use the game's native attack and cooldown checks even when Auto Farm is OFF.
+    const cast = typeof scene.auto.castSkills === "function" && typeof host.skills === "function"
+      && typeof host.cast === "function" && typeof host.kit === "function"
+      ? scene.auto.castSkills(host, enemy, enemies, pos.x, pos.y, remaining) : false;
+    if (!cast) host.basic();
+    message = "Đang loại quái sát rương bằng kỹ năng/đòn đánh gốc của game.";
+    return true;
   }
   function update(host, time) {
     const scene = binding?.scene;
@@ -65,9 +116,6 @@
       const reason = blockedReason(scene);
       if (reason) { release(reason); return false; }
       if (typeof host.inCombat !== "function" || typeof host.enemies !== "function") { release(); return false; }
-      if (host.inCombat() || scene.auto.on && host.enemies().some((enemy) => enemy.id === scene.auto.target && !enemy.dead)) {
-        release("Chờ Auto Farm kết thúc mục tiêu/giao tranh hiện tại."); return false;
-      }
       if (performance.now() - binding.modalAt > 250) {
         binding.modalAt = performance.now();
         binding.modal = [...document.querySelectorAll('[role="alertdialog"]')].some((el) => el.getClientRects().length && getComputedStyle(el).visibility !== "hidden");
@@ -87,13 +135,12 @@
       }
       if (!job) {
         if (performance.now() - binding.scanAt < 1000) return false; binding.scanAt = performance.now();
-        const next = chests.filter((chest) => !skipped.has(chest.id) && !danger(scene, chest))
+        const next = chests.filter((chest) => !skipped.has(chest.id))
           .sort((a, b) => Math.hypot(a.x - scene.px, a.y - scene.py) - Math.hypot(b.x - scene.px, b.y - scene.py))[0];
         if (!next) {
           message = !list.length ? "Game chưa gửi rương trong bí cảnh này; chưa có tọa độ để tự đi tới."
             : !chests.length ? `Có ${list.length} rương nhưng không khớp loại, quyền sở hữu hoặc tọa độ hợp lệ.`
-            : chests.every((chest) => skipped.has(chest.id)) ? `Có ${chests.length} rương phù hợp đang tạm bỏ; chờ tối đa 30 giây.`
-            : "Có rương phù hợp nhưng đang có quái trong 6 ô quanh nhân vật hoặc rương; chờ an toàn.";
+            : `Có ${chests.length} rương phù hợp đang tạm bỏ; chờ tối đa 30 giây.`;
           return false;
         }
         const navigation = Object.assign(Object.create(scene.auto), { path: [], pathAt: -Infinity,
@@ -104,19 +151,30 @@
           requestedAt: null, steer: null };
       }
       const chest = chests.find((item) => item.id === job.id);
-      if (danger(scene, chest)) { release("Có quái gần rương; tạm bỏ qua.", true); return false; }
-      const distance = Math.hypot(chest.x - scene.px, chest.y - scene.py), owner = job;
-      const walking = { ...host, steer: (x, y) => { scene.autoX = x; scene.autoY = y; owner.steer = [x, y]; } };
       if (job.requestedAt !== null) {
-        walking.steer(0, 0);
+        scene.autoX = scene.autoY = 0;
         if (time - job.requestedAt > 8) { release("Chưa xác nhận mở rương; bỏ qua 30 giây, không spam F.", true); return false; }
         return true;
       }
+      // Only query actors when there is a real chest objective, not every empty update frame.
+      const enemies = host.enemies();
+      if (!Array.isArray(enemies)) { release("Game chưa cung cấp danh sách quái hợp lệ."); return false; }
+      const threat = nearThreat(enemies, scene, chest);
+      if (threat) return clearThreat(scene, host, time, threat, enemies, chest);
+      if (job.phase === "clearing") {
+        job.phase = "moving"; job.threatId = null; job.navigation.path = [];
+        job.navigation.pathAt = -Infinity; job.progressAt = time; job.startedAt = time;
+        job.navigation.stillSince = time; job.navigation.stuckCount = 0;
+        job.navigation.lastX = scene.px; job.navigation.lastY = scene.py;
+      }
+      const remaining = Math.hypot(chest.x - scene.px, chest.y - scene.py), owner = job;
+      const walking = { ...host, steer: (x, y) => { scene.autoX = x; scene.autoY = y; owner.steer = [x, y]; } };
+
       if (GSTNavigation.progressed(scene, job, job.navigation.path, chest.x, chest.y)) job.progressAt = time;
       if (time - job.progressAt > 8 || time - job.startedAt > 120) {
         release("Chưa tiếp cận/mở được rương trong thời gian cho phép; bỏ qua 30 giây.", true); return false;
       }
-      if (distance > 1.8) {
+      if (remaining > 1.8) {
         if (time - job.progressAt > 2 && job.replans < 2 && time - job.replanAt >= 2) {
           job.navigation.path = []; job.navigation.pathAt = -Infinity;
           job.replans++; job.replanAt = time;
@@ -124,10 +182,14 @@
         if (!GSTNavigation.walk(scene, job.navigation, walking, time, scene.px, scene.py, chest.x, chest.y, 1.5)) {
           release("Đường tới rương bị chặn; tạm bỏ qua.", true); return false;
         }
-        message = `${time - job.replanAt < 1 ? "Đang tính lại đường tới rương" : "Đang tự đi tới rương bí cảnh"} · còn ${distance.toFixed(1)} ô.`;
+        message = `${time - job.replanAt < 1 ? "Đang tính lại đường tới rương" : "Đang tự đi tới rương bí cảnh"} · còn ${remaining.toFixed(1)} ô.`;
         return true;
       }
       walking.steer(0, 0);
+      if (host.inCombat()) {
+        message = "Đã tới rương; chờ game kết thúc giao tranh để mở rương.";
+        return true;
+      }
       const fresh = scene.pickTarget();
       job.freshTarget = globalThis.GSTRealmHistory?.target(fresh);
       const picked = fresh?.realm, cached = scene.target?.realm;
@@ -157,7 +219,8 @@
           || typeof scene.auto?.walk !== "function" || typeof scene.pickTarget !== "function" || typeof scene.interact !== "function"
           || typeof scene.now !== "function" || typeof scene.auto.update !== "function"
           || typeof scene.views?.values !== "function" || !scene.events?.on || !scene.events.off) return;
-      binding = { scene, auto: scene.auto, remove: GSTFarmUpdate.add(scene, 15, update), modalAt: -Infinity, modal: false, scanAt: -Infinity };
+      // Chest collection preempts routine farm target selection, but yields to portal discovery.
+      binding = { scene, auto: scene.auto, remove: GSTFarmUpdate.add(scene, 0.75, update), modalAt: -Infinity, modal: false, scanAt: -Infinity };
       scene.events.on("preupdate", guard); scene.events.on("shutdown", shutdown); scene.events.on("destroy", shutdown);
       clearInterval(timer); timer = null;
     } catch { detach(); }
@@ -175,7 +238,7 @@
           && chest.x >= 0 && chest.y >= 0 && chest.x < scene.map.w && chest.y < scene.map.h
           && (!chest.owner || chest.owner === scene.profile?.name) && (settings.kind === "all" || chest.kind === settings.kind)
           && !(skipped.get(chest.id) > performance.now()) && Math.hypot(chest.x - scene.px, chest.y - scene.py) <= 6
-          && !danger(scene, chest));
+          && !nearThreat(host.enemies(), scene, chest));
       } catch { return false; }
     }
   };
@@ -189,7 +252,7 @@
       if (JSON.stringify(next) !== JSON.stringify(settings)) release("Đã đổi cài đặt rương.");
       settings = next;
       if (!settings.enabled) { detach(); clearInterval(timer); timer = null; message = "Auto nhặt rương đang tắt."; }
-      else { message = "Auto nhặt rương đã bật; chờ vào bí cảnh và có rương phù hợp/an toàn."; watch(); discover(); }
+      else { message = "Tự tìm rương đã bật; nếu có quái sát rương sẽ dọn quái trước khi mở."; watch(); discover(); }
     }
     let current = message;
     try {

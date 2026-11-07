@@ -214,7 +214,9 @@
           <label class="switch-row"><span>Bật Tự vào bí cảnh</span><input id="realmEnabled" class="switch" type="checkbox"></label>
           <label class="check-row"><input id="realmAllowFarm" type="checkbox"><span>Cho phép vào khi Auto Farm đang bật</span></label>
           <label class="check-row"><input id="realmKeepFarm" type="checkbox" checked><span>Giữ Auto Farm qua đổi map</span></label>
-          <p class="hint">Tìm cổng hợp lệ trong toàn map hiện tại, không cần bán kính. Chờ hết giao tranh; tự tới cổng và yêu cầu vào một lần. Bạn di chuyển/tung chiêu thì tạm nhường, chờ 3 giây rồi tiếp tục.</p>
+          <label for="realmEntryMode">Khi tìm thấy cổng</label>
+          <select id="realmEntryMode"><option value="enter">Tự đi tới và vào cổng</option><option value="stand">Chỉ đi tới và đứng cạnh cổng</option></select>
+          <p class="hint">Ưu tiên cổng hợp lệ trong toàn map, kể cả khi đang giao tranh; tự đi tới thay vì chờ đánh xong. Chế độ đứng cạnh không tương tác. Chế độ vào cổng chỉ gửi yêu cầu khi game cho phép (đang giao tranh có thể bị từ chối). Bạn điều khiển tay thì tạm nhường 3 giây.</p>
           <p class="hint">Giữ bộ lọc quái hiện tại; muốn chỉ boss bạn tự đổi. Không tự mở rương, bỏ bảo vệ hay thoát bí cảnh. Chết trong bí cảnh có thể mất đồ của lượt đó.</p>
         </fieldset>
         <div class="separated">
@@ -224,9 +226,9 @@
         <fieldset id="chestControls" class="separated" disabled>
           <p class="field-title">Tự tìm và mở rương bí cảnh</p>
           <label class="switch-row"><span>Bật tự tìm và mở rương</span><input id="chestEnabled" class="switch" type="checkbox"></label>
-          <label class="check-row"><input id="chestAllowFarm" type="checkbox"><span>Cho phép nhặt khi Auto Farm bật (chờ hết giao tranh)</span></label>
+          <label class="check-row"><input id="chestAllowFarm" type="checkbox"><span>Cho phép nhặt khi Auto Farm bật</span></label>
           <label for="chestKind">Loại rương</label><select id="chestKind"><option value="all">Tất cả</option><option value="common">Thường</option><option value="hidden">Ẩn</option><option value="treasure">Linh tàng</option></select>
-          <p class="hint">Tự di chuyển tới từng rương phù hợp trong toàn bí cảnh và mở bằng tương tác F của game, không cần đứng gần sẵn. Muốn dùng cùng Auto Farm thì tick cho phép ở trên; vẫn ưu tiên chiến đấu và tránh quái gần rương. Chỉ tìm rương game đã gửi tọa độ, không tự dò rương ẩn chưa có dữ liệu. Không mở cổng thoát hoặc bỏ bảo vệ. Rương chưa phản hồi/không tới được bỏ qua 30 giây. Điều kiện level/email do game quyết định. Rương biến mất chưa đủ chứng minh đã nhận đồ.</p>
+          <p class="hint">Tự đi tới rương và mở bằng tương tác F của game. Nếu có quái thù địch sát nhân vật/rương, ưu tiên đánh bằng thao tác gốc trước khi mở — hoạt động cả khi Auto Farm đang tắt. Muốn nhặt khi Auto Farm bật, tick cho phép ở trên. Chỉ tìm rương game đã gửi tọa độ; không bỏ bảo vệ hoặc tương tác cổng thoát. Rương không phản hồi/không tới được tạm bỏ 30 giây. Game quyết định quyền nhận đồ.</p>
         </fieldset>
         <p id="chestStatus" class="hint" role="status">Đang đọc dữ liệu rương…</p>
         <p class="field-title">Thời gian &amp; thông báo</p>

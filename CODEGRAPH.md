@@ -64,6 +64,8 @@ flowchart TD
 | ---: | --- |
 | -1 | `farm-combat.js` |
 | 0 | `farm-revive-policy.js` |
+| 0.5 | `realm-page.js` (phát hiện cổng hợp lệ, ưu tiên di chuyển cả khi combat) |
+| 0.75 | `chest-page.js` (rương bí cảnh, xử lý quái chắn rương; hoạt động khi Auto Farm tắt) |
 | 1 | `farm-routing.js` |
 | 1.5 | `farm-boss-safety.js` (boss bí cảnh: né vùng skill; boss: HP thấp chờ hồi đan) |
 | 2 | `farm-behavior.js` (né quái) |
@@ -71,8 +73,6 @@ flowchart TD
 | 3 | `quest-page.js` |
 | 3.5 | `farm-seals.js` |
 | 4 | `farm-map.js` (đi mục tiêu) |
-| 5 | `realm-page.js` |
-| 15 | `chest-page.js` |
 | 20 | `harvest-page.js` |
 | 25 | `farm-map.js` (quét mục tiêu bổ sung) |
 
@@ -88,6 +88,8 @@ flowchart TD
 - `popup-layout.js` điều hướng một trang chức năng tại mỗi thời điểm, ghi nhớ trang bằng `popupActivePage`, chuyển các nút log hiện có sang trang Chẩn đoán và dùng nút Lưu cố định gọi lại handler Auto Farm cũ; không còn dùng kéo/sắp xếp `popupPanelOrder`. `menu-monitor.js` cập nhật thẻ trạng thái trang Tổng quan.
 - `farm-map.js` dùng thêm `GSTFarmPriority` từ `farm-page.js` để xếp thứ tự mục tiêu ở chế độ tìm toàn map; đường vòng tránh boss tận dụng `host.clear`/`host.route` gốc thay vì thêm pathfinder mới.
 - `background-diagnostics.js` xuất log build `background-log-2`: mốc bắt đầu trang (`boot`), HP/vị trí trước khi chết, thay đổi vị trí lớn, mất nhịp, kết nối và trạng thái Auto Farm; giữ 80 sự kiện và 24 mốc quan trọng trong `sessionStorage` của cùng tab để đối chiếu qua navigation. `farm-content.js` chỉ ghi dấu `extension_timer` khi chính extension thêm tham số timer. `farm-diagnostics-content.js` lọc trường trước khi xuất log, không truyền URL, packet hoặc thông tin tài khoản.
+- `realm-page.js` có `entryMode: enter|stand` từ `realm-popup.js` → `realm-content.js`: khi có cổng phù hợp, ưu tiên đi tới không chờ hết giao tranh; `stand` chỉ dừng cạnh cổng, `enter` chỉ dùng callback vào cổng gốc sau khi game cho phép. Cả hai vẫn nhường thao tác tay, quest, thu hoạch, hồi phục và điều kiện Auto Farm đã cấu hình.
+- `chest-page.js` ưu tiên rương bí cảnh trước tìm quái thường; khi quái thù địch cản trở trong vùng gần, điều khiển tiếp cận và gọi `host.face/basic` hoặc `scene.auto.castSkills` gốc, **không bật Auto Farm**. Sau khi dọn quái mới thử đúng target F rương; tôn trọng thao tác tay, chế độ farm/chest, bảo vệ bí cảnh, thời gian chờ và quyền nhận đồ của game.
 - `farm-behavior.js` ưu tiên nhặt đồ hợp lệ qua `scene.auto.idle()` ở priority 2.5 (sau né quái, trước các chuyến tìm bãi); `farm-map.js` có `pauseForLoot(scene)` để nhường đường và dùng sẵn `GSTNavigation` cho chế độ `idleMode: seek` trong bán kính tâm farm hoặc toàn map. Tùy chọn `preferLoot` và `idleMode` đi từ `popup.js` → `farm-content.js` → `farm-page.js`.
 - `flight-page.js` đọc cấu hình bridge Auto Farm qua `autoRespawn`, quyết định hỗ trợ bay bằng `scene.auto.on` (không dùng `enabled` của vùng tìm quái). Chờ snapshot game mới, giới hạn thử lại lệnh `scene.act('fly')` và xuất `GSTFlight.snapshot()` cho log chẩn đoán.
 - `movement-diagnostics.js` ghi K/U: bảng `skills`/`workshop`/`other` khi mở/đóng, khung hình ngắt trên 500ms, lệnh điều khiển và trạng thái Auto Farm. Giữ tối đa 36 sự kiện UI qua navigation trong cùng tab bằng `sessionStorage` (không thay đổi render gốc game).
