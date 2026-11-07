@@ -23,7 +23,7 @@
     result.fromOwner = ["GSTFarmMap", "native_farm_eligible"].includes(row.fromOwner) ? row.fromOwner : null;
     result.toOwner = ["GSTFarmMap", "native_farm_eligible"].includes(row.toOwner) ? row.toOwner : null;
     result.handoffReason = ["near_target", "native_target", "native_engaged", "target_unavailable",
-      "handoff_timeout", "native_out_of_range", "manual_override", "priority_preempt"]
+      "handoff_timeout", "native_out_of_range", "manual_override", "priority_preempt", "loot_priority"]
       .includes(row.handoffReason) ? row.handoffReason : null;
     result.replanReason = ["no_progress", "walk_failed", "blocked", "timeout", "boss_blocked"]
       .includes(row.replanReason) ? row.replanReason : null;

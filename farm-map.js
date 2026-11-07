@@ -4,8 +4,8 @@
   const finite = Number.isFinite, deferred = new Map();
   const explored = new Map();
   let scanAt = 0, correctionUntil = 0, lastFix;
-  let resumeTarget = null, handoff = null, resumeReason = null;
-  const nativeReach = 11, handoffReach = 6;
+  let resumeTarget = null, handoff = null, resumeReason = null, centerSync = null;
+  const nativeReach = 6.5, handoffReach = 5.5;
   function routeLog(scene, reason, extra = {}) {
     globalThis.GSTMovementDiagnostics?.event?.(scene, reason, extra);
   }
@@ -26,6 +26,14 @@
         fromOwner: "GSTFarmMap", toOwner: "native_farm_eligible", handoffReason: reason });
     }
     if (!handoff || handoff.id !== target.id) handoff = { id: target.id, at: time, fromMap };
+    // Native pick()/idle() search within 11 units of auto.ax/ay. A map target
+    // may be 40+ units away from the old center, so hand off the center too.
+    if (finite(target.x) && finite(target.y)) {
+      scene.auto.ax = target.x; scene.auto.ay = target.y;
+      centerSync = { x: target.x, y: target.y };
+      scene.auto.think = 0; scene.auto.chaseSince = time;
+    }
+    if (Number.isSafeInteger(target.id)) scene.auto.target = target.id;
     release();
     message = "Đang nhường Auto Farm gốc xử lý mục tiêu ở gần; chưa tìm bãi khác.";
   }
@@ -33,7 +41,8 @@
     const enemies = typeof host.enemies === "function" ? host.enemies() : [];
     const target = nativeTarget(scene, enemies, area, time);
     const distance = target ? range(target, { x: scene.px, y: scene.py }) : Infinity;
-    const engaged = target && distance <= nativeReach;
+    const engaged = target && distance <= nativeReach
+      && (distance <= 2.2 || host.clear?.(scene.px, scene.py, target.x, target.y));
     // A newly discovered boss may preempt a normal native target, but not an
     // actively engaged close-range fight.
     const ranked = globalThis.GSTFarmPriority;
@@ -51,20 +60,22 @@
       const held = Array.isArray(enemies) && enemies.find((enemy) => enemy.id === handoff.id
         && !enemy.dead && enemy.hostile && withinArea(area, enemy));
       if (!held) endHandoff("target_unavailable");
-      else if (engaged) {
-        if (target.id !== handoff.id) handoff = { ...handoff, id: target.id, at: time };
-        if (job) release();
-        return true;
-      } else if (range(held, { x: scene.px, y: scene.py }) <= nativeReach
-          && time - handoff.at < 3) return true;
       else {
-        if (time - handoff.at >= 3 && Number.isSafeInteger(handoff.id))
-          deferred.set(handoff.id, time + 5);
-        endHandoff(time - handoff.at >= 3 ? "handoff_timeout" : "native_out_of_range");
+        const heldDistance = range(held, { x: scene.px, y: scene.py });
+        if (engaged && target?.id === held.id) {
+          // The native owner is now within real combat range; do not
+          // re-acquire a route on the next frame.
+          if (job) release();
+          return true;
+        }
+        if (heldDistance <= nativeReach && time - handoff.at < 2) return true;
+        if (time - handoff.at >= 2 && Number.isSafeInteger(handoff.id))
+          deferred.set(handoff.id, time + 3);
+        endHandoff(time - handoff.at >= 2 ? "handoff_timeout" : "native_out_of_range");
       }
     }
     if (!engaged) return false;
-    // A map journey may be interrupted only by an active nearby native fight.
+    // Native has a genuinely nearby target, not simply an actor within 11 tiles.
     if (job && !(host.inCombat?.() && distance <= handoffReach)) return false;
     yieldToNative(scene, time, target, job ? "native_engaged" : "native_target");
     return true;
@@ -78,6 +89,7 @@
       job.navigation.path = [];
       job.navigation.pathAt = -Infinity;
       job.navigation.sideUntil = 0;
+      job.checkpoint = null;
       GSTNavigation.cancel(scene, job.navigation);
       host.steer(0, 0);
       routeLog(scene, "map_replan", { targetId: job.id, remaining,
@@ -99,6 +111,44 @@
   }
   const isBoss = (enemy) => enemy?.cls === "boss" || enemy?.wb === true;
   const range = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  // Prefer a stable, reachable short leg when the native route grid cannot
+  // route directly to a distant camp. Keep it until arrival; do not select
+  // an entirely new hop every animation frame.
+  function checkpoint(scene, host, owner, area) {
+    const pos = { x: scene.px, y: scene.py }, goal = { x: owner.x, y: owner.y };
+    if (owner.checkpoint && range(owner.checkpoint, pos) > 1.2) return owner.checkpoint;
+    if (owner.checkpoint) {
+      owner.visited.push(owner.checkpoint);
+      if (owner.visited.length > 6) owner.visited.shift();
+      owner.checkpoint = null;
+      owner.progressAt = scene.now();
+    }
+    const remaining = range(pos, goal), time = scene.now();
+    if (remaining <= 2.2 || time < owner.directUntil) return goal;
+    if (time < owner.checkpointRetryAt) return null;
+    // Pathfinding is expensive: never probe the full remote route each frame.
+    if (host.clear(pos.x, pos.y, goal.x, goal.y)
+        || host.route(pos.x, pos.y, goal.x, goal.y)?.length) {
+      owner.directUntil = time + 2;
+      return goal;
+    }
+    const angle = Math.atan2(goal.y - pos.y, goal.x - pos.x);
+    const radius = Math.min(12, Math.max(3.5, remaining - 3));
+    let best = null, bestScore = Infinity;
+    for (const offset of [0, 0.35, -0.35, 0.7, -0.7, 1.1, -1.1, 1.5, -1.5, 2, -2]) {
+      const candidate = { x: pos.x + Math.cos(angle + offset) * radius,
+        y: pos.y + Math.sin(angle + offset) * radius };
+      if (!withinArea(area, candidate)
+          || owner.visited.some((point) => range(point, candidate) < 3)) continue;
+      if (!host.clear(pos.x, pos.y, candidate.x, candidate.y)
+          && !host.route(pos.x, pos.y, candidate.x, candidate.y)?.length) continue;
+      const score = range(candidate, goal) + Math.abs(offset) * 2;
+      if (score < bestScore) { best = candidate; bestScore = score; }
+    }
+    if (best) owner.checkpoint = best;
+    else owner.checkpointRetryAt = time + 1;
+    return best;
+  }
   const segmentDistance = (point, start, end) => {
     const dx = end.x - start.x, dy = end.y - start.y;
     const length = dx * dx + dy * dy;
@@ -205,11 +255,11 @@
     const challenger = ordered[0], position = { x: scene.px, y: scene.py };
     const better = pursuing && challenger && challenger.id !== pursuing.id
       ? priority?.switchReason?.(pursuing, challenger, position, time - job.startedAt) : "";
-    const bossPriority = !pursuing && current && challenger && challenger.id !== current.id
-      && priority?.switchReason?.(current, challenger, position, 3) === "boss_priority";
-    const target = better || bossPriority ? challenger : pursuing ?? current ?? returning ?? nearbyAggro ?? challenger;
+    const localPriority = !pursuing && current && challenger && challenger.id !== current.id
+      ? priority?.switchReason?.(current, challenger, position, 3) : "";
+    const target = better || localPriority ? challenger : pursuing ?? current ?? returning ?? nearbyAggro ?? challenger;
     if (target?.id === resumeTarget) resumeTarget = null;
-    if (target) return { ...target, actor: true, switchReason: better || "" };
+    if (target) return { ...target, actor: true, switchReason: better || localPriority || "" };
     if (monsters.length) { message = "Các mục tiêu phù hợp đang được tạm bỏ do cooldown/đường bị chặn; chờ trước khi thử lại."; return null; }
     if (preferences.targetMode !== "boss") {
       return scouting ? scout(scene, time) : null;
@@ -301,7 +351,7 @@
           scene.autoX = scene.autoY = 0;
         // Keep the destination, but discard the route calculated from the old position.
         job.navigation.path = []; job.navigation.pathAt = -Infinity;
-        job.navigation.sideUntil = 0; job.progressAt = time;
+        job.navigation.sideUntil = 0; job.progressAt = time; job.checkpoint = null;
         job.replans = 0; job.lastReplanAt = -Infinity; job.retryUntil = 0; job.steer = null;
         correctionUntil = time + 0.12;
         routeLog(scene, "map_correction", { pauseMs: 120, targetId: job.id, action: "retry" });
@@ -342,7 +392,8 @@
       // Merely knowing a distant actor does not mean native pick() can route to it.
       // Its full route grid is bounded; native walk() can also use shorter hop() routes.
       const distance = Math.hypot(scene.px - target.x, scene.py - target.y);
-      if (target.actor && distance <= handoffReach) {
+      if (target.actor && distance <= handoffReach
+          && (distance <= 2.2 || host.clear(scene.px, scene.py, target.x, target.y))) {
         yieldToNative(scene, time, target, "near_target");
         return false;
       }
@@ -365,7 +416,8 @@
         const navigation = Object.assign(Object.create(scene.auto), { path: [], lastX: scene.px, lastY: scene.py,
           stillSince: time, pathAt: -Infinity, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0 });
         job = { id: target.id, actor: target.actor, scout: target.scout === true, x: target.x, y: target.y, navigation, castAt: scene.castAt, progressAt: time,
-          startedAt: time, steer: null, retargetAt: time, replans: 0, lastReplanAt: -Infinity, retryUntil: 0 };
+          startedAt: time, steer: null, retargetAt: time, replans: 0, lastReplanAt: -Infinity, retryUntil: 0,
+          checkpoint: null, visited: [], directUntil: -Infinity, checkpointRetryAt: -Infinity };
         if (resumeReason) {
           routeLog(scene, "map_resume", { targetId: target.id,
             fromOwner: "native_farm_eligible", toOwner: "GSTFarmMap", handoffReason: resumeReason });
@@ -373,7 +425,7 @@
         }
       } else if (Math.hypot(job.x - target.x, job.y - target.y) > 3 && time - job.retargetAt >= 3) {
         // Keep the existing route when a moving monster shifts only a little.
-        job.x = target.x; job.y = target.y; job.retargetAt = time;
+        job.x = target.x; job.y = target.y; job.retargetAt = time; job.checkpoint = null;
         job.navigation.path = []; job.navigation.pathAt = -Infinity;
       }
       if (GSTNavigation.progressed(scene, job, job.navigation.path, job.x, job.y)) {
@@ -381,7 +433,7 @@
         job.replans = 0; job.lastReplanAt = -Infinity;
       }
       const remaining = Math.hypot(scene.px - job.x, scene.py - job.y);
-      if (time - job.progressAt > 3 || time - job.startedAt > 120) {
+      if (time - job.progressAt > (remaining > 18 ? 6 : 4) || time - job.startedAt > 120) {
         if (time - job.startedAt > 120) {
           routeLog(scene, "map_stuck", { targetId: job.id, remaining,
             stuckMs: Math.max(0, (time - job.progressAt) * 1000),
@@ -407,6 +459,11 @@
         }
       }
       owner.denied = false;
+      const next = target.actor && (owner.checkpoint || distance > 2.2)
+        ? checkpoint(scene, host, owner, area) : { x: owner.x, y: owner.y };
+      // No reachable segment: count as a route failure instead of trying the
+      // same blocked 14-unit hop indefinitely.
+      if (!next) return recover(scene, host, time, "walk_failed", remaining);
       const walking = { ...host,
         clear: (x, y, gx, gy) => (!area.home
             || withinArea(area, { x, y }) && withinArea(area, { x: gx, y: gy }))
@@ -431,10 +488,10 @@
       if (target.scout && Math.hypot(scene.px - target.x, scene.py - target.y) <= 1.2) {
         explored.set(target.id, Infinity); release(); walking.steer(0, 0);
         message = "Đã tới điểm dò; đang tìm quái đúng bộ lọc.";
-      } else if (!target.scout && Math.hypot(scene.px - target.x, scene.py - target.y) <= 6) {
+      } else if (!target.actor && !target.scout && Math.hypot(scene.px - target.x, scene.py - target.y) <= 6) {
         walking.steer(0, 0); message = "Đã tới gần tọa độ boss; chờ game cung cấp actor boss để Auto Farm chọn mục tiêu.";
-      } else if (!GSTNavigation.walk(scene, owner.navigation, walking, time, scene.px, scene.py, owner.x, owner.y, target.scout ? 1 : 5)
-          || owner.denied) {
+      } else if (!GSTNavigation.walk(scene, owner.navigation, walking, time, scene.px, scene.py, next.x, next.y,
+          owner.checkpoint ? 0.8 : target.scout ? 1 : target.actor ? 1.8 : 5) || owner.denied) {
         return recover(scene, walking, time, owner.denied ? "blocked" : "walk_failed",
           Math.hypot(scene.px - owner.x, scene.py - owner.y));
       } else message = target.scout ? `Đang dò vùng mới tìm quái đúng bộ lọc · còn ${distance.toFixed(1)} ô.`
@@ -447,7 +504,7 @@
     release(); const old = binding; binding = null;
     if (old) { old.remove(); old.removeScout(); old.scene.events.off("preupdate", guard); old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach); }
     retryAt = 0; message = ""; deferred.clear(); explored.clear(); scanAt = 0; lastFix = undefined; correctionUntil = 0;
-    resumeTarget = null; handoff = null; resumeReason = null;
+    resumeTarget = null; handoff = null; resumeReason = null; centerSync = null;
   }
   function attach(scene) {
     if (!wanted() || suspended) { detach(); return; }
@@ -466,12 +523,21 @@
     // advertise a lock that prevents those earlier handlers from starting.
     controls: (scene) => !!binding && binding.scene === scene && job !== null && !job.scout,
     nativeHandling: (scene) => !!binding && binding.scene === scene && !!scene?.auto?.on && handoff !== null,
+    consumeCenter(scene) {
+      if (binding?.scene !== scene) return null;
+      const aligned = centerSync;
+      centerSync = null;
+      return aligned;
+    },
     pauseForLoot(scene) {
       if (!binding || binding.scene !== scene || !job) return;
-      release(); endHandoff("manual_override"); retryAt = scene.now() + 0.3;
+      if (job?.actor) resumeReason = "loot_priority";
+      release(); endHandoff("loot_priority"); retryAt = scene.now() + 0.3;
     },
     journey: (scene) => binding?.scene === scene && job ? {
-      id: job.id, x: job.x, y: job.y, scout: job.scout, path: job.navigation.path
+      id: job.id, x: job.x, y: job.y, scout: job.scout, path: job.navigation.path,
+      next: job.checkpoint ? { ...job.checkpoint } : null,
+      waiting: scene.now() < retryAt || scene.now() < job.retryUntil
     } : null,
     status: (scene) => binding && binding.scene === scene && scene.auto.on ? message : ""
   };

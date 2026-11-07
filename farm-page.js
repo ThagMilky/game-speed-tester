@@ -38,8 +38,12 @@
     if (!ranked() || !current || !challenger || comparePriority(challenger, current) >= 0) return "";
     if (settings.targetMode === "bossLevel" && isBoss(challenger) && !isBoss(current)) return "boss_priority";
     const gain = settings.targetMode === "lowLevel" ? current.lv - challenger.lv : challenger.lv - current.lv;
-    return finite(gain) && gain >= 4 && elapsed >= 3
-      && distance(challenger, pos) + 2 < distance(current, pos) ? "level_priority" : "";
+    // Allow a substantially better camp when it is nearby, but never turn
+    // around for a distant respawn after already committing to a long trip.
+    const challengerDistance = distance(challenger, pos);
+    return finite(gain) && gain >= 4 && elapsed >= 2
+      && challengerDistance <= 20 && challengerDistance <= distance(current, pos) + 3
+      ? "level_priority" : "";
   }
   globalThis.GSTFarmPriority = { compare: comparePriority, ranked, switchReason };
   function filterLabel() {
@@ -426,6 +430,11 @@
       const time = s.scene.now();
       globalThis.GSTFarmBehavior?.attach(s.scene);
       syncFilter(s.scene);
+      // A native handoff moves the game's 11-tile center to the remote camp.
+      // It is not a manual relocation of the user's configured farm origin.
+      const aligned = globalThis.GSTFarmMap?.consumeCenter?.(s.scene);
+      if (aligned && s.auto.ax === aligned.x && s.auto.ay === aligned.y)
+        s.center = { ...aligned };
       if (globalThis.GSTFarmBehavior?.pendingLoot(s.scene)) {
         message = "Đang ưu tiên nhặt đồ tại bãi vừa đánh trước khi chọn bãi tiếp theo.";
         return;

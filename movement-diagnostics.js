@@ -195,7 +195,7 @@
         row.fromOwner = ["GSTFarmMap", "native_farm_eligible"].includes(extra.fromOwner) ? extra.fromOwner : null;
         row.toOwner = ["GSTFarmMap", "native_farm_eligible"].includes(extra.toOwner) ? extra.toOwner : null;
         row.handoffReason = ["near_target", "native_target", "native_engaged", "target_unavailable",
-          "handoff_timeout", "native_out_of_range", "manual_override", "priority_preempt"]
+          "handoff_timeout", "native_out_of_range", "manual_override", "priority_preempt", "loot_priority"]
           .includes(extra.handoffReason) ? extra.handoffReason : null;
         row.replanReason = ["no_progress", "walk_failed", "blocked", "timeout", "boss_blocked"]
           .includes(extra.replanReason) ? extra.replanReason : null;

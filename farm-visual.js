@@ -22,8 +22,10 @@
       const target = journey ?? (actor && !actor.dead ? actor : null);
       if (!target || ![scene.px, scene.py, target.x, target.y].every(Number.isFinite)) return;
       const start = scene.toPx(scene.px, scene.py), end = scene.toPx(target.x, target.y);
+      const steeringTarget = journey?.next ?? target;
+      const steerEnd = scene.toPx(steeringTarget.x, steeringTarget.y);
       const width = 2 / (scene.cameras?.main?.zoom || 1);
-      graphics.lineStyle(width, journey?.scout ? 0xf5c86a : 0x5ce6bd, 0.9);
+      graphics.lineStyle(width, journey?.scout ? 0xf5c86a : 0x5ce6bd, journey?.waiting ? 0.25 : 0.9);
       if (journey?.scout) {
         const count = Math.min(256, Math.ceil(Math.hypot(end[0] - start[0], end[1] - start[1]) / 16));
         for (let i = 0; i < count; i += 2) {
@@ -31,8 +33,11 @@
           graphics.lineBetween(start[0] + (end[0] - start[0]) * a, start[1] + (end[1] - start[1]) * a,
             start[0] + (end[0] - start[0]) * b, start[1] + (end[1] - start[1]) * b);
         }
-      } else graphics.lineBetween(...start, ...end);
+      } else if (!journey?.waiting) graphics.lineBetween(...start, ...steerEnd);
+      // The ring marks the final camp; the line ends at the current
+      // navigable checkpoint, not an unverified straight path through walls.
       graphics.strokeCircle(end[0], end[1], width * 3);
+      if (journey?.next) graphics.strokeCircle(steerEnd[0], steerEnd[1], width * 2);
       const path = journey?.path ?? scene.auto.path;
       if (!Array.isArray(path)) return;
       graphics.lineStyle(width, 0x77baff, 0.8);

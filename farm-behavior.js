@@ -5,7 +5,7 @@
   let binding = null, job = null, configured = false, suspended = false, manualUntil = 0, retryAt = 0, noteUntil = 0, message = "";
   const hits = new Map();
   let lootTickAt = -Infinity, lootAt = -Infinity;
-  let observedTarget = null, lootGraceUntil = 0, lootActive = false, lootLastCount = 0;
+  let observedTarget = null, lootSite = null, lootActive = false, lootLastCount = 0, lootAbandoned = false;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -66,7 +66,7 @@
     if (sceneNow() !== scene || scene.auto !== binding.auto || !scene.sys?.isActive?.()) { detach(); return; }
     if (!scene.auto.on || scene.self?.dead || !connected(scene) || scene.leaving) {
       release(); hits.clear(); manualUntil = 0; message = "";
-      observedTarget = null; lootGraceUntil = 0; lootActive = false; return;
+      observedTarget = null; lootSite = null; lootActive = false; lootAbandoned = false; return;
     }
     if (manual(scene) || (job && scene.castAt !== job.castAt)) {
       manualUntil = performance.now() + 3000;
@@ -193,16 +193,23 @@
       return true;
     } catch { release("Interface né quái chưa phù hợp; đã nhường lại game."); return false; }
   }
-  // Track the monster actually fought, not a remote map destination.
-  // Give the game's drop objects a short chance to arrive after that monster dies.
+  // A loot phase belongs to the LAST confirmed local kill. Never chase a
+  // random old drop just because the route to the next camp passes nearby.
   function observeKill(scene, time) {
     if (!finite(scene.px) || !finite(scene.py) || !finite(time)) return;
+    if (lootSite && (time > lootSite.until || dist(lootSite, { x: scene.px, y: scene.py }) > 12)) {
+      lootAbandoned = true;
+      lootSite = null;
+    }
     if (observedTarget) {
       const previous = scene.views.get(observedTarget.id);
       if (!previous || previous.dead) {
-        if (time - observedTarget.at < 8
-            && Math.hypot(scene.px - observedTarget.x, scene.py - observedTarget.y) < 9)
-          lootGraceUntil = Math.max(lootGraceUntil, time + 0.8);
+        const site = { x: observedTarget.x, y: observedTarget.y };
+        if (time - observedTarget.at < 8 && dist(site, { x: scene.px, y: scene.py }) < 9) {
+          // More kills in the same camp extend the short post-combat window.
+          lootSite = { ...site, graceUntil: time + 1, until: time + 9 };
+          lootAbandoned = false;
+        }
         observedTarget = null;
       } else if (time - observedTarget.at > 8) observedTarget = null;
     }
@@ -212,24 +219,28 @@
       observedTarget = { id: actor.id, x: actor.x, y: actor.y, at: time };
   }
   function lootPlan(scene, host, time) {
-    if (!settings.preferLoot || !scene.auto?.on || blocked(scene) || manual(scene)
-        || !finite(time) || !finite(scene.px) || !finite(scene.py)
+    if (!scene?.auto?.on || !finite(time)) return null;
+    observeKill(scene, time);
+    if (!settings.preferLoot || !lootSite || blocked(scene) || manual(scene)
+        || !finite(scene.px) || !finite(scene.py)
         || typeof host?.loot !== "function" || typeof scene.auto?.idle !== "function"
         || typeof scene.auto.lootSkip?.has !== "function" || modal(binding)
         || performance.now() < manualUntil || GSTHarvest.needsRecovery?.(scene)
         || globalThis.GSTQuest?.active?.(scene)
         || ["GSTFarmSeals", "GSTChest", "GSTRealm", "GSTHarvest", "GSTQuest"]
           .some((name) => globalThis[name]?.controls?.(scene))) return null;
-    observeKill(scene, time);
     const all = host.loot();
     if (!Array.isArray(all)) return null;
     const nearby = all.filter((item) => finite(item.x) && finite(item.y)
-      && Math.hypot(item.x - scene.px, item.y - scene.py) < 11);
+      && Math.hypot(item.x - scene.px, item.y - scene.py) < 11
+      && Math.hypot(item.x - lootSite.x, item.y - lootSite.y) < 9);
     const eligible = nearby.filter((item) => !scene.auto.lootSkip.has(
       item.x.toFixed(1) + "," + item.y.toFixed(1)));
-    const waiting = eligible.length === 0 && time < lootGraceUntil;
-    if (!eligible.length && !waiting)
+    const waiting = eligible.length === 0 && time < lootSite.graceUntil;
+    if (!eligible.length && !waiting) {
+      lootSite = null; // Collection finished, or the remaining objects are skipped.
       return { eligible, waiting: false, skipped: nearby.length > 0 };
+    }
     // Avoid scanning every monster on every frame when no loot is available.
     // A combat flag can outlive the last monster, but an actual nearby threat cannot.
     const list = typeof host.gstRawEnemies === "function" ? host.gstRawEnemies()
@@ -259,8 +270,8 @@
       if (!plan || !plan.eligible.length && !plan.waiting) {
         if (lootActive) {
           globalThis.GSTMovementDiagnostics?.event?.(scene,
-            !plan || plan.skipped ? "loot_skip" : "loot_done", { lootCount: lootLastCount });
-          lootActive = false; lootLastCount = 0;
+            lootAbandoned || plan?.skipped ? "loot_skip" : "loot_done", { lootCount: lootLastCount });
+          lootActive = false; lootLastCount = 0; lootAbandoned = false;
         }
         return false;
       }
@@ -307,7 +318,7 @@
       for (const undo of old.undo.reverse()) undo();
     }
     hits.clear(); retryAt = 0; manualUntil = 0; lootTickAt = -Infinity; lootAt = -Infinity;
-    observedTarget = null; lootGraceUntil = 0; lootActive = false; lootLastCount = 0;
+    observedTarget = null; lootSite = null; lootActive = false; lootLastCount = 0; lootAbandoned = false;
   }
   function attach(scene) {
     if (!configured || suspended || (settings.idleMode !== "hold" && !settings.avoidEnabled
