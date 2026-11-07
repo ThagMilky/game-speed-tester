@@ -6,17 +6,21 @@
   // Keep a bounded record through same-tab reloads (no packet, URL or account data).
   try {
     const rows = JSON.parse(sessionStorage.getItem(logKey) ?? "[]");
-    const allowed = ["pill", "retreat", "resume", "hazard", "kite", "no_route", "unsupported"];
+    const allowed = ["pill", "retreat", "resume", "hazard", "kite", "no_route", "unsupported", "dash", "dash_result", "flight_drop"];
     if (Array.isArray(rows)) log.push(...rows.slice(-30).filter((row) => allowed.includes(row?.type)
       && typeof row.at === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.at))
       .map((row) => ({ at: row.at, type: row.type,
         hp: finite(row.hp) ? Math.max(0, Math.min(1, row.hp)) : null,
         position: Array.isArray(row.position) && row.position.length === 2 && row.position.every(finite)
           ? row.position.map((v) => Math.max(-1e6, Math.min(1e6, v))) : null,
-        cooldown: finite(row.cooldown) ? Math.max(0, Math.min(86400, row.cooldown)) : null })));
+        cooldown: finite(row.cooldown) ? Math.max(0, Math.min(86400, row.cooldown)) : null,
+        direction: Array.isArray(row.direction) && row.direction.length === 2 && row.direction.every(finite)
+          ? row.direction.map((v) => Math.max(-1, Math.min(1, v))) : null,
+        distance: finite(row.distance) ? Math.max(0, Math.min(1000, row.distance)) : null,
+        flying: row.flying === true })));
   } catch { /* Optional log, never influence Auto Farm. */ }
   let settings = {}, binding = null, job = null, retreating = false, suspended = false;
-  let retryAt = 0, message = "", noteUntil = 0;
+  let retryAt = 0, message = "", noteUntil = 0, lastDashAt = -Infinity, dashObservation = null;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   function note(scene, type, text, extra = {}) {
@@ -25,7 +29,11 @@
     log.push({ at: new Date().toISOString(), type, hp: finite(scene.self?.hp) && finite(scene.self?.mh) && scene.self.mh > 0
       ? Math.round(scene.self.hp / scene.self.mh * 1000) / 1000 : null,
       position: [scene.px, scene.py].every(finite) ? [scene.px, scene.py].map((n) => Math.round(n * 100) / 100) : null,
-      cooldown: finite(extra.cooldown) ? Math.round(Math.max(0, extra.cooldown) * 10) / 10 : null });
+      cooldown: finite(extra.cooldown) ? Math.round(Math.max(0, extra.cooldown) * 10) / 10 : null,
+      direction: Array.isArray(extra.direction) && extra.direction.length === 2 && extra.direction.every(finite)
+        ? extra.direction.map((n) => Math.round(Math.max(-1, Math.min(1, n)) * 1000) / 1000) : null,
+      distance: finite(extra.distance) ? Math.round(Math.max(0, extra.distance) * 100) / 100 : null,
+      flying: extra.flying === true });
     if (log.length > 30) log.shift();
     try { sessionStorage.setItem(logKey, JSON.stringify(log)); } catch { /* Optional diagnostics. */ }
   }
@@ -133,6 +141,71 @@
     }
     return best;
   }
+  function observeDash(scene, time) {
+    if (!dashObservation || !finite(scene?.px) || !finite(scene?.py)) return;
+    const previous = dashObservation;
+    if (time - previous.time < 0.35 || (finite(scene.dashT) && scene.dashT > 0)) return;
+    dashObservation = null;
+    const travelled = distance({ x: scene.px, y: scene.py }, previous.position);
+    note(scene, "dash_result", "Q đã kết thúc; ghi lại quãng lướt và trạng thái bay.",
+      { distance: travelled, direction: previous.direction, flying: scene.self?.fly === true });
+    if (previous.flying && scene.self?.fly === false) {
+      note(scene, "flight_drop", "Game báo đã mất trạng thái bay sau lần lướt Q.",
+        { distance: travelled, direction: previous.direction });
+    }
+  }
+  function tryDash(scene, host, time, pos, bounds, hazards, target, boss, lowHp) {
+    // Only at an imminent, server-reported impact. Never send synthetic key events.
+    if (!settings.bossDodge || typeof scene.useSkill !== "function"
+        || time - lastDashAt < 0.75 || (finite(scene.dashT) && scene.dashT > 0)
+        || !finite(scene.faceX) || !finite(scene.faceY)
+        || (scene.cdLocal?.Q ?? -Infinity) > time || (scene.self?.cd?.Q ?? 0) > 0.08
+        || scene.self?.fx?.includes?.("r") || scene.self?.fx?.includes?.("s")
+        || !finite(scene.clockOffset)) return false;
+    const serverNow = performance.now() / 1000 + scene.clockOffset;
+    const imminent = hazards.filter((area) => distance(pos, area) <= area.radius + 0.8
+      && area.at - serverNow <= 0.42 && area.until >= serverNow);
+    if (!imminent.length) return false;
+    const closest = imminent.sort((a, b) => distance(pos, a) - distance(pos, b))[0];
+    const outwardAngle = Math.atan2(pos.y - closest.y, pos.x - closest.x);
+    const goalAngle = target ? Math.atan2(target.point.y - pos.y, target.point.x - pos.x) : null;
+    const angles = [goalAngle, outwardAngle, outwardAngle + Math.PI / 4,
+      outwardAngle - Math.PI / 4, outwardAngle + Math.PI / 2,
+      outwardAngle - Math.PI / 2, outwardAngle + Math.PI].filter(finite);
+    let best = null, score = -Infinity;
+    for (const angle of angles) {
+      const direction = [Math.cos(angle), Math.sin(angle)];
+      // Reference Q travels around two cells. Only dash through a verified clear corridor.
+      const preview = { x: pos.x + direction[0] * 1.9, y: pos.y + direction[1] * 1.9 };
+      if (!inside(bounds, preview) || !host.clear(pos.x, pos.y, preview.x, preview.y)
+          || !clearOfHazards(pos, preview, hazards)
+          || (lowHp && boss && distance(preview, boss) < distance(pos, boss) - 0.1)) continue;
+      const progress = distance(preview, closest) - distance(pos, closest);
+      if (progress < 0.2) continue;
+      const clearance = Math.min(...hazards.map((area) => distance(preview, area) - area.radius));
+      const candidate = clearance + progress * 0.25 + (goalAngle === angle ? 0.1 : 0);
+      if (candidate > score) { best = direction; score = candidate; }
+    }
+    if (!best) return false;
+    const oldDash = scene.dashT, oldCooldown = scene.cdLocal?.Q;
+    const oldFace = [scene.faceX, scene.faceY], flying = scene.self.fly === true;
+    scene.faceX = best[0]; scene.faceY = best[1];
+    // The third arg disables the game's manual-input cancellation. Auto Farm owns this frame.
+    scene.useSkill("Q", false, false);
+    const accepted = (finite(scene.dashT) && scene.dashT > 0 && scene.dashT !== oldDash)
+      || (finite(scene.cdLocal?.Q) && scene.cdLocal.Q > time + 0.1 && scene.cdLocal.Q !== oldCooldown);
+    if (!accepted) {
+      scene.faceX = oldFace[0]; scene.faceY = oldFace[1];
+      return false;
+    }
+    release();
+    lastDashAt = time;
+    retryAt = time + 0.3;
+    dashObservation = { time, position: { ...pos }, direction: best, flying };
+    note(scene, "dash", "Đã dùng Q để lướt né vùng skill boss.",
+      { direction: best, flying, cooldown: scene.self.cd?.Q });
+    return true;
+  }
   function drinkIfReady(scene, host, time, hp) {
     const pills = host.pills?.("hp");
     if (!Array.isArray(pills) || pills.length < 2 || !pills.slice(0, 2).every(finite)
@@ -148,6 +221,7 @@
   function update(host, time) {
     const scene = binding?.scene;
     try {
+      if (scene && finite(time)) observeDash(scene, time);
       if (!scene || !enabled() || blocked(scene) || !finite(time)
           || !["steer", "route", "clear", "hp", "pills"].every((key) => typeof host?.[key] === "function")) {
         release(); retreating = false; return false;
@@ -157,6 +231,7 @@
           || !finite(scene.selfAt) || scene.now() - scene.selfAt > 3) {
         release(); retreating = false; return false;
       }
+      if (finite(scene.dashT) && scene.dashT > 0) return true; // Let native Q finish before choosing another movement.
       const boss = nearbyBoss(scene, pos), hp = scene.self.hp / scene.self.mh;
       const hazards = settings.bossDodge ? hazardZones(scene) : [];
       const danger = hazards.some((area) => distance(area, pos) <= area.radius + 0.8);
@@ -184,6 +259,11 @@
           : finite(cd) && cd > 0 ? `Đang giữ khoảng cách; đan HP còn hồi ${cd.toFixed(1)} giây.`
             : "Đang giữ khoảng cách với boss để hồi HP.");
         return true;
+      }
+      if (danger && settings.bossDodge) {
+        // Reuse a known safe goal if present; Q has its own short-corridor search.
+        const escape = job && inside(bounds, job.point) ? job : null;
+        if (tryDash(scene, host, time, pos, bounds, hazards, escape, boss, retreating)) return true;
       }
       if (job && (!inside(bounds, job.point) || hazards.some((area) => distance(area, job.point) <= area.radius + 0.7)
           || !pathSafe(scene, pos, job.navigation.path.length ? job.navigation.path : [[job.point.x, job.point.y]], bounds, hazards)
@@ -242,7 +322,7 @@
     if (blocked(scene)) { release(); retreating = false; }
   }
   function detach() {
-    release(); retreating = false; retryAt = 0;
+    release(); retreating = false; retryAt = 0; dashObservation = null;
     const old = binding; binding = null;
     if (!old) return;
     old.remove(); old.scene.events.off("preupdate", guard);

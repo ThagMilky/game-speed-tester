@@ -53,7 +53,7 @@
     return result;
   }
   function cleanBossSafety(data) {
-    const allowed = ["pill", "retreat", "resume", "hazard", "kite", "no_route", "unsupported"];
+    const allowed = ["pill", "retreat", "resume", "hazard", "kite", "no_route", "unsupported", "dash", "dash_result", "flight_drop"];
     const number = (value) => Number.isFinite(value) ? Math.round(Math.max(0, Math.min(86400, value)) * 1000) / 1000 : null;
     const point = (value) => Array.isArray(value) && value.length === 2 && value.every(Number.isFinite)
       ? value.map((n) => Math.round(Math.max(-1e6, Math.min(1e6, n)) * 100) / 100) : null;
@@ -62,7 +62,10 @@
       active: data?.active === true, retreating: data?.retreating === true,
       events: entries.map((row) => ({
         at: typeof row.at === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.at) ? row.at : "",
-        type: row.type, hp: number(row.hp), position: point(row.position), cooldown: number(row.cooldown)
+        type: row.type, hp: number(row.hp), position: point(row.position), cooldown: number(row.cooldown),
+        direction: Array.isArray(row.direction) && row.direction.length === 2 && row.direction.every(Number.isFinite)
+          ? row.direction.map((n) => Math.max(-1, Math.min(1, n))) : null,
+        distance: number(row.distance), flying: row.flying === true
       })) };
   }
   // Isolated-world log collection must still work if the shared schema was not

@@ -3,9 +3,13 @@
   const origin = "https://nghichthienky.online";
   let always = false, farm = false, binding = null, watcher = null, suspended = false;
   let stableAt = null, requestedAt = null, last = -Infinity, message = "Luôn bay đang tắt.";
-  let sentScene = null, sentAt = -Infinity;
+  let sentScene = null, sentAt = -Infinity, retryAfter = -Infinity, requestSelfAt = null;
   const sceneNow = () => window.game?.scene?.getScene?.("world") ?? window.__ntkScene;
-  function reset() { stableAt = null; requestedAt = null; last = -Infinity; }
+  function reset() { stableAt = null; requestedAt = null; last = -Infinity; retryAfter = -Infinity; requestSelfAt = null; }
+  function finiteSceneTime(scene) {
+    return typeof scene.now === "function" && Number.isFinite(scene.selfAt)
+      && scene.now() - scene.selfAt >= 0 && scene.now() - scene.selfAt <= 2;
+  }
   function ensure(scene) {
     if (!scene?.auto) { reset(); message = "Chờ scene world và Auto Farm sẵn sàng để kiểm tra bay."; return false; }
     if (binding?.scene !== scene) discover();
@@ -21,13 +25,27 @@
       reset(); message = "Đang bay."; return true;
     }
     if (requestedAt !== null) {
-      message = now - requestedAt < 8000 ? "Đã yêu cầu bay; chờ game xác nhận."
-        : "Game chưa xác nhận bay. Kiểm tra điều kiện hoặc tắt/bật Luôn bay để thử lại; không gửi lặp.";
+      if (now - requestedAt < 8000) {
+        message = "Đã yêu cầu bay; chờ game xác nhận."; return false;
+      }
+      // Fly is a toggle: only retry after a fresh server snapshot still reports fly=false.
+      if (!finiteSceneTime(scene) || !Number.isFinite(requestSelfAt)
+          || scene.selfAt <= requestSelfAt) {
+        message = "Chờ dữ liệu bay mới từ game; chưa gửi lại lệnh bật/tắt."; return false;
+      }
+      requestedAt = null;
+      retryAfter = now + 15000; // 23+ seconds between requests; avoid flip-flopping.
+      message = "Game chưa xác nhận bay; sẽ thử lại có giới hạn khi trạng thái vẫn tắt.";
       return false;
+    }
+    if (now < retryAfter) {
+      message = "Game chưa xác nhận bay; đang chờ trước khi thử lại."; return false;
     }
     if (now - last < 250) return false;
     last = now;
     if (scene.uiBlocked || scene.pendingSkill || scene.aiming || scene.harvesting || scene.self.med || scene.self.fish
+        || (Number.isFinite(scene.dashT) && scene.dashT > 0)
+        || (finiteSceneTime(scene) === false)
         || GSTFarmRouting.blocked(scene) || scene.self.realm?.inside?.protection > 0) {
       stableAt = null; message = "Chờ giao diện/thao tác nhân vật ổn định trước khi bật bay."; return false;
     }
@@ -35,9 +53,11 @@
     if (now - stableAt < 1000) { message = "Chuẩn bị bật bay sau 1 giây ổn định."; return false; }
     if (typeof scene.act !== "function") { message = "Chưa có thao tác bay tương thích trong game."; return false; }
     if (sentScene === scene && now - sentAt < 8000) {
-      requestedAt = sentAt; message = "Chờ yêu cầu bay trước đó; không gửi trùng khi đổi cài đặt nhanh."; return false;
+      requestedAt = sentAt; requestSelfAt = scene.selfAt;
+      message = "Chờ yêu cầu bay trước đó; không gửi trùng khi đổi cài đặt nhanh."; return false;
     }
     requestedAt = now;
+    requestSelfAt = scene.selfAt;
     sentScene = scene; sentAt = now;
     scene.act("fly"); message = "Đã yêu cầu bay; chờ game xác nhận.";
     return false;
