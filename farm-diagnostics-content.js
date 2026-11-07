@@ -16,12 +16,40 @@
       callers: (Array.isArray(row.callers) ? row.callers : []).filter((value) => typeof value === "string"
         && /^[A-Za-z0-9_.-]+\.js:\d+:\d+$/.test(value)).slice(0, 4) };
   }
+  // Allowlist MAIN -> ISOLATED diagnostic data; never relay URL or account details.
+  const bgDate = (value) => typeof value === "string"
+    && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) ? value : "";
+  const bgNumber = (value, limit = 86400000) => Number.isFinite(value)
+    ? Math.round(Math.max(0, Math.min(limit, value)) * 1000) / 1000 : null;
+  const bgPoint = (value) => Array.isArray(value) && value.length === 2 && value.every(Number.isFinite)
+    ? value.map((v) => Math.round(Math.max(-1e6, Math.min(1e6, v)) * 1000) / 1000) : null;
+  function cleanVitals(row) {
+    if (!row || typeof row !== "object") return null;
+    return { at: bgDate(row.at), auto: row.auto === true, dead: row.dead === true,
+      hidden: row.hidden === true, connected: row.connected === true,
+      hp: bgNumber(row.hp, 1e9), maxHp: bgNumber(row.maxHp, 1e9), hpPct: bgNumber(row.hpPct, 1),
+      position: bgPoint(row.position), serverPosition: bgPoint(row.serverPosition),
+      fix: bgNumber(row.fix, 1e9) };
+  }
   function cleanBackground(row) {
-    const reasons = ["attach", "state", "frame_gap", "visibility", "focus", "blur", "freeze", "resume", "pagehide", "pageshow", "revive_request", "native_revive_attempt", "worker_failure", "detach"];
+    const reasons = ["boot", "attach", "state", "heartbeat", "death", "revived", "position_jump",
+      "frame_gap", "visibility", "focus", "blur", "freeze", "resume", "pagehide", "pageshow",
+      "revive_request", "native_revive_attempt", "worker_failure", "detach"];
     if (!reasons.includes(row?.reason)) return null;
-    const result = { reason: row.reason, at: typeof row.at === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.at) ? row.at : "" };
-    for (const key of ["hidden", "focused", "auto", "dead", "connected", "reconnecting", "displaced", "active", "paused", "loopRunning", "wasDiscarded"]) result[key] = row[key] === true;
-    for (const key of ["gapMs", "sinceFrameMs"]) result[key] = Number.isFinite(row[key]) ? Math.max(0, Math.min(86400000, row[key])) : null;
+    const result = { reason: row.reason, at: bgDate(row.at), generation: bgNumber(row.generation, 1e7) };
+    for (const key of ["hidden", "focused", "auto", "dead", "connected", "reconnecting",
+      "displaced", "active", "paused", "loopRunning", "wasDiscarded"]) result[key] = row[key] === true;
+    for (const key of ["gapMs", "sinceFrameMs", "positionDelta"]) result[key] = bgNumber(row[key]);
+    result.hp = bgNumber(row.hp, 1e9); result.maxHp = bgNumber(row.maxHp, 1e9);
+    result.hpPct = bgNumber(row.hpPct, 1);
+    result.position = bgPoint(row.position); result.serverPosition = bgPoint(row.serverPosition);
+    result.previousPosition = bgPoint(row.previousPosition);
+    result.fix = bgNumber(row.fix, 1e9); result.previousFix = bgNumber(row.previousFix, 1e9);
+    result.before = cleanVitals(row.before);
+    result.navigationType = ["navigate", "reload", "back_forward", "prerender"].includes(row.navigationType)
+      ? row.navigationType : null;
+    result.redirectReason = row.redirectReason === "extension_timer" ? "extension_timer" : null;
+    result.persisted = typeof row.persisted === "boolean" ? row.persisted : null;
     return result;
   }
   // Isolated-world log collection must still work if the shared schema was not
@@ -49,7 +77,14 @@
     pending.delete(event.data.requestId); clearTimeout(entry.timer);
     const data = event.data.diagnostics;
     entry.respond({ build: data?.build === "farm-stop-1" ? data.build : "unknown", tracking: data?.tracking === true,
-      background: { build: "background-log-1", current: cleanBackground(data?.background?.current), events: (Array.isArray(data?.background?.events) ? data.background.events : []).slice(-50).map(cleanBackground).filter(Boolean) },
+      background: { build: ["background-log-1", "background-log-2"].includes(data?.background?.build)
+          ? data.background.build : "unavailable",
+        generation: bgNumber(data?.background?.generation, 1e7),
+        current: cleanBackground(data?.background?.current),
+        lastAlive: cleanVitals(data?.background?.lastAlive),
+        lastObserved: cleanVitals(data?.background?.lastObserved),
+        events: (Array.isArray(data?.background?.events) ? data.background.events : []).slice(-80).map(cleanBackground).filter(Boolean),
+        incidents: (Array.isArray(data?.background?.incidents) ? data.background.incidents : []).slice(-24).map(cleanBackground).filter(Boolean) },
       movement: { build: data?.movement?.build === "movement-log-1" ? "movement-log-1" : "unavailable",
         tracking: data?.movement?.tracking === true,
         scope: "Last 120 observations in this page; reset on reload",

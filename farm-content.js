@@ -19,6 +19,8 @@
         if (!navigating) {
           navigating = true;
           url.search += `${url.search ? "&" : "?"}timer`;
+          // Diagnostic marker only: no URL, account or network data is stored.
+          try { sessionStorage.setItem("gst:background-redirect:v1", "extension_timer"); } catch {}
           location.replace(url.href);
         }
         return;
@@ -55,6 +57,8 @@
       if (!navigating) {
         navigating = true;
         url.search += `${url.search ? "&" : "?"}timer`;
+        // Diagnostic marker only: no URL, account or network data is stored.
+        try { sessionStorage.setItem("gst:background-redirect:v1", "extension_timer"); } catch {}
         location.replace(url.href);
       }
       return;
