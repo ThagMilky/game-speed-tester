@@ -1,14 +1,29 @@
 (() => {
   "use strict";
   // Observe existing frames only. Never steer, pause, pick targets or send actions.
-  const { clean } = GSTMovementLogSchema, events = [], uiIncidents = [];
-  const uiLogKey = "gst:movement-ui:v1";
+  const { clean } = GSTMovementLogSchema, events = [], uiIncidents = [], incidents = [];
+  const uiLogKey = "gst:movement-ui:v1", incidentKey = "gst:movement-incidents:v1";
+  const incidentReasons = ["short_frame_gap", "movement_stall", "owner_change", "routing_correction",
+    "routing_replan", "routing_stuck", "map_correction", "map_replan", "map_stuck",
+    "portal_combat_yield", "chest_combat_yield", "chest_target_yield", "frame_gap", "correction"];
   let binding = null, preferences = {};
   try {
     const previous = JSON.parse(sessionStorage.getItem(uiLogKey) ?? "[]");
     if (Array.isArray(previous)) uiIncidents.push(...previous.slice(-36).map(clean)
       .filter((row) => row && ["panel_open", "panel_close", "panel_switch", "panel_gap"].includes(row.reason)));
   } catch { /* Diagnostics are optional. */ }
+  try {
+    const previous = JSON.parse(sessionStorage.getItem(incidentKey) ?? "[]");
+    if (Array.isArray(previous)) incidents.push(...previous.slice(-60).map(clean)
+      .filter((row) => row && incidentReasons.includes(row.reason)));
+  } catch { /* Diagnostics are optional. */ }
+  function appendIncident(row) {
+    const cleaned = clean(row);
+    if (!cleaned || !incidentReasons.includes(cleaned.reason)) return;
+    incidents.push(cleaned);
+    if (incidents.length > 60) incidents.shift();
+    try { sessionStorage.setItem(incidentKey, JSON.stringify(incidents)); } catch {}
+  }
   function panelType(scene) {
     if (!scene.panels?.open) return "none";
     const node = document.querySelector(".panel[data-title]") ?? document.querySelector(".panel");
@@ -24,7 +39,8 @@
     if (uiIncidents.length > 36) uiIncidents.shift();
     try { sessionStorage.setItem(uiLogKey, JSON.stringify(uiIncidents)); } catch {}
   }
-  const controllerNames = ["GSTHarvest", "GSTFarmBehavior", "GSTFarmMap", "GSTFarmSeals", "GSTRealm", "GSTChest", "GSTQuest"];
+  const controllerNames = ["GSTHarvest", "GSTFarmBehavior", "GSTFarmBossSafety", "GSTFarmMap",
+    "GSTFarmSeals", "GSTRealm", "GSTChest", "GSTQuest"];
   function snapshot(scene, reason, before = null) {
     const time = scene.now(), auto = scene.auto, self = scene.self, fx = typeof self?.fx === "string" ? self.fx : "";
     const owners = controllerNames.filter((name) => globalThis[name]?.controls?.(scene) === true);
@@ -61,6 +77,31 @@
       const scene = owner.scene, now = performance.now(), fix = scene.self?.fix;
       const rawGap = now - owner.lastFrameAt;
       owner.lastFrameAt = now;
+      // Notice 120-999 ms frame interruptions that the older 1-second logger missed.
+      // Throttle persistence so a low-FPS client cannot flood storage.
+      if (!document.hidden && scene.auto?.on && rawGap >= 120 && rawGap < 1000
+          && now - owner.lastShortGapAt >= 1500) {
+        owner.lastShortGapAt = now;
+        const row = snapshot(scene, "short_frame_gap", owner.before);
+        row.frameGapMs = GSTMovementLogSchema.number(rawGap);
+        append(row); appendIncident(row); owner.loggedAt = now;
+      }
+      // An active steer with almost no movement for 350ms is a suspect stall,
+      // not proof of a pathfinding fault; state flags are captured for context.
+      const pos = [scene.px, scene.py], hasSteer = Math.hypot(scene.autoX || 0, scene.autoY || 0) > 0.05;
+      const eligible = scene.auto?.on && !document.hidden && !scene.self?.dead && !scene.auto.resting
+        && !GSTFarmInput.movement(scene) && hasSteer && pos.every(Number.isFinite);
+      if (!eligible || !owner.movePosition || Math.hypot(pos[0] - owner.movePosition[0],
+          pos[1] - owner.movePosition[1]) >= 0.05) {
+        owner.movePosition = pos.every(Number.isFinite) ? pos : null;
+        owner.moveAt = now;
+      } else if (now - owner.moveAt >= 350 && now - owner.lastStallAt >= 2500) {
+        owner.lastStallAt = now;
+        const row = snapshot(scene, "movement_stall", owner.before);
+        row.stillMs = GSTMovementLogSchema.number(now - owner.moveAt);
+        row.littleProgress = true;
+        append(row); appendIncident(row); owner.loggedAt = now;
+      }
       if (now - owner.panelCheckAt >= 150) {
         const currentPanel = panelType(scene), previousPanel = owner.panel;
         owner.panelCheckAt = now;
@@ -93,13 +134,22 @@
       if (!commanded || corrected || gap || row.distance === null || row.distance >= 0.05) owner.stillAt = now;
       row.stillMs = GSTMovementLogSchema.number(now - owner.stillAt);
       row.littleProgress = row.stillMs >= 750;
+      const ownerKey = row.owners.join("|");
+      if (owner.ownerKey !== null && owner.ownerKey !== ownerKey && row.auto
+          && (owner.ownerKey.includes("GST") || ownerKey.includes("GST"))) {
+        const changed = { ...row, reason: "owner_change" };
+        append(changed); appendIncident(changed);
+      }
+      owner.ownerKey = ownerKey;
       const signature = JSON.stringify([row.auto, row.manual, row.clickOrder, row.paused, row.moved, row.dead,
         row.stunned, row.rooted, row.slowed, row.moveLocked, row.harvesting, row.pendingSkill, row.aiming,
         row.resting, row.target, row.owners, row.scope, row.radius, row.littleProgress, row.hidden, row.focused,
         row.panelOpen, row.uiBlocked, row.panel]);
       if (corrected || gap || targetChanged || signature !== owner.signature || (commanded && now - owner.loggedAt >= 5000)) {
         if (!corrected && !gap && !targetChanged && signature === owner.signature) row.reason = "sample";
-        append(row); owner.loggedAt = now;
+        append(row);
+        if (row.reason === "frame_gap" || row.reason === "correction") appendIncident(row);
+        owner.loggedAt = now;
       }
       owner.signature = signature; owner.at = now; owner.position = row.position; owner.target = scene.auto?.target;
     } catch { /* Optional read-only diagnostics. */ }
@@ -122,18 +172,29 @@
         const now = performance.now();
         binding = { scene, at: now, stillAt: now, loggedAt: now, lastFrameAt: now,
           panelCheckAt: -Infinity, panel: "none", lastPanelGapAt: -Infinity,
+          lastShortGapAt: -Infinity, lastStallAt: -Infinity, moveAt: now, movePosition: null, ownerKey: null,
           fix: scene.self?.fix, target: scene.auto?.target, signature: "", position: null };
         scene.events.on("preupdate", preframe); scene.events.on("postupdate", frame);
         scene.events.on("shutdown", detach); scene.events.on("destroy", detach);
         append(snapshot(scene, "attach"));
       } catch { detach(); }
     },
+    event(scene, reason, extra = {}) {
+      try {
+        if (!binding || binding.scene !== scene || !incidentReasons.includes(reason)) return;
+        const row = snapshot(scene, reason, binding.before);
+        row.pauseMs = GSTMovementLogSchema.number(extra.pauseMs);
+        row.retryMs = GSTMovementLogSchema.number(extra.retryMs);
+        append(row); appendIncident(row);
+      } catch { /* A diagnostic must never change Auto Farm behavior. */ }
+    },
     snapshot() {
       let current = null;
       try { if (binding) current = snapshot(binding.scene, "sample", binding.before); } catch {}
-      return { build: "movement-log-2", tracking: !!binding, scope: "Last 120 observations in this page; reset on reload",
+      return { build: "movement-log-3", tracking: !!binding, scope: "120 recent samples in this page, 60 incidents kept through same-tab reload",
         current, events: events.map((row) => clean(row)),
-        uiIncidents: uiIncidents.slice(-36).map((row) => clean(row)).filter(Boolean) };
+        uiIncidents: uiIncidents.slice(-36).map((row) => clean(row)).filter(Boolean),
+        incidents: incidents.slice(-60).map((row) => clean(row)).filter(Boolean) };
     }
   };
   window.addEventListener("pagehide", detach);

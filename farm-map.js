@@ -194,7 +194,8 @@
       if (!area) { release(); return false; }
       if (typeof GSTHarvest.needsRecovery !== "function" || GSTHarvest.needsRecovery(scene)) { release(); return false; }
       if (lastFix !== undefined && lastFix !== scene.self.fix && job) {
-        release(); correctionUntil = time + 0.45;
+        release(); correctionUntil = time + 0.12;
+        globalThis.GSTMovementDiagnostics?.event?.(scene, "map_correction", { pauseMs: 120 });
       }
       lastFix = scene.self.fix;
       if (time < correctionUntil) {
@@ -256,6 +257,7 @@
       if (GSTNavigation.progressed(scene, job, job.navigation.path, job.x, job.y)) job.progressAt = time;
       if (time - job.progressAt > 8 || time - job.startedAt > 120) {
         const delay = job.scout ? 60 : 15;
+        globalThis.GSTMovementDiagnostics?.event?.(scene, "map_stuck");
         defer(time); message = `Chưa tiếp cận được mục tiêu; tạm bỏ ${delay} giây và xét mục tiêu khác.`; return false;
       }
       const owner = job;
@@ -265,6 +267,7 @@
         if (Array.isArray(point) && point.length === 2 && point.every(finite)
             && !clearOfBoss({ x: scene.px, y: scene.py }, { x: point[0], y: point[1] }, bosses)) {
           owner.navigation.path = []; owner.navigation.pathAt = -Infinity;
+          globalThis.GSTMovementDiagnostics?.event?.(scene, "map_replan");
         }
       }
       owner.denied = false;
@@ -297,6 +300,7 @@
       } else if (!GSTNavigation.walk(scene, owner.navigation, walking, time, scene.px, scene.py, target.x, target.y, target.scout ? 1 : 5)
           || owner.denied) {
         const delay = job.scout ? 60 : 15;
+        globalThis.GSTMovementDiagnostics?.event?.(scene, "map_stuck");
         defer(time); message = `Đường tới mục tiêu bị chặn; tạm bỏ ${delay} giây và xét mục tiêu khác.`; return false;
       } else message = target.scout ? `Đang dò vùng mới tìm quái đúng bộ lọc · còn ${distance.toFixed(1)} ô.`
         : target.actor ? `Đang tới mục tiêu/bãi quái tiếp theo · còn ${distance.toFixed(1)} ô; tới gần sẽ dùng Auto Farm gốc đánh.`

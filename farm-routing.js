@@ -82,9 +82,12 @@
       }
       if (track.fix !== scene.self.fix) {
         track.remaining = remaining; track.point = null; track.progressAt = time;
-        track.settleUntil = time + 0.45;
+        // Native snapshots already reset client position on a correction.
+        // Keep a brief stabilization frame without holding movement for 450 ms.
+        track.settleUntil = time + 0.12;
         auto.path = []; auto.pathAt = -Infinity; auto.sideUntil = 0;
-        owner.note = "Game vừa chỉnh vị trí; đang chờ ổn định rồi tính lại đường."; owner.noteUntil = time + 1;
+        globalThis.GSTMovementDiagnostics?.event?.(scene, "routing_correction", { pauseMs: 120 });
+        owner.note = "Game vừa chỉnh vị trí; đang tính lại đường sau nhịp ổn định ngắn."; owner.noteUntil = time + 1;
       }
       track.fix = scene.self.fix;
       if (time < track.settleUntil) { host.steer(0, 0); return true; }
@@ -92,10 +95,12 @@
           && (!track.replanAt || time - track.replanAt >= 2)) {
         auto.path = []; auto.pathAt = -Infinity;
         track.replanAt = time; track.retries++;
+        globalThis.GSTMovementDiagnostics?.event?.(scene, "routing_replan");
         owner.note = "Đường chưa tiến triển; đang tính lại bằng đường đi của game."; owner.noteUntil = time + 2;
       }
       if (remaining > reach && time - track.progressAt > 7) {
         host.steer(0, 0); owner.track = null;
+        globalThis.GSTMovementDiagnostics?.event?.(scene, "routing_stuck");
         owner.note = "Đường bị kẹt; nhường game tạm bỏ mục tiêu và chọn quái khác."; owner.noteUntil = time + 3;
         return false;
       }

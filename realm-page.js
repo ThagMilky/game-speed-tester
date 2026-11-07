@@ -174,10 +174,12 @@
         return true;
       }
       if (scene.self.combat) {
-        job.phase = "waiting_combat";
-        job.progressAt = now;
-        message = "Đã tới cổng; game không cho vào khi còn giao tranh, đang chờ đủ điều kiện.";
-        return true;
+        // The native game rejects portal entry during combat. Release the
+        // dispatcher so Auto Farm can finish combat instead of waiting forever.
+        skipped.set(job.id, now + 6000);
+        globalThis.GSTMovementDiagnostics?.event?.(scene, "portal_combat_yield", { retryMs: 6000 });
+        release("Đã tới cổng nhưng đang giao tranh; nhường Auto Farm rồi thử lại sau 6 giây.");
+        return false;
       }
       job.phase = "entering";
       const validTarget = (target) => target?.realm?.action === "realm-enter" && target.realm.arg === portal.id;

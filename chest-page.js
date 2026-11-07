@@ -187,21 +187,37 @@
       }
       walking.steer(0, 0);
       if (host.inCombat()) {
-        message = "Đã tới rương; chờ game kết thúc giao tranh để mở rương.";
+        job.combatWaitAt ??= time;
+        if (time - job.combatWaitAt >= 2.5) {
+          skipped.set(job.id, performance.now() + 6000);
+          globalThis.GSTMovementDiagnostics?.event?.(scene, "chest_combat_yield", { retryMs: 6000 });
+          release("Chưa thể mở rương khi đang giao tranh; nhường Auto Farm rồi thử lại sau 6 giây.");
+          return false;
+        }
+        message = "Đã tới rương; chờ ngắn để game kết thúc giao tranh.";
         return true;
       }
+      job.combatWaitAt = null;
       const fresh = scene.pickTarget();
       job.freshTarget = globalThis.GSTRealmHistory?.target(fresh);
       const picked = fresh?.realm, cached = scene.target?.realm;
       job.targetMatched = picked?.action === "realm-chest" && picked.arg === job.id && cached?.action === "realm-chest" && cached.arg === job.id;
       if (picked?.action !== "realm-chest" || picked.arg !== job.id || cached?.action !== "realm-chest" || cached.arg !== job.id) {
         job.phase = "waiting_target";
+        job.targetWaitAt ??= time;
+        if (time - job.targetWaitAt >= 2) {
+          skipped.set(job.id, performance.now() + 10000);
+          globalThis.GSTMovementDiagnostics?.event?.(scene, "chest_target_yield", { retryMs: 10000 });
+          release("Game chưa chọn đúng mục tiêu F sau 2 giây; nhường farm và thử rương lại sau 10 giây.");
+          return false;
+        }
         const action = picked?.action ?? "chưa có";
         message = picked?.action === "realm-chest" && picked.arg === job.id
           ? "Đã nhận đúng rương; chờ game cập nhật mục tiêu F đã lưu."
           : `Đã tới rương nhưng mục tiêu F là ${action}; chưa bấm để tránh nhầm cổng/rương khác.`;
         return true;
       }
+      job.targetWaitAt = null;
       if (blocked(scene)) { release(); return false; }
       job.phase = "request"; job.requestedAt = time; scene.interact(); message = "Đã yêu cầu mở đúng rương; chờ game xác nhận."; return true;
     } catch { release("Interface rương chưa phù hợp; nhường lại game.", true); return false; }
