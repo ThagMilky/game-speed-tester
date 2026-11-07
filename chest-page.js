@@ -55,6 +55,11 @@
     } catch { detach(); watch(); }
   }
   const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  function enemiesForChest(host) {
+    const list = typeof host?.gstRawEnemies === "function" ? host.gstRawEnemies()
+      : typeof host?.enemies === "function" ? host.enemies() : null;
+    return Array.isArray(list) ? list : null;
+  }
   function nearThreat(enemies, scene, chest) {
     const pos = { x: scene.px, y: scene.py };
     return enemies.filter((enemy) => !enemy.dead && enemy.hostile
@@ -157,7 +162,7 @@
         return true;
       }
       // Only query actors when there is a real chest objective, not every empty update frame.
-      const enemies = host.enemies();
+      const enemies = enemiesForChest(host);
       if (!Array.isArray(enemies)) { release("Game chưa cung cấp danh sách quái hợp lệ."); return false; }
       const threat = nearThreat(enemies, scene, chest);
       if (threat) return clearThreat(scene, host, time, threat, enemies, chest);
@@ -249,13 +254,14 @@
       try {
         if (binding?.scene !== scene || blocked(scene) || binding.modal) return false;
         const host = scene.autoHost();
-        if (host.inCombat() || host.enemies().some((enemy) => enemy.id === scene.auto.target && !enemy.dead)) return false;
+        const enemies = enemiesForChest(host);
+        if (!enemies || host.inCombat() || enemies.some((enemy) => enemy.id === scene.auto.target && !enemy.dead)) return false;
         return (scene.self.realm.inside.chests ?? []).some((chest) =>
           (typeof chest.id === "string" || Number.isSafeInteger(chest.id)) && finite(chest.x) && finite(chest.y)
           && chest.x >= 0 && chest.y >= 0 && chest.x < scene.map.w && chest.y < scene.map.h
           && (!chest.owner || chest.owner === scene.profile?.name) && (settings.kind === "all" || chest.kind === settings.kind)
           && !(skipped.get(chest.id) > performance.now()) && Math.hypot(chest.x - scene.px, chest.y - scene.py) <= 6
-          && !nearThreat(host.enemies(), scene, chest));
+          && !nearThreat(enemies, scene, chest));
       } catch { return false; }
     }
   };

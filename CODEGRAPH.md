@@ -43,7 +43,7 @@ flowchart LR
 - **MAIN** dùng scene và API gốc của game. `content.js`/`page.js` còn quản lý tốc độ và overlay trạng thái.
 - Channel xác nhận trong source gồm `gst:farm:v1`, `gst:harvest:v1`, `gst:realm:v1`, `gst:chest:v1`, `gst:quest:v1`, `gst:fps:v1` và các channel status. Tên channel **không thay thế** việc đọc payload/ACK thực tế.
 - `farm-session.js` giữ ý định Auto Farm trong `sessionStorage` theo tab/nhân vật; preferences được lưu trong `chrome.storage.local`.
-- `page.js` tạm ngừng ghi đè `self.ms` và hoàn nguyên tốc độ game khi `scene.auto.on` hoặc `GSTHarvest.isEnabled()`, `GSTChest.isEnabled()`, `GSTRealm.isEnabled()` trả về `true`. Khi tất cả tắt, tiếp tục áp tốc độ đi bộ/bay đã lưu nếu người dùng vẫn bật công tắc; `content.js` hiển thị trạng thái `TẠM TẮT`. Các hàm `isEnabled()` phản ánh cài đặt tính năng, không phải quyền điều khiển di chuyển (khác `controls()`).
+- `page.js` tạm ngừng ghi đè `self.ms` và hoàn nguyên tốc độ game khi `scene.auto.on` hoặc `GSTHarvest.isEnabled()`, `GSTChest.isEnabled()`, `GSTRealm.isEnabled()` trả về `true`, hoặc `GSTQuest.active(scene)` đang chạy. Khi tất cả tắt, tiếp tục áp tốc độ đi bộ/bay đã lưu nếu người dùng vẫn bật công tắc; `content.js` hiển thị trạng thái `TẠM TẮT`. Các hàm `isEnabled()` phản ánh cài đặt tính năng, không phải quyền điều khiển di chuyển (khác `controls()`).
 
 ## 4. Điều phối nhiều module cùng dùng Auto Farm
 
@@ -83,6 +83,7 @@ flowchart TD
 
 - `farm-update.js` là dispatcher chung của `scene.auto.update`. Tránh thêm vòng update hoặc chủ sở hữu cạnh tranh.
 - `farm-routing.js` bọc `scene.auto.walk`; `navigation.js` hỗ trợ đường đi và bọc `scene.move` khi gần đích; `farm-input.js` bảo vệ thao tác người chơi.
+- Khi bộ lọc Auto Farm đang áp dụng, `farm-page.js` gắn `host.gstRawEnemies()` để `chest-page.js` kiểm tra quái cản trở bằng danh sách gốc. `host.enemies()` vẫn giữ bộ lọc cho việc chọn mục tiêu farm.
 - `farm-page.js` quản lý bộ lọc/mở rộng Auto Farm; `farm-session.js` theo dõi ý định ON/OFF; `farm-seals.js`, `harvest-page.js`, `realm-page.js`, `chest-page.js`, `quest-page.js` phối hợp quyền điều khiển tạm thời.
 - API `globalThis` dùng chéo gồm `GSTFarmUpdate`, `GSTNavigation`, `GSTFarmInput`, `GSTFarmRouting`, `GSTHarvest`, `GSTFarmSession`. Kiểm tra chữ ký hàm và call site trước khi thay đổi.
 - `popup.js` cung cấp `GSTClipboard.write(text)` cho các nút sao chép log; popup nhúng trong iframe sẽ chọn nội dung để người dùng bấm Ctrl+C nếu quyền clipboard bị chặn. `farm-diagnostics-content.js` có bộ làm sạch log dự phòng nếu `GSTMovementLogSchema` không khả dụng trong ISOLATED world.

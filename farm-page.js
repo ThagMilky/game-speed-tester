@@ -202,7 +202,10 @@
         return Array.isArray(enemies) ? enemies.filter((enemy) => matchesTarget(enemy)
           && (globalThis.GSTFarmBehavior?.allowsTarget(this, enemy) ?? true)) : [];
       };
-      return { ...host, allEligibleEnemies, enemies: () => {
+      return { ...host,
+        // Chest safety must see actual nearby monsters, not farm-targeting filters.
+        gstRawEnemies: () => host.enemies(),
+        allEligibleEnemies, enemies: () => {
         const filtered = allEligibleEnemies();
         if (this.auto?.resting) return filtered;
         if (ranked() && typeof this.auto.pick === "function" && !GSTFarmInput.movement(this)

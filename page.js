@@ -135,6 +135,7 @@
     if (globalThis.GSTHarvest?.isEnabled?.() === true) return "Auto Thu Hoạch";
     if (globalThis.GSTChest?.isEnabled?.() === true) return "Tìm Rương";
     if (globalThis.GSTRealm?.isEnabled?.() === true) return "Tìm Cổng Bí Cảnh";
+    if (globalThis.GSTQuest?.active?.(scene) === true) return "Auto Quest";
     return "";
   }
 
