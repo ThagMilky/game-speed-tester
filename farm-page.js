@@ -5,7 +5,7 @@
   const baseRadius = 11;
   globalThis.GSTFarmConfigurationReady = false;
   let settings = { enabled: false, radius: 22, autoRespawn: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
-    searchScope: "radius", idleMode: "hold", avoidEnabled: false, avoidLevel: 10, avoidDistance: 2 };
+    searchScope: "radius", idleMode: "hold", avoidEnabled: false, excludeBoss: false, avoidLevel: 10, avoidDistance: 2 };
   let filterBinding = null;
   let death = null;
   let respawnMessage = "";
@@ -23,9 +23,19 @@
   // Both features share the same once-per-death request state.
   GSTHarvest.respawn = (scene) => checkRespawn(scene, true);
   const targetMode = (value) => value === "level" ? "maxLevel"
-    : ["maxLevel", "minLevel", "range", "boss", "bossFirst"].includes(value) ? value : "all";
+    : ["maxLevel", "minLevel", "range", "boss", "bossFirst", "bossLevel", "highLevel"].includes(value) ? value : "all";
+  const isBoss = (enemy) => enemy?.cls === "boss" || enemy?.wb === true;
+  const ranked = () => settings.targetMode === "bossLevel" || settings.targetMode === "highLevel";
+  function comparePriority(a, b) {
+    if (settings.targetMode === "bossLevel" && isBoss(a) !== isBoss(b)) return isBoss(a) ? -1 : 1;
+    const left = finite(a?.lv) ? a.lv : -Infinity, right = finite(b?.lv) ? b.lv : -Infinity;
+    return left === right ? 0 : left > right ? -1 : 1;
+  }
+  globalThis.GSTFarmPriority = { compare: comparePriority, ranked };
   function filterLabel() {
     if (settings.targetMode === "bossFirst") return "Ưu tiên boss, rồi quái thường";
+    if (settings.targetMode === "bossLevel") return "Ưu tiên boss, rồi quái level cao đến thấp";
+    if (settings.targetMode === "highLevel") return "Ưu tiên quái thường level cao đến thấp";
     if (settings.targetMode === "boss") return "Chỉ farm boss";
     if (settings.targetMode === "maxLevel") return `Chỉ farm level ≤ ${settings.targetLevel}`;
     if (settings.targetMode === "minLevel") return `Chỉ farm level ≥ ${settings.targetLevel}`;
@@ -35,8 +45,9 @@
   }
   function matchesTarget(enemy) {
     if (settings.avoidEnabled && (!finite(enemy?.lv) || enemy.lv >= settings.avoidLevel)) return false;
+    if ((settings.excludeBoss || settings.targetMode === "highLevel") && isBoss(enemy)) return false;
     if (settings.targetMode === "boss") return enemy?.cls === "boss" || enemy?.wb === true;
-    if (settings.targetMode === "all" || settings.targetMode === "bossFirst") return true;
+    if (["all", "bossFirst", "bossLevel", "highLevel"].includes(settings.targetMode)) return true;
     if (!finite(enemy?.lv)) return false;
     if (settings.targetMode === "range") return enemy.lv >= settings.targetMinLevel && enemy.lv <= settings.targetMaxLevel;
     return settings.targetMode === "maxLevel" ? enemy.lv <= settings.targetLevel : enemy.lv >= settings.targetLevel;
@@ -172,7 +183,7 @@
   }
 
   function syncFilter(scene) {
-    if (settings.targetMode === "all" && !settings.avoidEnabled) { clearFilter(); return; }
+    if (settings.targetMode === "all" && !settings.avoidEnabled && !settings.excludeBoss) { clearFilter(); return; }
     if (filterBinding?.scene === scene && scene.autoHost === filterBinding.wrapper) return;
     clearFilter();
     const original = scene.autoHost;
@@ -181,13 +192,31 @@
     const descriptor = Object.getOwnPropertyDescriptor(scene, "autoHost");
     const wrapper = function (...args) {
       const host = original.apply(this, args);
-      if ((settings.targetMode === "all" && !settings.avoidEnabled) || !this.auto?.on) return host;
-      return { ...host, enemies: () => {
+      if ((settings.targetMode === "all" && !settings.avoidEnabled && !settings.excludeBoss) || !this.auto?.on) return host;
+      const allEligibleEnemies = () => {
         const enemies = typeof host?.enemies === "function" ? host.enemies() : [];
         if (this.auto?.resting) return Array.isArray(enemies) ? enemies : [];
-        // Use only the native host's level/boss metadata, never names or HP guesses.
-        const filtered = Array.isArray(enemies) ? enemies.filter((enemy) => matchesTarget(enemy)
+        return Array.isArray(enemies) ? enemies.filter((enemy) => matchesTarget(enemy)
           && (globalThis.GSTFarmBehavior?.allowsTarget(this, enemy) ?? true)) : [];
+      };
+      return { ...host, allEligibleEnemies, enemies: () => {
+        const filtered = allEligibleEnemies();
+        if (this.auto?.resting) return filtered;
+        if (ranked() && typeof this.auto.pick === "function" && !GSTFarmInput.movement(this)
+            && this.now() >= this.auto.pauseUntil && !this.pendingSkill && !this.aiming) {
+          const time = this.now(), pos = { x: this.px, y: this.py };
+          const candidates = filtered.filter((enemy) => !enemy.dead && enemy.hostile && finite(enemy.x) && finite(enemy.y)
+            && !(this.auto.skipped.get(enemy.id) > time) && distance(enemy, { x: this.auto.ax, y: this.auto.ay }) < baseRadius
+            && (settings.searchScope === "map" || !session || session.scene !== this || distance(enemy, session.home) < settings.radius))
+            .sort(comparePriority);
+          while (candidates.length) {
+            const first = candidates[0], tier = candidates.filter((enemy) => comparePriority(first, enemy) === 0);
+            const aggro = host.inCombat() ? tier.filter((enemy) => enemy.aggro && distance(enemy, pos) < 3.2) : [];
+            if (this.auto.pick(host, time, tier, aggro, pos.x, pos.y)) return tier;
+            candidates.splice(0, tier.length);
+          }
+          return filtered;
+        }
         if (settings.targetMode !== "bossFirst" || typeof this.auto.pick !== "function"
             || GSTFarmInput.movement(this) || this.now() < this.auto.pauseUntil
             || this.pendingSkill || this.aiming) return filtered;
@@ -225,7 +254,7 @@
   function stop(reason, block = false) {
     // Keep the inert filter attached through death/off so the next native
     // update after revival/re-enable cannot select an unfiltered target.
-    if (block || (settings.targetMode === "all" && !settings.avoidEnabled)) clearFilter();
+    if (block || (settings.targetMode === "all" && !settings.avoidEnabled && !settings.excludeBoss)) clearFilter();
     if (block) revival = null;
     if (session) {
       const old = session;
@@ -306,7 +335,7 @@
       globalThis.GSTFarmRouting?.attach(scene);
       globalThis.GSTFarmDiagnostics?.attach(scene);
       checkRespawn(scene);
-      if (!settings.enabled && settings.targetMode === "all" && !settings.avoidEnabled) return;
+      if (!settings.enabled && settings.targetMode === "all" && !settings.avoidEnabled && !settings.excludeBoss) return;
       if (compatible(scene) && scene.self && !scene.leaving
           && connected(scene) && scene.auto !== blockedAuto) syncFilter(scene);
       else clearFilter();
@@ -437,7 +466,7 @@
       }
       if (!ensureFlying(s, time)) return;
       const position = host.pos();
-      const enemies = host.enemies();
+      const enemies = ranked() && host.allEligibleEnemies ? host.allEligibleEnemies() : host.enemies();
       if (!Array.isArray(position) || !position.every(finite) || position.length !== 2 || !Array.isArray(enemies)) {
         stop("Invalid Auto Farm runtime data; stopped.", true);
         return;
@@ -454,6 +483,16 @@
         // Probing a full long route with pick() here would repeatedly mark them skipped.
         && !(settings.searchScope === "map" && distance(enemy, pos) > 6));
       const target = candidates.find((enemy) => enemy.id === s.auto.target);
+      if (ranked() && settings.searchScope !== "map") {
+        const ordered = [...candidates].sort((a, b) => comparePriority(a, b) || distance(a, pos) - distance(b, pos));
+        for (const enemy of ordered) {
+          if (s.auto.pick(host, time, [enemy], [], pos.x, pos.y)) {
+            shiftToward(s, enemy);
+            message = "Ưu tiên mục tiêu phù hợp theo boss và level; dùng Auto Farm gốc.";
+            return;
+          }
+        }
+      }
       if (settings.targetMode === "bossFirst" && settings.searchScope !== "map") {
         const bosses = candidates.filter((enemy) => enemy.cls === "boss" || enemy.wb === true);
         const boss = bosses.length ? s.auto.pick(host, time, bosses, [], pos.x, pos.y) : null;
@@ -543,7 +582,8 @@
       const filterChanged = settings.searchScope !== data.searchScope || settings.targetMode !== targetMode(data.targetMode)
         || settings.targetLevel !== data.targetLevel
         || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel
-        || settings.avoidEnabled !== (data.avoidEnabled === true) || settings.avoidLevel !== data.avoidLevel;
+        || settings.avoidEnabled !== (data.avoidEnabled === true) || settings.excludeBoss !== (data.excludeBoss === true)
+        || settings.avoidLevel !== data.avoidLevel;
       settings = { enabled: data.enabled, radius: data.radius, autoRespawn: true, noRetreat: data.noRetreat !== false,
         showTargetLine: data.showTargetLine === true,
         searchScope: data.searchScope === "map" ? "map" : "radius",
@@ -551,7 +591,7 @@
         targetLevel: Number.isSafeInteger(data.targetLevel) && data.targetLevel > 0 ? data.targetLevel : 1,
         targetMinLevel: Number.isSafeInteger(data.targetMinLevel) && data.targetMinLevel > 0 ? data.targetMinLevel : 1,
         targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20,
-        idleMode: data.idleMode === "home" ? "home" : "hold", avoidEnabled: data.avoidEnabled === true,
+        idleMode: data.idleMode === "home" ? "home" : "hold", avoidEnabled: data.avoidEnabled === true, excludeBoss: data.excludeBoss === true,
         avoidLevel: Number.isSafeInteger(data.avoidLevel) && data.avoidLevel > 0 ? data.avoidLevel : 10,
         avoidDistance: finite(data.avoidDistance) ? Math.max(1, Math.min(6, data.avoidDistance)) : 2 };
       globalThis.GSTFarmCombat?.configure(sceneNow(), settings.noRetreat);
@@ -563,7 +603,7 @@
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());
       globalThis.GSTFarmCombat?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
-      if (settings.targetMode === "all" && !settings.avoidEnabled) clearFilter();
+      if (settings.targetMode === "all" && !settings.avoidEnabled && !settings.excludeBoss) clearFilter();
       if (session) {
         if (scopeChanged) { restore(session); session.at = -Infinity; }
         syncFilter(session.scene);
@@ -571,7 +611,7 @@
         if (!settings.enabled) restore(session);
       }
       if (!settings.autoRespawn) respawnMessage = "";
-      if (!settings.enabled && settings.targetMode === "all" && !settings.avoidEnabled) {
+      if (!settings.enabled && settings.targetMode === "all" && !settings.avoidEnabled && !settings.excludeBoss) {
         if (watcher !== null) clearInterval(watcher);
         watcher = null;
         stop("Extended range disabled; original center restored where owned.");

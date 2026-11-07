@@ -22,6 +22,7 @@ const farmSearchScope = document.getElementById("farmSearchScope");
 const farmShowTargetLine = document.getElementById("farmShowTargetLine");
 const farmRadius = document.getElementById("farmRadius");
 const farmTargetMode = document.getElementById("farmTargetMode");
+const farmExcludeBoss = document.getElementById("farmExcludeBoss");
 const farmTargetLevel = document.getElementById("farmTargetLevel");
 const farmTargetMinLevel = document.getElementById("farmTargetMinLevel");
 const farmTargetMaxLevel = document.getElementById("farmTargetMaxLevel");
@@ -133,7 +134,7 @@ async function saveFarm(section) {
     if (!Number.isFinite(radius) || radius < 11 || radius > 1000) return;
     patch = { enabled: true, searchScope: farmSearchScope.value === "map" ? "map" : "radius", radius };
   } else if (section === "filter") {
-    const targetMode = ["maxLevel", "minLevel", "range", "boss", "bossFirst"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
+    const targetMode = ["maxLevel", "minLevel", "range", "boss", "bossFirst", "bossLevel", "highLevel"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
     const needsLevel = targetMode === "maxLevel" || targetMode === "minLevel";
     if (needsLevel && !farmTargetLevel.reportValidity()) return;
     const targetLevel = farmTargetLevel.valueAsNumber;
@@ -187,7 +188,7 @@ function syncFarmScope() {
 farmSearchScope.addEventListener("change", syncFarmScope);
 // These switches save only their own field, never unfinished range/filter drafts.
 for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmNoRetreat, "noRetreat"],
-  [breakSeals, "breakSeals"], [farmAvoidEnabled, "avoidEnabled"]]) {
+  [breakSeals, "breakSeals"], [farmAvoidEnabled, "avoidEnabled"], [farmExcludeBoss, "excludeBoss"]]) {
   input.addEventListener("change", async () => {
     const next = input.checked; input.disabled = true;
     try {
@@ -353,11 +354,12 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   breakSeals.disabled = false;
   farmIdleMode.value = farmPreferences?.idleMode === "home" ? "home" : "hold";
   farmAvoidEnabled.checked = farmPreferences?.avoidEnabled === true;
+  farmExcludeBoss.checked = farmPreferences?.excludeBoss === true;
   farmAvoidLevel.value = positiveLevel(farmPreferences?.avoidLevel, 10);
   farmAvoidDistance.value = Number.isFinite(farmPreferences?.avoidDistance)
     ? Math.max(1, Math.min(6, farmPreferences.avoidDistance)) : 2;
   farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
-    : ["maxLevel", "minLevel", "range", "boss", "bossFirst"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
+    : ["maxLevel", "minLevel", "range", "boss", "bossFirst", "bossLevel", "highLevel"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
   farmTargetLevel.value = Number.isSafeInteger(farmPreferences?.targetLevel) && farmPreferences.targetLevel > 0
     ? farmPreferences.targetLevel : 1;
   farmTargetMinLevel.value = positiveLevel(farmPreferences?.targetMinLevel, 1);

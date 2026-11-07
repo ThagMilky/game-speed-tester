@@ -37,11 +37,12 @@
       breakSeals: value?.breakSeals === true,
       idleMode: value?.idleMode === "home" ? "home" : "hold",
       avoidEnabled: value?.avoidEnabled === true,
+      excludeBoss: value?.excludeBoss === true,
       avoidLevel: Number.isSafeInteger(value?.avoidLevel) && value.avoidLevel > 0 ? value.avoidLevel : 10,
       avoidDistance: typeof value?.avoidDistance === "number" && Number.isFinite(value.avoidDistance)
         ? Math.max(1, Math.min(6, value.avoidDistance)) : 2,
       targetMode: value?.targetMode === "level" ? "maxLevel"
-        : ["maxLevel", "minLevel", "range", "boss", "bossFirst"].includes(value?.targetMode) ? value.targetMode : "all",
+        : ["maxLevel", "minLevel", "range", "boss", "bossFirst", "bossLevel", "highLevel"].includes(value?.targetMode) ? value.targetMode : "all",
       targetLevel: Number.isSafeInteger(value?.targetLevel) && value.targetLevel > 0 ? value.targetLevel : 1,
       targetMinLevel: Number.isSafeInteger(value?.targetMinLevel) && value.targetMinLevel > 0 ? value.targetMinLevel : 1,
       targetMaxLevel: Number.isSafeInteger(value?.targetMaxLevel) && value.targetMaxLevel > 0 ? value.targetMaxLevel : 20,
