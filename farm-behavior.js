@@ -206,8 +206,10 @@
       if (!previous || previous.dead) {
         const site = { x: observedTarget.x, y: observedTarget.y };
         if (time - observedTarget.at < 8 && dist(site, { x: scene.px, y: scene.py }) < 9) {
-          // More kills in the same camp extend the short post-combat window.
-          lootSite = { ...site, graceUntil: time + 1, until: time + 9 };
+          // The server can publish drops after the monster disappears.
+          // Allow a bounded 2.5-second arrival window before leaving camp;
+          // multiple kills reset it, and the 9-second collection cap remains.
+          lootSite = { ...site, graceUntil: time + 2.5, until: time + 9 };
           lootAbandoned = false;
         }
         observedTarget = null;

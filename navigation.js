@@ -33,11 +33,15 @@
         // endpoint, split this frame's movement and stop at actual arrival,
         // rather than pretending a crossed, out-of-range point was reached.
         let remaining = delta, result;
+        // Distribute the entire frame over at most 16 collision-checked steps.
+        // The old fixed 1/240-second cap silently discarded surplus time
+        // on frames longer than 16/240 seconds (unless already at the goal).
+        const stepSize = Math.max(1 / 240, delta / 16);
         for (let i = 0; remaining > 1e-8 && i < 16; i++) {
           if (Math.hypot(scene.px - intent.point[0], scene.py - intent.point[1]) <= intent.reach) {
             scene.autoX = scene.autoY = 0; break;
           }
-          const step = Math.min(remaining, 1 / 240);
+          const step = i === 15 ? remaining : Math.min(remaining, stepSize);
           result = original.call(this, step, ...rest); remaining -= step;
         }
         return result;

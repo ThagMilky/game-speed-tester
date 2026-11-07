@@ -428,7 +428,10 @@
         job.x = target.x; job.y = target.y; job.retargetAt = time; job.checkpoint = null;
         job.navigation.path = []; job.navigation.pathAt = -Infinity;
       }
-      if (GSTNavigation.progressed(scene, job, job.navigation.path, job.x, job.y)) {
+      // Reaching a detour checkpoint is progress even if that leg initially
+      // increases distance to the final camp behind a wall.
+      const progressGoal = job.checkpoint ?? job;
+      if (GSTNavigation.progressed(scene, job, job.navigation.path, progressGoal.x, progressGoal.y)) {
         job.progressAt = time;
         job.replans = 0; job.lastReplanAt = -Infinity;
       }

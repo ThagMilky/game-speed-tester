@@ -61,7 +61,9 @@
     return suspended || !scene?.auto?.on || !scene.self || scene.self.dead || scene.leaving
       || !scene.sys?.isActive?.() || !connected(scene) || GSTFarmRouting.blocked(scene)
       || GSTFarmInput.movement(scene) || scene.auto.moved || scene.now() < scene.auto.pauseUntil
-      || scene.pendingSkill || scene.aiming || scene.heldAttack || scene.harvesting
+      // Pending native casts/aim are handled after reading danger zones in
+      // update(): an imminent boss hit must not be silently ignored.
+      || scene.heldAttack || scene.harvesting
       || scene.auto.resting || scene.self.med || scene.self.fish || scene.keyCapture
       || globalThis.GSTQuest?.active?.(scene)
       || ["GSTRealm", "GSTChest", "GSTHarvest"].some((name) => globalThis[name]?.controls?.(scene))
@@ -300,6 +302,13 @@
       }
       if (retreating && (hp >= recovered || !boss)) {
         retreating = false; release(); note(scene, "resume", "HP đã hồi an toàn hoặc boss không còn; tiếp tục Auto Farm.");
+        return false;
+      }
+      // Do not interfere with normal native casting/aiming, but prioritize
+      // movement out of a confirmed/estimated imminent warning, or a
+      // critical low-HP retreat, over continuing that cast in place.
+      if ((scene.pendingSkill || scene.aiming) && !danger && !retreating) {
+        release();
         return false;
       }
       // When even one attack skill is available, immediately hand combat

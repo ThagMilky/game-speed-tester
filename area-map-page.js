@@ -22,12 +22,33 @@
     || enemy?.st?.cls === "boss" || enemy?.st?.wb === true || enemy?.boss === true;
   const inside = (map, point) => point && valid(point.x) && valid(point.y)
     && point.x >= 0 && point.y >= 0 && point.x < map.w && point.y < map.h;
+  let campsPromise = null;
+  function loadCamps(state, map) {
+    // The game's loader also reads this asset. It may contain fixed camp
+    // coordinates absent from the current monster snapshots; use only
+    // explicit finite positions, never invent a camp from its set name.
+    if (typeof map.scene !== "string") return;
+    if (!campsPromise) campsPromise = fetch("data/camps.json", { cache: "force-cache" })
+      .then((response) => response.ok ? response.json() : null).catch(() => null);
+    campsPromise.then((data) => {
+      if (ui !== state || state.map !== map) return;
+      const camps = data?.[map.scene]?.camps;
+      if (!Array.isArray(camps)) return;
+      for (const entry of camps.slice(0, 2000)) {
+        const point = { x: entry?.x ?? entry?.ax, y: entry?.y ?? entry?.ay };
+        if (!inside(map, point)) continue;
+        addCamp(state, { ...point, level: level(entry), boss: boss(entry),
+          live: false, source: "camps" });
+      }
+    }).catch(() => { /* Optional static data; live markers still work. */ });
+  }
   function addCamp(state, item) {
     const match = state.camps.find((camp) => camp.boss === item.boss
       && (camp.level === item.level || camp.level === null || item.level === null)
       && Math.hypot(camp.x - item.x, camp.y - item.y) < (item.boss ? 4 : 6));
     if (match) {
       if (match.level === null) match.level = item.level;
+      if (item.source === "camps" && match.source === "seen") match.source = "camps";
       if (item.live) { match.live = true; match.count++; }
       return;
     }
@@ -43,6 +64,7 @@
       if (inside(scene.map, point)) addCamp(state, { ...point, level: level(entry),
         boss: boss(entry), live: false, source: "map" });
     }
+    loadCamps(state, scene.map);
   }
   function scan(state, scene) {
     for (const camp of state.camps) { camp.live = false; camp.count = 0; }
@@ -52,7 +74,8 @@
         live: true, source: "seen" });
     }
     // Never retain thousands of old markers as the player explores.
-    if (state.camps.length > 600) state.camps = state.camps.filter((c) => c.live || c.source === "map").slice(-600);
+    if (state.camps.length > 1000) state.camps = state.camps
+      .filter((c) => c.live || c.source === "map" || c.source === "camps").slice(-1000);
   }
   function raster(state) {
     const map = state.map, collision = state.collision;
@@ -269,7 +292,8 @@
       const coord = "(" + found.x.toFixed(1) + ", " + found.y.toFixed(1) + ")";
       ui.detail.textContent = found.type === "gate" ? "Cổng tới " + String(found.to ?? "map khác") + " " + coord
         : (found.boss ? "Boss" : "Bãi quái") + " · " + (found.level === null ? "Chưa biết level" : "Lv." + found.level)
-        + " · " + (found.live ? "Đang thấy" : found.source === "map" ? "Dữ liệu map" : "Đã thấy trước đó") + " " + coord;
+        + " · " + (found.live ? "Đang thấy"
+          : found.source === "map" || found.source === "camps" ? "Dữ liệu map" : "Đã thấy trước đó") + " " + coord;
     });
     viewport.addEventListener("pointercancel", () => { if (ui) ui.drag = null; });
     viewport.addEventListener("wheel", (e) => {
