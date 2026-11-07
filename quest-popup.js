@@ -33,8 +33,9 @@
   }
   async function send(command) {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab?.url?.startsWith("https://nghichthienky.online/")) throw new Error("Mở tab game để dùng Auto Quest.");
-    return chrome.tabs.sendMessage(tab.id, { type: "gst:quest", command, selected });
+    if (!tab?.id) throw new Error("Mở tab game để dùng Auto Quest.");
+    try { return await chrome.tabs.sendMessage(tab.id, { type: "gst:quest", command, selected }); }
+    catch { throw new Error("Không kết nối được Auto Quest; mở tab game rồi tải lại nếu cần."); }
   }
   list.addEventListener("change", (event) => {
     const id = event.target.dataset.quest; if (!id) return;

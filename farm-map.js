@@ -4,6 +4,57 @@
   const finite = Number.isFinite, deferred = new Map();
   const explored = new Map();
   let scanAt = 0, correctionUntil = 0, lastFix;
+  let resumeTarget = null;
+  const isBoss = (enemy) => enemy?.cls === "boss" || enemy?.wb === true;
+  const range = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const segmentDistance = (point, start, end) => {
+    const dx = end.x - start.x, dy = end.y - start.y;
+    const length = dx * dx + dy * dy;
+    const t = length ? Math.max(0, Math.min(1, ((point.x - start.x) * dx + (point.y - start.y) * dy) / length)) : 0;
+    return Math.hypot(point.x - start.x - t * dx, point.y - start.y - t * dy);
+  };
+  function bossObstacles(scene) {
+    if (!preferences.excludeBoss && preferences.targetMode !== "highLevel") return [];
+    return [...scene.views.values()].filter((actor) => actor.k === "m" && !actor.dead
+      && (actor.st?.cls === "boss" || actor.st?.wb === true) && finite(actor.x) && finite(actor.y));
+  }
+  const clearance = (actor) => Math.max(2.5, (finite(actor.radius) ? actor.radius : 1) + 1.5);
+  const clearOfBoss = (from, to, bosses) => bosses.every((actor) =>
+    segmentDistance(actor, from, to) >= clearance(actor));
+  function nativeSafeLeg(host, from, to, bosses) {
+    const points = host.clear(from.x, from.y, to.x, to.y) ? [[to.x, to.y]]
+      : host.route(from.x, from.y, to.x, to.y);
+    if (!Array.isArray(points) || !points.length) return null;
+    const route = [...points];
+    if (route.some((point) => !Array.isArray(point) || point.length < 2 || !point.slice(0, 2).every(finite))) return null;
+    const last = route[route.length - 1];
+    if (Math.hypot(last[0] - to.x, last[1] - to.y) > 0.25) route.push([to.x, to.y]);
+    let previous = from;
+    for (const point of route) {
+      const next = { x: point[0], y: point[1] };
+      if (!clearOfBoss(previous, next, bosses)) return null;
+      previous = next;
+    }
+    return route;
+  }
+  function safeBossRoute(scene, host, from, to, bosses) {
+    const direct = nativeSafeLeg(host, from, to, bosses);
+    if (direct) return direct;
+    const dx = to.x - from.x, dy = to.y - from.y, length = Math.hypot(dx, dy);
+    if (length < 0.1) return null;
+    const blockers = bosses.filter((actor) => segmentDistance(actor, from, to) < clearance(actor))
+      .sort((a, b) => range(a, from) - range(b, from)).slice(0, 3);
+    for (const actor of blockers) for (const side of [1, -1]) for (const extra of [1, 3]) {
+      const offset = clearance(actor) + extra;
+      const point = { x: actor.x - dy / length * side * offset, y: actor.y + dx / length * side * offset };
+      if (!(point.x >= 0 && point.y >= 0 && point.x < scene.map?.w && point.y < scene.map?.h)) continue;
+      const first = nativeSafeLeg(host, from, point, bosses);
+      if (!first) continue;
+      const second = nativeSafeLeg(host, point, to, bosses);
+      if (second) return [...first, ...second];
+    }
+    return null;
+  }
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const wanted = () => preferences.enabled && preferences.searchScope === "map";
@@ -43,8 +94,14 @@
     const boss = preferences.targetMode === "bossFirst"
       ? (isBoss(current) ? current : isBoss(pursuing) ? pursuing : eligible.filter(isBoss)
         .sort((a, b) => Math.hypot(a.x - scene.px, a.y - scene.py) - Math.hypot(b.x - scene.px, b.y - scene.py))[0]) : null;
-    const target = boss ?? current ?? pursuing ?? nearbyAggro ?? eligible.sort((a, b) => Math.hypot(a.x - scene.px, a.y - scene.py)
-      - Math.hypot(b.x - scene.px, b.y - scene.py))[0];
+    const priority = globalThis.GSTFarmPriority;
+    const ordered = [...eligible].sort((a, b) =>
+      (priority?.ranked?.() === true ? priority.compare(a, b) : 0)
+      || Math.hypot(a.x - scene.px, a.y - scene.py) - Math.hypot(b.x - scene.px, b.y - scene.py));
+    const returning = resumeTarget === null ? null : eligible.find((enemy) => enemy.id === resumeTarget);
+    if (resumeTarget !== null && !returning) resumeTarget = null;
+    const target = boss ?? current ?? pursuing ?? returning ?? nearbyAggro ?? ordered[0];
+    if (target?.id === resumeTarget) resumeTarget = null;
     if (target) return { ...target, actor: true };
     if (monsters.length) { message = "Các mục tiêu phù hợp đang được tạm bỏ do cooldown/đường bị chặn; chờ trước khi thử lại."; return null; }
     if (preferences.targetMode !== "boss") {
@@ -133,6 +190,24 @@
       const target = destination(scene, host, time, scouting);
       if (!target) { if (scouting || !job?.scout) release(); return false; }
       if (scouting && !target.scout) return false;
+      if (!scouting && job?.actor && target.actor && job.id === target.id && !scene.auto.target
+          && typeof host.enemies === "function") {
+        const pos = { x: scene.px, y: scene.py };
+        const blocker = host.enemies().filter((enemy) => !isBoss(enemy) && enemy.id !== target.id
+          && !enemy.dead && enemy.hostile && finite(enemy.x) && finite(enemy.y)
+          && range(enemy, pos) < 3.5 && range(enemy, { x: scene.auto.ax, y: scene.auto.ay }) < 11
+          && segmentDistance(enemy, pos, target) < (finite(enemy.radius) ? enemy.radius : 1) + 0.7)
+          .sort((a, b) => range(a, pos) - range(b, pos))[0];
+        if (blocker && !(scene.auto.skipped.get(blocker.id) > time)
+            && scene.auto.pick(host, time, [blocker], [], scene.px, scene.py)) {
+          resumeTarget = target.id;
+          scene.auto.target = blocker.id;
+          scene.auto.think = 0;
+          release();
+          message = "Quái thường cản đường: nhường Auto Farm gốc xử lý rồi tiếp tục mục tiêu cũ.";
+          return false;
+        }
+      }
       if (!finite(target.x) || !finite(target.y) || !finite(scene.map?.w) || !finite(scene.map?.h)
           || target.x < 0 || target.y < 0 || target.x >= scene.map.w || target.y >= scene.map.h
           || !finite(scene.px) || !finite(scene.py) || !finite(time)
@@ -165,7 +240,21 @@
         defer(time); message = `Chưa tiếp cận được mục tiêu; tạm bỏ ${delay} giây và xét mục tiêu khác.`; return false;
       }
       const owner = job;
-      const walking = { ...host, steer: (x, y) => { scene.autoX = x; scene.autoY = y; owner.steer = [x, y]; } };
+      const bosses = bossObstacles(scene);
+      if (bosses.length && owner.navigation.path.length) {
+        const point = owner.navigation.path[0];
+        if (Array.isArray(point) && point.length === 2 && point.every(finite)
+            && !clearOfBoss({ x: scene.px, y: scene.py }, { x: point[0], y: point[1] }, bosses)) {
+          owner.navigation.path = []; owner.navigation.pathAt = -Infinity;
+        }
+      }
+      const walking = { ...host,
+        clear: (x, y, gx, gy) => host.clear(x, y, gx, gy)
+          && (!bosses.length || clearOfBoss({ x, y }, { x: gx, y: gy }, bosses)),
+        route: (x, y, gx, gy) => bosses.length
+          ? safeBossRoute(scene, host, { x, y }, { x: gx, y: gy }, bosses)
+          : host.route(x, y, gx, gy),
+        steer: (x, y) => { scene.autoX = x; scene.autoY = y; owner.steer = [x, y]; } };
       if (target.scout && Math.hypot(scene.px - target.x, scene.py - target.y) <= 1.2) {
         explored.set(target.id, Infinity); release(); walking.steer(0, 0);
         message = "Đã tới điểm dò; đang tìm quái đúng bộ lọc.";
@@ -184,6 +273,7 @@
     release(); const old = binding; binding = null;
     if (old) { old.remove(); old.removeScout(); old.scene.events.off("preupdate", guard); old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach); }
     retryAt = 0; message = ""; deferred.clear(); explored.clear(); scanAt = 0; lastFix = undefined; correctionUntil = 0;
+    resumeTarget = null;
   }
   function attach(scene) {
     if (!wanted() || suspended) { detach(); return; }

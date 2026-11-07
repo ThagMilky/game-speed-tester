@@ -478,7 +478,7 @@
           : distance(enemy, s.home) < settings.radius)
         && !(s.auto.skipped.has(enemy.id) && s.auto.skipped.get(enemy.id) > time));
       // Match the built-in skipped expiry without deleting its records ourselves.
-      const candidates = eligible.filter((enemy) => !s.auto.skipped.has(enemy.id)
+      const candidates = eligible.filter((enemy) => !(s.auto.skipped.get(enemy.id) > time)
         // The map navigator approaches all distant targets with native walk/hop first.
         // Probing a full long route with pick() here would repeatedly mark them skipped.
         && !(settings.searchScope === "map" && distance(enemy, pos) > 6));
@@ -521,7 +521,7 @@
         message = "Waiting for built-in loot collection.";
         return;
       }
-      const remote = candidates.filter((enemy) => !s.auto.skipped.has(enemy.id))
+      const remote = candidates.slice()
         .sort((a, b) => distance(a, pos) - distance(b, pos));
       let next = null;
       for (const enemy of remote.slice(0, 4)) {
