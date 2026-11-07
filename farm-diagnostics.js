@@ -109,6 +109,7 @@
       background: globalThis.GSTBackgroundDiagnostics?.snapshot(),
       movement: globalThis.GSTMovementDiagnostics?.snapshot(),
       bossSafety: globalThis.GSTFarmBossSafety?.snapshot(),
+      flight: globalThis.GSTFlight?.snapshot(),
       current: flags(binding?.scene), lastStop: rows.findLast((row) => row.event === "off") ?? null, events: [...rows] })
   };
   window.addEventListener("message", (event) => {

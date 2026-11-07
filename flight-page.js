@@ -3,12 +3,41 @@
   const origin = "https://nghichthienky.online";
   let always = false, farm = false, binding = null, watcher = null, suspended = false;
   let stableAt = null, requestedAt = null, last = -Infinity, message = "Luôn bay đang tắt.";
-  let sentScene = null, sentAt = -Infinity, retryAfter = -Infinity, requestSelfAt = null;
+  let sentScene = null, sentAt = -Infinity, retryAfter = -Infinity, requestSelfAt = null, failures = 0;
   const sceneNow = () => window.game?.scene?.getScene?.("world") ?? window.__ntkScene;
-  function reset() { stableAt = null; requestedAt = null; last = -Infinity; retryAfter = -Infinity; requestSelfAt = null; }
+  function reset() {
+    stableAt = null; requestedAt = null; last = -Infinity; retryAfter = -Infinity;
+    requestSelfAt = null; failures = 0;
+  }
   function finiteSceneTime(scene) {
     return typeof scene.now === "function" && Number.isFinite(scene.selfAt)
       && scene.now() - scene.selfAt >= 0 && scene.now() - scene.selfAt <= 2;
+  }
+  // Small event history for the existing Auto Farm diagnostic export. Never save URLs or packets.
+  const flightLogKey = "gst:flight-log:v1";
+  const flightReasons = ["request", "confirmed", "unconfirmed", "blocked", "disconnected", "no_snapshot", "wait"];
+  const flightEvents = [];
+  let lastLogState = "", lastLogAt = -Infinity;
+  try {
+    const past = JSON.parse(sessionStorage.getItem(flightLogKey) ?? "[]");
+    if (Array.isArray(past)) for (const row of past.slice(-30)) {
+      if (flightReasons.includes(row?.type) && typeof row.at === "string"
+          && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.at)) {
+        flightEvents.push({ at: row.at, type: row.type, auto: row.auto === true,
+          flying: row.flying === true, always: row.always === true, farm: row.farm === true });
+      }
+    }
+  } catch { /* Optional diagnostics. */ }
+  function record(type, scene) {
+    if (!flightReasons.includes(type)) return;
+    const now = performance.now();
+    const signature = type + ":" + !!scene?.auto?.on + ":" + !!scene?.self?.fly;
+    if (signature === lastLogState && now - lastLogAt < 10000) return;
+    lastLogState = signature; lastLogAt = now;
+    flightEvents.push({ at: new Date().toISOString(), type, auto: scene?.auto?.on === true,
+      flying: scene?.self?.fly === true, always, farm });
+    if (flightEvents.length > 30) flightEvents.shift();
+    try { sessionStorage.setItem(flightLogKey, JSON.stringify(flightEvents)); } catch {}
   }
   function ensure(scene) {
     if (!scene?.auto) { reset(); message = "Chờ scene world và Auto Farm sẵn sàng để kiểm tra bay."; return false; }
@@ -18,9 +47,11 @@
     const now = performance.now(), d = scene.driver;
     if (!scene.self || scene.self.dead || scene.leaving || !d || d.closing || d.reconnecting || d.displaced
         || !(d.online === false || d.link?.open?.() === true)) {
+      record("disconnected", scene);
       reset(); message = "Chờ nhân vật/kết nối ổn định để kiểm tra bay."; return false;
     }
     if (scene.self.fly) {
+      if (requestedAt !== null) record("confirmed", scene);
       if (sentScene === scene) { sentScene = null; sentAt = -Infinity; }
       reset(); message = "Đang bay."; return true;
     }
@@ -31,15 +62,20 @@
       // Fly is a toggle: only retry after a fresh server snapshot still reports fly=false.
       if (!finiteSceneTime(scene) || !Number.isFinite(requestSelfAt)
           || scene.selfAt <= requestSelfAt) {
+        record("no_snapshot", scene);
         message = "Chờ dữ liệu bay mới từ game; chưa gửi lại lệnh bật/tắt."; return false;
       }
+      record("unconfirmed", scene);
       requestedAt = null;
-      retryAfter = now + 15000; // 23+ seconds between requests; avoid flip-flopping.
+      failures++;
+      // Fly is a toggle: back off on repeated rejection to avoid reversing a delayed success.
+      retryAfter = now + Math.min(60000, 7000 * 2 ** Math.min(failures - 1, 4));
       message = "Game chưa xác nhận bay; sẽ thử lại có giới hạn khi trạng thái vẫn tắt.";
       return false;
     }
     if (now < retryAfter) {
-      message = "Game chưa xác nhận bay; đang chờ trước khi thử lại."; return false;
+      record("wait", scene);
+      message = `Game chưa xác nhận bay; chờ ${Math.ceil((retryAfter - now) / 1000)} giây trước khi thử lại.`; return false;
     }
     if (now - last < 250) return false;
     last = now;
@@ -47,6 +83,7 @@
         || (Number.isFinite(scene.dashT) && scene.dashT > 0)
         || (finiteSceneTime(scene) === false)
         || GSTFarmRouting.blocked(scene) || scene.self.realm?.inside?.protection > 0) {
+      record("blocked", scene);
       stableAt = null; message = "Chờ giao diện/thao tác nhân vật ổn định trước khi bật bay."; return false;
     }
     stableAt ??= now;
@@ -59,7 +96,8 @@
     requestedAt = now;
     requestSelfAt = scene.selfAt;
     sentScene = scene; sentAt = now;
-    scene.act("fly"); message = "Đã yêu cầu bay; chờ game xác nhận.";
+    scene.act("fly"); record("request", scene);
+    message = "Đã yêu cầu bay; chờ game xác nhận.";
     return false;
   }
   function frame() {
@@ -87,17 +125,34 @@
     if (!(always || farm)) { detach(); clearInterval(watcher); watcher = null; message = "Luôn bay đang tắt."; }
     else { if (!binding) message = "Chờ scene world; game cần tham số timer để truy cập trạng thái bay."; watch(); discover(); }
   }
-  globalThis.GSTFlight = { ensure, status: () => message };
+  globalThis.GSTFlight = {
+    ensure, status: () => message,
+    snapshot() {
+      const scene = binding?.scene;
+      return { build: "flight-log-1", always, farm, wanted: always || farm && scene?.auto?.on === true,
+        flying: scene?.self?.fly === true, auto: scene?.auto?.on === true,
+        requested: requestedAt !== null,
+        pendingMs: requestedAt !== null ? Math.max(0, performance.now() - requestedAt) : null,
+        retryMs: Math.max(0, retryAfter - performance.now()),
+        hasScene: !!scene, fresh: !!scene && finiteSceneTime(scene),
+        blocked: !!scene?.uiBlocked,
+        events: flightEvents.slice(-30).map((row) => ({ ...row })) };
+    }
+  };
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin) return;
     const data = event.data;
-    if (data?.channel === "gst:farm:v1" && data.type === "configure") { farm = data.enabled === true; configure(); }
+    if (data?.channel === "gst:farm:v1" && data.type === "configure") {
+      // autoRespawn marks an installed Auto Farm bridge, unlike 'enabled' (expanded radius).
+      farm = data.autoRespawn === true;
+      configure();
+    }
     if (data?.channel !== "gst:flight:v1") return;
     if (data.type === "configure") {
       const next = data.always === true;
       const demand = always || farm && binding?.scene.auto?.on;
       always = next;
-      if (demand !== (always || farm && binding?.scene.auto?.on) || requestedAt !== null && performance.now() - requestedAt >= 8000) reset();
+      if (demand !== (always || farm && binding?.scene.auto?.on)) reset();
       configure();
     }
     window.postMessage({ channel: "gst:flight-status:v1", requestId: data.requestId, message, always }, origin);

@@ -5,7 +5,11 @@
   function configure() {
     const url = new URL(location.href);
     if (always && !url.searchParams.has("timer")) {
-      if (!navigating) { navigating = true; url.search += `${url.search ? "&" : "?"}timer`; location.replace(url.href); }
+      if (!navigating) {
+        navigating = true; url.search += `${url.search ? "&" : "?"}timer`;
+        try { sessionStorage.setItem("gst:background-redirect:v1", "extension_timer"); } catch {}
+        location.replace(url.href);
+      }
       return;
     }
     window.postMessage({ channel: "gst:flight:v1", type: "configure", always }, origin);

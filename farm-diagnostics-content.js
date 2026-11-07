@@ -68,20 +68,37 @@
         distance: number(row.distance), flying: row.flying === true
       })) };
   }
+  function cleanFlight(data) {
+    const allowed = ["request", "confirmed", "unconfirmed", "blocked", "disconnected", "no_snapshot", "wait"];
+    const ms = (v) => Number.isFinite(v) ? Math.round(Math.max(0, Math.min(86400000, v))) : null;
+    return {
+      build: data?.build === "flight-log-1" ? "flight-log-1" : "unavailable",
+      always: data?.always === true, farm: data?.farm === true, wanted: data?.wanted === true,
+      flying: data?.flying === true, auto: data?.auto === true, requested: data?.requested === true,
+      pendingMs: ms(data?.pendingMs), retryMs: ms(data?.retryMs), hasScene: data?.hasScene === true,
+      fresh: data?.fresh === true, blocked: data?.blocked === true,
+      events: (Array.isArray(data?.events) ? data.events : []).slice(-30)
+        .filter((row) => allowed.includes(row?.type))
+        .map((row) => ({ at: bgDate(row.at), type: row.type, auto: row.auto === true,
+          flying: row.flying === true, always: row.always === true, farm: row.farm === true }))
+    };
+  }
   // Isolated-world log collection must still work if the shared schema was not
   // initialized in this page; preserve its field allowlist on that fallback.
   function cleanMovement(row) {
     const schema = globalThis.GSTMovementLogSchema;
     if (typeof schema?.clean === "function") return schema.clean(row);
-    const reasons = ["attach", "state", "correction", "frame_gap", "sample", "detach"];
+    const reasons = ["attach", "state", "correction", "frame_gap", "sample", "detach",
+      "panel_open", "panel_close", "panel_switch", "panel_gap"];
     if (!reasons.includes(row?.reason)) return null;
     const number = (value) => Number.isFinite(value) ? Math.round(Math.max(-1e8, Math.min(1e8, value)) * 1000) / 1000 : null;
     const point = (value) => Array.isArray(value) && value.length === 2 && value.every(Number.isFinite) ? value.map(number) : null;
     const result = { at: typeof row.at === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.at) ? row.at : "", reason: row.reason };
-    for (const key of ["auto", "manual", "clickOrder", "paused", "moved", "dead", "stunned", "rooted", "slowed", "moveLocked", "harvesting", "pendingSkill", "aiming", "resting", "target", "targetChanged", "hidden", "focused", "littleProgress"]) result[key] = row[key] === true;
-    for (const key of ["fix", "elapsedMs", "distance", "stillMs", "pathLength", "radius", "moveMultiplier"]) result[key] = number(row[key]);
+    for (const key of ["auto", "manual", "clickOrder", "paused", "moved", "dead", "stunned", "rooted", "slowed", "moveLocked", "harvesting", "pendingSkill", "aiming", "resting", "target", "targetChanged", "hidden", "focused", "littleProgress", "panelOpen", "uiBlocked"]) result[key] = row[key] === true;
+    for (const key of ["fix", "elapsedMs", "distance", "stillMs", "pathLength", "radius", "moveMultiplier", "frameGapMs"]) result[key] = number(row[key]);
     for (const key of ["position", "serverPosition", "targetPosition", "center", "home", "steerBefore", "steerAfter", "waypoint"]) result[key] = point(row[key]);
     result.scope = ["radius", "map"].includes(row.scope) ? row.scope : null;
+    result.panel = ["none", "skills", "workshop", "other"].includes(row.panel) ? row.panel : "none";
     const owners = ["native_farm_eligible", "GSTHarvest", "GSTFarmBehavior", "GSTFarmMap", "GSTFarmSeals", "GSTRealm", "GSTChest", "GSTQuest"];
     result.owners = (Array.isArray(row.owners) ? row.owners : []).filter((name) => owners.includes(name)).slice(0, owners.length);
     return result;
@@ -102,11 +119,15 @@
         events: (Array.isArray(data?.background?.events) ? data.background.events : []).slice(-80).map(cleanBackground).filter(Boolean),
         incidents: (Array.isArray(data?.background?.incidents) ? data.background.incidents : []).slice(-24).map(cleanBackground).filter(Boolean) },
       bossSafety: cleanBossSafety(data?.bossSafety),
-      movement: { build: data?.movement?.build === "movement-log-1" ? "movement-log-1" : "unavailable",
+      flight: cleanFlight(data?.flight),
+      movement: { build: ["movement-log-1", "movement-log-2"].includes(data?.movement?.build)
+          ? data.movement.build : "unavailable",
         tracking: data?.movement?.tracking === true,
         scope: "Last 120 observations in this page; reset on reload",
         current: cleanMovement(data?.movement?.current),
-        events: (Array.isArray(data?.movement?.events) ? data.movement.events : []).slice(-120).map(cleanMovement).filter(Boolean) },
+        events: (Array.isArray(data?.movement?.events) ? data.movement.events : []).slice(-120).map(cleanMovement).filter(Boolean),
+        uiIncidents: (Array.isArray(data?.movement?.uiIncidents) ? data.movement.uiIncidents : [])
+          .slice(-36).map(cleanMovement).filter(Boolean) },
       current: flags(data?.current), lastStop: clean(data?.lastStop),
       events: (Array.isArray(data?.events) ? data.events : []).slice(-20).map(clean).filter(Boolean) });
   });
