@@ -43,6 +43,7 @@ flowchart LR
 - **MAIN** dùng scene và API gốc của game. `content.js`/`page.js` còn quản lý tốc độ và overlay trạng thái.
 - Channel xác nhận trong source gồm `gst:farm:v1`, `gst:harvest:v1`, `gst:realm:v1`, `gst:chest:v1`, `gst:quest:v1`, `gst:fps:v1` và các channel status. Tên channel **không thay thế** việc đọc payload/ACK thực tế.
 - `farm-session.js` giữ ý định Auto Farm trong `sessionStorage` theo tab/nhân vật; preferences được lưu trong `chrome.storage.local`.
+- `page.js` tạm ngừng ghi đè `self.ms` và hoàn nguyên tốc độ game khi `scene.auto.on` hoặc `GSTHarvest.isEnabled()`, `GSTChest.isEnabled()`, `GSTRealm.isEnabled()` trả về `true`. Khi tất cả tắt, tiếp tục áp tốc độ đi bộ/bay đã lưu nếu người dùng vẫn bật công tắc; `content.js` hiển thị trạng thái `TẠM TẮT`. Các hàm `isEnabled()` phản ánh cài đặt tính năng, không phải quyền điều khiển di chuyển (khác `controls()`).
 
 ## 4. Điều phối nhiều module cùng dùng Auto Farm
 

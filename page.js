@@ -5,6 +5,8 @@
   const STATUS = "gst:status:v1";
   const origin = "https://nghichthienky.online";
   let enabled = false;
+  // Keep the user's ON preference even while automation temporarily suspends speed overrides.
+  let automationPaused = false, automationReason = "";
   let walkingSpeed = 3.5;
   let flyingSpeed = 2;
   let farmWalkingSpeed = 2, farmFlyingSpeed = 1.5;
@@ -46,6 +48,7 @@
   function onSpeedFrame() {
     if (!enabled || suspended) return;
     try {
+      if (syncAutomation(approachScene)) return;
       applySpeed(approachScene);
       stabilizeApproach();
     } catch {
@@ -123,6 +126,38 @@
 
   function player() {
     return worldScene()?.self ?? null;
+  }
+
+  function automationBlocker(scene) {
+    // Feature intent, not movement ownership: also suppress when an auto feature
+    // is enabled but temporarily idle or waiting for its target to appear.
+    if (scene?.auto?.on === true) return "Auto Farm";
+    if (globalThis.GSTHarvest?.isEnabled?.() === true) return "Auto Thu Hoạch";
+    if (globalThis.GSTChest?.isEnabled?.() === true) return "Tìm Rương";
+    if (globalThis.GSTRealm?.isEnabled?.() === true) return "Tìm Cổng Bí Cảnh";
+    return "";
+  }
+
+  function syncAutomation(scene) {
+    const reason = automationBlocker(scene);
+    if (reason) {
+      if (!automationPaused) {
+        restoreOnce();
+        approachPosition = null;
+      }
+      automationPaused = true;
+      automationReason = reason;
+      return true;
+    }
+    if (automationPaused) {
+      automationPaused = false;
+      automationReason = "";
+      // After the final automation turns off, apply the saved normal speed
+      // to the freshly restored client value; never force the popup switch ON.
+      resetMode();
+      approachPosition = null;
+    }
+    return false;
   }
 
   function numeric(value) {
@@ -206,18 +241,18 @@
       // Relative display counter only; never assign to the game's self.fix.
       fix = displayedFix(self?.fix);
       message ||= !enabled ? "Disabled; movement speed is controlled by the game."
+        : automationPaused ? `Tạm tắt tăng tốc vì ${automationReason} đang bật; sẽ tự khôi phục khi tất cả tính năng tự động tắt.`
         : !window.game ? "Waiting for window.game (requires timer URL parameter)."
         : !self ? "Waiting for world scene / player."
         : current === null ? "Waiting for a numeric self.ms."
         : pendingMode !== null ? "Waiting for movement / Auto Farm state to remain stable for 1 second."
-        : activeMode?.startsWith("farm:") ? `Auto Farm: bay ${farmFlyingSpeed} / đi bộ ${farmWalkingSpeed}.`
         : "Enabled; monitoring movement speed.";
     } catch {
       message ||= "Waiting for an accessible world scene.";
     }
     window.postMessage({
       channel: STATUS, requestId,
-      status: { enabled, current, fix, state, message }
+      status: { enabled, suppressed: enabled && automationPaused, current, fix, state, message }
     }, origin);
   }
 
@@ -259,7 +294,7 @@
     try {
       const scene = worldScene();
       attachApproach(scene);
-      applySpeed(scene);
+      if (!syncAutomation(scene)) applySpeed(scene);
       problem = null;
     } catch {
       problem = "World/player temporarily unavailable; retrying.";
@@ -304,6 +339,8 @@
     if (!enabled) {
       stopTimer();
       if (wasEnabled) restoreOnce();
+      automationPaused = false;
+      automationReason = "";
     } else {
       startTimer();
       if (wasEnabled && changedSpeed) tick();
@@ -316,6 +353,8 @@
     suspended = true;
     stopTimer();
     restoreOnce();
+    automationPaused = false;
+    automationReason = "";
   });
   window.addEventListener("pageshow", () => {
     suspended = false;

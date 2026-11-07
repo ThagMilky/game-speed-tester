@@ -243,6 +243,7 @@
   }
   function watch() { if (settings.enabled && !suspended && !binding && timer === null) timer = setInterval(discover, 1000); }
   globalThis.GSTChest = {
+    isEnabled: () => settings.enabled,
     controls: (scene) => !!binding && binding.scene === scene && job !== null,
     ready(scene) {
       try {

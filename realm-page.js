@@ -229,7 +229,10 @@
       message = "Đang tìm cổng bí cảnh trong toàn map hiện tại.";
     } catch { detach(); message = "Chưa gắn được hỗ trợ bí cảnh; chờ game."; watch(); }
   }
-  globalThis.GSTRealm = { controls: (scene) => binding?.scene === scene && job !== null };
+  globalThis.GSTRealm = {
+    isEnabled: () => preferences.enabled,
+    controls: (scene) => binding?.scene === scene && job !== null
+  };
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:realm:v1") return;
     if (event.data.type === "configure") {

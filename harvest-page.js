@@ -26,6 +26,7 @@
   const unconfirmedCodes = new Set(["harvest_unconfirmed", "request_timeout", "node_unavailable_before_ack", "target_changed"]);
   const summary = () => `Thành công ${totals.success} · Thất bại/bỏ qua ${totals.failed} · Chưa xác nhận ${totals.unconfirmed} · Hủy/nhường ${totals.canceled}`;
   GSTHarvest.journey = (scene) => binding?.scene === scene && job ? { x: job.node.x, y: job.node.y, path: job.path } : null;
+  GSTHarvest.isEnabled = () => settings.enabled;
   const skipped = new Map();
   const finite = Number.isFinite;
   function inRange(scene, node) {

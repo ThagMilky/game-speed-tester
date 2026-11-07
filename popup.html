@@ -269,7 +269,7 @@
       </div>
     </details>
     <details class="card" data-category="settings" data-panel="speed">
-      <summary><span><strong>Tốc độ &amp; bay</strong><small>Tốc độ thường và khi Auto Farm</small></span></summary>
+      <summary><span><strong>Tốc độ &amp; bay</strong><small>Tự tạm tắt tăng tốc khi dùng tính năng tự động</small></span></summary>
       <div class="card-body">
         <label class="switch-row"><span>Luôn giữ trạng thái bay</span><input id="alwaysFlying" class="switch" type="checkbox"></label>
         <p class="hint">Đã bay thì bỏ qua. Đang đi bộ thì chờ ổn định 1 giây, yêu cầu bay một lần và chờ game xác nhận. Giữ lựa chọn qua đổi map/hồi sinh. Tắt công tắc không ép hạ xuống đi bộ; Auto Farm vẫn có hỗ trợ bay riêng. Nếu bạn tự tắt bay khi công tắc đang bật, tool sẽ bật lại sau khoảng nghỉ. Không spam khi game chưa cho phép bay.</p>
@@ -283,15 +283,17 @@
             <div><label for="walkingSpeed">Đi bộ</label><input id="walkingSpeed" type="number" min="1" max="6" step="0.001" value="3.5" required></div>
             <div><label for="flyingSpeed">Bay</label><input id="flyingSpeed" type="number" min="1" max="6" step="0.001" value="2" required></div>
           </div>
-          <p class="field-title separated">Trong lúc Auto Farm bật</p>
-          <div class="two-columns">
-            <div><label for="farmWalkingSpeed">Đi bộ khi farm</label><input id="farmWalkingSpeed" type="number" min="1" max="6" step="0.001" value="2" required></div>
-            <div><label for="farmFlyingSpeed">Bay khi farm</label><input id="farmFlyingSpeed" type="number" min="1" max="6" step="0.001" value="1.5" required></div>
+          <div hidden>
+            <p class="field-title separated">Mức tốc độ farm cũ (không còn áp dụng)</p>
+            <div class="two-columns">
+              <div><label for="farmWalkingSpeed">Đi bộ khi farm</label><input id="farmWalkingSpeed" type="number" min="1" max="6" step="0.001" value="2" required></div>
+              <div><label for="farmFlyingSpeed">Bay khi farm</label><input id="farmFlyingSpeed" type="number" min="1" max="6" step="0.001" value="1.5" required></div>
+            </div>
           </div>
           <button id="save" type="button" class="primary full">Lưu tốc độ</button>
           </div>
           <button id="resetGameSpeed" type="button" class="full">Về tốc độ mặc định của game</button>
-          <p class="hint">Giới hạn 1–6 cho tốc độ ngoài farm. Khi Auto Farm bật dùng hai mức riêng bên trên (mặc định bay 1.5, đi bộ 2). Bật/tắt farm hoặc đổi bay/đi bộ phải ổn định 1 giây mới đổi tốc độ. Nút về mặc định tắt điều chỉnh tốc độ cả trong và ngoài farm, giữ các mức đã lưu.</p>
+          <p class="hint">Khi bật Auto Farm, Tự thu hoạch, Tìm rương hoặc Tìm cổng bí cảnh, extension tự tạm tắt tăng tốc để dùng tốc độ gốc của game. Khi cả bốn đều tắt, tăng tốc tự bật lại nếu công tắc Bật điều chỉnh tốc độ vẫn bật. Giữ nguyên mức đi bộ/bay đã lưu; không thay đổi trạng thái bay. Nút về mặc định sẽ tắt hẳn điều chỉnh tốc độ.</p>
         </fieldset>
       </div>
     </details>

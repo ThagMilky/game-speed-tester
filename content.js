@@ -97,7 +97,7 @@
     const lines = [];
     if (fields.realm) lines.push(realmTime);
     if (fields.fps) lines.push(`FPS: ${latestFps ?? "—"}`);
-    if (fields.override) lines.push(`Override: ${status ? (status.enabled ? "BẬT" : "TẮT") : "—"}`);
+    if (fields.override) lines.push(`Override: ${status ? (!status.enabled ? "TẮT" : status.suppressed ? "TẠM TẮT" : "BẬT") : "—"}`);
     if (fields.speed) lines.push(`Tốc độ: ${status?.current ?? "—"}`);
     if (fields.movement) lines.push(`Trạng thái: ${movement}`);
     if (fields.autoFarm) lines.push(`Auto Farm game: ${autoFarmOn === true ? "BẬT" : autoFarmOn === false ? "TẮT" : "CHƯA RÕ"}`);
@@ -174,6 +174,7 @@
     const value = event.data.status;
     latestStatus = {
       enabled: value?.enabled === true,
+      suppressed: value?.suppressed === true,
       current: Number.isFinite(value?.current) ? value.current : null,
       fix: Number.isFinite(value?.fix) ? value.fix : null,
       state: typeof value?.state === "string" ? value.state.slice(0, 80) : "unknown",
