@@ -36,8 +36,8 @@
       if (!Array.isArray(data.recentAttempts)) throw new Error("History unavailable");
       output.value = JSON.stringify({ build: "harvest-history-3", scope: "Last 10 completed attempts in this game tab; no runtime credentials", attempts: data.recentAttempts }, null, 2);
       if (!data.recentAttempts.length) { feedback.textContent = "Chưa có lượt kết thúc. Cho Thu hoạch chạy rồi sao chép lại."; return; }
-      try { await navigator.clipboard.writeText(output.value); feedback.textContent = "Đã sao chép. Dán log vào chat để kiểm tra."; }
-      catch { output.hidden = false; output.focus(); output.select(); feedback.textContent = "Đã chọn log; bấm Ctrl+C để sao chép."; }
+      if (await GSTClipboard.write(output.value)) feedback.textContent = "Đã sao chép. Dán log vào chat để kiểm tra.";
+      else { output.hidden = false; output.focus(); output.select(); feedback.textContent = "Đã chọn log; bấm Ctrl+C để sao chép."; }
     } catch { feedback.textContent = "Chưa đọc được lịch sử. Reload extension rồi tải lại game nếu vừa cập nhật."; }
     finally { button.disabled = false; }
   });
@@ -68,10 +68,9 @@
   debugPanel.addEventListener("toggle", refreshDebug);
   byId("copyHarvestDebug").addEventListener("click", async () => {
     if (!debugOutput.value) { debugFeedback.textContent = "Bật ghi log và chờ đọc được dữ liệu trước."; return; }
-    try {
-      await navigator.clipboard.writeText(debugOutput.value);
+    if (await GSTClipboard.write(debugOutput.value)) {
       debugFeedback.textContent = "Đã sao chép. Bạn có thể dán log vào chat.";
-    } catch {
+    } else {
       debugOutput.focus(); debugOutput.select();
       debugFeedback.textContent = "Đã chọn log; bấm Ctrl+C để sao chép.";
     }

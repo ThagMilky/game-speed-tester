@@ -10,10 +10,9 @@
       const data = await chrome.tabs.sendMessage(tab.id, { type: "gst:farm-diagnostics" });
       if (data?.build !== "farm-stop-1" || !data.tracking) throw new Error("No tracker");
       output.value = JSON.stringify(data, null, 2); output.hidden = false;
-      try {
-        await navigator.clipboard.writeText(output.value);
+      if (await GSTClipboard.write(output.value)) {
         feedback.textContent = "Đã sao chép. Dán vào chat để kiểm tra khựng di chuyển, chạy nền và hồi sinh.";
-      } catch {
+      } else {
         output.focus(); output.select(); feedback.textContent = "Đã chọn chẩn đoán; bấm Ctrl+C rồi dán vào chat.";
       }
     } catch { feedback.textContent = "Chưa đọc được chẩn đoán. Mở tab game, tải lại extension và game nếu vừa cập nhật."; }

@@ -1,4 +1,17 @@
 "use strict";
+// Embedded extension menus run in a cross-origin iframe, where clipboard-write
+// can be denied by the parent document's Permissions Policy.
+globalThis.GSTClipboard = {
+  async write(text) {
+    if (window.top !== window || typeof navigator.clipboard?.writeText !== "function") return false;
+    try {
+      const policy = document.permissionsPolicy ?? document.featurePolicy;
+      if (policy?.allowsFeature?.("clipboard-write") === false) return false;
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch { return false; }
+  }
+};
 const controls = document.getElementById("controls");
 const enabledInput = document.getElementById("enabled");
 const walkingInput = document.getElementById("walkingSpeed");

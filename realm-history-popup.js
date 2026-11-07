@@ -9,8 +9,8 @@
         const data = await chrome.tabs.sendMessage(tab.id, { type: "gst:realm-history", kind });
         if (data?.build !== "realm-history-1") throw new Error("Unavailable");
         output.value = JSON.stringify(data, null, 2);
-        try { await navigator.clipboard.writeText(output.value); feedback.textContent = "Đã sao chép. Dán log vào chat để kiểm tra."; }
-        catch { output.hidden = false; output.focus(); output.select(); feedback.textContent = "Bấm Ctrl+C để sao chép log đã chọn."; }
+        if (await GSTClipboard.write(output.value)) feedback.textContent = "Đã sao chép. Dán log vào chat để kiểm tra.";
+        else { output.hidden = false; output.focus(); output.select(); feedback.textContent = "Bấm Ctrl+C để sao chép log đã chọn."; }
       } catch { feedback.textContent = "Chưa đọc được log. Reload extension và game nếu vừa cập nhật."; }
       finally { button.disabled = false; }
     });

@@ -24,6 +24,24 @@
     for (const key of ["gapMs", "sinceFrameMs"]) result[key] = Number.isFinite(row[key]) ? Math.max(0, Math.min(86400000, row[key])) : null;
     return result;
   }
+  // Isolated-world log collection must still work if the shared schema was not
+  // initialized in this page; preserve its field allowlist on that fallback.
+  function cleanMovement(row) {
+    const schema = globalThis.GSTMovementLogSchema;
+    if (typeof schema?.clean === "function") return schema.clean(row);
+    const reasons = ["attach", "state", "correction", "frame_gap", "sample", "detach"];
+    if (!reasons.includes(row?.reason)) return null;
+    const number = (value) => Number.isFinite(value) ? Math.round(Math.max(-1e8, Math.min(1e8, value)) * 1000) / 1000 : null;
+    const point = (value) => Array.isArray(value) && value.length === 2 && value.every(Number.isFinite) ? value.map(number) : null;
+    const result = { at: typeof row.at === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.at) ? row.at : "", reason: row.reason };
+    for (const key of ["auto", "manual", "clickOrder", "paused", "moved", "dead", "stunned", "rooted", "slowed", "moveLocked", "harvesting", "pendingSkill", "aiming", "resting", "target", "targetChanged", "hidden", "focused", "littleProgress"]) result[key] = row[key] === true;
+    for (const key of ["fix", "elapsedMs", "distance", "stillMs", "pathLength", "radius", "moveMultiplier"]) result[key] = number(row[key]);
+    for (const key of ["position", "serverPosition", "targetPosition", "center", "home", "steerBefore", "steerAfter", "waypoint"]) result[key] = point(row[key]);
+    result.scope = ["radius", "map"].includes(row.scope) ? row.scope : null;
+    const owners = ["native_farm_eligible", "GSTHarvest", "GSTFarmBehavior", "GSTFarmMap", "GSTFarmSeals", "GSTRealm", "GSTChest", "GSTQuest"];
+    result.owners = (Array.isArray(row.owners) ? row.owners : []).filter((name) => owners.includes(name)).slice(0, owners.length);
+    return result;
+  }
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:farm-debug:v1") return;
     const entry = pending.get(event.data.requestId);
@@ -35,8 +53,8 @@
       movement: { build: data?.movement?.build === "movement-log-1" ? "movement-log-1" : "unavailable",
         tracking: data?.movement?.tracking === true,
         scope: "Last 120 observations in this page; reset on reload",
-        current: GSTMovementLogSchema.clean(data?.movement?.current),
-        events: (Array.isArray(data?.movement?.events) ? data.movement.events : []).slice(-120).map(GSTMovementLogSchema.clean).filter(Boolean) },
+        current: cleanMovement(data?.movement?.current),
+        events: (Array.isArray(data?.movement?.events) ? data.movement.events : []).slice(-120).map(cleanMovement).filter(Boolean) },
       current: flags(data?.current), lastStop: clean(data?.lastStop),
       events: (Array.isArray(data?.events) ? data.events : []).slice(-20).map(clean).filter(Boolean) });
   });
