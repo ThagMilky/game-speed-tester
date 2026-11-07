@@ -16,7 +16,7 @@
     },
     {
       "matches": ["https://nghichthienky.online/*"],
-      "js": ["harvest-options.js", "content.js", "font-options.js", "font.js", "farm-content.js", "movement-log-schema.js", "farm-diagnostics-content.js", "harvest-content.js", "realm-content.js", "realm-history-content.js", "fps-options.js", "fps-content.js", "realm-time-content.js", "chest-content.js", "menu-position.js", "game-menu.js", "background-content.js", "quest-content.js", "flight-content.js"],
+      "js": ["harvest-options.js", "content.js", "game-panel-scroll.js", "font-options.js", "font.js", "farm-content.js", "movement-log-schema.js", "farm-diagnostics-content.js", "harvest-content.js", "realm-content.js", "realm-history-content.js", "fps-options.js", "fps-content.js", "realm-time-content.js", "chest-content.js", "menu-position.js", "game-menu.js", "background-content.js", "quest-content.js", "flight-content.js"],
       "run_at": "document_start",
       "world": "ISOLATED"
     }

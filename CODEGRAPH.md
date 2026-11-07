@@ -12,7 +12,7 @@
 
 | Nhóm | File liên quan |
 | --- | --- |
-| Entry / UI | `manifest.json`, `popup.html`, `popup.css`, `popup.js`, `popup-layout.js`, `popup-help.js` |
+| Entry / UI | `manifest.json`, `popup.html`, `popup.css`, `popup.js`, `popup-layout.js`, `popup-help.js`, `game-panel-scroll.js` |
 | Menu trong game | `game-menu.js`, `menu-position.js`, `menu-popup.js`, `menu-monitor.js`, `menu-orientation.js` |
 | Speed, bay | `content.js`, `page.js`, `flight-content.js`, `flight-page.js`, `flight-popup.js` |
 | Auto Farm | `farm-page.js`, `farm-content.js`, `farm-session.js`, `farm-behavior.js`, `farm-boss-safety.js`, `farm-map.js`, `farm-visual.js`, `farm-seals.js`, `farm-combat.js`, `farm-revive-policy.js` |
@@ -88,6 +88,7 @@ flowchart TD
 - API `globalThis` dùng chéo gồm `GSTFarmUpdate`, `GSTNavigation`, `GSTFarmInput`, `GSTFarmRouting`, `GSTHarvest`, `GSTFarmSession`. Kiểm tra chữ ký hàm và call site trước khi thay đổi.
 - `popup.js` cung cấp `GSTClipboard.write(text)` cho các nút sao chép log; popup nhúng trong iframe sẽ chọn nội dung để người dùng bấm Ctrl+C nếu quyền clipboard bị chặn. `farm-diagnostics-content.js` có bộ làm sạch log dự phòng nếu `GSTMovementLogSchema` không khả dụng trong ISOLATED world.
 - `popup-layout.js` điều hướng một trang chức năng tại mỗi thời điểm, ghi nhớ trang bằng `popupActivePage`, chuyển các nút log hiện có sang trang Chẩn đoán và dùng nút Lưu cố định gọi lại handler Auto Farm cũ; không còn dùng kéo/sắp xếp `popupPanelOrder`. `menu-monitor.js` cập nhật thẻ trạng thái trang Tổng quan.
+- `game-panel-scroll.js` chạy ở ISOLATED world, theo dõi các bảng `body > .panel[role="dialog"][data-title]` của game. Khi game dựng lại cùng bảng/cùng tab, khôi phục vị trí cuộn do người dùng điều khiển trong `.body` và danh sách con có khóa phù hợp. Khi đổi tab hoặc điều hướng chủ động thì để game tự xử lý. Không tác động Menu tool, Auto Farm hay source game.
 - `farm-map.js` dùng `GSTFarmPriority` từ `farm-page.js` để xếp thứ tự mục tiêu toàn map và chỉ đổi hành trình đã chọn khi mục tiêu không còn hợp lệ hoặc có ưu tiên boss/level vượt trội rõ rệt. `farm-page.js` chỉ liệt kê/lọc quái trong `host.enemies()`, chọn mục tiêu theo nhịp `onFrame` và giữ mục tiêu hợp lệ khi đang tiếp cận. Đổi mục tiêu thực tế được ghi vào chẩn đoán `target_switch` (nguồn, ID cũ/mới, lý do). Đường vòng tránh boss tận dụng `host.clear`/`host.route` gốc thay vì thêm pathfinder mới.
 - `background-diagnostics.js` xuất log build `background-log-2`: mốc bắt đầu trang (`boot`), HP/vị trí trước khi chết, thay đổi vị trí lớn, mất nhịp, kết nối và trạng thái Auto Farm; giữ 80 sự kiện và 24 mốc quan trọng trong `sessionStorage` của cùng tab để đối chiếu qua navigation. `farm-content.js` chỉ ghi dấu `extension_timer` khi chính extension thêm tham số timer. `farm-diagnostics-content.js` lọc trường trước khi xuất log, không truyền URL, packet hoặc thông tin tài khoản. `farm-diagnostics-popup.js` xuất một dòng JSON `gst-farm-agent-1`, gộp bản ghi trùng giữa lịch sử thường/sự cố, giữ thời gian và dữ liệu tìm lỗi; `flags` chỉ liệt kê trạng thái đúng, các trường trống bị lược. Log thu hoạch/rương/cổng cũng xuất JSON một dòng.
 - `realm-page.js` có `entryMode: enter|stand` từ `realm-popup.js` → `realm-content.js`: khi có cổng phù hợp, ưu tiên đi tới không chờ hết giao tranh; `stand` cố ý đứng cạnh cổng, `enter` chỉ dùng callback gốc nếu game cho phép. Nếu đang combat tại cổng, tạm bỏ cổng 6 giây và nhường Auto Farm gốc tiếp tục đánh; vẫn nhường thao tác tay, quest, thu hoạch, hồi phục và điều kiện Auto Farm đã cấu hình.
@@ -103,6 +104,7 @@ flowchart TD
 | --- | --- | --- |
 | Speed đi bộ/bay, khôi phục | `popup.js`, `content.js`, `page.js` | `flight-page.js`, `farm-page.js` |
 | Menu tool và popup: điều hướng từng trang, Tổng quan, Chẩn đoán, nút Lưu cố định | `popup.html`, `popup-layout.js`, `popup.css` | `menu-monitor.js`, `menu-orientation.js`, `game-menu.js` |
+| Bảng game tự nhảy cuộn lên khi dữ liệu làm mới | `game-panel-scroll.js`, `manifest.json` | `game-reference/WorldScene.js` (bảng `Sd.show/refresh`; snapshot tham khảo) |
 | Auto Farm đứng yên, bật/tắt, lọc quái | `farm-page.js`, `farm-content.js`, `farm-session.js` | `farm-routing.js`, `farm-behavior.js`, `farm-map.js` |
 | Kẹt đường/overshoot | `navigation.js`, `farm-routing.js`, `farm-input.js` | `farm-map.js`, owner liên quan |
 | Xung đột farm/thu hoạch/bí cảnh/rương/quest | `farm-update.js`, `farm-routing.js` | `harvest-page.js`, `realm-page.js`, `chest-page.js`, `quest-page.js`, `farm-seals.js` |
