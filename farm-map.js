@@ -14,7 +14,7 @@
     return Math.hypot(point.x - start.x - t * dx, point.y - start.y - t * dy);
   };
   function bossObstacles(scene) {
-    if (!preferences.excludeBoss && preferences.targetMode !== "highLevel") return [];
+    if (!preferences.excludeBoss && !["highLevel", "lowLevel"].includes(preferences.targetMode)) return [];
     return [...scene.views.values()].filter((actor) => actor.k === "m" && !actor.dead
       && (actor.st?.cls === "boss" || actor.st?.wb === true) && finite(actor.x) && finite(actor.y));
   }
@@ -104,17 +104,13 @@
     const nearbyAggro = host.inCombat?.() ? eligible.filter((enemy) => enemy.aggro
       && Math.hypot(enemy.x - scene.px, enemy.y - scene.py) < 3.2)
       .sort((a, b) => Math.hypot(a.x - scene.px, a.y - scene.py) - Math.hypot(b.x - scene.px, b.y - scene.py))[0] : null;
-    const isBoss = (enemy) => enemy && (enemy.cls === "boss" || enemy.wb === true);
-    const boss = preferences.targetMode === "bossFirst"
-      ? (isBoss(current) ? current : isBoss(pursuing) ? pursuing : eligible.filter(isBoss)
-        .sort((a, b) => Math.hypot(a.x - scene.px, a.y - scene.py) - Math.hypot(b.x - scene.px, b.y - scene.py))[0]) : null;
     const priority = globalThis.GSTFarmPriority;
     const ordered = [...eligible].sort((a, b) =>
       (priority?.ranked?.() === true ? priority.compare(a, b) : 0)
       || Math.hypot(a.x - scene.px, a.y - scene.py) - Math.hypot(b.x - scene.px, b.y - scene.py));
     const returning = resumeTarget === null ? null : eligible.find((enemy) => enemy.id === resumeTarget);
     if (resumeTarget !== null && !returning) resumeTarget = null;
-    const target = boss ?? current ?? pursuing ?? returning ?? nearbyAggro ?? ordered[0];
+    const target = current ?? pursuing ?? returning ?? nearbyAggro ?? ordered[0];
     if (target?.id === resumeTarget) resumeTarget = null;
     if (target) return { ...target, actor: true };
     if (monsters.length) { message = "Các mục tiêu phù hợp đang được tạm bỏ do cooldown/đường bị chặn; chờ trước khi thử lại."; return null; }

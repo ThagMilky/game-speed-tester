@@ -148,7 +148,7 @@ async function saveFarm(section) {
     if (!Number.isFinite(radius) || radius < 11 || radius > 1000) return;
     patch = { enabled: true, searchScope: farmSearchScope.value === "map" ? "map" : "radius", radius };
   } else if (section === "filter") {
-    const targetMode = ["maxLevel", "minLevel", "range", "boss", "bossFirst", "bossLevel", "highLevel"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
+    const targetMode = ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
     const needsLevel = targetMode === "maxLevel" || targetMode === "minLevel";
     if (needsLevel && !farmTargetLevel.reportValidity()) return;
     const targetLevel = farmTargetLevel.valueAsNumber;
@@ -386,7 +386,13 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   farmAvoidDistance.value = Number.isFinite(farmPreferences?.avoidDistance)
     ? Math.max(1, Math.min(6, farmPreferences.avoidDistance)) : 2;
   farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
-    : ["maxLevel", "minLevel", "range", "boss", "bossFirst", "bossLevel", "highLevel"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
+    : farmPreferences?.targetMode === "bossFirst" ? "bossLevel"
+    : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
+  if (farmPreferences?.targetMode === "bossFirst") {
+    updateFarmPreferences({ targetMode: "bossLevel" }).catch(() => {
+      farmFeedback.textContent = "Chưa lưu được bộ lọc cũ; hãy bấm Lưu lựa chọn quái.";
+    });
+  }
   if (farmTargetMode.value === "boss" && farmExcludeBoss.checked) {
     farmTargetMode.value = "highLevel";
     updateFarmPreferences({ targetMode: "highLevel" }).catch(() => {

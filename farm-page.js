@@ -22,20 +22,22 @@
   GSTHarvest.farmOrigin = (scene) => session?.scene === scene ? { ...session.home } : null;
   // Both features share the same once-per-death request state.
   GSTHarvest.respawn = (scene) => checkRespawn(scene, true);
-  const targetMode = (value) => value === "level" ? "maxLevel"
-    : ["maxLevel", "minLevel", "range", "boss", "bossFirst", "bossLevel", "highLevel"].includes(value) ? value : "all";
+  const targetMode = (value) => value === "level" ? "maxLevel" : value === "bossFirst" ? "bossLevel"
+    : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(value) ? value : "all";
   const isBoss = (enemy) => enemy?.cls === "boss" || enemy?.wb === true;
-  const ranked = () => settings.targetMode === "bossLevel" || settings.targetMode === "highLevel";
+  const ranked = () => ["bossLevel", "highLevel", "lowLevel"].includes(settings.targetMode);
   function comparePriority(a, b) {
     if (settings.targetMode === "bossLevel" && isBoss(a) !== isBoss(b)) return isBoss(a) ? -1 : 1;
-    const left = finite(a?.lv) ? a.lv : -Infinity, right = finite(b?.lv) ? b.lv : -Infinity;
-    return left === right ? 0 : left > right ? -1 : 1;
+    const descending = settings.targetMode !== "lowLevel";
+    const left = finite(a?.lv) ? a.lv : descending ? -Infinity : Infinity;
+    const right = finite(b?.lv) ? b.lv : descending ? -Infinity : Infinity;
+    return left === right ? 0 : descending ? (left > right ? -1 : 1) : (left < right ? -1 : 1);
   }
   globalThis.GSTFarmPriority = { compare: comparePriority, ranked };
   function filterLabel() {
-    if (settings.targetMode === "bossFirst") return "Ưu tiên boss, rồi quái thường";
     if (settings.targetMode === "bossLevel") return "Ưu tiên boss, rồi quái level cao đến thấp";
     if (settings.targetMode === "highLevel") return "Ưu tiên quái thường level cao đến thấp";
+    if (settings.targetMode === "lowLevel") return "Ưu tiên quái thường level thấp đến cao";
     if (settings.targetMode === "boss") return "Chỉ farm boss";
     if (settings.targetMode === "maxLevel") return `Chỉ farm level ≤ ${settings.targetLevel}`;
     if (settings.targetMode === "minLevel") return `Chỉ farm level ≥ ${settings.targetLevel}`;
@@ -45,9 +47,9 @@
   }
   function matchesTarget(enemy) {
     if (settings.avoidEnabled && (!finite(enemy?.lv) || enemy.lv >= settings.avoidLevel)) return false;
-    if ((settings.excludeBoss || settings.targetMode === "highLevel") && isBoss(enemy)) return false;
+    if ((settings.excludeBoss || settings.targetMode === "highLevel" || settings.targetMode === "lowLevel") && isBoss(enemy)) return false;
     if (settings.targetMode === "boss") return enemy?.cls === "boss" || enemy?.wb === true;
-    if (["all", "bossFirst", "bossLevel", "highLevel"].includes(settings.targetMode)) return true;
+    if (["all", "bossLevel", "highLevel", "lowLevel"].includes(settings.targetMode)) return true;
     if (!finite(enemy?.lv)) return false;
     if (settings.targetMode === "range") return enemy.lv >= settings.targetMinLevel && enemy.lv <= settings.targetMaxLevel;
     return settings.targetMode === "maxLevel" ? enemy.lv <= settings.targetLevel : enemy.lv >= settings.targetLevel;
@@ -217,19 +219,7 @@
           }
           return filtered;
         }
-        if (settings.targetMode !== "bossFirst" || typeof this.auto.pick !== "function"
-            || GSTFarmInput.movement(this) || this.now() < this.auto.pauseUntil
-            || this.pendingSkill || this.aiming) return filtered;
-        const time = this.now(), pos = { x: this.px, y: this.py };
-        // Only prioritize bosses that the native controller can select here.
-        // Its picker retains reachability checks and native skip/backoff behavior.
-        const bosses = filtered.filter((enemy) => (enemy.cls === "boss" || enemy.wb === true)
-          && !enemy.dead && enemy.hostile && !(this.auto.skipped.get(enemy.id) > time)
-          && distance(enemy, { x: this.auto.ax, y: this.auto.ay }) < baseRadius
-          && (settings.searchScope === "map" || !session || session.scene !== this
-            || distance(enemy, session.home) < settings.radius));
-        const aggro = host.inCombat() ? bosses.filter((enemy) => enemy.aggro && distance(enemy, pos) < 3.2) : [];
-        return bosses.length && this.auto.pick(host, time, bosses, aggro, pos.x, pos.y) ? bosses : filtered;
+        return filtered;
       } };
     };
     scene.autoHost = wrapper;
@@ -498,18 +488,9 @@
         for (const enemy of ordered) {
           if (s.auto.pick(host, time, [enemy], [], pos.x, pos.y)) {
             shiftToward(s, enemy);
-            message = "Ưu tiên mục tiêu phù hợp theo boss và level; dùng Auto Farm gốc.";
+            message = "Ưu tiên mục tiêu phù hợp theo chế độ boss/level; dùng Auto Farm gốc.";
             return;
           }
-        }
-      }
-      if (settings.targetMode === "bossFirst" && settings.searchScope !== "map") {
-        const bosses = candidates.filter((enemy) => enemy.cls === "boss" || enemy.wb === true);
-        const boss = bosses.length ? s.auto.pick(host, time, bosses, [], pos.x, pos.y) : null;
-        if (boss) {
-          shiftToward(s, boss);
-          message = "Ưu tiên boss phù hợp trong vùng farm; dùng đường đi và chiến đấu gốc.";
-          return;
         }
       }
       if (target) {

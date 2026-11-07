@@ -45,7 +45,8 @@
       avoidDistance: typeof value?.avoidDistance === "number" && Number.isFinite(value.avoidDistance)
         ? Math.max(1, Math.min(6, value.avoidDistance)) : 2,
       targetMode: value?.targetMode === "level" ? "maxLevel"
-        : ["maxLevel", "minLevel", "range", "boss", "bossFirst", "bossLevel", "highLevel"].includes(value?.targetMode) ? value.targetMode : "all",
+        : value?.targetMode === "bossFirst" ? "bossLevel"
+        : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(value?.targetMode) ? value.targetMode : "all",
       targetLevel: Number.isSafeInteger(value?.targetLevel) && value.targetLevel > 0 ? value.targetLevel : 1,
       targetMinLevel: Number.isSafeInteger(value?.targetMinLevel) && value.targetMinLevel > 0 ? value.targetMinLevel : 1,
       targetMaxLevel: Number.isSafeInteger(value?.targetMaxLevel) && value.targetMaxLevel > 0 ? value.targetMaxLevel : 20,
