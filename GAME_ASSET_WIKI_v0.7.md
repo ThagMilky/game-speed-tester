@@ -335,3 +335,46 @@ index.js -> constructs game socket through current window.WebSocket
 8. For online game behavior, distinguish client rendering/commands from server-authoritative physics, HP, damage, stealth, aggro, inventory and macro detection.
 9. Validate script injection/load order for the two root-level WebSocket wrappers whenever an extension or connection bug is involved.
 10. **Current documentation state:** v0.7 is a reconstructed reference edition from past v0.6 findings plus verified new source; a byte-for-byte preservation of v0.6 requires the original v0.6 file to be supplied for a later merge.
+
+## Phaser bundle verification — `phaser-DRI6y8R5.js` (2026-11-07)
+
+**Evidence:** Direct static inspection of the user-provided `phaser-DRI6y8R5.js` snapshot (not a live-site fetch). **Status:** CONFIRMED for this file only. This extends the existing Phaser asset entry; it does not change the 8-asset registry or establish the current deployed build.
+
+- **File size:** 1,205,225 bytes; **SHA-256:** `5920a4fd5e79aa7f0f3f87a914b4591ba68a8a87a0f6a5c3d49005a870a5d7b1`.
+- **Format:** Minified/bundled JavaScript with internal numeric module IDs. The bundle exports `P` and `p` (`export{Ot as P,Dt as p}`); the latter is a frozen module namespace wrapper. The source explicitly declares `VERSION:"3.90.0"` in module `8054`.
+- **Responsibility:** Generic Phaser 3 runtime, **not** the game's Auto Farm, monster selection, quest, inventory, server AI, or WebSocket business logic.
+
+### Confirmed entry points and useful search anchors
+
+| Anchor / module | Confirmed responsibility | When it is relevant |
+| --- | --- | --- |
+| `8054`, `VERSION:"3.90.0"`; `85454` | Phaser constants and root namespace | Confirm engine version / imports |
+| `50127`, `Game.step`, `Game.headlessStep` | Game loop: scene updates plus rendered and headless frame paths | Background stepping, paused game, frame lifecycle |
+| `65898`, `TimeStep`; `43092`, `RequestAnimationFrame` | Frame scheduling, delta smoothing, FPS calculation and optional FPS cap | FPS timing, throttling, frame gaps |
+| `51085`, `VisibilityHandler` | Document visibility and window focus/blur events | Hidden-tab behavior; **not** a guarantee browsers keep running timers |
+| `60903`, `97482`, scene system module | Scene manager / scene lifecycle | Scene startup/shutdown and update event ordering |
+| `71911`, `38058`, `32743` | Camera, camera transforms, zoom, following and culling | Camera position, zoom, world-to-screen rendering |
+| `7003`, `14350` | Input manager and input helpers | Pointer and keyboard integration |
+| `77856`, `27458` | Game objects / textures | Sprite visibility, hiding assets, texture lifecycle |
+| `60421`, `60848`, `9674` | Animation objects / animation manager/state | Visual animation and frame timing |
+| `86054` | Renderer selection and Canvas/WebGL initialization | Rendering compatibility and FPS visual optimizations |
+| `62501`, `44563` | Tilemaps; generic Arcade/Matter physics namespace | Engine maps / physics integration, not proof the game uses engine physics for server movement |
+| `57777`, `23717` | Asset loader and sound subsystem | Loading or audio issues |
+| `43066`, `90291` | Tweens and clocks/timers | Client visual timers and transitions |
+
+### Important verified behavior and boundaries
+
+1. `Game.step(time, delta)` emits engine step events, updates scenes and renders them. `Game.headlessStep(time, delta)` also advances scene updates but skips normal renderer work; it still emits pre/post render events with a `null` renderer. **This is an engine capability, not proof that a particular background worker is active.**
+2. `TimeStep` uses the browser frame scheduler by default, smooths frame deltas when configured, and exposes `actualFps`. `fps.limit` / `fps.target` are engine configuration values; **do not infer that changing Phaser FPS also changes server-approved movement or combat speed**.
+3. `VisibilityHandler` emits hidden/visible and focus/blur lifecycle events. Browser background scheduling and the game's own background automation must be investigated separately.
+4. The camera manager assigns per-camera IDs and `BaseCamera.ignore()` sets a bit in a game object's `cameraFilter`. This explains the rendering mechanism used by the extension's FPS masking logic; changes to `cameraFilter` affect rendering, **not game-world entity existence**.
+5. Camera zoom and `worldView` are engine-rendering values. They do not change monster detection ranges, collision rules, or server-authoritative positions by themselves.
+6. Phaser includes generic collision/physics and tilemap code, but the game's actual navigation and combat rules must still be traced from `WorldScene.js` and `giftcodes-*.js`.
+
+### Feature routing additions
+
+- **Hidden tab / FPS measurements:** First inspect extension `background-page.js`, `fps-page.js`, and game `WorldScene.js` / `index.js`; consult Phaser modules `50127`, `65898`, `51085` only when the engine's frame lifecycle matters.
+- **Hide visuals / simple map / camera:** First inspect extension `fps-page.js`, `fps-map.js`, `fps-minimap*.js` and game scene objects; consult Phaser camera, renderer, texture, and `cameraFilter` implementation if a generic rendering issue is suspected.
+- **Scene lifecycle / event ordering:** Inspect scene hooks in the extension and `WorldScene.js` before reading the Phaser scene-manager implementation.
+
+**Caveats:** Module numbers and bundle export names are build-local. SHA-256 identifies only the uploaded snapshot. Verify the active site's bundle and imports before concluding that this exact file is deployed. Do not vendor/modify the Phaser file for ordinary extension features, and do not add it to the extension runtime manifest.
