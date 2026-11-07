@@ -238,7 +238,16 @@
           <label for="realmEntryMode">Khi tìm thấy cổng</label>
           <select id="realmEntryMode"><option value="enter">Tự đi tới và vào cổng</option><option value="stand">Chỉ đi tới và đứng cạnh cổng</option></select>
           <p class="hint">Ưu tiên cổng hợp lệ trong toàn map, kể cả khi đang giao tranh; tự đi tới thay vì chờ đánh xong. Chế độ đứng cạnh không tương tác. Chế độ vào cổng chỉ gửi yêu cầu khi game cho phép (đang giao tranh có thể bị từ chối). Bạn điều khiển tay thì tạm nhường 3 giây.</p>
-          <p class="hint">Giữ bộ lọc quái hiện tại; muốn chỉ boss bạn tự đổi. Không tự mở rương, bỏ bảo vệ hay thoát bí cảnh. Chết trong bí cảnh có thể mất đồ của lượt đó.</p>
+          <p class="hint">Giữ bộ lọc quái hiện tại; cổng vào không tự mở rương, bỏ bảo vệ hay rời bí cảnh. Chết trong bí cảnh có thể mất đồ của lượt đó.</p>
+          <div class="separated">
+            <p class="field-title">Mục tiêu trong bí cảnh (tự lưu)</p>
+            <label class="check-row"><input id="realmSeekBoss" type="checkbox"><span>Tự tìm boss theo tọa độ bí cảnh (cần bật Auto Farm)</span></label>
+            <p class="hint">Dùng bộ tìm đường Auto Farm hiện có; không tự đổi bộ lọc quái hay bật Auto Farm. Nếu boss chưa được game gửi tọa độ, không tự đoán vị trí.</p>
+            <label class="check-row"><input id="realmSeekExit" type="checkbox"><span>Tự tìm cổng thoát sau khi boss đã hạ và không còn rương được game liệt kê</span></label>
+            <label for="realmExitMode">Khi đến cổng thoát</label>
+            <select id="realmExitMode"><option value="stand">Chỉ đến gần và đứng cạnh cổng (mặc định)</option><option value="leave">Yêu cầu rút lui bằng tương tác gốc của game</option></select>
+            <p class="hint">Chỉ tự tìm cổng thoát trong bí cảnh, sau khi boss hết HP và danh sách rương hiện tại trống. Chế độ rút lui do game quyết định; nhân vật cần đứng yên ngoài giao tranh. Nếu game chưa gửi đủ rương, có thể chưa xác định được đã nhặt hết. Mặc định các tùy chọn này TẮT.</p>
+          </div>
         </fieldset>
         <div class="separated">
           <label class="check-row"><input id="breakSeals" type="checkbox" disabled><span>Tự phá phong ấn khi đánh boss bí cảnh</span></label>

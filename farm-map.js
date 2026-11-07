@@ -199,12 +199,15 @@
   }
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
-  const wanted = () => preferences.enabled && (preferences.searchScope === "map"
-    || (preferences.searchScope === "radius" && preferences.idleMode === "seek"));
+  const seekRealmBoss = (scene) => globalThis.GSTRealm?.seekBoss?.(scene) === true;
+  const wanted = (scene) => (preferences.enabled && (preferences.searchScope === "map"
+    || (preferences.searchScope === "radius" && preferences.idleMode === "seek")))
+    || seekRealmBoss(scene);
   function searchArea(scene) {
     const w = scene.map?.w, h = scene.map?.h;
     if (![w, h].every(finite) || w <= 0 || h <= 0) return null;
-    if (preferences.searchScope === "map") return { minX: 0, minY: 0, maxX: w, maxY: h, home: null };
+    if (preferences.searchScope === "map" || seekRealmBoss(scene))
+      return { minX: 0, minY: 0, maxX: w, maxY: h, home: null };
     const home = globalThis.GSTHarvest?.farmOrigin?.(scene), radius = preferences.radius;
     if (!home || ![home.x, home.y, radius].every(finite) || radius < 11) return null;
     return { minX: Math.max(0, home.x - radius), maxX: Math.min(w, home.x + radius),
@@ -240,6 +243,17 @@
     const monsters = enemies.filter((enemy) => !enemy.dead && enemy.hostile && finite(enemy.id)
       && withinArea(area, enemy));
     const eligible = monsters.filter((enemy) => !(scene.auto.skipped.get(enemy.id) > time) && !deferred.has(enemy.id));
+    // Opt-in realm boss search uses the known encounter coordinates. Actual
+    // attacks still belong to the user's native Auto Farm skill/target filter.
+    // The metadata is NOT a fabricated monster actor.
+    if (seekRealmBoss(scene)) {
+      const metadata = scene.self.realm.inside.boss;
+      if (withinArea(area, metadata)) {
+        const liveBoss = eligible.find((enemy) => isBoss(enemy));
+        if (liveBoss) return { ...liveBoss, actor: true };
+        if (!scouting) return { id: "realm:boss", x: metadata.x, y: metadata.y, actor: false };
+      }
+    }
     // Keep a valid target/journey stable before considering a different actor.
     const current = eligible.find((enemy) => enemy.id === scene.auto.target);
     const pursuing = job?.actor ? eligible.find((enemy) => enemy.id === job.id) : null;
@@ -335,10 +349,10 @@
   function update(host, time, scouting = false) {
     const scene = binding?.scene;
     try {
-      if (!scene || !wanted() || suspended || !allowed(scene) || GSTFarmBehavior.controls(scene)
+      if (!scene || !wanted(scene) || suspended || !allowed(scene) || GSTFarmBehavior.controls(scene)
           || globalThis.GSTFarmBossSafety?.controls(scene)) {
         release();
-        if (!scene?.auto?.on || !wanted() || suspended || (scene && GSTFarmInput.movement(scene)))
+        if (!scene?.auto?.on || !wanted(scene) || suspended || (scene && GSTFarmInput.movement(scene)))
           endHandoff("manual_override");
         return false;
       }
@@ -510,7 +524,7 @@
     resumeTarget = null; handoff = null; resumeReason = null; centerSync = null;
   }
   function attach(scene) {
-    if (!wanted() || suspended) { detach(); return; }
+    if (!wanted(scene) || suspended) { detach(); return; }
     if (binding && binding.scene === scene && binding.auto === scene?.auto && GSTFarmUpdate.attached(scene)) return;
     detach();
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.walk !== "function" || typeof scene.now !== "function"

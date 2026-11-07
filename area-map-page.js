@@ -5,6 +5,13 @@
   const keys = { Period: 190, Comma: 188, Slash: 191, Semicolon: 186, Quote: 222,
     BracketLeft: 219, BracketRight: 221, Backslash: 220, Minus: 189, Equal: 187, Backquote: 192 };
   let shortcut = "Period", farmShortcut = null, suspended = false, ui = null;
+  // Snapshot memory belongs to the map, not to the open/closed dialog.
+  // Per-map caches last until the page session ends, without writing game
+  // coordinates to persistent extension storage.
+  const knownMaps = new Map(), unkeyedMaps = new WeakMap();
+  const mapKey = (map) => typeof map?.scene === "string"
+    ? map.scene + ":" + map.w + "x" + map.h : null;
+  let observer = null;
   const valid = Number.isFinite;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
@@ -31,7 +38,7 @@
     if (!campsPromise) campsPromise = fetch("data/camps.json", { cache: "force-cache" })
       .then((response) => response.ok ? response.json() : null).catch(() => null);
     campsPromise.then((data) => {
-      if (ui !== state || state.map !== map) return;
+      if ((mapKey(map) ? knownMaps.get(mapKey(map)) : unkeyedMaps.get(map)) !== state) return;
       const camps = data?.[map.scene]?.camps;
       if (!Array.isArray(camps)) return;
       for (const entry of camps.slice(0, 2000)) {
@@ -56,15 +63,36 @@
   }
   function setScene(state, scene) {
     state.scene = scene; state.map = scene.map; state.collision = scene.collision;
-    state.camps = []; state.terrain = null; state.terrainFailed = false;
+    state.terrain = null; state.terrainFailed = false;
     state.scanAt = 0; state.markers = []; state.zoom = 1;
     state.center = { x: scene.map.w / 2, y: scene.map.h / 2 };
-    for (const entry of Array.isArray(scene.map.monsters) ? scene.map.monsters : []) {
-      const point = { x: entry?.x ?? entry?.ax, y: entry?.y ?? entry?.ay };
-      if (inside(scene.map, point)) addCamp(state, { ...point, level: level(entry),
-        boss: boss(entry), live: false, source: "map" });
+    state.camps = memoryFor(scene).camps;
+  }
+  function memoryFor(scene) {
+    const map = scene.map;
+    const key = mapKey(map);
+    let memory = key ? knownMaps.get(key) : unkeyedMaps.get(map);
+    if (!memory) {
+      memory = { camps: [], lastScan: -Infinity };
+      if (key) {
+        knownMaps.set(key, memory);
+        if (knownMaps.size > 12) knownMaps.delete(knownMaps.keys().next().value);
+      } else unkeyedMaps.set(map, memory);
+      for (const entry of Array.isArray(map.monsters) ? map.monsters : []) {
+        const point = { x: entry?.x ?? entry?.ax, y: entry?.y ?? entry?.ay };
+        if (inside(map, point)) addCamp(memory, { ...point, level: level(entry),
+          boss: boss(entry), live: false, source: "map" });
+      }
+      loadCamps(memory, map);
     }
-    loadCamps(state, scene.map);
+    return memory;
+  }
+  function remember(scene) {
+    if (!scene?.sys?.isActive?.() || !scene.map || typeof scene.views?.values !== "function") return;
+    const memory = memoryFor(scene), time = performance.now();
+    if (time - memory.lastScan < 850) return;
+    memory.lastScan = time;
+    scan(memory, scene);
   }
   function scan(state, scene) {
     for (const camp of state.camps) { camp.live = false; camp.count = 0; }
@@ -74,8 +102,11 @@
         live: true, source: "seen" });
     }
     // Never retain thousands of old markers as the player explores.
-    if (state.camps.length > 1000) state.camps = state.camps
-      .filter((c) => c.live || c.source === "map" || c.source === "camps").slice(-1000);
+    if (state.camps.length > 1500) {
+      const stable = state.camps.filter((c) => c.source === "map" || c.source === "camps");
+      const recent = state.camps.filter((c) => c.source === "seen").slice(-Math.max(0, 1500 - stable.length));
+      state.camps.splice(0, state.camps.length, ...stable, ...recent);
+    }
   }
   function raster(state) {
     const map = state.map, collision = state.collision;
@@ -158,9 +189,7 @@
       for (let y = yMin; y <= yMax && y < yMin + 160; y++) { ctx.moveTo(left, sy(y)); ctx.lineTo(left + width, sy(y)); }
       ctx.stroke();
     }
-    if (scene && scene.map === map && performance.now() - state.scanAt > 800) {
-      scan(state, scene); state.scanAt = performance.now();
-    }
+    if (scene && scene.map === map) remember(scene);
     if (scene && scene.map === map && scene.auto?.on && valid(scene.px) && valid(scene.py)) {
       const job = globalThis.GSTFarmMap?.journey?.(scene);
       const live = scene.views?.get?.(scene.auto.target);
@@ -204,12 +233,48 @@
       ctx.globalAlpha = 1;
       state.markers.push({ x, y, item: { ...camp, type: "camp" } });
     }
+    // Unlike ordinary enemies, realm metadata is available at any distance,
+    // including sealed objectives, chest positions and exit coordinates.
+    const realm = scene?.map === map ? scene.self?.realm?.inside : null;
+    if (realm) {
+      const markers = [];
+      const b = realm.boss;
+      if (inside(map, b) && valid(b.hp) && b.hp > 0)
+        markers.push({ type: "realm-boss", x: b.x, y: b.y, hp: b.hp, label: "BOSS", color: "#ff576d" });
+      for (const seal of Array.isArray(realm.seals) ? realm.seals : [])
+        if (inside(map, seal) && valid(seal.hits) && seal.hits > 0)
+          markers.push({ type: "seal", x: seal.x, y: seal.y, hits: seal.hits,
+            label: "Ấn " + seal.hits, color: "#f3a967" });
+      for (const chest of Array.isArray(realm.chests) ? realm.chests : [])
+        if (inside(map, chest))
+          markers.push({ type: "chest", x: chest.x, y: chest.y, kind: chest.kind,
+            label: chest.kind === "hidden" ? "Rương ẩn" : chest.kind === "treasure" ? "Linh tàng" : "Rương",
+            color: chest.kind === "hidden" ? "#78e9f2" : "#f6da72" });
+      for (const exit of Array.isArray(realm.exits) ? realm.exits : [])
+        if (Array.isArray(exit) && exit.length >= 2
+            && inside(map, { x: exit[0], y: exit[1] }))
+          markers.push({ type: "exit", x: exit[0], y: exit[1],
+            label: "Thoát", color: "#68b5ff" });
+      for (const marker of markers) {
+        const x = sx(marker.x), y = sy(marker.y);
+        if (x < -75 || x > w + 75 || y < -20 || y > h + 20) continue;
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = marker.color;
+        ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#07101c"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.font = "bold 11px system-ui"; ctx.textBaseline = "middle";
+        const measured = ctx.measureText(marker.label).width;
+        ctx.fillStyle = "#06121ce0"; ctx.fillRect(x + 7, y - 9, measured + 10, 18);
+        ctx.fillStyle = marker.color; ctx.fillText(marker.label, x + 12, y);
+        state.markers.push({ x, y, item: marker });
+      }
+    }
     if (scene?.map === map && valid(scene.px) && valid(scene.py)) {
       ctx.beginPath(); ctx.arc(sx(scene.px), sy(scene.py), 6, 0, Math.PI * 2);
       ctx.fillStyle = "#fffdec"; ctx.fill(); ctx.strokeStyle = "#182832"; ctx.lineWidth = 2; ctx.stroke();
     }
     status.textContent = String(map.title ?? map.scene ?? "Khu vực") + " · " + map.w + "×" + map.h
-      + " ô · " + state.camps.length + " bãi đã biết"
+      + " ô · " + state.camps.length + " bãi đã biết" + (realm ? " · Bí cảnh" : "")
       + (state.terrain && state.terrain.row < state.terrain.h ? " · Đang dựng địa hình…" : "");
   }
   function zoom(state, factor, x, y) {
@@ -244,7 +309,7 @@
     const root = document.createElement("div"); root.id = "gst-area-map";
     const shadow = root.attachShadow({ mode: "closed" });
     shadow.innerHTML = '<style>:host{all:initial!important;position:fixed!important;inset:0!important;z-index:2147483646!important;background:#04090ddd!important;display:flex!important;align-items:center!important;justify-content:center!important;color:#edf6fa;font:13px/1.4 system-ui;pointer-events:auto!important}*{box-sizing:border-box}button{border:1px solid #7f9dad;border-radius:7px;background:#233a48;color:#eef6fa;padding:7px 11px;font:inherit;cursor:pointer}button:hover,button:focus-visible{border-color:#71e7cf}section{display:flex;flex-direction:column;width:min(1100px,96vw);height:min(810px,94vh);background:#111b25;border:1px solid #718e9e;border-radius:13px;overflow:hidden;box-shadow:0 18px 75px #000b}header,footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 13px}header{border-bottom:1px solid #485f6b}footer{border-top:1px solid #485f6b;color:#c2d1da}h2{font-size:16px;margin:0 auto 0 0}#map{flex:1;min-height:0;overflow:hidden;touch-action:none;cursor:grab}#map:active{cursor:grabbing}canvas{width:100%;height:100%;display:block}#legend{padding:0 13px 9px;font-size:11px;color:#a5baca}#detail{flex:1;min-width:180px}@media(max-width:600px){section{height:96vh;width:98vw}h2{width:100%}header,footer{padding:8px}}</style>'
-      + '<section role="dialog" aria-modal="true" aria-label="Bản đồ toàn khu vực"><header><h2>Bản đồ toàn khu vực</h2><button id="less" title="Thu nhỏ">−</button><button id="more" title="Phóng to">＋</button><button id="here">Về nhân vật</button><button id="close">Đóng ×</button></header><div id="map"><canvas aria-label="Bản đồ có vị trí bãi quái"></canvas></div><div id="legend">Trắng: nhân vật · Cam: quái đang thấy · Xám: bãi từng thấy · Tím: boss · Xanh: cổng · Xanh ngọc: tuyến đã có. Kéo để xem, cuộn để phóng to.</div><footer><span id="status">Đang đọc bản đồ…</span><span id="detail">Chạm dấu bãi quái để xem chi tiết.</span></footer></section>';
+      + '<section role="dialog" aria-modal="true" aria-label="Bản đồ toàn khu vực"><header><h2>Bản đồ toàn khu vực</h2><button id="less" title="Thu nhỏ">−</button><button id="more" title="Phóng to">＋</button><button id="here">Về nhân vật</button><button id="close">Đóng ×</button></header><div id="map"><canvas aria-label="Bản đồ có vị trí bãi quái"></canvas></div><div id="legend">Trắng: nhân vật · Cam: quái đang thấy · Xám: đã thấy · Tím: boss · Đỏ: boss bí cảnh · Vàng: rương · Xanh: cổng thoát · Ấn: phong ấn · Xanh ngọc: tuyến đã có. Kéo để xem, cuộn để phóng to.</div><footer><span id="status">Đang đọc bản đồ…</span><span id="detail">Chạm dấu bãi quái để xem chi tiết.</span></footer></section>';
     document.body.append(root);
     const scene = sceneNow(), canvas = shadow.querySelector("canvas");
     ui = { root, shadow, canvas, status: shadow.getElementById("status"), detail: shadow.getElementById("detail"),
@@ -290,8 +355,13 @@
         .filter((m) => m.d < 15).sort((a, b) => a.d - b.d)[0]?.marker?.item;
       if (!found) return;
       const coord = "(" + found.x.toFixed(1) + ", " + found.y.toFixed(1) + ")";
-      ui.detail.textContent = found.type === "gate" ? "Cổng tới " + String(found.to ?? "map khác") + " " + coord
-        : (found.boss ? "Boss" : "Bãi quái") + " · " + (found.level === null ? "Chưa biết level" : "Lv." + found.level)
+      if (found.type === "gate") ui.detail.textContent = "Cổng tới " + String(found.to ?? "map khác") + " " + coord;
+      else if (found.type === "realm-boss") ui.detail.textContent = "Boss bí cảnh · HP còn " + found.hp + " · " + coord;
+      else if (found.type === "seal") ui.detail.textContent = "Phong ấn · còn " + found.hits + " đòn · " + coord;
+      else if (found.type === "chest") ui.detail.textContent = "Rương bí cảnh · " + String(found.kind ?? "chưa rõ loại") + " · " + coord;
+      else if (found.type === "exit") ui.detail.textContent = "Cổng thoát bí cảnh · " + coord;
+      else ui.detail.textContent = (found.boss ? "Boss" : "Bãi quái") + " · "
+        + (found.level === null ? "Chưa biết level" : "Lv." + found.level)
         + " · " + (found.live ? "Đang thấy"
           : found.source === "map" || found.source === "camps" ? "Dữ liệu map" : "Đã thấy trước đó") + " " + coord;
     });
@@ -339,7 +409,17 @@
       farmShortcut = Number.isSafeInteger(e.data.farmKey) ? e.data.farmKey : null;
     } else if (e.data.type === "toggle") toggle();
   });
-  window.addEventListener("pagehide", () => { suspended = true; close(); });
-  window.addEventListener("pageshow", () => { suspended = false; window.postMessage({ channel, type: "ready" }, origin); });
+  observer = setInterval(() => {
+    if (suspended) return;
+    try { remember(sceneNow()); } catch { /* A scene change must never affect gameplay. */ }
+  }, 1100);
+  window.addEventListener("pagehide", () => { suspended = true; close(); clearInterval(observer); observer = null; });
+  window.addEventListener("pageshow", () => {
+    suspended = false;
+    if (!observer) observer = setInterval(() => {
+      try { remember(sceneNow()); } catch { /* Fail closed on a changing scene. */ }
+    }, 1100);
+    window.postMessage({ channel, type: "ready" }, origin);
+  });
   window.postMessage({ channel, type: "ready" }, origin);
 })();

@@ -3,7 +3,9 @@
   const origin = "https://nghichthienky.online", pending = new Map();
   let preferences = null, revision = 0, sequence = 0;
   const normalize = (value) => ({ enabled: value?.enabled === true, allowFarm: value?.allowFarm === true,
-    keepFarm: value?.keepFarm !== false, entryMode: value?.entryMode === "stand" ? "stand" : "enter" });
+    keepFarm: value?.keepFarm !== false, entryMode: value?.entryMode === "stand" ? "stand" : "enter",
+    seekBoss: value?.seekBoss === true, seekExit: value?.seekExit === true,
+    exitMode: value?.exitMode === "leave" ? "leave" : "stand" });
   function configure(value, requestId) {
     preferences = normalize(value);
     if ((preferences.enabled || preferences.keepFarm) && !new URL(location.href).searchParams.has("timer")) {

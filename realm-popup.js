@@ -4,13 +4,18 @@
   const status = document.getElementById("realmStatus"), feedback = document.getElementById("realmFeedback");
   const fields = [["enabled", document.getElementById("realmEnabled")],
     ["allowFarm", document.getElementById("realmAllowFarm")], ["keepFarm", document.getElementById("realmKeepFarm")],
-    ["entryMode", document.getElementById("realmEntryMode")]];
+    ["entryMode", document.getElementById("realmEntryMode")],
+    ["seekBoss", document.getElementById("realmSeekBoss")],
+    ["seekExit", document.getElementById("realmSeekExit")],
+    ["exitMode", document.getElementById("realmExitMode")]];
   let preferences = null, busy = false, saving = false;
   let revision = 0;
   const normalize = (value) => ({ enabled: value?.enabled === true, allowFarm: value?.allowFarm === true,
-    keepFarm: value?.keepFarm !== false, entryMode: value?.entryMode === "stand" ? "stand" : "enter" });
+    keepFarm: value?.keepFarm !== false, entryMode: value?.entryMode === "stand" ? "stand" : "enter",
+    seekBoss: value?.seekBoss === true, seekExit: value?.seekExit === true,
+    exitMode: value?.exitMode === "leave" ? "leave" : "stand" });
   function render() { for (const [key, input] of fields) {
-    if (key === "entryMode") input.value = preferences[key];
+    if (key === "entryMode" || key === "exitMode") input.value = preferences[key];
     else input.checked = preferences[key];
   } }
   async function send(type) {
@@ -23,7 +28,7 @@
     busy = true;
     try {
       const data = await send("gst:realm-status");
-      status.textContent = data.applied ? `Tự vào bí cảnh: ${data.enabled ? "BẬT" : "TẮT"} · ${data.message}`
+      status.textContent = data.applied ? `Bí cảnh: ${data.enabled ? "Tìm cổng vào BẬT" : "Tìm cổng vào TẮT"} · ${data.message}`
         : `Cài đặt chưa được trang xác nhận. ${data.message}`;
     } catch { status.textContent = "Mở tab game; tải lại sau khi cập nhật extension."; }
     finally { busy = false; }
@@ -32,7 +37,7 @@
     if (saving || !preferences) return;
     const previous = preferences;
     preferences = Object.fromEntries(fields.map(([key, input]) =>
-      [key, key === "entryMode" ? input.value : input.checked]));
+      [key, key === "entryMode" || key === "exitMode" ? input.value : input.checked]));
     controls.disabled = true; saving = true;
     try {
       await chrome.storage.local.set({ realmPreferences: preferences });

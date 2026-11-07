@@ -1,10 +1,11 @@
 (() => {
   "use strict";
   const origin = "https://nghichthienky.online";
-  let preferences = { enabled: false, allowFarm: false, keepFarm: true, entryMode: "enter" };
+  let preferences = { enabled: false, allowFarm: false, keepFarm: true, entryMode: "enter",
+    seekBoss: false, seekExit: false, exitMode: "stand" };
   let binding = null, job = null, watcher = null, suspended = false, manualUntil = 0;
   let message = "Tự vào bí cảnh đang tắt.", lastScan = -Infinity;
-  let lastEntry = null;
+  let lastEntry = null, exitJob = null, exitRetryAt = 0, bossAttachAt = -Infinity;
   let lastReviveAt = -Infinity;
   let modalAt = -Infinity, modal = false;
   const skipped = new Map(), finite = Number.isFinite;
@@ -33,6 +34,100 @@
   function manual(scene) {
     return GSTFarmInput.movement(scene) || scene.pendingSkill || scene.aiming || scene.heldAttack;
   }
+  function releaseExit() {
+    if (!exitJob || !binding) { exitJob = null; return; }
+    const scene = binding.scene;
+    GSTNavigation.cancel(scene, exitJob.navigation);
+    if (exitJob.steer && scene.autoX === exitJob.steer[0] && scene.autoY === exitJob.steer[1])
+      scene.autoX = scene.autoY = 0;
+    exitJob = null;
+  }
+  function findExit(host, time, scene) {
+    const inside = scene.self?.realm?.inside, now = performance.now();
+    if (!preferences.seekExit || !inside || !finite(inside.boss?.hp) || inside.boss.hp > 0
+        || !Array.isArray(inside.chests) || inside.chests.length
+        || !Array.isArray(inside.exits) || !inside.exits.length) {
+      releaseExit();
+      return false;
+    }
+    if (!finite(time) || !finite(scene.px) || !finite(scene.py) || !connected(scene)
+        || scene.leaving || scene.self.dead || scene.uiBlocked || scene.harvesting
+        || scene.self.med || scene.self.fish || scene.auto.resting || scene.keyCapture
+        || globalThis.GSTQuest?.active(scene) || globalThis.GSTHarvest?.controls(scene)
+        || globalThis.GSTChest?.controls(scene) || globalThis.GSTFarmSeals?.controls(scene)
+        || manual(scene) || now < manualUntil || modalOpen()
+        || typeof host?.clear !== "function" || typeof host?.steer !== "function") {
+      releaseExit();
+      return false;
+    }
+    const exits = inside.exits.map((point, id) => ({ id, x: point?.[0], y: point?.[1] }))
+      .filter((point) => finite(point.x) && finite(point.y) && point.x >= 0 && point.y >= 0
+        && point.x < scene.map?.w && point.y < scene.map?.h);
+    if (!exits.length) { releaseExit(); message = "Game chưa cung cấp tọa độ cổng thoát hợp lệ."; return false; }
+    if (!exitJob && now < exitRetryAt) return false;
+    const pos = { x: scene.px, y: scene.py };
+    if (!exitJob || !exits.some((point) => point.id === exitJob.id
+        && point.x === exitJob.x && point.y === exitJob.y)) {
+      releaseExit();
+      const closest = exits.sort((a, b) => distance(a, pos) - distance(b, pos))[0];
+      const navigation = Object.assign(Object.create(scene.auto), { path: [], pathAt: -Infinity,
+        lastX: pos.x, lastY: pos.y, stillSince: time, stuckCount: 0, sideUntil: 0,
+        sideX: 0, sideY: 0 });
+      exitJob = { ...closest, navigation, steer: null, startedAt: now, progressAt: now,
+        arrivedAt: null, lastRequestAt: -Infinity, requests: 0 };
+    }
+    const owner = exitJob;
+    const steering = { ...host, steer: (x, y) => {
+      scene.autoX = x; scene.autoY = y; owner.steer = [x, y];
+    } };
+    if (GSTNavigation.progressed(scene, owner, owner.navigation.path, owner.x, owner.y, 0.2))
+      owner.progressAt = now;
+    // Waiting at an exit is intentional; never treat the five-second
+    // stationary requirement (or standing mode) as navigation failure.
+    if (distance(pos, owner) > 2.5
+        && (now - owner.progressAt > 6000 || now - owner.startedAt > 120000)) {
+      releaseExit(); exitRetryAt = now + 6000;
+      message = "Chưa tới được cổng thoát; nhường điều khiển 6 giây.";
+      return false;
+    }
+    if (distance(pos, owner) > 2.5 || !host.clear(pos.x, pos.y, owner.x, owner.y)) {
+      owner.arrivedAt = null;
+      if (!GSTNavigation.walk(scene, owner.navigation, steering, time, pos.x, pos.y, owner.x, owner.y, 2.5)) {
+        releaseExit(); exitRetryAt = now + 6000;
+        message = "Đường tới cổng thoát bị chặn; thử lại sau 6 giây.";
+        return false;
+      }
+      message = "Đang tới cổng thoát bí cảnh · còn " + distance(pos, owner).toFixed(1) + " ô.";
+      return true;
+    }
+    steering.steer(0, 0);
+    owner.arrivedAt ??= now;
+    if (preferences.exitMode === "stand") {
+      message = "Đã đứng cạnh cổng thoát; không tự rút lui.";
+      return true;
+    }
+    if (scene.self.combat || scene.pendingSkill || scene.aiming) {
+      owner.arrivedAt = null;
+      message = "Đang giao tranh; chờ yên ổn trước khi rút lui.";
+      return false;
+    }
+    // Native game requires standing still around five seconds for a safe exit.
+    if (now - owner.arrivedAt < 5000) {
+      message = "Đang đứng yên tại cổng thoát trước khi yêu cầu rút lui.";
+      return true;
+    }
+    if (owner.requests >= 3) {
+      message = "Game chưa xác nhận rút lui sau 3 yêu cầu; đứng cạnh cổng để bạn tự xử lý.";
+      return true;
+    }
+    if (now - owner.lastRequestAt >= 8000) {
+      owner.lastRequestAt = now; owner.requests++;
+      scene.sendMove();
+      scene.realmUI.interact({ action: "realm-exit", arg: "" });
+      message = "Đã yêu cầu rút lui qua tương tác gốc; chờ game xác nhận.";
+    }
+    return true;
+  }
   function modalOpen(fresh = false) {
     if (!fresh && performance.now() - modalAt < 200) return modal;
     modalAt = performance.now();
@@ -51,7 +146,7 @@
         release("Nhường điều khiển đang hoạt động của người chơi/Auto Quest."); return;
       }
       if (scene.self.dead) {
-        if (performance.now() - lastReviveAt >= 1000) {
+        if (preferences.enabled && performance.now() - lastReviveAt >= 1000) {
           lastReviveAt = performance.now();
           release(GSTHarvest.respawn(scene));
         }
@@ -60,6 +155,15 @@
       if (manual(scene)) {
         manualUntil = performance.now() + 3000;
         release("Tạm nhường thao tác tay; tự tiếp tục sau 3 giây.");
+        releaseExit();
+      }
+      if (exitJob && (!scene.self?.realm?.inside || !preferences.seekExit
+          || scene.self.dead || scene.leaving || scene.uiBlocked)) releaseExit();
+      // Map navigation must also attach when the user enables boss scouting
+      // BEFORE enabling native Auto Farm, even if extended farming is off.
+      if (preferences.seekBoss && performance.now() - bossAttachAt >= 1000) {
+        bossAttachAt = performance.now();
+        globalThis.GSTFarmMap?.attach?.(scene);
       }
       if (job && (scene.self.dead || scene.uiBlocked || scene.harvesting || scene.auto.resting
           || scene.self.med || scene.self.fish || (!preferences.allowFarm && scene.auto.on))) release("Đang nhường giao diện/hồi phục hoặc Auto Farm.");
@@ -93,7 +197,7 @@
   function update(host, time) {
     try {
       const scene = binding?.scene;
-      if (!scene || !preferences.enabled || suspended) return false;
+      if (!scene || (!preferences.enabled && !preferences.seekExit) || suspended) return false;
       if (globalThis.GSTQuest?.active(scene)) { release("Nhường cho Auto Quest đang chạy."); return false; }
       // Realm portals preempt target scouting and routine farming while present.
       if (globalThis.GSTHarvest?.controls(scene)) { release("Nhường thao tác thu hoạch đang hoạt động."); return false; }
@@ -106,8 +210,10 @@
           message = "Đã vào bí cảnh; chờ hết bảo vệ ban đầu rồi tiếp tục farm.";
           return true;
         }
-        return false;
+        return findExit(host, time, scene);
       }
+      releaseExit();
+      if (!preferences.enabled) return false;
       if (!realm || !Array.isArray(realm.events) || !finite(realm.now) || !finite(realm.retryAt)) {
         release("Chờ game cung cấp danh sách cổng bí cảnh."); return false;
       }
@@ -201,20 +307,28 @@
       action.onClick();
       message = "Đã yêu cầu vào bí cảnh; chờ game xác nhận.";
       return true;
-    } catch { release("Interface bí cảnh chưa tương thích; đã nhường điều khiển.", true); return false; }
+    } catch {
+      releaseExit();
+      release("Interface bí cảnh chưa tương thích; đã nhường điều khiển.", true);
+      return false;
+    }
   }
   function detach() {
+    releaseExit();
     release("Rời scene hoặc dừng bộ điều khiển; yêu cầu trước đó chưa được xác nhận ở scene mới.");
     if (!binding) return;
     const old = binding; binding = null;
     old.remove(); old.scene.events.off("preupdate", guard);
     old.scene.events.off("shutdown", shutdown); old.scene.events.off("destroy", shutdown);
-    skipped.clear();
+    skipped.clear(); bossAttachAt = -Infinity;
   }
   function shutdown() { detach(); watch(); }
-  function watch() { if (preferences.enabled && !suspended && !binding && watcher === null) watcher = setInterval(discover, 1000); }
+  function watch() {
+    if ((preferences.enabled || preferences.seekExit || preferences.seekBoss) && !suspended && !binding && watcher === null)
+      watcher = setInterval(discover, 1000);
+  }
   function discover() {
-    if (!preferences.enabled || suspended || binding) return;
+    if ((!preferences.enabled && !preferences.seekExit && !preferences.seekBoss) || suspended || binding) return;
     try {
       const scene = sceneNow();
       if (!scene?.sys?.isActive?.() || !scene.self || !connected(scene) || typeof scene.auto?.walk !== "function"
@@ -226,21 +340,32 @@
       binding = { scene, auto: scene.auto, remove };
       scene.events.on("preupdate", guard); scene.events.on("shutdown", shutdown); scene.events.on("destroy", shutdown);
       clearInterval(watcher); watcher = null; lastScan = -Infinity; lastReviveAt = -Infinity;
-      message = "Đang tìm cổng bí cảnh trong toàn map hiện tại.";
+      message = preferences.enabled ? "Đang tìm cổng vào bí cảnh trên toàn map."
+        : preferences.seekExit ? "Đã bật tìm cổng thoát sau khi boss chết và không còn rương."
+          : "Đang theo dõi tùy chọn tìm boss khi Auto Farm bật.";
     } catch { detach(); message = "Chưa gắn được hỗ trợ bí cảnh; chờ game."; watch(); }
   }
   globalThis.GSTRealm = {
-    isEnabled: () => preferences.enabled,
-    controls: (scene) => binding?.scene === scene && job !== null
+    isEnabled: () => preferences.enabled || preferences.seekExit,
+    seekBoss: (scene) => {
+      const boss = scene?.self?.realm?.inside?.boss;
+      return preferences.seekBoss && scene?.auto?.on === true
+        && finite(boss?.hp) && boss.hp > 0 && finite(boss.x) && finite(boss.y);
+    },
+    controls: (scene) => binding?.scene === scene && (job !== null || exitJob !== null)
   };
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:realm:v1") return;
     if (event.data.type === "configure") {
       const value = event.data.preferences;
       preferences = { enabled: value?.enabled === true, allowFarm: value?.allowFarm === true,
-        keepFarm: value?.keepFarm !== false, entryMode: value?.entryMode === "stand" ? "stand" : "enter" };
-      if (!preferences.enabled) { detach(); clearInterval(watcher); watcher = null; message = "Tự vào bí cảnh đang tắt."; }
-      else { watch(); discover(); }
+        keepFarm: value?.keepFarm !== false, entryMode: value?.entryMode === "stand" ? "stand" : "enter",
+        seekBoss: value?.seekBoss === true, seekExit: value?.seekExit === true,
+        exitMode: value?.exitMode === "leave" ? "leave" : "stand" };
+      if (!preferences.enabled && !preferences.seekExit && !preferences.seekBoss) {
+        detach(); clearInterval(watcher); watcher = null; message = "Các tùy chọn tìm cổng/boss đang tắt.";
+      } else { watch(); discover(); }
+      globalThis.GSTFarmMap?.attach?.(sceneNow());
     }
     if (["configure", "status"].includes(event.data.type)) {
       window.postMessage({ channel: "gst:realm-status:v1", requestId: event.data.requestId, enabled: preferences.enabled,
