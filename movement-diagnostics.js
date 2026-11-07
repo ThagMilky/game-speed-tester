@@ -5,7 +5,7 @@
   const uiLogKey = "gst:movement-ui:v1", incidentKey = "gst:movement-incidents:v1";
   const incidentReasons = ["short_frame_gap", "movement_stall", "owner_change", "routing_correction",
     "routing_replan", "routing_stuck", "map_correction", "map_replan", "map_stuck",
-    "portal_combat_yield", "chest_combat_yield", "chest_target_yield", "frame_gap", "correction"];
+    "portal_combat_yield", "chest_combat_yield", "chest_target_yield", "frame_gap", "correction", "target_switch"];
   let binding = null, preferences = {};
   try {
     const previous = JSON.parse(sessionStorage.getItem(uiLogKey) ?? "[]");
@@ -185,6 +185,11 @@
         const row = snapshot(scene, reason, binding.before);
         row.pauseMs = GSTMovementLogSchema.number(extra.pauseMs);
         row.retryMs = GSTMovementLogSchema.number(extra.retryMs);
+        row.fromId = Number.isSafeInteger(extra.fromId) && extra.fromId >= 0 ? extra.fromId : null;
+        row.toId = Number.isSafeInteger(extra.toId) && extra.toId >= 0 ? extra.toId : null;
+        row.switchSource = ["map", "radius"].includes(extra.switchSource) ? extra.switchSource : null;
+        row.switchReason = ["boss_priority", "level_priority", "target_unavailable", "pick_failed"]
+          .includes(extra.switchReason) ? extra.switchReason : null;
         append(row); appendIncident(row);
       } catch { /* A diagnostic must never change Auto Farm behavior. */ }
     },

@@ -110,9 +110,12 @@
       || Math.hypot(a.x - scene.px, a.y - scene.py) - Math.hypot(b.x - scene.px, b.y - scene.py));
     const returning = resumeTarget === null ? null : eligible.find((enemy) => enemy.id === resumeTarget);
     if (resumeTarget !== null && !returning) resumeTarget = null;
-    const target = current ?? pursuing ?? returning ?? nearbyAggro ?? ordered[0];
+    const challenger = ordered[0], position = { x: scene.px, y: scene.py };
+    const better = pursuing && challenger && challenger.id !== pursuing.id
+      ? priority?.switchReason?.(pursuing, challenger, position, time - job.startedAt) : "";
+    const target = better ? challenger : pursuing ?? current ?? returning ?? nearbyAggro ?? challenger;
     if (target?.id === resumeTarget) resumeTarget = null;
-    if (target) return { ...target, actor: true };
+    if (target) return { ...target, actor: true, switchReason: better || "" };
     if (monsters.length) { message = "Các mục tiêu phù hợp đang được tạm bỏ do cooldown/đường bị chặn; chờ trước khi thử lại."; return null; }
     if (preferences.targetMode !== "boss") {
       return scouting ? scout(scene, time) : null;
@@ -247,12 +250,21 @@
           && getComputedStyle(el).visibility !== "hidden");
       }
       if (binding.modal) { release(); return false; }
-      if (!job || job.id !== target.id || job.actor !== target.actor || Math.hypot(job.x - target.x, job.y - target.y) > 1) {
+      if (!job || job.id !== target.id || job.actor !== target.actor) {
+        if (job?.actor && target.actor && job.id !== target.id) {
+          globalThis.GSTMovementDiagnostics?.event?.(scene, "target_switch", {
+            fromId: job.id, toId: target.id, switchSource: "map",
+            switchReason: target.switchReason || "target_unavailable" });
+        }
         release();
         const navigation = Object.assign(Object.create(scene.auto), { path: [], lastX: scene.px, lastY: scene.py,
           stillSince: time, pathAt: -Infinity, stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0 });
         job = { id: target.id, actor: target.actor, scout: target.scout === true, x: target.x, y: target.y, navigation, castAt: scene.castAt, progressAt: time,
-          startedAt: time, steer: null };
+          startedAt: time, steer: null, retargetAt: time };
+      } else if (Math.hypot(job.x - target.x, job.y - target.y) > 1.5 && time - job.retargetAt >= 2) {
+        // The same moving monster must not restart the journey every frame.
+        job.x = target.x; job.y = target.y; job.retargetAt = time;
+        job.navigation.path = []; job.navigation.pathAt = -Infinity;
       }
       if (GSTNavigation.progressed(scene, job, job.navigation.path, job.x, job.y)) job.progressAt = time;
       if (time - job.progressAt > 8 || time - job.startedAt > 120) {

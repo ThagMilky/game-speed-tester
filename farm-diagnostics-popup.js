@@ -42,7 +42,8 @@
     ["position", "pos"], ["serverPosition", "serverPos"], ["targetPosition", "targetPos"],
     ["center", "center"], ["home", "home"], ["steerBefore", "steerBefore"],
     ["steerAfter", "steerAfter"], ["waypoint", "waypoint"], ["scope", "scope"],
-    ["panel", "panel"], ["owners", "owners"]];
+    ["panel", "panel"], ["owners", "owners"], ["fromId", "fromId"], ["toId", "toId"],
+    ["switchSource", "source"], ["switchReason", "switchReason"]];
   const bgFlags = ["hidden", "focused", "auto", "dead", "connected", "reconnecting",
     "displaced", "active", "paused", "loopRunning", "wasDiscarded"];
   const vitalFlags = ["auto", "dead", "hidden", "connected"];

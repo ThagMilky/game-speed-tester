@@ -34,7 +34,14 @@
     const right = finite(b?.lv) ? b.lv : descending ? -Infinity : Infinity;
     return left === right ? 0 : descending ? (left > right ? -1 : 1) : (left < right ? -1 : 1);
   }
-  globalThis.GSTFarmPriority = { compare: comparePriority, ranked };
+  function switchReason(current, challenger, pos, elapsed) {
+    if (!ranked() || !current || !challenger || comparePriority(challenger, current) >= 0) return "";
+    if (settings.targetMode === "bossLevel" && isBoss(challenger) && !isBoss(current)) return "boss_priority";
+    const gain = settings.targetMode === "lowLevel" ? current.lv - challenger.lv : challenger.lv - current.lv;
+    return finite(gain) && gain >= 4 && elapsed >= 3
+      && distance(challenger, pos) + 2 < distance(current, pos) ? "level_priority" : "";
+  }
+  globalThis.GSTFarmPriority = { compare: comparePriority, ranked, switchReason };
   function filterLabel() {
     if (settings.targetMode === "bossLevel") return "Ưu tiên boss, rồi quái level cao đến thấp";
     if (settings.targetMode === "highLevel") return "Ưu tiên quái thường level cao đến thấp";
@@ -206,25 +213,9 @@
         // Chest safety must see actual nearby monsters, not farm-targeting filters.
         gstRawEnemies: () => host.enemies(),
         allEligibleEnemies, enemies: () => {
-        const filtered = allEligibleEnemies();
-        if (this.auto?.resting) return filtered;
-        if (ranked() && typeof this.auto.pick === "function" && !GSTFarmInput.movement(this)
-            && this.now() >= this.auto.pauseUntil && !this.pendingSkill && !this.aiming) {
-          const time = this.now(), pos = { x: this.px, y: this.py };
-          const candidates = filtered.filter((enemy) => !enemy.dead && enemy.hostile && finite(enemy.x) && finite(enemy.y)
-            && !(this.auto.skipped.get(enemy.id) > time) && distance(enemy, { x: this.auto.ax, y: this.auto.ay }) < baseRadius
-            && (settings.searchScope === "map" || !session || session.scene !== this || distance(enemy, session.home) < settings.radius))
-            .sort(comparePriority);
-          while (candidates.length) {
-            const first = candidates[0], tier = candidates.filter((enemy) => comparePriority(first, enemy) === 0);
-            const aggro = host.inCombat() ? tier.filter((enemy) => enemy.aggro && distance(enemy, pos) < 3.2) : [];
-            if (this.auto.pick(host, time, tier, aggro, pos.x, pos.y)) return tier;
-            candidates.splice(0, tier.length);
-          }
-          return filtered;
-        }
-        return filtered;
-      } };
+          const filtered = allEligibleEnemies();
+          return ranked() && !this.auto?.resting ? filtered.sort(comparePriority) : filtered;
+        } };
     };
     scene.autoHost = wrapper;
     filterBinding = { scene, descriptor, wrapper };
@@ -232,6 +223,31 @@
     scene.events.on("destroy", clearFilter);
   }
 
+  function pickRanked(s, host, time, pos, candidates, moveCenter) {
+    const ordered = candidates.filter((enemy) => finite(enemy?.id) && finite(enemy.x) && finite(enemy.y)
+      && !enemy.dead && enemy.hostile && !(s.auto.skipped.get(enemy.id) > time))
+      .sort((a, b) => comparePriority(a, b) || distance(a, pos) - distance(b, pos));
+    const previous = s.rankTarget;
+    const held = previous && ordered.find((enemy) => enemy.id === previous.id);
+    const better = held && ordered[0] && ordered[0].id !== held.id
+      ? switchReason(held, ordered[0], pos, time - previous.at) : "";
+    const first = better ? ordered[0] : held ?? ordered[0];
+    if (!first) { s.rankTarget = null; return false; }
+    for (const enemy of [first, ...ordered.filter((item) => item.id !== first.id)]) {
+      if (!s.auto.pick(host, time, [enemy], [], pos.x, pos.y)) continue;
+      if (previous && previous.id !== enemy.id) {
+        globalThis.GSTMovementDiagnostics?.event?.(s.scene, "target_switch", {
+          fromId: previous.id, toId: enemy.id, switchSource: "radius",
+          switchReason: better && first.id === enemy.id ? better
+            : held ? "pick_failed" : "target_unavailable" });
+      }
+      s.rankTarget = { id: enemy.id, at: previous?.id === enemy.id ? previous.at : time };
+      if (moveCenter) shiftToward(s, enemy);
+      return true;
+    }
+    s.rankTarget = null;
+    return false;
+  }
   function center(s, point) {
     if (s.auto.ax === point.x && s.auto.ay === point.y) return;
     s.auto.ax = point.x;
@@ -436,6 +452,19 @@
       s.at = time;
       const host = s.scene.autoHost();
       if (!settings.enabled) {
+        if (s.auto.moved || time < s.auto.pauseUntil || GSTFarmInput.movement(s.scene)) s.rankTarget = null;
+        if (ranked() && !s.auto.moved && time >= s.auto.pauseUntil && !s.auto.resting
+            && !s.scene.pendingSkill && !s.scene.aiming && !GSTFarmInput.movement(s.scene)
+            && !GSTFarmRouting.blocked(s.scene) && typeof host.pos === "function") {
+          const point = host.pos();
+          const enemies = host.allEligibleEnemies ? host.allEligibleEnemies() : host.enemies();
+          if (Array.isArray(point) && point.length === 2 && point.every(finite) && Array.isArray(enemies)) {
+            const centerPoint = { x: s.auto.ax, y: s.auto.ay };
+            pickRanked(s, host, time, { x: point[0], y: point[1] },
+              enemies.filter((enemy) => finite(enemy?.x) && finite(enemy.y)
+                && distance(enemy, centerPoint) < baseRadius), false);
+          }
+        }
         message = `${filterLabel()}; dùng bán kính gốc của game.`;
         return;
       }
@@ -447,6 +476,7 @@
       if (s.auto.moved || time < s.auto.pauseUntil) {
         restore(s);
         s.reanchor = true;
+        s.rankTarget = null;
         message = "Paused for manual movement.";
         return;
       }
@@ -454,6 +484,7 @@
         s.home = { x: s.auto.ax, y: s.auto.ay };
         s.center = { ...s.home };
         s.reanchor = false;
+        s.rankTarget = null;
       }
       if (s.auto.resting || host.meditating() || s.scene.pendingSkill || s.scene.aiming || GSTFarmRouting.blocked(s.scene)) {
         message = "Waiting for built-in healing, skill or UI handling.";
@@ -488,15 +519,9 @@
         // Probing a full long route with pick() here would repeatedly mark them skipped.
         && !(settings.searchScope === "map" && distance(enemy, pos) > 6));
       const target = candidates.find((enemy) => enemy.id === s.auto.target);
-      if (ranked() && settings.searchScope !== "map") {
-        const ordered = [...candidates].sort((a, b) => comparePriority(a, b) || distance(a, pos) - distance(b, pos));
-        for (const enemy of ordered) {
-          if (s.auto.pick(host, time, [enemy], [], pos.x, pos.y)) {
-            shiftToward(s, enemy);
-            message = "Ưu tiên mục tiêu phù hợp theo chế độ boss/level; dùng Auto Farm gốc.";
-            return;
-          }
-        }
+      if (ranked() && settings.searchScope !== "map" && pickRanked(s, host, time, pos, candidates, true)) {
+        message = "Giữ mục tiêu đã chọn theo ưu tiên boss/level cho tới khi cần đổi.";
+        return;
       }
       if (target) {
         if (distance(target, s.center) >= baseRadius - 0.5) shiftToward(s, target);
@@ -608,7 +633,7 @@
       if (session) {
         if (scopeChanged) { restore(session); session.at = -Infinity; }
         syncFilter(session.scene);
-        if (filterChanged) session.auto.think = 0;
+        if (filterChanged) { session.auto.think = 0; session.rankTarget = null; }
         if (!settings.enabled) restore(session);
       }
       if (!settings.autoRespawn) respawnMessage = "";
