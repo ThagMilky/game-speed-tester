@@ -1,6 +1,6 @@
 # CodeGraph — Game Speed Tester
 
-> Bản đồ code extension trên `main` tại commit `33469b1` (2026-11-07). Tài liệu tĩnh; không phải trình tạo graph tự động hoặc bằng chứng gameplay.
+> Bản đồ code extension trên `main` tại commit `e531d79` (2026-11-07). Tài liệu tĩnh; không phải trình tạo graph tự động hoặc bằng chứng gameplay.
 
 ## 1. Đọc từ đâu?
 
@@ -114,3 +114,48 @@ flowchart TD
 3. Chỉ chỉnh phần đã thay đổi, cập nhật mốc commit/source nếu graph đổi. Không cập nhật graph khi chỉ sửa logic nội bộ và quan hệ module giữ nguyên.
 4. Không suy ra dependency từ tên file, chỉ ghi quan hệ có call site/source. Luôn phân biệt source snapshot và runtime chưa xác minh.
 5. CodeGraph không yêu cầu dependency, generator hay test; test và Git tuân `AGENTS.md` và quyền người dùng cấp cho task hiện tại.
+## 8. Event & Handler Map — tra theo sự kiện
+
+Chỉ liệt kê **điểm kích hoạt quan trọng đã thấy trong source** tại baseline `e531d79`; không phải toàn bộ listener. Tên handler `anonymous/inline` nghĩa là callback viết trực tiếp trong `addEventListener`, không phải một hàm tên riêng. Khi debug, bắt đầu ở handler tương ứng rồi đọc tiếp hàm nó gọi và điều kiện guard.
+
+### 8.1. Thao tác người dùng, cài đặt và cầu nối
+
+| Sự kiện / thông điệp | File → handler | Vai trò chính |
+| --- | --- | --- |
+| Popup bấm **Lưu tốc độ** (`click`) | `popup.js` → `save()` | Kiểm tra input, lưu `preferences` vào `chrome.storage.local`. |
+| Popup bấm **Lưu Auto Farm** (`click`) | `popup.js` → `saveFarm("scope" / "filter" / "behavior")` | Lưu riêng nhóm phạm vi, bộ lọc hoặc hành vi farm. |
+| Phím điều khiển Auto Farm (`keydown`) | `farm-page.js` → `guardFarmKey(event)` | Kiểm tra focus, ô nhập, phím mặc định/tùy chỉnh; gọi đường bật/tắt Auto Farm khi được phép. |
+| Phím điều khiển tay khi đang tự hái (`keydown`) | `harvest-page.js` → `onKey(event)` | Tạm nhường điều khiển sau thao tác di chuyển/chiến đấu/tương tác tay hợp lệ. |
+| Cài đặt đổi (`chrome.storage.onChanged`) | `content.js` → callback inline → `configure()` / `renderOverlay()` | Đồng bộ thay đổi tốc độ và bảng trạng thái từ storage. |
+| Popup hỏi trạng thái/hiển thị (`chrome.runtime.onMessage`) | `content.js` → callback inline | Nhận `gst:status`, `gst:display`; trả lời hoặc chuyển `gst:command:v1` sang MAIN. |
+| `window.message`: `gst:command:v1` | `page.js` → callback inline | Nhận cấu hình tốc độ (`configure`) hoặc chụp trạng thái (`snapshot`); điều khiển timer và `publish()`. |
+| `window.message`: `gst:farm:v1` | `farm-page.js` → callback inline | Nhận `shortcut`/`configure`/`status`, đồng bộ module farm và phát `gst:farm-status:v1`. |
+| `window.message`: `gst:harvest:v1` | `harvest-page.js` → callback inline | Nhận `configure`/`synchronize`/`status`/chẩn đoán; phản hồi `gst:harvest-status:v1`. |
+| `window.message`: `gst:realm:v1` | `realm-page.js` → callback inline; `farm-session.js` → callback inline (`configure`) | Đổi cấu hình vào bí cảnh; cập nhật lựa chọn **giữ Auto Farm** khi đổi map. |
+| `window.message`: `gst:chest:v1` | `chest-page.js` → callback inline | Đổi cấu hình rương và trả trạng thái `gst:chest-status:v1`. |
+| `window.message`: `gst:quest:v1` | `quest-page.js` → callback inline | Nhận `configure`/`start`/`stop`, quản lý danh sách quest và gửi status. |
+| Menu trong game: `click`, `pointer*`, `keydown`, `gst:menu-*` | `game-menu.js` → `open()` / `close()` / `beginEdit()` / `savePosition()` và callbacks inline | Mở/đóng popup nhúng, kéo vị trí, xử lý Esc và thông điệp menu. |
+
+### 8.2. Nhịp game và module sở hữu lượt điều khiển
+
+| Sự kiện / điểm hook | File → handler | Vai trò chính |
+| --- | --- | --- |
+| `scene.events.preupdate` | `page.js` → `onSpeedFrame()` | Hỗ trợ áp tốc độ theo nhịp scene khi cơ chế tương ứng được gắn. |
+| `scene.events.preupdate` | `farm-page.js` → `onFrame()` | Theo dõi và phối hợp logic hỗ trợ Auto Farm trong scene. |
+| `scene.events.preupdate` | `farm-session.js` → `frame()` | Quan sát/khôi phục ý định Auto Farm theo điều kiện phiên. |
+| `scene.events.preupdate` | `harvest-page.js` → `onFrame()` | Điều phối vòng theo dõi thu hoạch và trạng thái nhân vật. |
+| `scene.events.preupdate` | `realm-page.js`, `chest-page.js`, `quest-page.js` → `guard()` | Theo dõi trạng thái scene và khả năng tiếp tục/gỡ điều khiển của từng tính năng. |
+| `scene.auto.update` qua `GSTFarmUpdate.add()` | `farm-update.js` → callback của từng module (xem **mục 4**) | Gọi các handler theo priority; callback trả `true` thì dừng lượt, ngược lại nhường update gốc. **Không phải** DOM event hay một timer riêng cho mỗi tính năng. |
+| `scene.events.postupdate` | `background-page.js` → `frame()` → `monitor()` | Theo dõi nhịp cập nhật scene cho chức năng khi tab nền (khi đã bật và gắn scene). |
+
+### 8.3. Vòng đời trang / scene
+
+| Sự kiện | File → handler | Vai trò chính |
+| --- | --- | --- |
+| `DOMContentLoaded` | `content.js` → `renderOverlay()`; `game-menu.js` → `mount()` | Gắn bảng trạng thái hoặc nút menu khi DOM sẵn sàng (cả hai có đường gọi trực tiếp phù hợp). |
+| `visibilitychange` | `background-page.js` → callback inline → `discover()` / `monitor()` | Kiểm tra lại cơ chế hỗ trợ nhịp nền khi tab đổi trạng thái hiển thị. |
+| `pagehide` | `page.js`, `content.js`, `farm-session.js`, `harvest-page.js`, `realm-page.js`, `chest-page.js`, `quest-page.js`, `game-menu.js` | Tạm dừng hoặc gỡ watcher, wrapper, timer/overlay theo quyền sở hữu từng module. |
+| `pageshow` | Cùng nhóm module trên | Khởi động lại theo dõi hoặc gắn lại khi điều kiện cho phép; **không có nghĩa tự động bật mọi tính năng**. |
+| `scene.events.shutdown` / `destroy` | `farm-page.js` → `onShutdown()`; `realm-page.js`, `chest-page.js`, `quest-page.js` → `shutdown()`; `harvest-page.js` → `onShutdown()` | Dọn handler/quyền điều khiển khi scene kết thúc hoặc bị hủy. |
+
+**Cách tra lỗi nhanh:** (1) Xác định hành động/sự kiện bắt đầu lỗi; (2) tìm handler trong mục 8; (3) đọc guard, hàm gọi tiếp và owner liên quan ở mục 4–5; (4) nếu phụ thuộc hành vi game, đối chiếu source snapshot theo Wiki. Các mô tả ở đây chỉ xác nhận wiring trong source, không khẳng định event đã xảy ra ở runtime hoặc game server chấp nhận hành động.
