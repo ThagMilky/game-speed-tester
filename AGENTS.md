@@ -12,7 +12,7 @@
 
 Áp dụng cho feature, sửa đổi, debug và tối ưu:
 
-1. Đọc AGENTS.md và tham khảo `GAME_ASSET_WIKI_v0.7.md` ở root trước.
+1. Đọc AGENTS.md, tham khảo `CODEGRAPH.md` cho extension và `GAME_ASSET_WIKI_v0.7.md` cho source game.
 2. Xác định hệ thống game liên quan; dùng asset registry/feature routing của Wiki để khoanh vùng bundle cần đọc.
 3. Đọc flow extension hiện có và tái sử dụng source/thông tin đã có trước khi yêu cầu file ngoài.
 4. Không tự động xin source cho mọi task. Nếu extension và Wiki đã đủ để xử lý an toàn, tiếp tục.
@@ -24,6 +24,11 @@ Quy tắc xin source trong AGENTS.md này được ưu tiên hơn các câu tron
 
 Nếu Wiki thiếu: báo rõ, không bịa nội dung hoặc tuyên bố đã đọc. Có thể tiếp tục phần độc lập bằng source sẵn có; nếu task phụ thuộc routing/thông tin trong Wiki thì xin đúng file này trước.
 
+## CodeGraph của extension
+
+- `CODEGRAPH.md` ở root là bản đồ tĩnh entry point, bridge, dependency và ownership của extension. Đọc để khoanh vùng trước khi sửa nhiều module; không thay thế source thật.
+- Cập nhật đúng phần CodeGraph liên quan khi thay đổi module, manifest/popup load order, channel, public API, priority hoặc ownership/dependency. Không sửa CodeGraph chỉ vì đổi logic nội bộ không làm đổi các quan hệ này.
+- Không xem CodeGraph là bằng chứng runtime/live game; Wiki và `game-reference/` vẫn là tài liệu định tuyến source game với giới hạn phiên bản riêng.
 ## Wiki là bản đồ điều hướng, không phải bằng chứng runtime
 
 - Tên class/hàm minified, dependency và hành vi trong Wiki có thể thuộc bản game cũ; không mặc định bản deployed hiện tại giống hệt.
