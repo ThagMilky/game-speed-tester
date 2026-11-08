@@ -228,6 +228,14 @@
   }
 
   function pickRanked(s, host, time, pos, candidates, moveCenter) {
+    // Native combat may already be fighting a nearby attacker. Do not
+    // repeatedly restore an old ranked target while that fight is active.
+    const native = s.scene.views?.get?.(s.auto.target);
+    if (host.inCombat?.() && native?.k === "m" && !native.dead
+        && finite(native.x) && finite(native.y) && distance(native, pos) <= 5.5) {
+      s.rankTarget = null;
+      return true;
+    }
     const ordered = candidates.filter((enemy) => finite(enemy?.id) && finite(enemy.x) && finite(enemy.y)
       && !enemy.dead && enemy.hostile && !(s.auto.skipped.get(enemy.id) > time))
       .sort((a, b) => comparePriority(a, b) || distance(a, pos) - distance(b, pos));

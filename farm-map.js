@@ -6,6 +6,46 @@
   let scanAt = 0, correctionUntil = 0, lastFix;
   let resumeTarget = null, handoff = null, resumeReason = null, centerSync = null;
   const nativeReach = 6.5, handoffReach = 5.5;
+  const hitHooks = new WeakMap();
+  function observeHit(scene, event) {
+    const owner = binding;
+    if (owner?.scene !== scene || event?.e !== "dmg" || event.kind !== "p"
+        || event.id !== scene.you || !finite(event.v) || event.v <= 0
+        || !Number.isSafeInteger(event.by)) return;
+    const actor = scene.views?.get?.(event.by), time = scene.now();
+    // aggro means a monster is aggressive, not that it attacked the player.
+    if (actor?.k !== "m" || actor.dead || actor.st?.cls === "pet" || !finite(time)) return;
+    owner.hitSequence = (owner.hitSequence || 0) + 1;
+    owner.lastHit = { id: event.by, at: time, sequence: owner.hitSequence };
+  }
+  function attachHits(scene) {
+    if (typeof scene.onEvent !== "function") return;
+    let hook = hitHooks.get(scene);
+    if (!hook) {
+      const original = scene.onEvent;
+      const descriptor = Object.getOwnPropertyDescriptor(scene, "onEvent");
+      hook = { original, descriptor, wrapper: null, active: false };
+      hook.wrapper = function (...args) {
+        const result = original.apply(this, args);
+        if (this === scene && hook.active) {
+          try { observeHit(scene, args[0]); } catch { /* Native game events always proceed. */ }
+        }
+        return result;
+      };
+      scene.onEvent = hook.wrapper;
+      hitHooks.set(scene, hook);
+    }
+    hook.active = true;
+  }
+  function detachHits(scene) {
+    const hook = hitHooks.get(scene);
+    if (!hook) return;
+    hook.active = false;
+    if (scene.onEvent !== hook.wrapper) return; // Another owner may wrap ours.
+    if (hook.descriptor) Object.defineProperty(scene, "onEvent", hook.descriptor);
+    else delete scene.onEvent;
+    hitHooks.delete(scene);
+  }
   function routeLog(scene, reason, extra = {}) {
     globalThis.GSTMovementDiagnostics?.event?.(scene, reason, extra);
   }
@@ -17,10 +57,12 @@
     if (!Number.isSafeInteger(scene.auto.target)) return null;
     return Array.isArray(enemies) ? enemies.find((enemy) => enemy.id === scene.auto.target
       && !enemy.dead && enemy.hostile && withinArea(area, enemy)
-      && !(scene.auto.skipped.get(enemy.id) > time)) ?? null : null;
+      && !(scene.auto.skipped.get(enemy.id) > time)
+      && !(deferred.get(enemy.id) > time)) ?? null : null;
   }
   function yieldToNative(scene, time, target, reason) {
     const fromMap = !!job?.actor || handoff?.fromMap === true;
+    if (job?.actor && target.id !== job.id) resumeTarget = job.id;
     if (job?.actor) {
       routeLog(scene, "map_handoff", { targetId: target.id, remaining: range(target, { x: scene.px, y: scene.py }),
         fromOwner: "GSTFarmMap", toOwner: "native_farm_eligible", handoffReason: reason });
@@ -43,22 +85,17 @@
     const distance = target ? range(target, { x: scene.px, y: scene.py }) : Infinity;
     const engaged = target && distance <= nativeReach
       && (distance <= 2.2 || host.clear?.(scene.px, scene.py, target.x, target.y));
-    // When an eligible monster is actually attacking beside the player,
-    // interrupt a distant map pursuit and hand combat back to native Auto Farm.
-    // Do not override an already engaged nearby native target or re-issue
-    // the same handoff every frame.
-    const nearbyAggro = host.inCombat?.() && Array.isArray(enemies)
-      ? enemies.filter((enemy) => Number.isSafeInteger(enemy.id) && !enemy.dead && enemy.hostile
-          && enemy.aggro && withinArea(area, enemy)
-          && !(scene.auto.skipped.get(enemy.id) > time)
-          && range(enemy, { x: scene.px, y: scene.py }) < 3.2)
-        .sort((a, b) => range(a, { x: scene.px, y: scene.py })
-          - range(b, { x: scene.px, y: scene.py }))[0] : null;
-    if (nearbyAggro && (!engaged || distance > 4) && target?.id !== nearbyAggro.id) {
-      if (handoff?.id !== nearbyAggro.id) {
-        if (job?.actor) resumeTarget = job.id;
-        yieldToNative(scene, time, nearbyAggro, "nearby_aggro");
-      }
+    // Hand off only for a confirmed recent hit on the player. The game's
+    // enemy.aggro flag describes monster type, not the attacker.
+    const hit = binding?.lastHit;
+    const recent = hit && hit.sequence !== binding.handledHit
+      && time >= hit.at && time - hit.at <= 1.5 && Array.isArray(enemies)
+      ? enemies.find((enemy) => enemy.id === hit.id && !enemy.dead && enemy.hostile
+          && withinArea(area, enemy) && !(scene.auto.skipped.get(enemy.id) > time)
+          && range(enemy, { x: scene.px, y: scene.py }) < 3.2) : null;
+    if (recent && (!engaged || distance > 4) && target?.id !== recent.id) {
+      binding.handledHit = hit.sequence;
+      if (handoff?.id !== recent.id) yieldToNative(scene, time, recent, "recent_attacker");
       return true;
     }
     // A newly discovered boss may preempt a normal native target, but not an
@@ -78,11 +115,11 @@
       const held = Array.isArray(enemies) && enemies.find((enemy) => enemy.id === handoff.id
         && !enemy.dead && enemy.hostile && withinArea(area, enemy));
       if (!held) endHandoff("target_unavailable");
+      else if (scene.auto.target !== handoff.id) endHandoff("native_target_changed");
       else {
         const heldDistance = range(held, { x: scene.px, y: scene.py });
-        if (engaged && target?.id === held.id) {
-          // The native owner is now within real combat range; do not
-          // re-acquire a route on the next frame.
+        // Only an ongoing fight may hold native ownership indefinitely.
+        if (engaged && target?.id === held.id && host.inCombat?.()) {
           if (job) release();
           return true;
         }
@@ -90,6 +127,7 @@
         if (time - handoff.at >= 2 && Number.isSafeInteger(handoff.id))
           deferred.set(handoff.id, time + 3);
         endHandoff(time - handoff.at >= 2 ? "handoff_timeout" : "native_out_of_range");
+        return false; // Do not immediately re-handoff the expired target.
       }
     }
     if (!engaged) return false;
@@ -271,7 +309,7 @@
       ? priority?.switchReason?.(pursuing, challenger, position, time - job.startedAt) : "";
     const localPriority = !pursuing && current && challenger && challenger.id !== current.id
       ? priority?.switchReason?.(current, challenger, position, 3) : "";
-    const target = better || localPriority ? challenger : pursuing ?? current ?? returning ?? nearbyAggro ?? challenger;
+    const target = better || localPriority ? challenger : pursuing ?? returning ?? current ?? nearbyAggro ?? challenger;
     if (target?.id === resumeTarget) resumeTarget = null;
     if (target) return { ...target, actor: true, switchReason: better || localPriority || "" };
     if (monsters.length) { message = "Các mục tiêu phù hợp đang được tạm bỏ do cooldown/đường bị chặn; chờ trước khi thử lại."; return null; }
@@ -527,7 +565,11 @@
   }
   function detach() {
     release(); const old = binding; binding = null;
-    if (old) { old.remove(); old.removeScout(); old.scene.events.off("preupdate", guard); old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach); }
+    if (old) {
+      old.remove(); old.removeScout(); detachHits(old.scene);
+      old.scene.events.off("preupdate", guard);
+      old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach);
+    }
     retryAt = 0; message = ""; deferred.clear(); explored.clear(); scanAt = 0; lastFix = undefined; correctionUntil = 0;
     resumeTarget = null; handoff = null; resumeReason = null; centerSync = null;
   }
@@ -538,7 +580,9 @@
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.walk !== "function" || typeof scene.now !== "function"
         || typeof scene.views?.values !== "function" || !scene.events?.on || !scene.events.off) return;
     binding = { scene, auto: scene.auto, remove: GSTFarmUpdate.add(scene, 4, (host, time) => update(host, time)),
-      removeScout: GSTFarmUpdate.add(scene, 25, (host, time) => update(host, time, true)), modalAt: -Infinity, modal: false };
+      removeScout: GSTFarmUpdate.add(scene, 25, (host, time) => update(host, time, true)),
+      modalAt: -Infinity, modal: false, lastHit: null, handledHit: null, hitSequence: 0 };
+    attachHits(scene);
     scene.events.on("preupdate", guard); scene.events.on("shutdown", detach); scene.events.on("destroy", detach);
   }
   globalThis.GSTFarmMap = {
