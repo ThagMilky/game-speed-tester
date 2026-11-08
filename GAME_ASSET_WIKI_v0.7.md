@@ -3,7 +3,7 @@
 **Wiki version:** 0.7 (reconstructed reference edition)  
 **Updated:** 2026-11-05  
 **Coverage:** 8 analyzed JavaScript assets (6 application/engine bundles and 2 standalone browser scripts).  
-**Purpose:** English-language navigation reference for Codex. Read this wiki to identify relevant current source files; ask the user for the full current file before implementation. This wiki is not a substitute for source code.
+**Purpose:** English-language source navigation reference. Use this wiki to identify game systems and read relevant files already available in `game-reference/`. Request an updated full file only if the available snapshot is missing, outdated or insufficient, as directed by `AGENTS.md`. This wiki is not a substitute for source code.
 
 > **Provenance notice:** This v0.7 file was reconstructed from the verified findings and asset mapping of v0.6 plus direct inspection of `tm-guard.js` and `tm-direct.js`. The original v0.6 Markdown is not mounted in this session, so this is **not a byte-for-byte append to the earlier document**; it retains the known systems, search anchors, feature routing and caveats but may not contain every paragraph or detail of v0.6. For a lossless merge, provide the previously downloaded v0.6 Wiki. The two new scripts and their hashes were inspected directly in this session.
 
@@ -14,7 +14,9 @@
 - **UNKNOWN:** an important behavior, exact build match or server-side rule not established by the provided assets.
 - Minified identifiers (e.g. `Lf`, `lm`, `Pa`, `Et`, `yt`) and hashed asset names are **build-local**; always search the current version again.
 - Browser `self`, `hp`, `fx`, position and UI fields are **not authoritative proof** of server-computed damage, invulnerability, stealth or NPC aggro.
-- To avoid excessive context, start from the routing table; ask for **only** relevant current complete files. Do not request `phaser-DRI6y8R5.js` for ordinary gameplay modifications.
+- To avoid excessive context, start from the routing table and inspect **only** the relevant repository snapshots first. Request only the particular updated source files when the existing reference is not sufficient. Do not request `phaser-DRI6y8R5.js` for ordinary gameplay modifications.
+
+> **Repository note (2026-11-08):** The eight client snapshots listed here remain reference material; this documentation update does not refresh or verify them against the live game. Extension behavior, owner coordination and shared event hooks are documented in [CODEGRAPH.md](CODEGRAPH.md) from the current repository source, not in this historical game-asset registry.
 
 ## Asset registry
 

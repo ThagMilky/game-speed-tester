@@ -18,6 +18,7 @@ See [GAME_ASSET_WIKI_v0.7.md](../GAME_ASSET_WIKI_v0.7.md) for asset descriptions
 - They may not match the currently deployed game version.
 - Minified identifiers and hashed filenames may change between game builds.
 - Client-side code does not establish server-authoritative behavior.
+- `WorldScene.js` can be used to verify the native Auto Farm target picker, damage-event fields, and movement API for extension integration; do not infer live event availability or server acceptance from this snapshot. For extension module ownership (e.g. `GSTFarmEvents`, `GSTFarmMap`, `GSTMapTravel`), read [CODEGRAPH.md](../CODEGRAPH.md).
 
 ## Available assets
 
@@ -36,5 +37,5 @@ See [GAME_ASSET_WIKI_v0.7.md](../GAME_ASSET_WIKI_v0.7.md) for asset descriptions
 2. Identify the relevant game system.
 3. Read only the necessary reference files.
 4. Cross-check implementation details against the source.
-5. Request updated source only when the available snapshot is insufficient.
+5. Request updated source only when the available snapshot is insufficient; follow [AGENTS.md](../AGENTS.md) for the current repository workflow.
 6. Do not modify or deploy these files.

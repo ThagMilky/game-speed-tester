@@ -1,12 +1,19 @@
 # Game Speed Tester
 
-Source đang ở `C:\Users\Milk\Downloads\Work\game-speed-tester`. Dùng trực tiếp bằng Load unpacked tại `chrome://extensions`; chọn thư mục này, nơi có `manifest.json`. Không cần build, Node hoặc giải nén ZIP. Hiện chưa đóng gói để chia sẻ.
+Source chính: [ThagMilky/game-speed-tester](https://github.com/ThagMilky/game-speed-tester), nhánh `main`. Cài extension trực tiếp từ thư mục chứa `manifest.json` bằng **Load unpacked** tại `chrome://extensions`; không cần build hoặc Node.js. Để chia sẻ với bạn bè, repository đã có GitHub Actions **Release extension** đóng gói ZIP theo phiên bản `manifest.json`; xem [RELEASE.md](RELEASE.md).
 
-Sau khi chuyển từ đường dẫn `outputs\game-speed-tester` cũ, nạp lại extension từ thư mục mới rồi tải lại trang game. Trình duyệt có thể tạo ID khác khi nạp từ đường dẫn mới, nên cài đặt cũ không bảo đảm tự chuyển sang; giữ bản cũ cho tới khi đã đối chiếu cài đặt. Source, lịch sử Git và remote được giữ nguyên. Thư mục `work/` chứa source tham khảo, backup và kết quả QA cũ được giữ cục bộ, không đưa vào commit.
+Nếu chuyển thư mục Load unpacked sang đường dẫn khác, Chrome có thể tạo ID extension khác và không tự chuyển cài đặt cũ. Cập nhật source local theo quy trình Git hiện có, nhấn **Reload** cho extension rồi tải lại tab game. Gói ZIP Release không chứa Git history, tài liệu phát triển hoặc `game-reference/`.
 
 Chrome Extension Manifest V3 phục vụ kiểm thử anti-cheat có sự cho phép, chỉ trên `https://nghichthienky.online/*`. Mặc định **tắt**; tốc độ **đi bộ 3.5**, **bay 2**; mỗi giá trị điều chỉnh trong **1.0–6.0**.
 
-Cập nhật 2026-11-04: bộ lọc ≤ / ≥ / boss và áp dụng tốc độ trước bước di chuyển đã triển khai. Tests/lint/typecheck/browser/gameplay cho các thay đổi này: **NOT RUN**; behavior: **UNVERIFIED**; CI: **NOT CHECKED**. Kết quả 29/29 bên dưới là QA lịch sử trước các thay đổi này, xem [QA-report.md (lịch sử)](https://github.com/ThagMilky/game-speed-tester/blob/036ddbafd3891320039317f7f18dda38db208867/QA-report.md).
+**Mốc tài liệu hiện hành:** đối chiếu source extension trên `main` tại commit `c82bdc5` (2026-11-08), trước commit tài liệu. Các mục ghi ngày cũ bên dưới lưu lịch sử, có thể mô tả giao diện hoặc giới hạn đã được thay thế. Khi nội dung khác nhau, ưu tiên phần tóm tắt này, [CODEGRAPH.md](CODEGRAPH.md), [RELEASE.md](RELEASE.md) và source thật. Đây là đối chiếu tĩnh; **tests/lint/browser/gameplay: NOT RUN; runtime: UNVERIFIED; CI: NOT CHECKED**. Kết quả QA lịch sử không xác minh HEAD hiện tại ([QA-report.md tại commit cũ](https://github.com/ThagMilky/game-speed-tester/blob/036ddbafd3891320039317f7f18dda38db208867/QA-report.md)).
+
+## Tính năng chính theo source hiện tại
+
+- **Popup:** điều hướng theo từng trang ở thanh bên: Tổng quan, Auto Farm, Thu hoạch, Bí cảnh, Auto Quest, Tốc độ & bay, Hình ảnh & FPS, Giao diện và Chẩn đoán. Ghi nhớ trang bằng `popupActivePage`; không còn kéo thả thứ tự panel.
+- **Auto Farm:** sử dụng Auto Farm của game để chiến đấu, hỗ trợ lọc quái theo level/boss, phạm vi bán kính 11–1.000 ô hoặc tìm mục tiêu trên toàn map hiện tại. Khi di chuyển xa, `farm-map.js` dùng đường đi gốc rồi nhường Auto Farm gốc đánh ở gần. Khi game gửi sự kiện sát thương có ID quái gây đòn (`event.by`), bộ tìm quái có thể ưu tiên quái đó ở gần; không suy đoán kẻ đánh chỉ từ cờ `aggro`. `farm-behavior.js` và `farm-map.js` dùng chung `GSTFarmEvents` để theo dõi sự kiện.
+- **Map toàn khu vực:** mở bằng dấu `.` mặc định (có thể đổi phím trong Giao diện); có marker và **Click để di chuyển**. Tọa độ click tính theo lần vẽ canvas cuối cùng, kể cả ngay sau khi zoom. WASD/joystick chủ động hủy hành trình. Tùy chọn quay lại nơi chết lưu điểm trong cùng tab tối đa 2 phút, **không áp dụng trong bí cảnh**. Khả năng đến đích phụ thuộc dữ liệu map/va chạm game.
+- **Phát hành:** GitHub Actions tạo ZIP trong Releases theo `manifest.json`; người nhận giải nén và **Load unpacked**, không tự cập nhật qua Chrome Web Store. Xem [RELEASE.md](RELEASE.md).
 
 ## Cấu trúc
 
@@ -25,7 +32,11 @@ game-speed-tester/
   farm-session.js Giữ ý định Auto Farm theo tab qua tải lại/đổi map
   farm-update.js Một wrapper update chung để bàn giao phong ấn/Tự hái/game gốc
   farm-input.js  Một wrapper click-to-move chung, kiểm tra focus lúc thực thi
-  farm-behavior.js Chờ tại chỗ khi hết quái; né ngắn khi xác định được quái gây sát thương
+  farm-behavior.js Hành vi đứng chờ/né, cung cấp GSTFarmEvents cho scene.onEvent
+  farm-map.js    Tiếp cận quái toàn map, dùng GSTFarmEvents để nhận sát thương
+  farm-boss-safety.js Né cảnh báo boss và phối hợp rút lui HP thấp
+  map-travel-page.js Điều hướng điểm click và quay về nơi chết ngoài bí cảnh
+  area-map-page.js Vẽ bản đồ toàn khu vực và nhận click theo khung đã vẽ
   farm-diagnostics.js Theo dõi các lần bật/tắt và nguyên nhân, không điều khiển farm
   farm-diagnostics-content.js Cầu nối chỉ đọc chẩn đoán, lọc trường xuất
   farm-diagnostics-popup.js Sao chép chẩn đoán theo yêu cầu, không polling riêng
@@ -42,7 +53,7 @@ game-speed-tester/
   popup.html     Giao diện
   popup.css      Định dạng giao diện
   popup.js       Lưu tùy chọn và đọc trạng thái tab đang mở
-  popup-layout.js Kéo thả thứ tự nhóm trong popup, lưu riêng trong storage
+  popup-layout.js Điều hướng trang popup, lưu popupActivePage, không kéo thả panel
   README.md
 ```
 
@@ -58,10 +69,9 @@ Không cần build, npm, backend hoặc dependency.
 
 ## Bố cục popup
 
-Cập nhật giao diện 2026-11-05: menu chia hai tab **Tự động** (Auto Farm, Thu hoạch, Bí cảnh, Auto Quest) và **Cài đặt** (Tốc độ & bay, Hình ảnh & FPS, Giao diện). Nhóm Giao diện gom bảng trạng thái, font và vị trí nút menu. Mỗi lần mở chọn tab Tự động; thứ tự kéo thả đã lưu tiếp tục áp dụng cho các nhóm còn tồn tại. Các nhóm giao diện cũ được gom vào một nhóm nên không còn thứ tự kéo riêng ở cấp ngoài.
+Bố cục hiện hành (đối chiếu `popup.html` và `popup-layout.js`): thanh điều hướng có trang **Tổng quan** và từng trang tính năng; mỗi lần chỉ mở một trang. Nút trên Tổng quan cho phép mở nhanh. `popupActivePage` trong `chrome.storage.local` ghi nhớ trang đã chọn. Trang Auto Farm có thanh Lưu riêng, nút chẩn đoán chuyển sang trang Chẩn đoán nhưng vẫn dùng handler cũ. Không còn kéo thả sắp xếp nhóm bằng `popupPanelOrder`. Giao diện thực tế trong Chrome chưa được kiểm thử ở HEAD này.
 
-Hướng dẫn nằm trong dấu `?` cạnh tùy chọn; bấm để giữ mở, bấm ngoài hoặc Esc để đóng. Trạng thái hoạt động và lỗi vẫn hiện trực tiếp. Trạng thái Auto Farm/phím tắt đưa lên đầu nhóm; chờ/né quái nằm trong phần nâng cao. Các dòng Tự lưu/Lưu chỉ mô tả cách lưu hiện có, không đổi cơ chế tính năng. Bộ đếm Fix vẫn có trong bảng trạng thái tùy chọn trong game, bỏ khỏi phần tổng quan menu. Thay đổi UI này: tests/browser QA NOT RUN; rendered UI UNVERIFIED; CI NOT CHECKED. Phần mô tả bố cục cũ bên dưới là lịch sử trước lần cập nhật này.
-
+### Lịch sử bố cục popup (không còn áp dụng)
 
 Đầu popup có bốn chỉ số: Auto Farm thật của game, trạng thái di chuyển, tốc độ hiện tại và Fix. Bên dưới là sáu nhóm: **Auto Farm**, **Tự hái**, **Tự vào bí cảnh**, **Tốc độ di chuyển**, **Bảng trạng thái**, **Font chữ**. Mỗi lần mở popup, cả sáu nhóm đều thu gọn; bấm tiêu đề để mở. Kéo tay nắm **⠿** ở đầu nhóm lên/xuống và thả khi thấy vạch màu để đổi thứ tự. Ví dụ kéo Tự hái xuống dưới Tốc độ di chuyển để Auto Farm và Tốc độ nằm cạnh nhau. Thứ tự tự lưu riêng ở `popupPanelOrder` trong `chrome.storage.local`, dùng lại khi mở popup; không đổi cài đặt tính năng hoặc tác động game. Có thể dùng bàn phím: đặt focus vào tay nắm rồi bấm Alt + mũi tên lên/xuống.
 

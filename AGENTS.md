@@ -26,7 +26,7 @@ Nếu Wiki thiếu: báo rõ, không bịa nội dung hoặc tuyên bố đã đ
 
 ## CodeGraph của extension
 
-- `CODEGRAPH.md` ở root là bản đồ tĩnh entry point, bridge, dependency và ownership của extension. Đọc để khoanh vùng trước khi sửa nhiều module; không thay thế source thật.
+- `CODEGRAPH.md` ở root là bản đồ tĩnh entry point, bridge, dependency và ownership của extension. Đọc để khoanh vùng trước khi sửa nhiều module; không thay thế source thật. `README.md` mô tả cách sử dụng (các phần ghi ngày cũ là lịch sử), `RELEASE.md` mô tả quy trình ZIP hiện hành; chỉ cập nhật thông tin có chứng cứ từ source/workflow.
 - Cập nhật đúng phần CodeGraph liên quan khi thay đổi module, manifest/popup load order, channel, public API, priority hoặc ownership/dependency. Không sửa CodeGraph chỉ vì đổi logic nội bộ không làm đổi các quan hệ này.
 - Không xem CodeGraph là bằng chứng runtime/live game; Wiki và `game-reference/` vẫn là tài liệu định tuyến source game với giới hạn phiên bản riêng.
 ## Wiki là bản đồ điều hướng, không phải bằng chứng runtime
@@ -92,7 +92,7 @@ Khi hoàn tất: nêu thay đổi, các file extension sửa (gọn), source gam
 - AGENTS.md được tạo từ yêu cầu setup Wiki-driven workflow ngày 2026-11-05.
 - Đã đưa `GAME_ASSET_WIKI_v0.7.md` từ Downloads vào root và đọc toàn bộ ngày 2026-11-05. Giữ nguyên bản gốc trong Downloads và nội dung Wiki.
 - Wiki v0.7 là reconstructed reference edition, có provenance/limitations riêng; các nhãn CONFIRMED trong Wiki là bằng chứng lịch sử của tác giả, không phải xác minh live hoặc toàn bộ source trong lần setup này.
-- Setup workflow đã hoàn tất; chưa triển khai các đề xuất tính năng cũ (auto click, rương, cổng) từ bước setup này.
+- Tại thời điểm setup 2026-11-05, các đề xuất tính năng cũ (auto click, rương, cổng) chưa được triển khai **trong bước setup**. Trạng thái tính năng hiện tại phải đọc từ source và `CODEGRAPH.md`, không lấy câu ghi nhận lịch sử này làm kết luận về HEAD hiện tại.
 
 ## Game source snapshots
 
