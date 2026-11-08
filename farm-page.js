@@ -238,7 +238,16 @@
     const first = better ? ordered[0] : held ?? ordered[0];
     if (!first) { s.rankTarget = null; return false; }
     for (const enemy of [first, ...ordered.filter((item) => item.id !== first.id)]) {
-      if (!s.auto.pick(host, time, [enemy], [], pos.x, pos.y)) continue;
+      const selected = s.auto.pick(host, time, [enemy], [], pos.x, pos.y);
+      if (!selected || selected.id !== enemy.id) continue;
+      // Native pick() only returns a candidate; native update() normally
+      // applies target, chaseSince and path on a target switch.
+      if (s.auto.target !== selected.id) {
+        s.auto.target = selected.id;
+        s.auto.chaseSince = time;
+        s.auto.path = [];
+        s.auto.think = 0;
+      }
       if (previous && previous.id !== enemy.id) {
         globalThis.GSTMovementDiagnostics?.event?.(s.scene, "target_switch", {
           fromId: previous.id, toId: enemy.id, switchSource: "radius",

@@ -43,6 +43,24 @@
     const distance = target ? range(target, { x: scene.px, y: scene.py }) : Infinity;
     const engaged = target && distance <= nativeReach
       && (distance <= 2.2 || host.clear?.(scene.px, scene.py, target.x, target.y));
+    // When an eligible monster is actually attacking beside the player,
+    // interrupt a distant map pursuit and hand combat back to native Auto Farm.
+    // Do not override an already engaged nearby native target or re-issue
+    // the same handoff every frame.
+    const nearbyAggro = host.inCombat?.() && Array.isArray(enemies)
+      ? enemies.filter((enemy) => Number.isSafeInteger(enemy.id) && !enemy.dead && enemy.hostile
+          && enemy.aggro && withinArea(area, enemy)
+          && !(scene.auto.skipped.get(enemy.id) > time)
+          && range(enemy, { x: scene.px, y: scene.py }) < 3.2)
+        .sort((a, b) => range(a, { x: scene.px, y: scene.py })
+          - range(b, { x: scene.px, y: scene.py }))[0] : null;
+    if (nearbyAggro && (!engaged || distance > 4) && target?.id !== nearbyAggro.id) {
+      if (handoff?.id !== nearbyAggro.id) {
+        if (job?.actor) resumeTarget = job.id;
+        yieldToNative(scene, time, nearbyAggro, "nearby_aggro");
+      }
+      return true;
+    }
     // A newly discovered boss may preempt a normal native target, but not an
     // actively engaged close-range fight.
     const ranked = globalThis.GSTFarmPriority;

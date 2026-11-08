@@ -227,6 +227,11 @@
       }
       return;
     }
+    if ((job || pending) && GSTFarmInput.movement(scene)) {
+      // postupdate still runs when native WorldScene skips auto.update
+      // while a skill is queued or aimed: manual input must cancel the trip.
+      release("Đã hủy hành trình vì bạn điều khiển nhân vật.", true);
+    }
     if (seenDead) { seenDead = false; revivedAt = performance.now(); }
     // Native WorldScene skips auto.update while a skill is queued/aimed.
     // Freeze journey timeout even on frames where our update callback cannot run.
