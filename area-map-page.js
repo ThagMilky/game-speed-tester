@@ -448,19 +448,21 @@
   }
   function toggle() { if (ui) close(); else open(); }
   function keyHandler(e) {
-    if (suspended || e.isComposing || e.repeat || !e.isTrusted) return;
+    if (suspended || e.isComposing || !e.isTrusted) return;
     if (ui) {
       if (e.key === "Tab" || e.ctrlKey || e.altKey || e.metaKey) return;
-      if (e.key === "Enter" || e.key === " ") {
+      if (!e.repeat && (e.key === "Enter" || e.key === " ")) {
         const focused = ui.shadow.activeElement;
         if (focused?.tagName === "BUTTON" || (focused?.tagName === "INPUT" && focused.type === "checkbox")) {
           e.preventDefault(); e.stopImmediatePropagation(); focused.click(); return;
         }
       }
       e.preventDefault(); e.stopImmediatePropagation();
-      if (e.key === "Escape" || e.code === shortcut || (shortcut === "Period" && e.code === "NumpadDecimal")) close();
+      if (!e.repeat && (e.key === "Escape" || e.code === shortcut
+          || (shortcut === "Period" && e.code === "NumpadDecimal"))) close();
       return;
     }
+    if (e.repeat) return;
     if (!(e.code === shortcut || (shortcut === "Period" && e.code === "NumpadDecimal"))
         || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey
         || document.getElementById("gst-game-menu")?.dataset.open === "true") return;

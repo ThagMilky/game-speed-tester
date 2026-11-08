@@ -65,6 +65,9 @@
       // update(): an imminent boss hit must not be silently ignored.
       || scene.heldAttack || scene.harvesting
       || scene.auto.resting || scene.self.med || scene.self.fish || scene.keyCapture
+      // Let the native Auto Farm drink pills before considering boss movement.
+      || (globalThis.GSTMapTravel?.active?.(scene)
+        && globalThis.GSTHarvest?.needsRecovery?.(scene))
       || globalThis.GSTQuest?.active?.(scene)
       || ["GSTRealm", "GSTChest", "GSTHarvest"].some((name) => globalThis[name]?.controls?.(scene))
       || (scene.self.realm?.inside?.protection ?? 0) > 0;

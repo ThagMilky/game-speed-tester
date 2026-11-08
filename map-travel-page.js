@@ -210,18 +210,28 @@
               && lastAlive.profile === profile && Date.now() - lastAlive.at < 10000) {
             pending = { x: lastAlive.x, y: lastAlive.y, map, profile, at: Date.now() };
             savePending();
-          } else { pending = null; savePending(); }
+          } else if (!(preferences.returnDeath && pending && pending.map === map
+              && pending.profile === profile && inside(scene, pending)
+              && Date.now() - pending.at >= 0 && Date.now() - pending.at < 120000)) {
+            // Do not erase a valid same-tab destination restored during death.
+            pending = null; savePending();
+          }
         }
       }
       return;
     }
     if (seenDead) { seenDead = false; revivedAt = performance.now(); }
+    // Farm-combat can finish this tick before our update callback runs.
+    // Observe native meditation/resting on postupdate to freeze journey timers.
+    if (job && (scene.auto?.resting || scene.self.med)) yieldTravel(scene, job);
     if (pending) {
       if (!preferences.returnDeath || !inside(scene, pending)
           || pending.map !== map || pending.profile !== profile
           || Date.now() - pending.at < 0 || Date.now() - pending.at >= 120000 || inRealm) {
         pending = null; savePending();
-      } else if (!job && connected(scene) && !scene.leaving && !GSTFarmInput.movement(scene)) {
+      } else if (GSTFarmInput.movement(scene)) {
+        release("Đã hủy quay lại vị trí chết vì bạn điều khiển nhân vật.", true);
+      } else if (!job && connected(scene) && !scene.leaving) {
         revivedAt ??= performance.now();
         if (performance.now() - revivedAt >= 2000 && !(scene.auto?.deadAt > 0)) {
           const reason = begin(scene, pending, "return");
