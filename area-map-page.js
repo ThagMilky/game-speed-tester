@@ -453,7 +453,7 @@
       if (e.key === "Tab" || e.ctrlKey || e.altKey || e.metaKey) return;
       if (e.key === "Enter" || e.key === " ") {
         const focused = ui.shadow.activeElement;
-        if (focused?.tagName === "BUTTON") {
+        if (focused?.tagName === "BUTTON" || (focused?.tagName === "INPUT" && focused.type === "checkbox")) {
           e.preventDefault(); e.stopImmediatePropagation(); focused.click(); return;
         }
       }

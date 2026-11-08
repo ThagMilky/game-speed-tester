@@ -100,6 +100,14 @@
       : "Đang đi tới điểm đã chọn trên bản đồ.";
     return message;
   }
+  function yieldTravel(scene, current) {
+    if (current.steer && scene.autoX === current.steer[0] && scene.autoY === current.steer[1])
+      scene.autoX = scene.autoY = 0;
+    current.steer = null;
+    const now = performance.now();
+    current.pausedAt ??= now;
+    current.progressAt = now;
+  }
   function update(host, time) {
     const scene = binding?.scene, current = job;
     if (!current || current.scene !== scene || binding.auto !== this) return false;
@@ -123,22 +131,21 @@
     }
     // Give native combat, healing and skill execution room to finish first.
     if (scene.auto.resting || scene.self.combat || scene.pendingSkill || scene.aiming
-        || scene.heldAttack || scene.dashT > 0) {
-      if (current.steer && scene.autoX === current.steer[0] && scene.autoY === current.steer[1])
-        scene.autoX = scene.autoY = 0;
-      current.steer = null;
-      current.progressAt = performance.now();
+        || scene.heldAttack || scene.dashT > 0
+        || (scene.auto.on && globalThis.GSTHarvest?.needsRecovery?.(scene))) {
+      yieldTravel(scene, current);
       return false;
     }
     if (scene.uiBlocked || scene.keyCapture || scene.overlay?.dialogOpen
         || scene.harvesting || scene.self.med || scene.self.fish
         || (scene.self.realm?.inside?.protection ?? 0) > 0
         || modalOpen()) {
-      if (current.steer && scene.autoX === current.steer[0] && scene.autoY === current.steer[1])
-        scene.autoX = scene.autoY = 0;
-      current.steer = null;
-      current.progressAt = performance.now();
+      yieldTravel(scene, current);
       return true;
+    }
+    if (current.pausedAt !== undefined) {
+      current.startedAt += performance.now() - current.pausedAt;
+      current.pausedAt = undefined;
     }
     const pos = { x: scene.px, y: scene.py }, goal = current.destination;
     const distance = Math.hypot(goal.x - pos.x, goal.y - pos.y);
@@ -281,6 +288,7 @@
     },
     cancel() { release("Đã dừng hành trình theo yêu cầu.", true); },
     active: (scene) => !!job && job.scene === scene,
+    controls: (scene) => !!job && job.scene === scene,
     snapshot: (scene) => job?.scene === scene ? {
       x: job.destination.x, y: job.destination.y, mode: job.mode,
       path: Array.isArray(job.navigation.path) ? job.navigation.path.slice(0, 80) : []

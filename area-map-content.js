@@ -2,12 +2,15 @@
   "use strict";
   const origin = "https://nghichthienky.online", channel = "gst:area-map:v1";
   const allowed = /^(?:Period|Comma|Slash|Semicolon|Quote|BracketLeft|BracketRight|Backslash|Minus|Equal|Backquote|Key[A-Z]|Digit[0-9]|F(?:[1-9]|10))$/;
-  let shortcut = null, farmShortcut = null, mapOptions = null, version = 0;
+  let shortcut = null, farmShortcut = null, mapOptions = null, loaded = false;
+  const changedKeys = new Set();
   const defaults = { npcs: true, resources: true, gates: true, portals: true,
     exits: true, clickMove: false, returnDeath: false };
   const normalize = (value) => Object.fromEntries(Object.keys(defaults)
     .map((key) => [key, typeof value?.[key] === "boolean" ? value[key] : defaults[key]]));
   function configure() {
+    // Never overwrite the pending death destination with defaults before storage loads.
+    if (!loaded) return;
     const code = shortcut?.code;
     window.postMessage({ channel, type: "configure",
       code: typeof code === "string" && allowed.test(code) && !["KeyM", "KeyV", "F5"].includes(code)
@@ -22,7 +25,6 @@
     else if (event.data.type === "options" && event.data.options
         && Object.keys(defaults).every((key) => typeof event.data.options[key] === "boolean")) {
       mapOptions = normalize(event.data.options);
-      version++;
       chrome.storage.local.set({ areaMapOptions: mapOptions }).catch(() => configure());
     }
   });
@@ -33,17 +35,17 @@
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local") return;
-    if (changes.areaMapShortcut) { version++; shortcut = changes.areaMapShortcut.newValue; }
-    if (changes.farmShortcut) { version++; farmShortcut = changes.farmShortcut.newValue; }
-    if (changes.areaMapOptions) { version++; mapOptions = changes.areaMapOptions.newValue; }
+    if (changes.areaMapShortcut) { changedKeys.add("areaMapShortcut"); shortcut = changes.areaMapShortcut.newValue; }
+    if (changes.farmShortcut) { changedKeys.add("farmShortcut"); farmShortcut = changes.farmShortcut.newValue; }
+    if (changes.areaMapOptions) { changedKeys.add("areaMapOptions"); mapOptions = changes.areaMapOptions.newValue; }
     if (changes.areaMapShortcut || changes.farmShortcut || changes.areaMapOptions) configure();
   });
   window.addEventListener("pageshow", configure);
-  const current = version;
   chrome.storage.local.get(["areaMapShortcut", "farmShortcut", "areaMapOptions"]).then((saved) => {
-    if (version !== current) return;
-    shortcut = saved.areaMapShortcut; farmShortcut = saved.farmShortcut;
-    mapOptions = saved.areaMapOptions;
+    if (!changedKeys.has("areaMapShortcut")) shortcut = saved.areaMapShortcut;
+    if (!changedKeys.has("farmShortcut")) farmShortcut = saved.farmShortcut;
+    if (!changedKeys.has("areaMapOptions")) mapOptions = saved.areaMapOptions;
+    loaded = true;
     configure();
-  }).catch(() => configure());
+  }).catch(() => { loaded = true; configure(); });
 })();

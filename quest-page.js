@@ -77,6 +77,12 @@
     const s = binding?.scene;
     if (!run || !s) return false;
     try {
+      // The map's higher-priority owner may return false while native Auto Farm heals.
+      // Keep the quest timer paused even on those native-recovery frames.
+      if (globalThis.GSTMapTravel?.active(s)) {
+        run.pausedAt ??= time;
+        return false;
+      }
       if (sceneNow() !== s || s.auto !== binding.auto || !connected(s) || s.leaving || !s.self || !s.profile || s.self.dead
           || s.map.scene !== run.map || s.profile.name !== run.name) {
         stop("Auto Quest đã dừng: chết, mất kết nối, đổi nhân vật hoặc đổi map. Bấm Bắt đầu để chạy lại."); return false;
@@ -199,6 +205,8 @@
       if (sceneNow() !== s || s.auto !== binding.auto || !s.sys?.isActive?.() || !connected(s) || s.leaving
           || !s.self || !s.profile || s.self.dead || s.map?.scene !== run.map || s.profile.name !== run.name) {
         stop("Auto Quest dừng do nhân vật, map hoặc kết nối thay đổi; không tự bật lại.");
+      } else if (globalThis.GSTMapTravel?.active(s)) {
+        run.pausedAt ??= s.now();
       } else if (run.phase === "farm" && !s.auto.on) stop("Auto Farm đã tắt; Auto Quest cũng dừng.");
     } catch { stop("Interface quest thay đổi; đã dừng Auto Quest."); }
   }
