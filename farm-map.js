@@ -6,7 +6,6 @@
   let scanAt = 0, correctionUntil = 0, lastFix;
   let resumeTarget = null, handoff = null, resumeReason = null, centerSync = null;
   const nativeReach = 6.5, handoffReach = 5.5;
-  const hitHooks = new WeakMap();
   function observeHit(scene, event) {
     const owner = binding;
     if (owner?.scene !== scene || event?.e !== "dmg" || event.kind !== "p"
@@ -17,34 +16,6 @@
     if (actor?.k !== "m" || actor.dead || actor.st?.cls === "pet" || !finite(time)) return;
     owner.hitSequence = (owner.hitSequence || 0) + 1;
     owner.lastHit = { id: event.by, at: time, sequence: owner.hitSequence };
-  }
-  function attachHits(scene) {
-    if (typeof scene.onEvent !== "function") return;
-    let hook = hitHooks.get(scene);
-    if (!hook) {
-      const original = scene.onEvent;
-      const descriptor = Object.getOwnPropertyDescriptor(scene, "onEvent");
-      hook = { original, descriptor, wrapper: null, active: false };
-      hook.wrapper = function (...args) {
-        const result = original.apply(this, args);
-        if (this === scene && hook.active) {
-          try { observeHit(scene, args[0]); } catch { /* Native game events always proceed. */ }
-        }
-        return result;
-      };
-      scene.onEvent = hook.wrapper;
-      hitHooks.set(scene, hook);
-    }
-    hook.active = true;
-  }
-  function detachHits(scene) {
-    const hook = hitHooks.get(scene);
-    if (!hook) return;
-    hook.active = false;
-    if (scene.onEvent !== hook.wrapper) return; // Another owner may wrap ours.
-    if (hook.descriptor) Object.defineProperty(scene, "onEvent", hook.descriptor);
-    else delete scene.onEvent;
-    hitHooks.delete(scene);
   }
   function routeLog(scene, reason, extra = {}) {
     globalThis.GSTMovementDiagnostics?.event?.(scene, reason, extra);
@@ -566,7 +537,7 @@
   function detach() {
     release(); const old = binding; binding = null;
     if (old) {
-      old.remove(); old.removeScout(); detachHits(old.scene);
+      old.remove(); old.removeScout(); old.removeHits?.();
       old.scene.events.off("preupdate", guard);
       old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach);
     }
@@ -582,7 +553,7 @@
     binding = { scene, auto: scene.auto, remove: GSTFarmUpdate.add(scene, 4, (host, time) => update(host, time)),
       removeScout: GSTFarmUpdate.add(scene, 25, (host, time) => update(host, time, true)),
       modalAt: -Infinity, modal: false, lastHit: null, handledHit: null, hitSequence: 0 };
-    attachHits(scene);
+    binding.removeHits = GSTFarmEvents.add(scene, (event) => observeHit(scene, event));
     scene.events.on("preupdate", guard); scene.events.on("shutdown", detach); scene.events.on("destroy", detach);
   }
   globalThis.GSTFarmMap = {

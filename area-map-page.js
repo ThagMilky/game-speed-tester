@@ -69,7 +69,7 @@
   function setScene(state, scene) {
     state.scene = scene; state.map = scene.map; state.collision = scene.collision;
     state.terrain = null; state.terrainFailed = false;
-    state.scanAt = 0; state.markers = []; state.zoom = 1;
+    state.scanAt = 0; state.markers = []; state.zoom = 1; state.painted = null;
     state.center = { x: scene.map.w / 2, y: scene.map.h / 2 };
     state.camps = memoryFor(scene).camps;
   }
@@ -325,6 +325,10 @@
       + (state.terrain && state.terrain.row < state.terrain.h ? " · Đang dựng địa hình…" : "")
       + (globalThis.GSTMapTravel?.status() ? " · " + GSTMapTravel.status() : "");
     if (state.stopTravel) state.stopTravel.disabled = !globalThis.GSTMapTravel?.active(scene);
+    // Store the transform actually shown on canvas, not the newer state
+    // calculated by wheel/buttons before the throttled redraw.
+    state.painted = { scene, map, width: w, height: h,
+      center: { ...state.center }, zoom: state.zoom };
   }
   function zoom(state, factor, x, y) {
     const w = state.canvas.clientWidth, h = state.canvas.clientHeight, map = state.map;
@@ -362,7 +366,7 @@
     document.body.append(root);
     const scene = sceneNow(), canvas = shadow.querySelector("canvas");
     ui = { root, shadow, canvas, status: shadow.getElementById("status"), detail: shadow.getElementById("detail"),
-      scene: null, map: null, collision: null, center: { x: 0, y: 0 }, zoom: 1,
+      scene: null, map: null, collision: null, center: { x: 0, y: 0 }, zoom: 1, painted: null,
       camps: [], markers: [], scanAt: 0, terrain: null, terrainFailed: false,
       raf: 0, lastPaint: -Infinity, drag: null, stopTravel: shadow.getElementById("stopTravel") };
     if (scene?.sys?.isActive?.() && scene.map && scene.collision) setScene(ui, scene);
@@ -409,17 +413,19 @@
       const drag = ui?.drag;
       if (!drag || drag.id !== e.pointerId) return;
       ui.drag = null;
-      const scene = sceneNow();
+      const scene = sceneNow(), painted = ui.painted;
       if (drag.distance > 6 || !scene?.sys?.isActive?.() || !scene.map || !scene.collision
           || ui.scene !== scene || ui.map !== scene.map || drag.scene !== scene || drag.map !== scene.map
-          || !valid(ui.map.w) || !valid(ui.map.h) || ui.map.w <= 0 || ui.map.h <= 0
-          || !canvas.clientWidth || !canvas.clientHeight) return;
-      const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
+          || !painted || painted.scene !== scene || painted.map !== ui.map
+          || !valid(ui.map.w) || !valid(ui.map.h) || ui.map.w <= 0 || ui.map.h <= 0) return;
+      const rect = canvas.getBoundingClientRect();
+      if (Math.abs(rect.width - painted.width) > 0.5 || Math.abs(rect.height - painted.height) > 0.5) return;
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
       const found = ui.markers.map((m) => ({ marker: m, d: Math.hypot(m.x - x, m.y - y) }))
         .filter((m) => m.d < 15).sort((a, b) => a.d - b.d)[0]?.marker?.item;
-      const unit = Math.min(canvas.clientWidth / ui.map.w, canvas.clientHeight / ui.map.h) * ui.zoom;
-      const point = found ?? { x: ui.center.x + (x - canvas.clientWidth / 2) / unit,
-        y: ui.center.y - (y - canvas.clientHeight / 2) / unit };
+      const unit = Math.min(painted.width / ui.map.w, painted.height / ui.map.h) * painted.zoom;
+      const point = found ?? { x: painted.center.x + (x - painted.width / 2) / unit,
+        y: painted.center.y - (y - painted.height / 2) / unit };
       if (!inside(ui.map, point)) return;
       if (!found) ui.detail.textContent = "Điểm " + point.x.toFixed(1) + ", " + point.y.toFixed(1);
       else {

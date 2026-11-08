@@ -304,6 +304,38 @@
       return true;
     } catch { return false; } // Never interrupt native farming on malformed data.
   }
+  // Shared event observer: farm behavior and full-map targeting must not
+  // independently wrap scene.onEvent and strand each other's old wrappers.
+  const eventHooks = new WeakMap();
+  globalThis.GSTFarmEvents = {
+    add(scene, callback) {
+      let entry = eventHooks.get(scene);
+      if (!entry) {
+        const original = scene.onEvent;
+        if (typeof original !== "function") throw new Error("Game event handler unavailable");
+        const descriptor = Object.getOwnPropertyDescriptor(scene, "onEvent");
+        entry = { descriptor, callbacks: new Map(), wrapper: null };
+        entry.wrapper = function (...args) {
+          const result = original.apply(this, args);
+          if (this === scene) for (const observer of entry.callbacks.values()) {
+            try { observer(args[0]); } catch { /* Never interrupt native events. */ }
+          }
+          return result;
+        };
+        scene.onEvent = entry.wrapper;
+        eventHooks.set(scene, entry);
+      }
+      const token = Symbol();
+      entry.callbacks.set(token, callback);
+      return () => {
+        entry.callbacks.delete(token);
+        if (entry.callbacks.size || scene.onEvent !== entry.wrapper) return;
+        if (entry.descriptor) Object.defineProperty(scene, "onEvent", entry.descriptor);
+        else delete scene.onEvent;
+        eventHooks.delete(scene);
+      };
+    }
+  };
   function wrap(owner, object, key, factory) {
     const original = object[key], descriptor = Object.getOwnPropertyDescriptor(object, key);
     const wrapper = factory(original); object[key] = wrapper;
@@ -343,11 +375,8 @@
       host.steer(0, 0); this.stillSince = time;
       owner.idleAt = performance.now();
     });
-    if (settings.avoidEnabled) wrap(owner, scene, "onEvent", (original) => function (...args) {
-      const result = original.apply(this, args);
-      try { if (this === scene) recordHit(scene, args[0]); } catch { /* Never break native event handling. */ }
-      return result;
-    });
+    if (settings.avoidEnabled)
+      owner.undo.push(GSTFarmEvents.add(scene, (event) => recordHit(scene, event)));
     owner.undo.push(GSTFarmUpdate.add(scene, 2, update));
     owner.undo.push(GSTFarmUpdate.add(scene, 2.5, collectLoot));
     scene.events.on("preupdate", guard); scene.events.on("shutdown", detach); scene.events.on("destroy", detach);
