@@ -81,7 +81,11 @@
     const meta = scene.self?.realm?.inside?.boss;
     if (finite(meta?.hp) && meta.hp > 0 && finite(meta.x) && finite(meta.y)
         && (retreating || scene.self.combat || distance(pos, meta) < 12)) return meta;
-    if (!scene.self.combat) return null;
+    // Even outside combat, protect a map journey at critical HP when a visible boss is nearby.
+    const criticalTravel = globalThis.GSTMapTravel?.active?.(scene)
+      && finite(scene.self?.hp) && finite(scene.self?.mh) && scene.self.mh > 0
+      && scene.self.hp / scene.self.mh < threshold;
+    if (!scene.self.combat && !criticalTravel) return null;
     return [...(scene.views?.values?.() ?? [])].filter(bossActor)
       .sort((a, b) => distance(a, pos) - distance(b, pos)).find((actor) => distance(actor, pos) < 12) ?? null;
   }
@@ -120,8 +124,19 @@
     // Once a hazard escape starts, let it finish instead of switching back to
     // the map destination on the first safe tile (at most the native 6s cap).
     if (job?.emergency === true && time - job.startedAt < 6) return true;
-    return hazardZones(scene, time).some((area) => distance(area, pos) <= area.radius + 0.8
-      && area.at <= time + 2.2 && area.until >= time);
+    if (settings.bossDodge && hazardZones(scene, time).some((area) =>
+      distance(area, pos) <= area.radius + 0.8 && area.at <= time + 2.2 && area.until >= time)) return true;
+    // A map journey must also yield for critical HP retreat, even without a telegraph.
+    const boss = settings.bossRetreat ? nearbyBoss(scene, pos) : null;
+    const hp = finite(scene.self?.hp) && finite(scene.self?.mh) && scene.self.mh > 0
+      ? scene.self.hp / scene.self.mh : Infinity;
+    if (!boss || hp >= (retreating ? recovered : threshold)) return false;
+    // Match update(): when retreat is disabled for empty HP pills, let the journey continue.
+    if (settings.noRetreat === false) {
+      const pills = scene.autoHost?.()?.pills?.("hp");
+      if (Array.isArray(pills) && pills.every((count) => count === 0)) return false;
+    }
+    return true;
   }
   function rememberWarning(scene, x, y, radius, seconds, source) {
     if (!settings.bossDodge || !scene?.auto?.on
@@ -425,7 +440,29 @@
     const scene = binding?.scene;
     if (!scene) return;
     if (sceneNow() !== scene || binding.auto !== scene.auto || !scene.sys?.isActive?.()) { detach(); return; }
-    if (blocked(scene)) { release(); retreating = false; cooldownHolding = false; }
+    if (blocked(scene)) { release(); retreating = false; cooldownHolding = false; return; }
+    // WorldScene skips auto.update while aiming or waiting to cast. Only an
+    // imminent boss warning may interrupt that state, from this existing
+    // preupdate guard; ordinary dodge/movement still uses GSTFarmUpdate.
+    if ((!scene.aiming && !scene.pendingSkill) || !settings.bossDodge
+        || (finite(scene.dashT) && scene.dashT > 0)) return;
+    const time = scene.now();
+    if (!finite(time) || !finite(scene.selfAt) || time - scene.selfAt > 3
+        || !finite(scene.px) || !finite(scene.py)) return;
+    const pos = { x: scene.px, y: scene.py }, bounds = zone(scene);
+    if (!bounds || !inside(bounds, pos)) return;
+    const hazards = hazardZones(scene, time);
+    if (!hazards.some((area) => distance(area, pos) <= area.radius + 0.8
+        && area.at <= time + 0.42 && area.until >= time)) return;
+    const host = scene.autoHost?.();
+    if (!host || typeof host.clear !== "function" || typeof host.route !== "function") return;
+    const boss = nearbyBoss(scene, pos);
+    // Q is the game's native dash and can run before auto.update resumes.
+    if (tryDash(scene, host, time, pos, bounds, hazards, null, boss, false, false)) return;
+    // With Q unavailable, use the game's own aim cancellation and drop only
+    // the queued client-side cast to permit the normal emergency dodge tick.
+    if (scene.aiming && typeof scene.cancelAim === "function") scene.cancelAim();
+    if (scene.pendingSkill) scene.pendingSkill = null;
   }
   function restoreWarnings(scene) {
     const hooks = warningHooks.get(scene);

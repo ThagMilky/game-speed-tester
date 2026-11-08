@@ -228,9 +228,10 @@
       return;
     }
     if (seenDead) { seenDead = false; revivedAt = performance.now(); }
-    // Farm-combat can finish this tick before our update callback runs.
-    // Observe native meditation/resting on postupdate to freeze journey timers.
-    if (job && (scene.auto?.resting || scene.self.med)) yieldTravel(scene, job);
+    // Native WorldScene skips auto.update while a skill is queued/aimed.
+    // Freeze journey timeout even on frames where our update callback cannot run.
+    if (job && (scene.auto?.resting || scene.self.med || scene.pendingSkill || scene.aiming))
+      yieldTravel(scene, job);
     if (pending) {
       if (!preferences.returnDeath || !inside(scene, pending)
           || pending.map !== map || pending.profile !== profile

@@ -393,7 +393,8 @@
     viewport.addEventListener("pointerdown", (e) => {
       if (!ui || e.button !== 0) return;
       viewport.setPointerCapture(e.pointerId);
-      ui.drag = { id: e.pointerId, x: e.clientX, y: e.clientY, distance: 0 };
+      ui.drag = { id: e.pointerId, x: e.clientX, y: e.clientY, distance: 0,
+        scene: ui.scene, map: ui.map };
     });
     viewport.addEventListener("pointermove", (e) => {
       const drag = ui?.drag, map = ui?.map;
@@ -408,8 +409,11 @@
       const drag = ui?.drag;
       if (!drag || drag.id !== e.pointerId) return;
       ui.drag = null;
-      if (drag.distance > 6 || !ui.map || !valid(ui.map.w) || !valid(ui.map.h)
-          || ui.map.w <= 0 || ui.map.h <= 0 || !canvas.clientWidth || !canvas.clientHeight) return;
+      const scene = sceneNow();
+      if (drag.distance > 6 || !scene?.sys?.isActive?.() || !scene.map || !scene.collision
+          || ui.scene !== scene || ui.map !== scene.map || drag.scene !== scene || drag.map !== scene.map
+          || !valid(ui.map.w) || !valid(ui.map.h) || ui.map.w <= 0 || ui.map.h <= 0
+          || !canvas.clientWidth || !canvas.clientHeight) return;
       const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
       const found = ui.markers.map((m) => ({ marker: m, d: Math.hypot(m.x - x, m.y - y) }))
         .filter((m) => m.d < 15).sort((a, b) => a.d - b.d)[0]?.marker?.item;
@@ -435,7 +439,7 @@
           : found.source === "map" || found.source === "camps" ? "Dữ liệu map" : "Đã thấy trước đó") + " " + coord;
       }
       if (options.clickMove) {
-        const result = globalThis.GSTMapTravel?.go(sceneNow(), point.x, point.y);
+        const result = globalThis.GSTMapTravel?.go(scene, point.x, point.y);
         if (typeof result === "string") ui.detail.textContent = result;
       }
     });
