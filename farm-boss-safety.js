@@ -110,6 +110,19 @@
         at: time + area.at - serverNow, until: time + area.until - serverNow }));
     return [...realms, ...visibleWarnings];
   }
+  function emergency(scene, time) {
+    if (!binding || binding.scene !== scene || binding.auto !== scene?.auto
+        || !enabled() || !settings.bossDodge || !finite(time) || blocked(scene)
+        || !finite(scene.px) || !finite(scene.py)
+        || !finite(scene.selfAt) || time - scene.selfAt > 3) return false;
+    const pos = { x: scene.px, y: scene.py }, bounds = zone(scene);
+    if (!bounds || !inside(bounds, pos)) return false;
+    // Once a hazard escape starts, let it finish instead of switching back to
+    // the map destination on the first safe tile (at most the native 6s cap).
+    if (job?.emergency === true && time - job.startedAt < 6) return true;
+    return hazardZones(scene, time).some((area) => distance(area, pos) <= area.radius + 0.8
+      && area.at <= time + 2.2 && area.until >= time);
+  }
   function rememberWarning(scene, x, y, radius, seconds, source) {
     if (!settings.bossDodge || !scene?.auto?.on
         || ![x, y, radius, seconds].every(finite) || radius <= 0 || radius >= 20
@@ -295,6 +308,7 @@
       const hazards = settings.bossDodge ? hazardZones(scene, time) : [];
       const danger = hazards.some((area) => distance(area, pos) <= area.radius + 0.8
         && area.at <= time + 2.2 && area.until >= time);
+      if (job && danger) job.emergency = true;
       // A pending realm seal owns combat before the boss. Keep urgent hazard
       // dodging and low-HP retreat, but do not kite/spam Q solely for the boss
       // while the seal handler is trying to approach and break seals.
@@ -359,7 +373,8 @@
           const navigation = Object.assign(Object.create(scene.auto), { path: next.path.slice(),
             goalX: next.point.x, goalY: next.point.y, pathAt: time, lastX: pos.x, lastY: pos.y,
             stillSince: time, sideUntil: 0, sideX: 0, sideY: 0, stuckCount: 0 });
-          job = { ...next, navigation, startedAt: time, progressAt: time, steer: null };
+          job = { ...next, navigation, startedAt: time, progressAt: time,
+            steer: null, emergency: danger };
           note(scene, danger ? "hazard" : "kite",
             danger ? "Đang thoát vòng cảnh báo boss."
               : retreating ? "Đang lùi xa boss khi HP thấp."
@@ -494,6 +509,7 @@
       detach(); this.attach(scene);
     },
     attach(scene) { try { attach(scene); } catch { detach(); } },
+    emergency,
     controls: (scene) => !!binding && binding.scene === scene
       && (job !== null || retreating || cooldownHolding),
     status(scene) {

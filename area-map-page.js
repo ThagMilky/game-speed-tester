@@ -408,7 +408,8 @@
       const drag = ui?.drag;
       if (!drag || drag.id !== e.pointerId) return;
       ui.drag = null;
-      if (drag.distance > 6) return;
+      if (drag.distance > 6 || !ui.map || !valid(ui.map.w) || !valid(ui.map.h)
+          || ui.map.w <= 0 || ui.map.h <= 0 || !canvas.clientWidth || !canvas.clientHeight) return;
       const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
       const found = ui.markers.map((m) => ({ marker: m, d: Math.hypot(m.x - x, m.y - y) }))
         .filter((m) => m.d < 15).sort((a, b) => a.d - b.d)[0]?.marker?.item;

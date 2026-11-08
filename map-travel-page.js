@@ -7,6 +7,7 @@
   let preferences = { clickMove: false, returnDeath: false };
   let binding = null, job = null, lastAlive = null, seenDead = false;
   let revivedAt = null, watcher = null, suspended = false, message = "";
+  let configured = false;
   let modalAt = -Infinity, modal = false;
   function modalOpen() {
     if (performance.now() - modalAt < 250) return modal;
@@ -143,6 +144,12 @@
       yieldTravel(scene, current);
       return true;
     }
+    // Only an imminent confirmed/estimated boss warning temporarily owns movement.
+    // Keep map destination intact and let the existing boss handler decide the dodge.
+    if (globalThis.GSTFarmBossSafety?.emergency?.(scene, time) === true) {
+      yieldTravel(scene, current);
+      return false;
+    }
     if (current.pausedAt !== undefined) {
       current.startedAt += performance.now() - current.pausedAt;
       current.pausedAt = undefined;
@@ -274,6 +281,7 @@
     } catch { detach(); }
   }
   function configure(options) {
+    configured = true;
     preferences = { clickMove: options?.clickMove === true, returnDeath: options?.returnDeath === true };
     if (!preferences.returnDeath) {
       pending = null; savePending();
@@ -310,5 +318,10 @@
     if (watcher !== null) clearInterval(watcher);
     watcher = null; detach();
   });
-  window.addEventListener("pageshow", () => { suspended = false; configure(preferences); });
+  window.addEventListener("pageshow", () => {
+    suspended = false;
+    // On an initial load, wait for area-map-content.js to read Chrome Storage.
+    // A default false here would permanently erase a saved return destination.
+    if (configured) configure(preferences);
+  });
 })();
