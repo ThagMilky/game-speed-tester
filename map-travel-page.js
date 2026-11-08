@@ -130,7 +130,13 @@
       release("Game chưa cung cấp đường đi phù hợp.", true);
       return false;
     }
-    // Give native combat, healing and skill execution room to finish first.
+    // An imminent boss warning may preempt potion recovery. Otherwise the
+    // game's own combat/pill logic keeps priority over this manual journey.
+    const urgentDodge = globalThis.GSTFarmBossSafety?.emergency?.(scene, time) === true;
+    if (urgentDodge) {
+      yieldTravel(scene, current);
+      return false;
+    }
     if (scene.auto.resting || scene.self.combat || scene.pendingSkill || scene.aiming
         || scene.heldAttack || scene.dashT > 0
         || (scene.auto.on && globalThis.GSTHarvest?.needsRecovery?.(scene))) {
@@ -143,12 +149,6 @@
         || modalOpen()) {
       yieldTravel(scene, current);
       return true;
-    }
-    // Only an imminent confirmed/estimated boss warning temporarily owns movement.
-    // Keep map destination intact and let the existing boss handler decide the dodge.
-    if (globalThis.GSTFarmBossSafety?.emergency?.(scene, time) === true) {
-      yieldTravel(scene, current);
-      return false;
     }
     if (current.pausedAt !== undefined) {
       current.startedAt += performance.now() - current.pausedAt;

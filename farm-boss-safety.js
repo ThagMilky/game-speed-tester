@@ -57,7 +57,7 @@
     return !!d && !d.closing && !d.reconnecting && !d.displaced
       && (d.online === false || d.link?.open?.() === true);
   }
-  function blocked(scene) {
+  function blocked(scene, imminent = false) {
     return suspended || !scene?.auto?.on || !scene.self || scene.self.dead || scene.leaving
       || !scene.sys?.isActive?.() || !connected(scene) || GSTFarmRouting.blocked(scene)
       || GSTFarmInput.movement(scene) || scene.auto.moved || scene.now() < scene.auto.pauseUntil
@@ -66,7 +66,7 @@
       || scene.heldAttack || scene.harvesting
       || scene.auto.resting || scene.self.med || scene.self.fish || scene.keyCapture
       // Let the native Auto Farm drink pills before considering boss movement.
-      || (globalThis.GSTMapTravel?.active?.(scene)
+      || (!imminent && globalThis.GSTMapTravel?.active?.(scene)
         && globalThis.GSTHarvest?.needsRecovery?.(scene))
       || globalThis.GSTQuest?.active?.(scene)
       || ["GSTRealm", "GSTChest", "GSTHarvest"].some((name) => globalThis[name]?.controls?.(scene))
@@ -81,16 +81,20 @@
     const meta = scene.self?.realm?.inside?.boss;
     if (finite(meta?.hp) && meta.hp > 0 && finite(meta.x) && finite(meta.y)
         && (retreating || scene.self.combat || distance(pos, meta) < 12)) return meta;
-    // Even outside combat, protect a map journey at critical HP when a visible boss is nearby.
-    const criticalTravel = globalThis.GSTMapTravel?.active?.(scene)
-      && finite(scene.self?.hp) && finite(scene.self?.mh) && scene.self.mh > 0
-      && scene.self.hp / scene.self.mh < threshold;
-    if (!scene.self.combat && !criticalTravel) return null;
+    // While following a map destination, detect nearby bosses even outside combat.
+    // This supports both low-HP retreat and warnings outside the normal farm circle.
+    if (!scene.self.combat && !globalThis.GSTMapTravel?.active?.(scene)) return null;
     return [...(scene.views?.values?.() ?? [])].filter(bossActor)
       .sort((a, b) => distance(a, pos) - distance(b, pos)).find((actor) => distance(actor, pos) < 12) ?? null;
   }
   function zone(scene) {
-    const w = scene.map?.w, h = scene.map?.h, radius = settings.enabled ? settings.radius : 11;
+    const w = scene.map?.w, h = scene.map?.h;
+    // The farm circle is not the safe-movement boundary for an explicit map journey.
+    // Keep the native map edges and collision/path checks for emergency escapes.
+    if (globalThis.GSTMapTravel?.active?.(scene))
+      return finite(w) && finite(h) && w > 0 && h > 0
+        ? { w, h, home: { x: scene.px, y: scene.py }, radius: Infinity } : null;
+    const radius = settings.enabled ? settings.radius : 11;
     const home = GSTHarvest.farmOrigin(scene) ?? { x: scene.auto.ax, y: scene.auto.ay };
     if (![w, h, radius, home.x, home.y].every(finite) || w <= 0 || h <= 0 || radius < 11) return null;
     return { w, h, home, radius: settings.enabled && settings.searchScope === "map" ? Infinity : radius };
@@ -114,29 +118,46 @@
         at: time + area.at - serverNow, until: time + area.until - serverNow }));
     return [...realms, ...visibleWarnings];
   }
-  function emergency(scene, time) {
-    if (!binding || binding.scene !== scene || binding.auto !== scene?.auto
-        || !enabled() || !settings.bossDodge || !finite(time) || blocked(scene)
-        || !finite(scene.px) || !finite(scene.py)
-        || !finite(scene.selfAt) || time - scene.selfAt > 3) return false;
-    const pos = { x: scene.px, y: scene.py }, bounds = zone(scene);
-    if (!bounds || !inside(bounds, pos)) return false;
-    // Once a hazard escape starts, let it finish instead of switching back to
-    // the map destination on the first safe tile (at most the native 6s cap).
-    if (job?.emergency === true && time - job.startedAt < 6) return true;
-    if (settings.bossDodge && hazardZones(scene, time).some((area) =>
-      distance(area, pos) <= area.radius + 0.8 && area.at <= time + 2.2 && area.until >= time)) return true;
-    // A map journey must also yield for critical HP retreat, even without a telegraph.
-    const boss = settings.bossRetreat ? nearbyBoss(scene, pos) : null;
-    const hp = finite(scene.self?.hp) && finite(scene.self?.mh) && scene.self.mh > 0
-      ? scene.self.hp / scene.self.mh : Infinity;
-    if (!boss || hp >= (retreating ? recovered : threshold)) return false;
-    // Match update(): when retreat is disabled for empty HP pills, let the journey continue.
+  function imminentWarning(scene, time) {
+    return settings.bossDodge && finite(time) && finite(scene?.px) && finite(scene?.py)
+      && finite(scene?.selfAt) && time - scene.selfAt <= 3
+      && hazardZones(scene, time).some((area) =>
+        distance(area, { x: scene.px, y: scene.py }) <= area.radius + 0.8
+        && area.at <= time + 0.42 && area.until >= time);
+  }
+  function criticalRetreat(scene) {
+    if (!settings.bossRetreat || !scene?.self || !finite(scene.px) || !finite(scene.py)
+        || !finite(scene.self.hp) || !finite(scene.self.mh) || scene.self.mh <= 0
+        || scene.self.hp / scene.self.mh >= (retreating ? recovered : threshold)
+        || !nearbyBoss(scene, { x: scene.px, y: scene.py })) return false;
+    // When native meditation is intentionally enabled and no pills remain,
+    // let the game's own resting logic handle the situation instead.
     if (settings.noRetreat === false) {
       const pills = scene.autoHost?.()?.pills?.("hp");
       if (Array.isArray(pills) && pills.every((count) => count === 0)) return false;
     }
     return true;
+  }
+  function urgentEscape(scene, time) {
+    return imminentWarning(scene, time)
+      || (settings.bossDodge && job?.emergency === true && finite(time)
+        && time - job.startedAt < 6) || criticalRetreat(scene);
+  }
+  function emergency(scene, time) {
+    const urgent = urgentEscape(scene, time);
+    if (!binding || binding.scene !== scene || binding.auto !== scene?.auto
+        || !enabled() || !finite(time) || blocked(scene, urgent)
+        || !finite(scene.px) || !finite(scene.py)
+        || !finite(scene.selfAt) || time - scene.selfAt > 3) return false;
+    const pos = { x: scene.px, y: scene.py }, bounds = zone(scene);
+    if (!bounds || !inside(bounds, pos)) return false;
+    // An imminent warning, a bounded escape route, or critical HP beside a boss
+    // keeps the safety owner active. Its retreat uses the game's native HP pills.
+    if (urgent) return true;
+    // Ordinary recovery stays with the native game; future warnings can wait.
+    if (globalThis.GSTHarvest?.needsRecovery?.(scene)) return false;
+    return settings.bossDodge && hazardZones(scene, time).some((area) =>
+      distance(area, pos) <= area.radius + 0.8 && area.at <= time + 2.2 && area.until >= time);
   }
   function rememberWarning(scene, x, y, radius, seconds, source) {
     if (!settings.bossDodge || !scene?.auto?.on
@@ -309,7 +330,8 @@
     try {
       cooldownHolding = false;
       if (scene && finite(time)) observeDash(scene, time);
-      if (!scene || !enabled() || blocked(scene) || !finite(time)
+      const urgent = scene && urgentEscape(scene, time);
+      if (!scene || !enabled() || blocked(scene, urgent) || !finite(time)
           || !["steer", "route", "clear", "hp", "pills"].every((key) => typeof host?.[key] === "function")) {
         release(); retreating = false; return false;
       }
@@ -440,27 +462,29 @@
     const scene = binding?.scene;
     if (!scene) return;
     if (sceneNow() !== scene || binding.auto !== scene.auto || !scene.sys?.isActive?.()) { detach(); return; }
-    if (blocked(scene)) { release(); retreating = false; cooldownHolding = false; return; }
+    const time = scene.now(), imminent = imminentWarning(scene, time);
+    if (blocked(scene, imminent || criticalRetreat(scene))) { release(); retreating = false; cooldownHolding = false; return; }
     // WorldScene skips auto.update while aiming or waiting to cast. Only an
     // imminent boss warning may interrupt that state, from this existing
     // preupdate guard; ordinary dodge/movement still uses GSTFarmUpdate.
     if ((!scene.aiming && !scene.pendingSkill) || !settings.bossDodge
         || (finite(scene.dashT) && scene.dashT > 0)) return;
-    const time = scene.now();
-    if (!finite(time) || !finite(scene.selfAt) || time - scene.selfAt > 3
-        || !finite(scene.px) || !finite(scene.py)) return;
+    if (!imminent) return;
     const pos = { x: scene.px, y: scene.py }, bounds = zone(scene);
     if (!bounds || !inside(bounds, pos)) return;
     const hazards = hazardZones(scene, time);
-    if (!hazards.some((area) => distance(area, pos) <= area.radius + 0.8
-        && area.at <= time + 0.42 && area.until >= time)) return;
     const host = scene.autoHost?.();
     if (!host || typeof host.clear !== "function" || typeof host.route !== "function") return;
     const boss = nearbyBoss(scene, pos);
     // Q is the game's native dash and can run before auto.update resumes.
-    if (tryDash(scene, host, time, pos, bounds, hazards, null, boss, false, false)) return;
-    // With Q unavailable, use the game's own aim cancellation and drop only
-    // the queued client-side cast to permit the normal emergency dodge tick.
+    if (tryDash(scene, host, time, pos, bounds, hazards, null, boss, false, false)) {
+      // Native Q with the no-manual-cancel argument leaves pendingSkill intact.
+      // Cancel that queued cast after a successful emergency dash, too.
+      if (scene.aiming && typeof scene.cancelAim === "function") scene.cancelAim();
+      if (scene.pendingSkill) scene.pendingSkill = null;
+      return;
+    }
+    // With Q unavailable, interrupt the aimed/queued cast to allow normal dodge.
     if (scene.aiming && typeof scene.cancelAim === "function") scene.cancelAim();
     if (scene.pendingSkill) scene.pendingSkill = null;
   }
@@ -519,7 +543,8 @@
     observe("onEvent", ([event]) => {
       if (event?.e !== "cast" || !finite(event.ax) || !finite(event.ay)) return;
       const caster = scene.views?.get?.(event.id);
-      if (!bossActor(caster) || (!scene.self?.combat && scene.auto?.target !== caster.id)
+      if (!bossActor(caster) || (!scene.self?.combat && scene.auto?.target !== caster.id
+          && !globalThis.GSTMapTravel?.active?.(scene))
           || distance({ x: scene.px, y: scene.py }, { x: event.ax, y: event.ay }) > 7) return;
       if (rememberWarning(scene, event.ax, event.ay, 3.5, 0.9, "cast_estimate")
           && performance.now() > noteUntil)
