@@ -182,6 +182,9 @@
           globalThis.GSTMovementDiagnostics?.event?.(scene, "realm_phase", { realmPhase: currentPhase });
       }
       // A discovered portal takes priority over regular farming; do not release the goal.
+      if (globalThis.GSTMapTravel?.active(scene)) {
+        release("Nhường điều khiển cho hành trình bản đồ."); releaseExit(); return;
+      }
       if (globalThis.GSTHarvest?.controls(scene) || globalThis.GSTQuest?.controls(scene)) {
         release("Nhường điều khiển đang hoạt động của người chơi/Auto Quest."); return;
       }
@@ -238,6 +241,7 @@
     try {
       const scene = binding?.scene;
       if (!scene || (!preferences.enabled && !preferences.seekExit) || suspended) return false;
+      if (globalThis.GSTMapTravel?.active(scene)) return false;
       if (globalThis.GSTQuest?.active(scene)) { release("Nhường cho Auto Quest đang chạy."); return false; }
       // Realm portals preempt target scouting and routine farming while present.
       if (globalThis.GSTHarvest?.controls(scene)) { release("Nhường thao tác thu hoạch đang hoạt động."); return false; }

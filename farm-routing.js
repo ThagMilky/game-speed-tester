@@ -22,7 +22,7 @@
     return GSTFarmInput.movement(scene);
   }
   function otherOwner(scene) {
-    return ["GSTHarvest", "GSTFarmBehavior", "GSTFarmMap", "GSTFarmSeals", "GSTRealm", "GSTChest", "GSTQuest"]
+    return ["GSTHarvest", "GSTFarmBehavior", "GSTFarmMap", "GSTFarmSeals", "GSTRealm", "GSTChest", "GSTQuest", "GSTMapTravel"]
       .some((name) => globalThis[name]?.controls?.(scene));
   }
   function ready(scene, time) {

@@ -9,6 +9,11 @@
   // Per-map caches last until the page session ends, without writing game
   // coordinates to persistent extension storage.
   const knownMaps = new Map(), unkeyedMaps = new WeakMap();
+  const defaults = { npcs: true, resources: true, gates: true, portals: true,
+    exits: true, clickMove: false, returnDeath: false };
+  let options = { ...defaults };
+  const normalize = (value) => Object.fromEntries(Object.keys(defaults)
+    .map((key) => [key, typeof value?.[key] === "boolean" ? value[key] : defaults[key]]));
   const mapKey = (map) => typeof map?.scene === "string"
     ? map.scene + ":" + map.w + "x" + map.h : null;
   let observer = null;
@@ -210,7 +215,22 @@
       }
     }
     state.markers = [];
-    for (const gate of Array.isArray(map.gates) ? map.gates : []) {
+    const place = (point, type, label, color, size = 4) => {
+      if (!inside(map, point)) return;
+      const x = sx(point.x), y = sy(point.y);
+      if (x < -65 || x > w + 65 || y < -20 || y > h + 20) return;
+      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
+      if (unit >= 4) {
+        ctx.font = "11px system-ui"; ctx.textBaseline = "middle";
+        const width = Math.min(175, ctx.measureText(label).width);
+        ctx.fillStyle = "#06121cde"; ctx.fillRect(x + 7, y - 9, width + 10, 18);
+        ctx.save(); ctx.beginPath(); ctx.rect(x + 9, y - 8, width + 6, 16); ctx.clip();
+        ctx.fillStyle = color; ctx.fillText(label, x + 11, y); ctx.restore();
+      }
+      state.markers.push({ x, y, item: { type, x: point.x, y: point.y, label,
+        ready: point.ready, ore: point.ore } });
+    };
+    for (const gate of options.gates && Array.isArray(map.gates) ? map.gates : []) {
       if (!inside(map, gate)) continue;
       const x = sx(gate.x), y = sy(gate.y);
       if (x < -15 || x > w + 15 || y < -15 || y > h + 15) continue;
@@ -233,6 +253,21 @@
       ctx.globalAlpha = 1;
       state.markers.push({ x, y, item: { ...camp, type: "camp" } });
     }
+    if (scene?.map === map) {
+      if (options.npcs) for (const npc of Array.isArray(scene.npcs) ? scene.npcs.slice(0, 300) : [])
+        place(npc, "npc", String(npc.info?.name ?? "NPC").slice(0, 70), "#ffe3a2", 4.5);
+      if (options.resources) for (const node of Array.isArray(scene.nodes) ? scene.nodes.slice(0, 1200) : [])
+        place(node, "resource", String(node.item ?? (node.ore ? "Quặng" : "Linh thảo")).slice(0, 70)
+          + (node.ready ? " · Sẵn sàng" : " · Chưa sẵn sàng"),
+          node.ready ? (node.ore ? "#9ee4ff" : "#68e6a0") : "#687b81", 3.5);
+      const realmState = scene.self?.realm;
+      if (options.portals && !realmState?.inside && Array.isArray(realmState?.events))
+        for (const portal of realmState.events.slice(0, 100)) {
+          if (portal.host !== map.scene || portal.closing || !valid(portal.ends)
+              || !valid(realmState.now) || portal.ends <= realmState.now) continue;
+          place(portal, "realm-portal", String(portal.name ?? "Cổng bí cảnh").slice(0, 70), "#ff87b0", 6);
+        }
+    }
     // Unlike ordinary enemies, realm metadata is available at any distance,
     // including sealed objectives, chest positions and exit coordinates.
     const realm = scene?.map === map ? scene.self?.realm?.inside : null;
@@ -250,7 +285,7 @@
           markers.push({ type: "chest", x: chest.x, y: chest.y, kind: chest.kind,
             label: chest.kind === "hidden" ? "Rương ẩn" : chest.kind === "treasure" ? "Linh tàng" : "Rương",
             color: chest.kind === "hidden" ? "#78e9f2" : "#f6da72" });
-      for (const exit of Array.isArray(realm.exits) ? realm.exits : [])
+      for (const exit of options.exits && Array.isArray(realm.exits) ? realm.exits : [])
         if (Array.isArray(exit) && exit.length >= 2
             && inside(map, { x: exit[0], y: exit[1] }))
           markers.push({ type: "exit", x: exit[0], y: exit[1],
@@ -269,13 +304,27 @@
         state.markers.push({ x, y, item: marker });
       }
     }
+    const travel = scene?.map === map ? globalThis.GSTMapTravel?.snapshot(scene) : null;
+    if (travel && inside(map, travel)) {
+      const points = Array.isArray(travel.path) ? travel.path.filter((p) =>
+        Array.isArray(p) && p.length === 2 && p.every(valid)).slice(0, 80) : [];
+      ctx.strokeStyle = "#ffdc76"; ctx.lineWidth = 2; ctx.beginPath();
+      ctx.moveTo(sx(scene.px), sy(scene.py));
+      for (const point of points) ctx.lineTo(sx(point[0]), sy(point[1]));
+      if (!points.length) ctx.lineTo(sx(travel.x), sy(travel.y));
+      ctx.stroke();
+      ctx.fillStyle = "#ffdc76"; ctx.beginPath(); ctx.arc(sx(travel.x), sy(travel.y), 7, 0, Math.PI * 2);
+      ctx.strokeStyle = "#ffdc76"; ctx.stroke();
+    }
     if (scene?.map === map && valid(scene.px) && valid(scene.py)) {
       ctx.beginPath(); ctx.arc(sx(scene.px), sy(scene.py), 6, 0, Math.PI * 2);
       ctx.fillStyle = "#fffdec"; ctx.fill(); ctx.strokeStyle = "#182832"; ctx.lineWidth = 2; ctx.stroke();
     }
     status.textContent = String(map.title ?? map.scene ?? "Khu vực") + " · " + map.w + "×" + map.h
       + " ô · " + state.camps.length + " bãi đã biết" + (realm ? " · Bí cảnh" : "")
-      + (state.terrain && state.terrain.row < state.terrain.h ? " · Đang dựng địa hình…" : "");
+      + (state.terrain && state.terrain.row < state.terrain.h ? " · Đang dựng địa hình…" : "")
+      + (globalThis.GSTMapTravel?.status() ? " · " + GSTMapTravel.status() : "");
+    if (state.stopTravel) state.stopTravel.disabled = !globalThis.GSTMapTravel?.active(scene);
   }
   function zoom(state, factor, x, y) {
     const w = state.canvas.clientWidth, h = state.canvas.clientHeight, map = state.map;
@@ -308,15 +357,25 @@
     if (ui || suspended || !document.body) return;
     const root = document.createElement("div"); root.id = "gst-area-map";
     const shadow = root.attachShadow({ mode: "closed" });
-    shadow.innerHTML = '<style>:host{all:initial!important;position:fixed!important;inset:0!important;z-index:2147483646!important;background:#04090ddd!important;display:flex!important;align-items:center!important;justify-content:center!important;color:#edf6fa;font:13px/1.4 system-ui;pointer-events:auto!important}*{box-sizing:border-box}button{border:1px solid #7f9dad;border-radius:7px;background:#233a48;color:#eef6fa;padding:7px 11px;font:inherit;cursor:pointer}button:hover,button:focus-visible{border-color:#71e7cf}section{display:flex;flex-direction:column;width:min(1100px,96vw);height:min(810px,94vh);background:#111b25;border:1px solid #718e9e;border-radius:13px;overflow:hidden;box-shadow:0 18px 75px #000b}header,footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 13px}header{border-bottom:1px solid #485f6b}footer{border-top:1px solid #485f6b;color:#c2d1da}h2{font-size:16px;margin:0 auto 0 0}#map{flex:1;min-height:0;overflow:hidden;touch-action:none;cursor:grab}#map:active{cursor:grabbing}canvas{width:100%;height:100%;display:block}#legend{padding:0 13px 9px;font-size:11px;color:#a5baca}#detail{flex:1;min-width:180px}@media(max-width:600px){section{height:96vh;width:98vw}h2{width:100%}header,footer{padding:8px}}</style>'
-      + '<section role="dialog" aria-modal="true" aria-label="Bản đồ toàn khu vực"><header><h2>Bản đồ toàn khu vực</h2><button id="less" title="Thu nhỏ">−</button><button id="more" title="Phóng to">＋</button><button id="here">Về nhân vật</button><button id="close">Đóng ×</button></header><div id="map"><canvas aria-label="Bản đồ có vị trí bãi quái"></canvas></div><div id="legend">Trắng: nhân vật · Cam: quái đang thấy · Xám: đã thấy · Tím: boss · Đỏ: boss bí cảnh · Vàng: rương · Xanh: cổng thoát · Ấn: phong ấn · Xanh ngọc: tuyến đã có. Kéo để xem, cuộn để phóng to.</div><footer><span id="status">Đang đọc bản đồ…</span><span id="detail">Chạm dấu bãi quái để xem chi tiết.</span></footer></section>';
+    shadow.innerHTML = '<style>:host{all:initial!important;position:fixed!important;inset:0!important;z-index:2147483646!important;background:#04090ddd!important;display:flex!important;align-items:center!important;justify-content:center!important;color:#edf6fa;font:13px/1.4 system-ui;pointer-events:auto!important}*{box-sizing:border-box}button{border:1px solid #7f9dad;border-radius:7px;background:#233a48;color:#eef6fa;padding:7px 11px;font:inherit;cursor:pointer}button:hover,button:focus-visible{border-color:#71e7cf}section{display:flex;flex-direction:column;width:min(1100px,96vw);height:min(810px,94vh);background:#111b25;border:1px solid #718e9e;border-radius:13px;overflow:hidden;box-shadow:0 18px 75px #000b}header,footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 13px}header{border-bottom:1px solid #485f6b}footer{border-top:1px solid #485f6b;color:#c2d1da}h2{font-size:16px;margin:0 auto 0 0}#map{flex:1;min-height:0;overflow:hidden;touch-action:none;cursor:grab}#map:active{cursor:grabbing}canvas{width:100%;height:100%;display:block}#legend{padding:0 13px 9px;font-size:11px;color:#a5baca}#detail{flex:1;min-width:180px}#filters{display:flex;align-items:center;flex-wrap:wrap;gap:6px 13px;padding:9px 13px;background:#172630;border-bottom:1px solid #415865}#filters label{display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}#filters input{accent-color:#6af1d2}button:disabled{opacity:.45;cursor:default}@media(max-width:600px){section{height:96vh;width:98vw}h2{width:100%}header,footer{padding:8px}}</style>'
+      + '<section role="dialog" aria-modal="true" aria-label="Bản đồ toàn khu vực"><header><h2>Bản đồ toàn khu vực</h2><button id="less" title="Thu nhỏ">−</button><button id="more" title="Phóng to">＋</button><button id="here">Về nhân vật</button><button id="close">Đóng ×</button></header><div id="filters" role="group" aria-label="Tùy chọn bản đồ"><label><input type="checkbox" data-option="npcs"> NPC</label><label><input type="checkbox" data-option="resources"> Thu hoạch</label><label><input type="checkbox" data-option="gates"> Cổng dịch chuyển</label><label><input type="checkbox" data-option="portals"> Cổng bí cảnh</label><label><input type="checkbox" data-option="exits"> Cổng thoát</label><label><input type="checkbox" data-option="clickMove"> Click để di chuyển</label><label><input type="checkbox" data-option="returnDeath"> Quay lại nơi chết (trừ bí cảnh)</label></div><div id="map"><canvas aria-label="Bản đồ có vị trí bãi quái"></canvas></div><div id="legend">Trắng: nhân vật · Cam: quái đang thấy · Xám: đã thấy · Tím: boss · Đỏ: boss bí cảnh · Vàng: rương · Xanh: cổng thoát · Ấn: phong ấn · Xanh ngọc: tuyến đã có. Kéo để xem, cuộn để phóng to. Khi bật Click để di chuyển, chọn một điểm sẽ bắt đầu hành trình.</div><footer><span id="status">Đang đọc bản đồ…</span><span id="detail">Chạm biểu tượng để xem chi tiết.</span><button id="stopTravel" type="button">Dừng di chuyển</button></footer></section>';
     document.body.append(root);
     const scene = sceneNow(), canvas = shadow.querySelector("canvas");
     ui = { root, shadow, canvas, status: shadow.getElementById("status"), detail: shadow.getElementById("detail"),
       scene: null, map: null, collision: null, center: { x: 0, y: 0 }, zoom: 1,
       camps: [], markers: [], scanAt: 0, terrain: null, terrainFailed: false,
-      raf: 0, lastPaint: -Infinity, drag: null };
+      raf: 0, lastPaint: -Infinity, drag: null, stopTravel: shadow.getElementById("stopTravel") };
     if (scene?.sys?.isActive?.() && scene.map && scene.collision) setScene(ui, scene);
+    for (const input of shadow.querySelectorAll("[data-option]")) {
+      const key = input.dataset.option;
+      input.checked = options[key] === true;
+      input.addEventListener("change", () => {
+        options = { ...options, [key]: input.checked };
+        globalThis.GSTMapTravel?.configure(options);
+        window.postMessage({ channel, type: "options", options: { ...options } }, origin);
+      });
+    }
+    ui.stopTravel.addEventListener("click", () => globalThis.GSTMapTravel?.cancel());
     const more = shadow.getElementById("more"), less = shadow.getElementById("less");
     more.addEventListener("click", () => zoom(ui, 1.5, canvas.clientWidth / 2, canvas.clientHeight / 2));
     less.addEventListener("click", () => zoom(ui, 1 / 1.5, canvas.clientWidth / 2, canvas.clientHeight / 2));
@@ -353,17 +412,31 @@
       const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
       const found = ui.markers.map((m) => ({ marker: m, d: Math.hypot(m.x - x, m.y - y) }))
         .filter((m) => m.d < 15).sort((a, b) => a.d - b.d)[0]?.marker?.item;
-      if (!found) return;
+      const unit = Math.min(canvas.clientWidth / ui.map.w, canvas.clientHeight / ui.map.h) * ui.zoom;
+      const point = found ?? { x: ui.center.x + (x - canvas.clientWidth / 2) / unit,
+        y: ui.center.y - (y - canvas.clientHeight / 2) / unit };
+      if (!inside(ui.map, point)) return;
+      if (!found) ui.detail.textContent = "Điểm " + point.x.toFixed(1) + ", " + point.y.toFixed(1);
+      else {
       const coord = "(" + found.x.toFixed(1) + ", " + found.y.toFixed(1) + ")";
       if (found.type === "gate") ui.detail.textContent = "Cổng tới " + String(found.to ?? "map khác") + " " + coord;
       else if (found.type === "realm-boss") ui.detail.textContent = "Boss bí cảnh · HP còn " + found.hp + " · " + coord;
       else if (found.type === "seal") ui.detail.textContent = "Phong ấn · còn " + found.hits + " đòn · " + coord;
       else if (found.type === "chest") ui.detail.textContent = "Rương bí cảnh · " + String(found.kind ?? "chưa rõ loại") + " · " + coord;
       else if (found.type === "exit") ui.detail.textContent = "Cổng thoát bí cảnh · " + coord;
+      else if (found.type === "npc") ui.detail.textContent = "NPC · " + found.label + " " + coord;
+      else if (found.type === "resource") ui.detail.textContent = (found.ore ? "Quặng" : "Linh thảo")
+        + " · " + found.label + " " + coord;
+      else if (found.type === "realm-portal") ui.detail.textContent = found.label + " " + coord;
       else ui.detail.textContent = (found.boss ? "Boss" : "Bãi quái") + " · "
         + (found.level === null ? "Chưa biết level" : "Lv." + found.level)
         + " · " + (found.live ? "Đang thấy"
           : found.source === "map" || found.source === "camps" ? "Dữ liệu map" : "Đã thấy trước đó") + " " + coord;
+      }
+      if (options.clickMove) {
+        const result = globalThis.GSTMapTravel?.go(sceneNow(), point.x, point.y);
+        if (typeof result === "string") ui.detail.textContent = result;
+      }
     });
     viewport.addEventListener("pointercancel", () => { if (ui) ui.drag = null; });
     viewport.addEventListener("wheel", (e) => {
@@ -407,6 +480,10 @@
       shortcut = typeof e.data.code === "string" && allowed.test(e.data.code)
         && !["KeyM", "KeyV"].includes(e.data.code) ? e.data.code : "Period";
       farmShortcut = Number.isSafeInteger(e.data.farmKey) ? e.data.farmKey : null;
+      options = normalize(e.data.options);
+      globalThis.GSTMapTravel?.configure(options);
+      if (ui) for (const input of ui.shadow.querySelectorAll("[data-option]"))
+        input.checked = options[input.dataset.option] === true;
     } else if (e.data.type === "toggle") toggle();
   });
   observer = setInterval(() => {

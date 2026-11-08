@@ -323,7 +323,7 @@
     const scene = binding?.scene;
     if (!scene) return;
     if (sceneNow() !== scene || binding.auto !== scene.auto || !scene.sys?.isActive?.()) { detach(); return; }
-    if (job && (!allowed(scene) || scene.castAt !== job.castAt || GSTFarmBehavior.controls(scene)
+    if (job && (globalThis.GSTMapTravel?.active(scene) || !allowed(scene) || scene.castAt !== job.castAt || GSTFarmBehavior.controls(scene)
         || globalThis.GSTFarmBossSafety?.controls(scene))) {
       release(); retryAt = scene.now() + 0.5;
     }
@@ -331,7 +331,8 @@
   function update(host, time, scouting = false) {
     const scene = binding?.scene;
     try {
-      if (!scene || !wanted(scene) || suspended || !allowed(scene) || GSTFarmBehavior.controls(scene)
+      if (!scene || !wanted(scene) || suspended || globalThis.GSTMapTravel?.active(scene)
+          || !allowed(scene) || GSTFarmBehavior.controls(scene)
           || globalThis.GSTFarmBossSafety?.controls(scene)) {
         release();
         if (!scene?.auto?.on || !wanted(scene) || suspended || (scene && GSTFarmInput.movement(scene)))

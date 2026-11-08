@@ -47,7 +47,7 @@
       || scene.auto.moved || scene.now() < scene.auto.pauseUntil;
   }
   function blocked(scene) {
-    return !scene.auto.on || !scene.self || scene.self.dead || !connected(scene) || scene.leaving
+    return globalThis.GSTMapTravel?.active(scene) || !scene.auto.on || !scene.self || scene.self.dead || !connected(scene) || scene.leaving
       || GSTFarmRouting.blocked(scene) || scene.keyCapture || scene.overlay?.dialogOpen || scene.harvesting
       || scene.self.med || scene.self.fish || scene.auto.resting
       || (scene.self.realm?.inside?.protection ?? 0) > 0;

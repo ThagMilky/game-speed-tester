@@ -54,6 +54,7 @@
   }
   function yieldReason(scene, freshModal = false) {
     if (!enabled || suspended || !scene.auto.on) return "";
+    if (globalThis.GSTMapTravel?.active(scene)) return "Nhường cho hành trình bản đồ.";
     if (globalThis.GSTQuest?.active(scene)) return "Nhường cho Auto Quest đang chạy.";
     if (globalThis.GSTFarmBehavior?.controls(scene)) return "Nhường di chuyển để né quái level cao.";
     if (globalThis.GSTFarmBossSafety?.controls(scene)) return "Nhường di chuyển để né skill boss hoặc hồi HP.";
@@ -111,7 +112,7 @@
     const scene = binding?.scene;
     try {
       holding = false;
-      if (!scene || !enabled || suspended || !scene.auto.on) return false;
+      if (!scene || !enabled || suspended || !scene.auto.on || globalThis.GSTMapTravel?.active(scene)) return false;
       const active = seals(scene);
       for (const [id, entry] of skipped) {
         if (performance.now() >= entry.until

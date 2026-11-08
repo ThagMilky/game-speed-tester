@@ -28,6 +28,7 @@
     if (scene.leaving || !driver || driver.closing || driver.reconnecting || driver.displaced
         || !(driver.online === false || driver.link?.open?.() === true)) return "Chờ kết nối game/scene ổn định.";
     if (!scene.self.realm?.inside) return "Chờ vào bí cảnh để tìm rương.";
+    if (globalThis.GSTMapTravel?.active(scene)) return "Nhường điều khiển cho hành trình bản đồ.";
     if (globalThis.GSTQuest?.active(scene)) return "Đang nhường Auto Quest. Bấm Dừng Auto Quest nếu muốn mở rương.";
     if (scene.self.realm.inside.protection > 0) return `Chờ hết bảo vệ bí cảnh · còn ${Math.ceil(scene.self.realm.inside.protection)} giây.`;
     if (scene.keyCapture) return "Chờ kết thúc đặt phím trong game.";

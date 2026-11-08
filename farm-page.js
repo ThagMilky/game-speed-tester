@@ -444,6 +444,9 @@
         message = "Đang ưu tiên nhặt đồ tại bãi vừa đánh trước khi chọn bãi tiếp theo.";
         return;
       }
+      if (globalThis.GSTMapTravel?.active(s.scene)) {
+        message = GSTMapTravel.status(s.scene); return;
+      }
       if (globalThis.GSTFarmMap?.controls(s.scene) || globalThis.GSTFarmMap?.nativeHandling(s.scene)) {
         message = GSTFarmMap.status(s.scene); return;
       }

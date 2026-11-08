@@ -136,6 +136,7 @@
     if (globalThis.GSTChest?.isEnabled?.() === true) return "Tìm Rương";
     if (globalThis.GSTRealm?.isEnabled?.() === true) return "Tìm Cổng Bí Cảnh";
     if (globalThis.GSTQuest?.active?.(scene) === true) return "Auto Quest";
+    if (globalThis.GSTMapTravel?.active?.(scene) === true) return "Di chuyển bản đồ";
     return "";
   }
 
