@@ -45,8 +45,24 @@
       && challengerDistance <= 20 && challengerDistance <= distance(current, pos) + 3
       ? "level_priority" : "";
   }
+  function realmBossEligible(scene) {
+    if (settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode)) return false;
+    const levelRequired = settings.avoidEnabled
+      || ["maxLevel", "minLevel", "range"].includes(settings.targetMode);
+    if (!levelRequired) return true;
+    // A boss hidden by the level filter is not a reason to block chest
+    // collection. Unknown levels are not treated as confirmed eligible.
+    const actors = [...(scene?.views?.values?.() ?? [])]
+      .filter((actor) => actor?.k === "m" && !actor.dead && isBoss(actor.st)
+        && finite(actor.st?.lv));
+    const level = scene?.self?.realm?.inside?.boss?.lv;
+    return actors.some((actor) => matchesTarget(actor.st))
+      || (finite(level) && matchesTarget({ cls: "boss", lv: level }));
+  }
   globalThis.GSTFarmPriority = { compare: comparePriority, ranked, switchReason,
-    bossFocus: () => ["boss", "bossLevel"].includes(settings.targetMode) && !settings.excludeBoss };
+    realmBossEligible,
+    bossFocus: (scene) => ["boss", "bossLevel"].includes(settings.targetMode)
+      && realmBossEligible(scene) };
   function filterLabel() {
     if (settings.targetMode === "bossLevel") return "Ưu tiên boss, rồi quái level cao đến thấp";
     if (settings.targetMode === "highLevel") return "Ưu tiên quái thường level cao đến thấp";

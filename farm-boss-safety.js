@@ -84,10 +84,12 @@
     && finite(actor.x) && finite(actor.y);
   function nearbyBoss(scene, pos) {
     const current = scene.views?.get?.(scene.auto.target);
-    if (bossActor(current) && (retreating || scene.self.combat || distance(pos, current) < 12)) return current;
+    if (bossActor(current) && distance(pos, current) < 12) return current;
     const meta = scene.self?.realm?.inside?.boss;
+    // Combat with an ordinary monster must not make a distant realm boss
+    // count as a nearby threat, even during an existing retreat.
     if (finite(meta?.hp) && meta.hp > 0 && finite(meta.x) && finite(meta.y)
-        && (retreating || scene.self.combat || distance(pos, meta) < 12)) return meta;
+        && distance(pos, meta) < 12) return meta;
     // While following a map destination, detect nearby bosses even outside combat.
     // This supports both low-HP retreat and warnings outside the normal farm circle.
     if (!scene.self.combat && !globalThis.GSTMapTravel?.active?.(scene)) return null;

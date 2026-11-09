@@ -44,8 +44,9 @@
     // boss-focused farming, finish the encounter before collecting rewards.
     if (scene.auto.on && finite(scene.self.realm.inside.boss?.hp)
         && scene.self.realm.inside.boss.hp > 0
+        && globalThis.GSTFarmPriority?.realmBossEligible?.(scene) !== false
         && (globalThis.GSTRealm?.seekBoss?.(scene)
-          || globalThis.GSTFarmPriority?.bossFocus?.()))
+          || globalThis.GSTFarmPriority?.bossFocus?.(scene)))
       return "Đang ưu tiên đánh boss bí cảnh; sẽ tìm rương khi boss đã hạ.";
     if (scene.auto.on && !settings.allowFarm) return "Auto Farm đang bật: tick Cho phép nhặt khi Auto Farm bật, hoặc tắt Auto Farm.";
     if (scene.auto.on && GSTHarvest.needsRecovery(scene)) return "Chờ Auto Farm hồi HP/MP theo cài đặt của game.";

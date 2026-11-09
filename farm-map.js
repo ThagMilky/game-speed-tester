@@ -169,8 +169,17 @@
       && (actor.st?.cls === "boss" || actor.st?.wb === true) && finite(actor.x) && finite(actor.y));
   }
   const clearance = (actor) => Math.max(2.5, (finite(actor.radius) ? actor.radius : 1) + 1.5);
-  const clearOfBoss = (from, to, bosses) => bosses.every((actor) =>
-    segmentDistance(actor, from, to) >= clearance(actor));
+  const clearOfBoss = (from, to, bosses) => bosses.every((actor) => {
+    const limit = clearance(actor), startDistance = range(actor, from);
+    if (startDistance < limit) {
+      // A character already inside an avoided boss's range must be able
+      // to leave it. Never allow the first step to move closer to the boss.
+      const dx = to.x - from.x, dy = to.y - from.y;
+      const outward = (from.x - actor.x) * dx + (from.y - actor.y) * dy;
+      return outward >= 0 && range(actor, to) > startDistance + 0.15;
+    }
+    return segmentDistance(actor, from, to) >= limit;
+  });
   function nativeSafeLeg(host, from, to, bosses) {
     const points = host.clear(from.x, from.y, to.x, to.y) ? [[to.x, to.y]]
       : host.route(from.x, from.y, to.x, to.y);
