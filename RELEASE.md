@@ -1,12 +1,12 @@
 # Phát hành Game Speed Tester
 
-Repository này là Chrome Extension Manifest V3. Không cần build, Node.js, npm hoặc file EXE. Workflow phát hành hiện có tại [`.github/workflows/release-extension.yml`](.github/workflows/release-extension.yml). Commit cập nhật code hoặc tài liệu trên `main` **không tự tạo Release**.
+Repository này là Chrome Extension Manifest V3. Không cần build, Node.js, npm hoặc file EXE. Workflow phát hành hiện có tại [`.github/workflows/release-extension.yml`](.github/workflows/release-extension.yml). **Khi commit thay đổi `manifest.json` trên nhánh `main`, workflow tự phát hành phiên bản mới.** Commit chỉ sửa code hoặc tài liệu khác không tự tạo Release.
 
 ## Tạo Release trực tiếp trên GitHub (không cần dùng Git)
 
-1. **Khi thực sự muốn phát hành phiên bản mới**, cập nhật trường `version` trong `manifest.json` trên nhánh `main`, ví dụ từ `1.0.1` thành `1.0.2`, và commit thay đổi. Không cần tăng version cho lần sửa tài liệu đơn thuần.
-2. Vào **Actions** → **Release extension** → **Run workflow**. Chọn nhánh **main** và chạy.
-3. Khi workflow thành công, vào **Releases** để lấy file `Game-Speed-Tester-vX.Y.Z.zip` và gửi cho bạn bè.
+1. **Khi thực sự muốn phát hành phiên bản mới**, cập nhật trường `version` trong `manifest.json` trên nhánh `main`, ví dụ từ `1.0.2` thành `1.0.3`, rồi commit thay đổi. GitHub tự chạy workflow để tạo Release.
+2. Khi workflow thành công, vào **Releases** để lấy file `Game-Speed-Tester-vX.Y.Z.zip` và gửi cho bạn bè.
+3. Nếu muốn phát hành lại theo phiên bản hiện đang có mà chưa có Release, vào **Actions** → **Release extension** → **Run workflow** trên nhánh **main**.
 
 Workflow thủ công tạo GitHub Release (và tag `vX.Y.Z` nếu chưa tồn tại) theo phiên bản trong `manifest.json`, rồi đính kèm ZIP. Mỗi phiên bản chỉ nên phát hành một lần. Nếu tag hoặc Release đã tồn tại ở commit khác, không dùng lại phiên bản cũ; hãy tăng `version`.
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Game Speed Tester",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Local movement-speed override for authorized testing on nghichthienky.online.",
   "minimum_chrome_version": "111",
   "permissions": ["storage"],
