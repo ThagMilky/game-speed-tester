@@ -95,6 +95,16 @@
           || !GSTFarmUpdate.attached(scene) || !connected(scene) || scene.leaving) {
         detach(); watch(); return;
       }
+      // A seal objective may appear without a scene reload. Re-evaluate the
+      // existing boss-safety owner only on transitions, including seal removal.
+      const sealPending = enabled && scene.auto.on && seals(scene).length > 0;
+      if (binding.safetyPending !== sealPending) {
+        const owner = binding;
+        binding.safetyPending = sealPending;
+        queueMicrotask(() => {
+          if (binding === owner) globalThis.GSTFarmBossSafety?.attach(scene);
+        });
+      }
       if (!scene.auto.on || scene.self?.dead) {
         holding = false;
         stopJob(); skipped.clear(); manualUntil = 0;
@@ -243,8 +253,11 @@
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:farm:v1"
         || event.data.type !== "configure") return;
     enabled = event.data.breakSeals === true;
-    if (!enabled) { detach(); clearInterval(watcher); watcher = null; message = ""; }
-    else { watch(); discover(); }
+    if (!enabled) {
+      detach(); clearInterval(watcher); watcher = null; message = "";
+      // If safety existed only because seals were active, release it now.
+      globalThis.GSTFarmBossSafety?.attach(sceneNow());
+    } else { watch(); discover(); }
   });
   window.addEventListener("pagehide", () => { suspended = true; detach(); clearInterval(watcher); watcher = null; });
   window.addEventListener("pageshow", () => { suspended = false; watch(); discover(); });

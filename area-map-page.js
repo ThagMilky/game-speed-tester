@@ -237,7 +237,11 @@
       ctx.fillStyle = "#94b9ff"; ctx.fillRect(x - 4, y - 4, 8, 8);
       state.markers.push({ x, y, item: { ...gate, type: "gate" } });
     }
+    const realm = scene?.map === map ? scene.self?.realm?.inside : null;
     for (const camp of [...state.camps].sort((a, b) => Number(a.live) - Number(b.live))) {
+      // Realm bosses have one authoritative encounter marker below. Historical
+      // camp positions (and moved boss sightings) are not separate bosses.
+      if (realm && camp.boss) continue;
       const x = sx(camp.x), y = sy(camp.y);
       if (x < -80 || x > w + 80 || y < -20 || y > h + 20) continue;
       const label = camp.boss ? (camp.level === null ? "Boss" : "Boss Lv." + camp.level)
@@ -270,12 +274,20 @@
     }
     // Unlike ordinary enemies, realm metadata is available at any distance,
     // including sealed objectives, chest positions and exit coordinates.
-    const realm = scene?.map === map ? scene.self?.realm?.inside : null;
     if (realm) {
       const markers = [];
       const b = realm.boss;
-      if (inside(map, b) && valid(b.hp) && b.hp > 0)
-        markers.push({ type: "realm-boss", x: b.x, y: b.y, hp: b.hp, label: "BOSS", color: "#ff576d" });
+      // Use a single live boss fallback only when realm metadata has no
+      // usable coordinates; a dead encounter must never show stale bosses.
+      const liveBoss = (!inside(map, b) || !valid(b?.hp))
+        ? [...(scene.views?.values?.() ?? [])].find((actor) => actor?.k === "m"
+          && !actor.dead && (actor.st?.cls === "boss" || actor.st?.wb === true)
+          && inside(map, actor)) : null;
+      const bossPoint = inside(map, b) ? b : liveBoss;
+      const bossHP = valid(b?.hp) ? b.hp : (liveBoss ? liveBoss.st?.hp : null);
+      if (inside(map, bossPoint) && (!valid(bossHP) || bossHP > 0))
+        markers.push({ type: "realm-boss", x: bossPoint.x, y: bossPoint.y,
+          hp: valid(bossHP) ? bossHP : null, label: "BOSS", color: "#ff576d" });
       for (const seal of Array.isArray(realm.seals) ? realm.seals : [])
         if (inside(map, seal) && valid(seal.hits) && seal.hits > 0)
           markers.push({ type: "seal", x: seal.x, y: seal.y, hits: seal.hits,

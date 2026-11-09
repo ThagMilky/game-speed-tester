@@ -48,9 +48,12 @@
       binding.scene.autoX = 0; binding.scene.autoY = 0;
     }
   }
-  function enabled() {
-    return ["boss", "bossLevel"].includes(settings.targetMode)
-      && (settings.bossDodge || settings.bossRetreat);
+  function enabled(scene = binding?.scene) {
+    const bossMode = ["boss", "bossLevel"].includes(settings.targetMode);
+    // Seals can be attacked with any farm target filter. Their hazard warnings
+    // still need the same safety owner, without enabling routine boss kiting.
+    const sealThreat = settings.bossDodge && globalThis.GSTFarmSeals?.pending?.(scene);
+    return (bossMode && (settings.bossDodge || settings.bossRetreat)) || !!sealThreat;
   }
   function connected(scene) {
     const d = scene.driver;
@@ -165,7 +168,9 @@
         || seconds <= 0 || seconds > 5) return false;
     const time = scene.now(), pos = { x: scene.px, y: scene.py };
     const boss = nearbyBoss(scene, pos);
-    if (!finite(time) || !boss || distance(boss, { x, y }) > 14) return false;
+    const sealWarning = globalThis.GSTFarmSeals?.pending?.(scene)
+      && distance(pos, { x, y }) < 8;
+    if (!finite(time) || !(boss && distance(boss, { x, y }) <= 14) && !sealWarning) return false;
     const existing = visibleWarnings.find((area) => distance(area, { x, y }) < 0.3
       && Math.abs(area.radius - radius) < 0.3 && area.until > time);
     if (existing) existing.until = Math.max(existing.until, time + seconds);
@@ -222,20 +227,43 @@
     const danger = hazards.filter((area) => distance(area, pos) <= area.radius + 1);
     const origin = danger[0] ?? boss;
     const baseAngle = origin ? Math.atan2(pos.y - origin.y, pos.x - origin.x) : 0;
-    let best = null, score = Infinity;
-    for (const step of [3, 5, 7, 9]) for (const turn of [0, 0.6, -0.6, 1.2, -1.2, 1.8, -1.8, Math.PI]) {
+    const steps = lowHp ? [3, 5, 7, 9] : [1.5, 2.5, 3.5, 5, 7];
+    const candidates = [];
+    const bossRange = boss ? distance(pos, boss) : 0;
+    if (!lowHp && boss && bossRange > 1) {
+      // Move along a short arc around the boss first, keeping attack range
+      // instead of retreating in a straight line for every small warning.
+      const angle = Math.atan2(pos.y - boss.y, pos.x - boss.x);
+      for (const step of steps) for (const side of [-1, 1]) {
+        const nextAngle = angle + side * step / bossRange;
+        candidates.push({ point: {
+          x: boss.x + Math.cos(nextAngle) * bossRange,
+          y: boss.y + Math.sin(nextAngle) * bossRange
+        }, orbit: true });
+      }
+    }
+    for (const step of steps) for (const turn of [Math.PI / 2, -Math.PI / 2, 0, 0.6, -0.6, 1.2, -1.2, Math.PI]) {
       const angle = baseAngle + turn;
-      const point = { x: pos.x + Math.cos(angle) * step, y: pos.y + Math.sin(angle) * step };
+      candidates.push({ point: {
+        x: pos.x + Math.cos(angle) * step,
+        y: pos.y + Math.sin(angle) * step
+      }, orbit: false });
+    }
+    let best = null, score = Infinity;
+    for (const candidate of candidates) {
+      const point = candidate.point;
       if (!inside(zone, point) || hazards.some((area) => distance(area, point) <= area.radius + 0.7)) continue;
-      if (lowHp && boss && distance(point, boss) < Math.max(7, distance(pos, boss) + 0.5)) continue;
-      if (!lowHp && boss && distance(point, boss) < Math.max(2, distance(pos, boss) - 0.5)) continue;
+      if (lowHp && boss && distance(point, boss) < Math.max(7, bossRange + 0.5)) continue;
+      if (!lowHp && boss && distance(point, boss) < Math.max(2, bossRange - 0.5)) continue;
       const route = host.clear(pos.x, pos.y, point.x, point.y)
         ? [[point.x, point.y]] : host.route(pos.x, pos.y, point.x, point.y);
       if (!pathSafe(scene, pos, route, zone, hazards)) continue;
-      const value = route.reduce((total, waypoint, index) => {
+      const length = route.reduce((total, waypoint, index) => {
         const before = index ? { x: route[index - 1][0], y: route[index - 1][1] } : pos;
         return total + distance(before, { x: waypoint[0], y: waypoint[1] });
-      }, 0) + Math.abs(turn) * 0.1;
+      }, 0);
+      const radialDrift = !lowHp && boss ? Math.abs(distance(point, boss) - bossRange) : 0;
+      const value = length + radialDrift * 1.2 + (candidate.orbit ? 0 : 0.35);
       if (value < score) { score = value; best = { point, path: route }; }
     }
     return best;
@@ -253,9 +281,9 @@
         { distance: travelled, direction: previous.direction });
     }
   }
-  function tryDash(scene, host, time, pos, bounds, hazards, target, boss, lowHp, cooldownGap) {
-    // Prefer Q for an actual warning; otherwise use Q defensively when every
-    // equipped attack is on its own cooldown. Never synthesize key events.
+  function tryDash(scene, host, time, pos, bounds, hazards, target, boss, lowHp) {
+    // Q is reserved for an imminent hazard, not ordinary attack cooldowns.
+    // Never synthesize key events.
     if (!settings.bossDodge || typeof scene.useSkill !== "function"
         || time - lastDashAt < 0.75 || (finite(scene.dashT) && scene.dashT > 0)
         || !finite(scene.faceX) || !finite(scene.faceY)
@@ -264,31 +292,35 @@
         || scene.self?.fx?.includes?.("r") || scene.self?.fx?.includes?.("s")) return false;
     const imminent = hazards.filter((area) => distance(pos, area) <= area.radius + 0.8
       && area.at - time <= 0.42 && area.until >= time);
-    const avoiding = imminent.length > 0, waiting = cooldownGap && boss && distance(pos, boss) < 9;
-    if (!avoiding && !waiting) return false;
-    const closest = avoiding
-      ? imminent.sort((a, b) => distance(pos, a) - distance(pos, b))[0] : boss;
+    if (!imminent.length) return false;
+    const closest = imminent.sort((a, b) => distance(pos, a) - distance(pos, b))[0];
     const outwardAngle = Math.atan2(pos.y - closest.y, pos.x - closest.x);
-    const goalAngle = avoiding && target
-      ? Math.atan2(target.point.y - pos.y, target.point.x - pos.x) : null;
-    const angles = [outwardAngle, outwardAngle + Math.PI / 4,
-      outwardAngle - Math.PI / 4, outwardAngle + Math.PI / 2,
-      outwardAngle - Math.PI / 2, outwardAngle + Math.PI, goalAngle].filter(finite);
+    const bossAngle = boss ? Math.atan2(pos.y - boss.y, pos.x - boss.x) : outwardAngle;
+    const goalAngle = target ? Math.atan2(target.point.y - pos.y, target.point.x - pos.x) : null;
+    const angles = [bossAngle + Math.PI / 2, bossAngle - Math.PI / 2,
+      outwardAngle + Math.PI / 2, outwardAngle - Math.PI / 2,
+      outwardAngle + Math.PI / 4, outwardAngle - Math.PI / 4,
+      outwardAngle, goalAngle].filter(finite);
     let best = null, score = -Infinity;
     for (const angle of angles) {
       const direction = [Math.cos(angle), Math.sin(angle)];
-      // The reference Q moves roughly two cells. Keep both corridor and end
-      // point inside the farm zone, not through a marked warning.
-      const preview = { x: pos.x + direction[0] * 1.9, y: pos.y + direction[1] * 1.9 };
-      if (!inside(bounds, preview) || !host.clear(pos.x, pos.y, preview.x, preview.y)
+      // Source snapshot: class Q dash is <= 2.04 cells. Use 2.4 cells
+      // as a conservative collision/zone preview, not just the old 1.9.
+      // A circular farm zone is convex: a safe segment stays inside it.
+      const preview = { x: pos.x + direction[0] * 2.4, y: pos.y + direction[1] * 2.4 };
+      const shortEnd = { x: pos.x + direction[0] * 1.75, y: pos.y + direction[1] * 1.75 };
+      if (!inside(bounds, preview) || !inside(bounds, shortEnd)
+          || !host.clear(pos.x, pos.y, preview.x, preview.y)
           || !clearOfHazards(pos, preview, hazards)
-          || (lowHp && boss && distance(preview, boss) < distance(pos, boss) - 0.1)) continue;
+          || imminent.some((area) => distance(shortEnd, area) <= area.radius + 0.3)
+          || (lowHp && boss && distance(shortEnd, boss) < distance(pos, boss) - 0.1)) continue;
       const progress = distance(preview, closest) - distance(pos, closest);
       if (progress < 0.2) continue;
-      const clearance = hazards.length
-        ? Math.min(...hazards.map((area) => distance(preview, area) - area.radius))
-        : boss ? distance(preview, boss) : progress;
-      const candidate = clearance + progress * 0.25 + (goalAngle === angle ? 0.1 : 0);
+      const clearance = Math.min(...hazards.map((area) => distance(preview, area) - area.radius));
+      const radialDrift = !lowHp && boss
+        ? Math.abs(distance(preview, boss) - distance(pos, boss)) : 0;
+      const candidate = Math.min(clearance, 3) * 0.6 + Math.min(progress, 2) * 0.25
+        - radialDrift * 1.2 + (goalAngle === angle ? 0.1 : 0);
       if (candidate > score) { best = direction; score = candidate; }
     }
     if (!best) return false;
@@ -307,9 +339,7 @@
     lastDashAt = time;
     retryAt = time + 0.3;
     dashObservation = { time, position: { ...pos }, direction: best, flying };
-    note(scene, avoiding ? "dash" : "cooldown_wait",
-      avoiding ? "Đã dùng Q để thoát vùng cảnh báo boss."
-        : "Các skill tấn công đang hồi; dùng Q giữ khoảng cách với boss.",
+    note(scene, "dash", "Đã dùng Q để thoát vùng cảnh báo sắp trúng.",
       { direction: best, flying, cooldown: scene.self.cd?.Q });
     return true;
   }
@@ -344,7 +374,7 @@
       const boss = nearbyBoss(scene, pos), hp = scene.self.hp / scene.self.mh;
       const hazards = settings.bossDodge ? hazardZones(scene, time) : [];
       const danger = hazards.some((area) => distance(area, pos) <= area.radius + 0.8
-        && area.at <= time + 2.2 && area.until >= time);
+        && area.at <= time + 0.75 && area.until >= time);
       if (job && danger) job.emergency = true;
       // A pending realm seal owns combat before the boss. Keep urgent hazard
       // dodging and low-HP retreat, but do not kite/spam Q solely for the boss
@@ -352,7 +382,9 @@
       const cooling = !globalThis.GSTFarmSeals?.pending?.(scene)
         && !!boss && offensiveCooldownGap(scene, host, time);
       const gapDistance = boss ? distance(pos, boss) : Infinity;
-      const cooldownKite = cooling && gapDistance <= 10;
+      // Only make a short spacing adjustment if the boss is almost touching us.
+      // Waiting for attack cooldown alone must not trigger a long kite/Q dash.
+      const cooldownKite = cooling && gapDistance < 4;
       if (settings.bossRetreat && !retreating && boss && hp < threshold) {
         retreating = true;
         note(scene, "retreat", "HP dưới 30%; ưu tiên giữ khoảng cách và chờ đan HP.",
@@ -389,23 +421,14 @@
       }
       if ((danger || cooldownKite) && settings.bossDodge) {
         const escape = job && inside(bounds, job.point) ? job : null;
-        if (tryDash(scene, host, time, pos, bounds, hazards, escape, boss,
-          retreating, cooldownKite)) return true;
-      }
-      // Keep a safe distance while all attacks are cooling. If no warning is
-      // present and the boss is already far enough, avoid oscillating back
-      // into melee range; yield as soon as any offensive skill is ready.
-      if (cooldownKite && !danger && !retreating && gapDistance >= 7) {
-        cooldownHolding = true;
-        release(); host.steer(0, 0);
-        if (performance.now() > noteUntil) note(scene, null, "Đang chờ skill tấn công hồi; giữ khoảng cách với boss.");
-        return true;
+        if (danger && tryDash(scene, host, time, pos, bounds, hazards, escape, boss,
+          retreating)) return true;
       }
       if (job && (!inside(bounds, job.point) || hazards.some((area) => distance(area, job.point) <= area.radius + 0.7)
           || !pathSafe(scene, pos, job.navigation.path.length ? job.navigation.path : [[job.point.x, job.point.y]], bounds, hazards)
-          || ((retreating || cooldownKite) && boss && distance(job.point, boss) < 7))) release();
+          || (retreating && boss && distance(job.point, boss) < 7))) release();
       if (!job && time >= retryAt) {
-        const next = destination(scene, host, pos, boss, hazards, retreating || cooldownKite, bounds);
+        const next = destination(scene, host, pos, boss, hazards, retreating, bounds);
         if (next) {
           const navigation = Object.assign(Object.create(scene.auto), { path: next.path.slice(),
             goalX: next.point.x, goalY: next.point.y, pathAt: time, lastX: pos.x, lastY: pos.y,
@@ -477,7 +500,7 @@
     if (!host || typeof host.clear !== "function" || typeof host.route !== "function") return;
     const boss = nearbyBoss(scene, pos);
     // Q is the game's native dash and can run before auto.update resumes.
-    if (tryDash(scene, host, time, pos, bounds, hazards, null, boss, false, false)) {
+    if (tryDash(scene, host, time, pos, bounds, hazards, null, boss, false)) {
       // Native Q with the no-manual-cancel argument leaves pendingSkill intact.
       // Cancel that queued cast after a successful emergency dash, too.
       if (scene.aiming && typeof scene.cancelAim === "function") scene.cancelAim();
@@ -543,16 +566,27 @@
     observe("onEvent", ([event]) => {
       if (event?.e !== "cast" || !finite(event.ax) || !finite(event.ay)) return;
       const caster = scene.views?.get?.(event.id);
-      if (!bossActor(caster) || (!scene.self?.combat && scene.auto?.target !== caster.id
-          && !globalThis.GSTMapTravel?.active?.(scene))
-          || distance({ x: scene.px, y: scene.py }, { x: event.ax, y: event.ay }) > 7) return;
-      if (rememberWarning(scene, event.ax, event.ay, 3.5, 0.9, "cast_estimate")
+      const playerPos = { x: scene.px, y: scene.py };
+      const isBoss = bossActor(caster);
+      const sealMonster = globalThis.GSTFarmSeals?.pending?.(scene)
+        && caster?.k === "m" && !caster.dead && caster.st?.cls !== "pet"
+        && finite(caster.x) && finite(caster.y)
+        && distance(caster, playerPos) <= 11
+        && event.key !== "Q" && event.key !== "Space";
+      if ((!isBoss && !sealMonster) || (isBoss && !scene.self?.combat
+          && scene.auto?.target !== caster.id && !globalThis.GSTMapTravel?.active?.(scene)
+          && !globalThis.GSTFarmSeals?.pending?.(scene))
+          || distance(playerPos, { x: event.ax, y: event.ay }) > 7) return;
+      // Ordinary monster cast locations are only cautious estimates; real
+      // realm.hazards remain the preferred authoritative zone source.
+      const radius = isBoss ? 3.5 : 2.3;
+      if (rememberWarning(scene, event.ax, event.ay, radius, 0.9, "cast_estimate")
           && performance.now() > noteUntil)
-        note(scene, "boss_cast", "Boss vừa dùng chiêu có tọa độ ngắm; đang ưu tiên thoát khu vực gần điểm ngắm.");
+        note(scene, "boss_cast", "Phát hiện cảnh báo chiêu gần nhân vật; đang ưu tiên thoát vùng nguy hiểm.");
     });
   }
   function attach(scene) {
-    if (!enabled() || suspended || !scene?.auto) { detach(); return; }
+    if (!enabled(scene) || suspended || !scene?.auto) { detach(); return; }
     if (binding?.scene === scene && binding.auto === scene.auto && GSTFarmUpdate.attached(scene)) return;
     detach();
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.update !== "function" || !scene.events?.on
