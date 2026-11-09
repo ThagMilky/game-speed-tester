@@ -143,19 +143,18 @@
   function checkpoint(scene, host, owner, area) {
     const bosses = bossObstacles(scene);
     const safe = {
-      clear: (x, y, gx, gy) => host.clear(x, y, gx, gy)
+      clear: (x, y, gx, gy) => permittedStep(scene, area, { x, y }, { x: gx, y: gy })
+        && host.clear(x, y, gx, gy)
         && (!bosses.length || clearOfBoss({ x, y }, { x: gx, y: gy }, bosses)),
       route: (x, y, gx, gy) => {
         const result = bosses.length
           ? safeBossRoute(scene, host, { x, y }, { x: gx, y: gy }, bosses)
           : host.route(x, y, gx, gy);
-        if (!Array.isArray(result)) return null;
-        return result.every((point) => Array.isArray(point) && point.length >= 2
-          && withinArea(area, { x: point[0], y: point[1] })) ? result : null;
+        return permittedRoute(scene, area, { x, y }, result) ? result : null;
       }
     };
     return GSTNavigation.leg(scene, owner, safe, owner.x, owner.y,
-      (point) => withinArea(area, point));
+      (point) => permittedStep(scene, area, { x: scene.px, y: scene.py }, point));
   }
   const segmentDistance = (point, start, end) => {
     const dx = end.x - start.x, dy = end.y - start.y;
@@ -233,6 +232,27 @@
   const withinArea = (area, point) => area && finite(point?.x) && finite(point?.y)
     && point.x >= 0 && point.y >= 0 && point.x < area.maxX && point.y < area.maxY && point.x >= area.minX && point.y >= area.minY
     && (!area.home || range(point, area.home) <= area.radius);
+  function permittedStep(scene, area, from, to) {
+    const w = scene.map?.w, h = scene.map?.h;
+    if (![from?.x, from?.y, to?.x, to?.y, w, h].every(finite)
+        || from.x < 0 || from.y < 0 || from.x >= w || from.y >= h
+        || to.x < 0 || to.y < 0 || to.x >= w || to.y >= h) return false;
+    if (!area.home || withinArea(area, from)) return withinArea(area, to);
+    // A realm/map objective may leave the farm circle. Once back under
+    // radius navigation, allow only inward progress until re-entering it.
+    return range(to, area.home) <= range(from, area.home) + 1e-6;
+  }
+  function permittedRoute(scene, area, from, route) {
+    if (!Array.isArray(route) || !route.length) return false;
+    let previous = from;
+    for (const point of route) {
+      if (!Array.isArray(point) || point.length < 2) return false;
+      const next = { x: point[0], y: point[1] };
+      if (!permittedStep(scene, area, previous, next)) return false;
+      previous = next;
+    }
+    return true;
+  }
   function release() {
     if (job && binding) GSTNavigation.cancel(binding.scene, job.navigation);
     if (job && binding && job.steer && binding.scene.autoX === job.steer[0] && binding.scene.autoY === job.steer[1]) {
@@ -471,7 +491,15 @@
         job.replans = 0; job.lastReplanAt = -Infinity;
       }
       const remaining = Math.hypot(scene.px - job.x, scene.py - job.y);
-      if (time - job.progressAt > (remaining > 18 ? 6 : 4) || time - job.startedAt > 120) {
+      const waitingForBoss = !target.actor && !target.scout && remaining <= 6;
+      if (waitingForBoss) {
+        // Reaching the known boss position is successful navigation.
+        // Waiting for the game to publish the boss actor is not a route stall.
+        job.progressAt = time; job.startedAt = time;
+        job.replans = 0; job.lastReplanAt = -Infinity;
+      }
+      if (!waitingForBoss && (time - job.progressAt > (remaining > 18 ? 6 : 4)
+          || time - job.startedAt > 120)) {
         if (time - job.startedAt > 120) {
           routeLog(scene, "map_stuck", { targetId: job.id, remaining,
             stuckMs: Math.max(0, (time - job.progressAt) * 1000),
@@ -497,8 +525,7 @@
         }
       }
       owner.denied = false;
-      const nearBossMetadata = !target.actor && !target.scout && distance <= 6;
-      const next = !nearBossMetadata && (owner.checkpoint || distance > 2.2)
+      const next = !waitingForBoss && (owner.checkpoint || distance > 2.2)
         ? checkpoint(scene, host, owner, area) : { x: owner.x, y: owner.y };
       if (owner.legArrived) {
         owner.progressAt = time;
@@ -508,22 +535,18 @@
       // same blocked 14-unit hop indefinitely.
       if (!next) return recover(scene, host, time, "walk_failed", remaining);
       const walking = { ...host,
-        clear: (x, y, gx, gy) => (!area.home
-            || withinArea(area, { x, y }) && withinArea(area, { x: gx, y: gy }))
+        clear: (x, y, gx, gy) => permittedStep(scene, area, { x, y }, { x: gx, y: gy })
           && host.clear(x, y, gx, gy)
           && (!bosses.length || clearOfBoss({ x, y }, { x: gx, y: gy }, bosses)),
         route: (x, y, gx, gy) => {
-          if (area.home && (!withinArea(area, { x, y }) || !withinArea(area, { x: gx, y: gy }))) return null;
           const route = bosses.length
             ? safeBossRoute(scene, host, { x, y }, { x: gx, y: gy }, bosses)
             : host.route(x, y, gx, gy);
-          if (!area.home || route === null) return route;
-          return Array.isArray(route) && route.every((point) => Array.isArray(point) && point.length >= 2
-            && withinArea(area, { x: point[0], y: point[1] })) ? route : null;
+          return permittedRoute(scene, area, { x, y }, route) ? route : null;
         },
         steer: (x, y) => {
-          if (area.home && (!finite(x) || !finite(y)
-              || !withinArea(area, { x: scene.px + x * 0.25, y: scene.py + y * 0.25 }))) {
+          if (!permittedStep(scene, area, { x: scene.px, y: scene.py },
+            { x: scene.px + x * 0.25, y: scene.py + y * 0.25 })) {
             owner.denied = true; x = 0; y = 0;
           }
           scene.autoX = x; scene.autoY = y; owner.steer = [x, y];
@@ -531,7 +554,7 @@
       if (target.scout && Math.hypot(scene.px - target.x, scene.py - target.y) <= 1.2) {
         explored.set(target.id, Infinity); release(); walking.steer(0, 0);
         message = "Đã tới điểm dò; đang tìm quái đúng bộ lọc.";
-      } else if (!target.actor && !target.scout && Math.hypot(scene.px - target.x, scene.py - target.y) <= 6) {
+      } else if (waitingForBoss) {
         walking.steer(0, 0); message = "Đã tới gần tọa độ boss; chờ game cung cấp actor boss để Auto Farm chọn mục tiêu.";
       } else if (!GSTNavigation.walk(scene, owner.navigation, walking, time, scene.px, scene.py, next.x, next.y,
           owner.checkpoint ? 0.8 : target.scout ? 1 : target.actor ? 1.8 : 5) || owner.denied) {

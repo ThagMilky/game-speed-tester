@@ -219,9 +219,14 @@
   function clearOfHazards(start, end, hazards) {
     return hazards.every((area) => {
       const radius = area.radius + 0.6, current = distance(start, area), destination = distance(end, area);
-      // When already in the marked circle, allow only an outward escape leg.
-      return current < radius ? destination > current + 0.15
-        : segmentDistance(area, start, end) >= radius;
+      if (current < radius) {
+        // An endpoint farther away is not enough: the segment could cross
+        // the center of the warning before exiting on the other side.
+        const outward = (start.x - area.x) * (end.x - start.x)
+          + (start.y - area.y) * (end.y - start.y);
+        return outward >= 0 && destination > current + 0.15;
+      }
+      return segmentDistance(area, start, end) >= radius;
     });
   }
   function pathSafe(scene, start, points, zone, hazards) {
