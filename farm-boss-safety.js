@@ -49,8 +49,11 @@
     }
   }
   function enabled(scene = binding?.scene) {
+    // Native Auto Farm can select a live boss even in "all" target mode.
+    const activeBoss = scene?.auto?.on === true
+      && bossActor(scene.views?.get?.(scene.auto.target));
     const bossMode = ["boss", "bossLevel"].includes(settings.targetMode)
-      || globalThis.GSTRealm?.seekBoss?.(scene) === true;
+      || globalThis.GSTRealm?.seekBoss?.(scene) === true || activeBoss;
     // Seals can be attacked with any farm target filter. Their hazard warnings
     // still need the same safety owner, without enabling routine boss kiting.
     const sealThreat = settings.bossDodge && globalThis.GSTFarmSeals?.pending?.(scene);

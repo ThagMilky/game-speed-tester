@@ -320,11 +320,13 @@
     if (travel && inside(map, travel)) {
       const points = Array.isArray(travel.path) ? travel.path.filter((p) =>
         Array.isArray(p) && p.length === 2 && p.every(valid)).slice(0, 80) : [];
-      ctx.strokeStyle = "#ffdc76"; ctx.lineWidth = 2; ctx.beginPath();
-      ctx.moveTo(sx(scene.px), sy(scene.py));
-      for (const point of points) ctx.lineTo(sx(point[0]), sy(point[1]));
-      if (!points.length) ctx.lineTo(sx(travel.x), sy(travel.y));
-      ctx.stroke();
+      // A missing route is not a confirmed straight line through the terrain.
+      if (points.length) {
+        ctx.strokeStyle = "#ffdc76"; ctx.lineWidth = 2; ctx.beginPath();
+        ctx.moveTo(sx(scene.px), sy(scene.py));
+        for (const point of points) ctx.lineTo(sx(point[0]), sy(point[1]));
+        ctx.stroke();
+      }
       ctx.fillStyle = "#ffdc76"; ctx.beginPath(); ctx.arc(sx(travel.x), sy(travel.y), 7, 0, Math.PI * 2);
       ctx.strokeStyle = "#ffdc76"; ctx.stroke();
     }

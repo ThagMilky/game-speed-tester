@@ -46,7 +46,7 @@
       ? "level_priority" : "";
   }
   globalThis.GSTFarmPriority = { compare: comparePriority, ranked, switchReason,
-    bossFocus: () => ["boss", "bossLevel"].includes(settings.targetMode) };
+    bossFocus: () => ["boss", "bossLevel"].includes(settings.targetMode) && !settings.excludeBoss };
   function filterLabel() {
     if (settings.targetMode === "bossLevel") return "Ưu tiên boss, rồi quái level cao đến thấp";
     if (settings.targetMode === "highLevel") return "Ưu tiên quái thường level cao đến thấp";
@@ -447,6 +447,15 @@
       }
       const time = s.scene.now();
       globalThis.GSTFarmBehavior?.attach(s.scene);
+      // Follow native target changes even when the user farms all monsters.
+      // Refresh periodically because a boss actor can appear/disappear
+      // without the native target ID changing.
+      if (finite(time) && (s.bossSafetyTarget !== s.auto.target
+          || time - (s.bossSafetyAt ?? -Infinity) >= 0.5)) {
+        s.bossSafetyTarget = s.auto.target;
+        s.bossSafetyAt = time;
+        globalThis.GSTFarmBossSafety?.attach?.(s.scene);
+      }
       syncFilter(s.scene);
       // A native handoff moves the game's 11-tile center to the remote camp.
       // It is not a manual relocation of the user's configured farm origin.

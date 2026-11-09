@@ -172,7 +172,9 @@ async function saveFarm(section) {
     patch = { targetMode, targetLevel: positiveLevel(targetLevel, 1),
       targetMinLevel: positiveLevel(targetMinLevel, 1), targetMaxLevel: positiveLevel(targetMaxLevel, 20),
       bossDodge: farmBossDodge.checked, bossRetreat: farmBossRetreat.checked };
-    if (targetMode === "boss") { patch.excludeBoss = false; farmExcludeBoss.checked = false; }
+    if (["boss", "bossLevel"].includes(targetMode)) {
+      patch.excludeBoss = false; farmExcludeBoss.checked = false;
+    }
   } else {
     if (farmAvoidEnabled.checked && (!farmAvoidLevel.reportValidity() || !farmAvoidDistance.reportValidity())) return;
     const avoidLevel = farmAvoidLevel.valueAsNumber, avoidDistance = farmAvoidDistance.valueAsNumber;
@@ -199,7 +201,7 @@ document.getElementById("saveFarmFilter").addEventListener("click", () => saveFa
 document.getElementById("saveFarmBehavior").addEventListener("click", () => saveFarm("behavior"));
 farmTargetMode.addEventListener("change", () => {
   syncFarmLevelInputs();
-  if (farmTargetMode.value === "boss") farmExcludeBoss.checked = false;
+  if (["boss", "bossLevel"].includes(farmTargetMode.value)) farmExcludeBoss.checked = false;
 });
 for (const input of [farmTargetMinLevel, farmTargetMaxLevel]) {
   input.addEventListener("input", () => farmTargetMaxLevel.setCustomValidity(""));
@@ -215,15 +217,15 @@ for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmNoRetre
   [breakSeals, "breakSeals"], [farmAvoidEnabled, "avoidEnabled"], [farmExcludeBoss, "excludeBoss"]]) {
   input.addEventListener("change", async () => {
     const next = input.checked, previousMode = farmTargetMode.value;
-    const resetBossOnly = key === "excludeBoss" && next && previousMode === "boss";
-    if (resetBossOnly) { farmTargetMode.value = "highLevel"; syncFarmLevelInputs(); }
+    const resetBossFocus = key === "excludeBoss" && next && ["boss", "bossLevel"].includes(previousMode);
+    if (resetBossFocus) { farmTargetMode.value = "highLevel"; syncFarmLevelInputs(); }
     input.disabled = true;
     try {
-      await updateFarmPreferences(resetBossOnly ? { excludeBoss: true, targetMode: "highLevel" } : { [key]: next });
+      await updateFarmPreferences(resetBossFocus ? { excludeBoss: true, targetMode: "highLevel" } : { [key]: next });
       farmFeedback.textContent = "";
     } catch {
       input.checked = !next;
-      if (resetBossOnly) { farmTargetMode.value = previousMode; syncFarmLevelInputs(); }
+      if (resetBossFocus) { farmTargetMode.value = previousMode; syncFarmLevelInputs(); }
       farmFeedback.textContent = "Chưa lưu được lựa chọn. Hãy thử lại.";
     }
     finally { input.disabled = false; }
@@ -395,15 +397,14 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
     : farmPreferences?.targetMode === "bossFirst" ? "bossLevel"
     : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
-  if (farmPreferences?.targetMode === "bossFirst") {
-    updateFarmPreferences({ targetMode: "bossLevel" }).catch(() => {
-      farmFeedback.textContent = "Chưa lưu được bộ lọc cũ; hãy bấm Lưu lựa chọn quái.";
-    });
-  }
-  if (farmTargetMode.value === "boss" && farmExcludeBoss.checked) {
+  if (farmExcludeBoss.checked && ["boss", "bossLevel"].includes(farmTargetMode.value)) {
     farmTargetMode.value = "highLevel";
     updateFarmPreferences({ targetMode: "highLevel" }).catch(() => {
       farmFeedback.textContent = "Chưa đồng bộ được bộ lọc boss; hãy lưu lại.";
+    });
+  } else if (farmPreferences?.targetMode === "bossFirst") {
+    updateFarmPreferences({ targetMode: "bossLevel" }).catch(() => {
+      farmFeedback.textContent = "Chưa lưu được bộ lọc cũ; hãy bấm Lưu lựa chọn quái.";
     });
   }
   farmTargetLevel.value = Number.isSafeInteger(farmPreferences?.targetLevel) && farmPreferences.targetLevel > 0
