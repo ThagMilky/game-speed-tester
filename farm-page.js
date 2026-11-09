@@ -45,7 +45,8 @@
       && challengerDistance <= 20 && challengerDistance <= distance(current, pos) + 3
       ? "level_priority" : "";
   }
-  globalThis.GSTFarmPriority = { compare: comparePriority, ranked, switchReason };
+  globalThis.GSTFarmPriority = { compare: comparePriority, ranked, switchReason,
+    bossFocus: () => ["boss", "bossLevel"].includes(settings.targetMode) };
   function filterLabel() {
     if (settings.targetMode === "bossLevel") return "Ưu tiên boss, rồi quái level cao đến thấp";
     if (settings.targetMode === "highLevel") return "Ưu tiên quái thường level cao đến thấp";

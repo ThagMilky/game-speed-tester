@@ -207,6 +207,9 @@
       if (preferences.seekBoss && performance.now() - bossAttachAt >= 1000) {
         bossAttachAt = performance.now();
         globalThis.GSTFarmMap?.attach?.(scene);
+        // Realm boss scouting may start after Auto Farm was configured.
+        // Keep the existing boss-safety owner in sync when the boss appears.
+        globalThis.GSTFarmBossSafety?.attach?.(scene);
       }
       if (job && (scene.self.dead || scene.uiBlocked || scene.harvesting || scene.auto.resting
           || scene.self.med || scene.self.fish || (!preferences.allowFarm && scene.auto.on))) release("Đang nhường giao diện/hồi phục hoặc Auto Farm.");
@@ -425,6 +428,8 @@
         detach(); clearInterval(watcher); watcher = null; message = "Các tùy chọn tìm cổng/boss đang tắt.";
       } else { watch(); discover(); }
       globalThis.GSTFarmMap?.attach?.(sceneNow());
+      // Disabling seekBoss must also release safety if no other owner needs it.
+      globalThis.GSTFarmBossSafety?.attach?.(sceneNow());
     }
     if (["configure", "status"].includes(event.data.type)) {
       window.postMessage({ channel: "gst:realm-status:v1", requestId: event.data.requestId, enabled: preferences.enabled,

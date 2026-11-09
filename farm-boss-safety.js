@@ -49,7 +49,8 @@
     }
   }
   function enabled(scene = binding?.scene) {
-    const bossMode = ["boss", "bossLevel"].includes(settings.targetMode);
+    const bossMode = ["boss", "bossLevel"].includes(settings.targetMode)
+      || globalThis.GSTRealm?.seekBoss?.(scene) === true;
     // Seals can be attacked with any farm target filter. Their hazard warnings
     // still need the same safety owner, without enabling routine boss kiting.
     const sealThreat = settings.bossDodge && globalThis.GSTFarmSeals?.pending?.(scene);
@@ -100,7 +101,14 @@
     const radius = settings.enabled ? settings.radius : 11;
     const home = GSTHarvest.farmOrigin(scene) ?? { x: scene.auto.ax, y: scene.auto.ay };
     if (![w, h, radius, home.x, home.y].every(finite) || w <= 0 || h <= 0 || radius < 11) return null;
-    return { w, h, home, radius: settings.enabled && settings.searchScope === "map" ? Infinity : radius };
+    // Ordinary radius farming stays inside its circle. An explicit realm
+    // boss/seal objective may travel beyond it; only then use map boundaries
+    // for emergency dodges rather than disabling safety outside the circle.
+    const realmObjective = globalThis.GSTRealm?.seekBoss?.(scene) === true
+      || globalThis.GSTFarmSeals?.pending?.(scene) === true;
+    const outsideFarmCircle = distance({ x: scene.px, y: scene.py }, home) > radius;
+    return { w, h, home, radius: settings.enabled && settings.searchScope === "map"
+      || (realmObjective && outsideFarmCircle) ? Infinity : radius };
   }
   function inside(zone, pos) {
     return finite(pos?.x) && finite(pos?.y) && pos.x >= 0 && pos.y >= 0
