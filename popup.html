@@ -98,6 +98,11 @@
           </div>
           <p class="save-mode">Số ô tính từ điểm bắt đầu farm. Ví dụ 30: tìm quái cách điểm đó tối đa 30 ô.</p>
           <p class="hint">Tự hồi sinh: luôn BẬT khi đang Auto Farm; tiếp tục farm sau mỗi lần hồi sinh, không giới hạn số lần chết. Vẫn chờ nút game sẵn sàng. Bạn chủ động tắt farm thì giữ TẮT.</p>
+          <div class="separated">
+            <label class="switch-row"><span>Tự quay lại điểm chết sau hồi sinh</span><input id="farmReturnDeath" class="switch" type="checkbox"></label>
+            <p class="save-mode">Tự lưu · chỉ chạy khi Auto Farm đang bật · mặc định TẮT</p>
+            <p class="hint">Sau khi hồi sinh, trở lại gần vị trí chết rồi tiếp tục farm tại đó. Chỉ áp dụng cùng bản đồ, không áp dụng trong bí cảnh; điểm chờ được giữ tối đa 2 phút trong tab. Di chuyển tay hoặc tắt Auto Farm sẽ hủy hành trình.</p>
+          </div>
           </div><div class="wide-group">
           <div class="two-columns separated">
             <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="boss">Chỉ boss</option><option value="bossLevel">Boss trước → Level cao đến thấp</option><option value="highLevel">Level cao → thấp (quái thường)</option><option value="lowLevel">Level thấp → cao (quái thường)</option><option value="maxLevel">Level ≤ mức chọn</option><option value="minLevel">Level ≥ mức chọn</option><option value="range">Trong khoảng level</option></select></div>

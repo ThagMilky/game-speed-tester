@@ -112,6 +112,10 @@
   function update(host, time) {
     const scene = binding?.scene, current = job;
     if (!current || current.scene !== scene || binding.auto !== this) return false;
+    if (current.mode === "return" && !scene.auto?.on) {
+      release("Đã hủy quay lại vị trí chết vì Auto Farm đang tắt.", true);
+      return false;
+    }
     if (!compatible(scene) || !connected(scene) || sceneNow() !== scene
         || scene.leaving || scene.map.scene !== current.map || scene.self.dead) {
       release("Hành trình đã dừng vì nhân vật hoặc bản đồ thay đổi.", true);
@@ -157,6 +161,12 @@
     const pos = { x: scene.px, y: scene.py }, goal = current.destination;
     const distance = Math.hypot(goal.x - pos.x, goal.y - pos.y);
     if (distance <= 1.1) {
+      if (current.mode === "return" && scene.auto?.on) {
+        // The next farm frame must search around where the return ended,
+        // not continue pursuing the pre-death farm center/target.
+        scene.auto.ax = pos.x; scene.auto.ay = pos.y;
+        scene.auto.target = 0; scene.auto.path = []; scene.auto.think = 0;
+      }
       release(current.mode === "return" ? "Đã quay lại gần vị trí chết."
         : "Đã tới điểm được chọn.", true);
       return true;
@@ -206,6 +216,11 @@
     if (!scene || sceneNow() !== scene || !scene.self) return;
     const map = scene.map?.scene, profile = scene.profile?.name;
     const inRealm = !!scene.self.realm?.inside;
+    const farmOn = scene.auto?.on === true;
+    if (binding.lastFarmOn === true && !farmOn && (job?.mode === "return" || pending)) {
+      release("Đã hủy quay lại vị trí chết vì bạn tắt Auto Farm.", true);
+    }
+    binding.lastFarmOn = farmOn;
     if (scene.self.dead) {
       if (!seenDead) {
         seenDead = true;
@@ -213,7 +228,7 @@
           release("Chết trong bí cảnh: không quay lại vị trí chết.", true);
         } else {
           release("Nhân vật đã chết; chờ hồi sinh.");
-          if (preferences.returnDeath && lastAlive && lastAlive.map === map
+          if (preferences.returnDeath && farmOn && lastAlive && lastAlive.map === map
               && lastAlive.profile === profile && Date.now() - lastAlive.at < 10000) {
             pending = { x: lastAlive.x, y: lastAlive.y, map, profile, at: Date.now() };
             savePending();
@@ -244,7 +259,7 @@
         pending = null; savePending();
       } else if (GSTFarmInput.movement(scene)) {
         release("Đã hủy quay lại vị trí chết vì bạn điều khiển nhân vật.", true);
-      } else if (!job && connected(scene) && !scene.leaving) {
+      } else if (!job && farmOn && connected(scene) && !scene.leaving) {
         revivedAt ??= performance.now();
         if (performance.now() - revivedAt >= 2000 && !(scene.auto?.deadAt > 0)) {
           const reason = begin(scene, pending, "return");

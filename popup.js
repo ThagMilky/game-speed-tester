@@ -30,6 +30,7 @@ const fontFamily = document.getElementById("fontFamily");
 const fontFeedback = document.getElementById("fontFeedback");
 const farmControls = document.getElementById("farmControls");
 const farmNoRetreat = document.getElementById("farmNoRetreat");
+const farmReturnDeath = document.getElementById("farmReturnDeath");
 const breakSeals = document.getElementById("breakSeals");
 const farmSearchScope = document.getElementById("farmSearchScope");
 const farmShowTargetLine = document.getElementById("farmShowTargetLine");
@@ -231,6 +232,22 @@ for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmNoRetre
     finally { input.disabled = false; }
   });
 }
+farmReturnDeath.addEventListener("change", async () => {
+  const next = farmReturnDeath.checked;
+  farmReturnDeath.disabled = true;
+  try {
+    // Keep the existing saved returnDeath flag: no migration or loss of
+    // preferences when moving the checkbox out of the map UI.
+    const saved = await chrome.storage.local.get("areaMapOptions");
+    await chrome.storage.local.set({
+      areaMapOptions: { ...saved.areaMapOptions, returnDeath: next }
+    });
+    farmFeedback.textContent = "";
+  } catch {
+    farmReturnDeath.checked = !next;
+    farmFeedback.textContent = "Chưa lưu được tùy chọn quay lại điểm chết. Hãy thử lại.";
+  } finally { farmReturnDeath.disabled = false; }
+});
 farmRadius.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm("scope"); });
 for (const name of Object.keys(GSTFont.families)) {
   const option = document.createElement("option");
@@ -359,7 +376,7 @@ fontControls.addEventListener("change", async () => {
   }
 });
 
-chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences", "farmPreferences", "farmShortcut"]).then(({ preferences, displayPreferences, fontPreferences, farmPreferences, farmShortcut }) => {
+chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences", "farmPreferences", "farmShortcut", "areaMapOptions"]).then(({ preferences, displayPreferences, fontPreferences, farmPreferences, farmShortcut, areaMapOptions }) => {
   enabledInput.checked = preferences?.enabled === true;
   document.getElementById("speedSettings").hidden = !enabledInput.checked;
   for (const [input, fallback] of [[walkingInput, 3.5], [flyingInput, 2], [farmWalkingInput, 2], [farmFlyingInput, 1.5]]) {
@@ -381,6 +398,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   fontControls.disabled = false;
   farmSearchScope.value = farmPreferences?.enabled === true && farmPreferences?.searchScope === "map" ? "map" : "radius";
   farmNoRetreat.checked = farmPreferences?.noRetreat !== false;
+  farmReturnDeath.checked = areaMapOptions?.returnDeath === true;
   farmBossDodge.checked = farmPreferences?.bossDodge !== false;
   farmBossRetreat.checked = farmPreferences?.bossRetreat !== false;
   syncFarmScope();
