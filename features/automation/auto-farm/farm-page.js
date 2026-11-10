@@ -489,7 +489,7 @@
         stop("Player dead; extended range paused until revival.");
         return;
       }
-      if (globalThis.GSTFarmDefense?.controls(s.scene)) { message = GSTFarmDefense.status(); return; }
+      if (globalThis.GSTFarmDefense?.controls(s.scene)) return;
       const time = s.scene.now();
       const host = s.scene.autoHost();
       const mapKey = nativeMapKey(host);
@@ -757,10 +757,15 @@
         if (scene?.self) dead = !!scene.self.dead;
         waitReason = nativeWaitReason(scene);
       } catch { /* Read-only status must not start or restart gameplay. */ }
+      const scene = sceneNow();
+      const defense = globalThis.GSTFarmDefense?.status(scene) || "";
+      const primary = defense || globalThis.GSTFarmBossSafety?.status(scene) || waitReason
+        || globalThis.GSTFarmMap?.status(scene) || globalThis.GSTFarmBehavior?.status(scene)
+        || globalThis.GSTFarmSession?.status(scene) || globalThis.GSTFarmSeals?.status(scene) || message;
+      const defenseInfo = autoOn === false && !defense ? globalThis.GSTFarmDefense?.status(scene, true) : "";
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
         message: (settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage
-          || (dead && respawnMessage ? respawnMessage : (globalThis.GSTFarmDefense?.status(sceneNow()) || globalThis.GSTFarmBossSafety?.status(sceneNow()) || waitReason || globalThis.GSTFarmMap?.status(sceneNow()) || globalThis.GSTFarmBehavior?.status(sceneNow())
-            || globalThis.GSTFarmSession?.status(sceneNow()) || globalThis.GSTFarmSeals?.status(sceneNow()) || message))),
+          || (dead && respawnMessage ? respawnMessage : primary)) + (defenseInfo ? ` · ${defenseInfo}` : ""),
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);
     }
   });

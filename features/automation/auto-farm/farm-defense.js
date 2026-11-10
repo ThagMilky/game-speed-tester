@@ -2,7 +2,7 @@
   "use strict";
   // This is an extension reaction threshold, not the game's attack range.
   const nearby = 1.3, finite = Number.isFinite;
-  let enabled = false, configured = false, suspended = false, binding = null, episode = null;
+  let enabled = false, configured = false, suspended = false, binding = null, episode = null, continuation = null;
   let message = "Chờ cài đặt tự vệ.", idleSince = null, idlePoint = null, lastIdleAt = -Infinity;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
@@ -13,9 +13,11 @@
     return actor?.id === id && actor?.k === "m" && actor.st && typeof actor.st.cls === "string" && actor.st.cls !== "pet"
       && !actor.dead && finite(actor.x) && finite(actor.y) ? actor : null;
   };
-  function clearEpisode(note) {
+  function clearEpisode(note, retainContinuation = false) {
     const old = episode, scene = binding?.scene;
-    episode = null; lastIdleAt = -Infinity; idleSince = null; idlePoint = null;
+    episode = null;
+    if (!retainContinuation) continuation = null;
+    lastIdleAt = -Infinity; idleSince = null; idlePoint = null;
     if (old && scene) {
       if (old.steer && scene.autoX === old.steer[0] && scene.autoY === old.steer[1]) scene.autoX = scene.autoY = 0;
       if (old.facing && scene.lockId === old.id && scene.faceX === old.facing[0] && scene.faceY === old.facing[1]) {
@@ -40,6 +42,25 @@
       && typeof host.face === "function" && typeof host.basic === "function" && typeof host.steer === "function"
       && typeof host.enemies === "function" && typeof scene.views?.get === "function"
       && (!scene.auto.on || scene.auto.skipped instanceof Map);
+  }
+  // All event and action paths must observe the same scene, player and map.
+  function validateContext(scene, host) {
+    if (!binding || binding.scene !== scene || !available(scene, host)) {
+      clearEpisode("Tự vệ không khả dụng; chờ kết nối và dữ liệu game.");
+      return false;
+    }
+    const key = host.mapKey();
+    if (typeof key !== "string" || !key.trim()) {
+      clearEpisode("Tự vệ không khả dụng; thiếu thông tin bản đồ.");
+      return false;
+    }
+    const identity = `${scene.you}:${key}`;
+    if (identity !== binding.identity || scene.auto.on !== binding.farmOn) {
+      binding.identity = identity; binding.farmOn = scene.auto.on;
+      clearEpisode("Tự vệ đang nhường; chờ trạng thái ổn định.");
+      return false;
+    }
+    return true;
   }
   function blocked(scene) {
     return GSTFarmInput.movement(scene) || scene.pendingSkill || scene.aiming || scene.heldAttack
@@ -79,40 +100,55 @@
   }
   function record(event) {
     const scene = binding?.scene;
-    if (!scene || !enabled || event?.e !== "dmg" || event.kind !== "p" || event.id !== scene.you
-        || !finite(event.v) || event.v <= 0 || !Number.isSafeInteger(event.by)) return;
-    const attacker = actorFor(scene, event.by), time = scene.now();
-    if (!attacker || !finite(time)) return;
-    if (episode) {
-      if (boss(attacker) && !episode.boss && time - episode.started < 4) {
-        clearEpisode(); episode = { id: attacker.id, boss: true, started: time, hitAt: time, farmOn: scene.auto.on };
+    if (!scene || !enabled) return;
+    try {
+      const host = scene.autoHost();
+      if (!validateContext(scene, host)) return;
+      if (event?.e !== "dmg" || event.kind !== "p" || event.id !== scene.you
+          || !finite(event.v) || event.v <= 0 || !Number.isSafeInteger(event.by)) return;
+      const attacker = actorFor(scene, event.by), time = scene.now();
+      if (!attacker || !finite(time)) return;
+      if (blocked(scene) || nativeBusy(scene, host)) {
+        clearEpisode("Tự vệ đang nhường thao tác khác."); return;
       }
-      return;
-    }
-    if (performance.now() - lastIdleAt > 500) return;
-    try { if (blocked(scene) || (scene.auto.on && scene.auto.target)) return; }
-    catch { clearEpisode("Tự vệ không khả dụng; thiếu dữ liệu game."); return; }
-    lastIdleAt = -Infinity;
-    episode = { id: attacker.id, boss: boss(attacker), started: time, hitAt: time, farmOn: scene.auto.on };
+      if (episode) {
+        if (attacker.id === episode.id) {
+          episode.hitAt = time;
+          if (continuation) continuation.hitAt = time;
+        } else if (boss(attacker) && !episode.boss && time - episode.started < 4) {
+          clearEpisode();
+          continuation = { id: attacker.id, hitAt: time };
+          episode = { id: attacker.id, boss: true, started: time, hitAt: time, farmOn: scene.auto.on };
+          message = "Tự vệ · đang chuẩn bị lùi khỏi boss.";
+        }
+        return;
+      }
+      const continuing = continuation && time >= continuation.hitAt && time - continuation.hitAt <= 8
+        && actorFor(scene, continuation.id) && (attacker.id === continuation.id || boss(attacker));
+      if (!continuing && performance.now() - lastIdleAt > 500) return;
+      if (scene.autoX || scene.autoY || (finite(scene.castAt) && scene.castAt > time && !continuing)) return;
+      lastIdleAt = -Infinity;
+      continuation = { id: attacker.id, hitAt: time };
+      episode = { id: attacker.id, boss: boss(attacker), started: time, hitAt: time, farmOn: scene.auto.on };
+      message = episode.boss ? "Tự vệ · đang chuẩn bị lùi khỏi boss." : "Tự vệ · đang chuẩn bị phản ứng.";
+    } catch { clearEpisode("Tự vệ không khả dụng; thiếu dữ liệu game."); }
   }
   function guard() {
     const scene = binding?.scene;
     if (!scene) return;
     try {
-      const host = scene.autoHost(), identity = `${scene.you}:${host.mapKey()}`;
-      if (!available(scene, host) || !host.mapKey()) {
-        clearEpisode("Tự vệ không khả dụng; chờ kết nối và dữ liệu game."); return;
-      }
-      if (identity !== binding.identity || scene.auto.on !== binding.farmOn) {
-        binding.identity = identity; binding.farmOn = scene.auto.on;
-        clearEpisode("Tự vệ đang nhường; chờ trạng thái ổn định."); return;
-      }
-      if (blocked(scene) || (episode && scene.auto.on && scene.auto.target)) { clearEpisode("Tự vệ đang nhường thao tác khác."); return; }
+      const host = scene.autoHost();
+      if (!validateContext(scene, host)) return;
+      if (blocked(scene) || nativeBusy(scene, host)) { clearEpisode("Tự vệ đang nhường thao tác khác."); return; }
       if (episode) return;
-      if (scene.autoX || scene.autoY || nativeBusy(scene, host) || scene.self.combat
-          || (finite(scene.castAt) && scene.castAt > scene.now())) {
+      const time = scene.now();
+      if (continuation && (time < continuation.hitAt || time - continuation.hitAt > 8
+          || !actorFor(scene, continuation.id))) continuation = null;
+      if (scene.autoX || scene.autoY) { clearEpisode("Tự vệ đang nhường di chuyển khác."); return; }
+      if (scene.self.combat || (finite(scene.castAt) && scene.castAt > time)) {
         idleSince = null; idlePoint = null; lastIdleAt = -Infinity; return;
       }
+      continuation = null;
       const pos = { x: scene.px, y: scene.py }, now = performance.now();
       if (!idlePoint || distance(pos, idlePoint) > 0.1) { idlePoint = pos; idleSince = now; }
       if (now - idleSince >= 350) { lastIdleAt = now; message = "Tự vệ bật · đang chờ."; }
@@ -123,24 +159,36 @@
     if (!scene || !job) return false;
     try {
       const attacker = actorFor(scene, job.id), pos = { x: scene.px, y: scene.py };
-      if (!available(scene, host) || blocked(scene) || scene.auto.on !== job.farmOn || (scene.auto.on && scene.auto.target)
-          || nativeBusy(scene, host) || !attacker || time < job.started || time - job.started > 4 || time - job.hitAt > 3) {
+      if (!validateContext(scene, host)) return false;
+      if (blocked(scene) || nativeBusy(scene, host)) {
+        clearEpisode("Tự vệ đang nhường thao tác khác."); return false;
+      }
+      if (!attacker || time < job.started) {
         clearEpisode("Tự vệ đã dừng và nhường game."); return false;
+      }
+      if (time - job.started > 4 || time - job.hitAt > 3) {
+        clearEpisode("Tự vệ đã kết thúc lượt; chờ đòn mới.", true); return false;
       }
       if (!job.boss && !job.goal && distance(pos, attacker) <= nearby && host.clear(pos.x, pos.y, attacker.x, attacker.y)) {
         if (!job.facing) { job.previousLock = scene.lockId; job.previousFace = [scene.faceX, scene.faceY]; }
+        if (!validateContext(scene, host)) return false;
         host.face(attacker.x, attacker.y, attacker.id); job.facing = [scene.faceX, scene.faceY];
         host.basic(); message = "Tự vệ · đang dùng đòn đánh thường."; return true;
       }
       if (!job.goal) {
         job.goal = retreat(scene, host, attacker);
-        if (!job.goal) { clearEpisode("Tự vệ nhường: không có đường lùi an toàn."); return false; }
+        if (!job.goal) { clearEpisode("Tự vệ nhường: không có đường lùi an toàn.", true); return false; }
       }
       if (!boundary(scene, pos) || !boundary(scene, job.goal) || !host.clear(pos.x, pos.y, job.goal.x, job.goal.y)
           || distance(pos, job.goal) <= 0.3 || time - job.started > 3) {
-        clearEpisode("Tự vệ đã kết thúc lượt lùi."); return false;
+        clearEpisode("Tự vệ đã kết thúc lượt lùi.", true); return false;
       }
       const dx = job.goal.x - pos.x, dy = job.goal.y - pos.y, length = Math.hypot(dx, dy);
+      // Distance from the current attacker must not decrease anywhere on the segment.
+      if (dx * (pos.x - attacker.x) + dy * (pos.y - attacker.y) <= 0) {
+        clearEpisode("Tự vệ nhường: đường lùi không còn an toàn.", true); return false;
+      }
+      if (!validateContext(scene, host)) return false;
       host.steer(dx / length, dy / length); job.steer = [scene.autoX, scene.autoY];
       message = job.boss ? "Tự vệ · đang đi lùi khỏi boss." : "Tự vệ · đang đi lùi khỏi quái.";
       return true;
@@ -191,7 +239,18 @@
     },
     attach,
     controls: (scene) => binding?.scene === scene && episode !== null,
-    status: () => enabled ? message : ""
+    status(scene, includeIdle = false) {
+      if (!enabled || !scene || sceneNow() !== scene) return "";
+      if (!binding || binding.scene !== scene) return includeIdle ? "Tự vệ không khả dụng; đang chờ scene." : "";
+      try {
+        const host = scene.autoHost(), key = host?.mapKey?.();
+        if (typeof key !== "string" || !key.trim())
+          return includeIdle ? "Tự vệ không khả dụng; thiếu thông tin bản đồ." : "";
+        if (`${scene.you}:${key}` !== binding.identity || scene.auto.on !== binding.farmOn) return "";
+        if (!available(scene, host)) return includeIdle ? "Tự vệ không khả dụng; chờ kết nối và dữ liệu game." : "";
+        return episode || includeIdle ? message : "";
+      } catch { return includeIdle ? "Tự vệ không khả dụng; thiếu dữ liệu game." : ""; }
+    }
   };
   window.addEventListener("keydown", manual, true);
   window.addEventListener("pointerdown", (event) => {
