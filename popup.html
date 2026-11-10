@@ -88,6 +88,8 @@
             <div><label for="farmRadius">Giới hạn vùng farm <span class="range">1–1.000 ô</span></label><input id="farmRadius" type="number" min="1" max="1000" step="1" value="22" required><small id="farmRadiusError" class="field-error" aria-live="polite"></small></div>
           </div>
           <p class="save-mode">Số ô tính từ điểm bắt đầu farm. Ví dụ 30: tìm quái cách điểm đó tối đa 30 ô.</p>
+          <label class="check-row"><input id="farmShowRange" type="checkbox"><span>Hiện vòng phạm vi farm trên game</span></label>
+          <p class="hint">Vòng xanh là giới hạn từ điểm bắt đầu; vòng xanh lá là vùng quét của Auto Farm gốc; vòng vàng quanh bản thân là vùng dọn quái gần khi bật.</p>
           <div class="two-columns separated">
             <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="boss">Chỉ boss</option><option value="bossLevel">Boss trước → tu vi cao đến thấp</option><option value="highLevel">Tu vi cao → thấp (quái thường)</option><option value="lowLevel">Tu vi thấp → cao (quái thường)</option><option value="maxLevel">Tới cảnh giới/tầng chọn</option><option value="minLevel">Từ cảnh giới/tầng chọn</option><option value="range">Trong khoảng cảnh giới/tầng</option></select></div>
             <div id="farmSingleLevel"><label for="farmTargetLevel">Mức tu vi quái</label><select id="farmTargetLevel" required disabled></select></div>
@@ -107,7 +109,10 @@
           </div></details>
           <details class="advanced separated"><summary id="farmDefenseSummary">Tự vệ &amp; tự động</summary><div class="advanced-body">
             <label class="check-row"><input id="farmSelfDefense" type="checkbox"><span>Tự vệ khi đứng chờ</span></label>
-            <p class="hint">Khi bị quái thường đánh, thử đánh thường nếu quái ở gần; khi bị boss đánh, chỉ đi lùi. Không tự đuổi theo.</p>
+            <p class="hint">Khi bị quái thường đánh, ưu tiên đánh thường khi an toàn; khi bị boss đánh, ưu tiên giữ khoảng cách và nhường cơ chế né.</p>
+            <label class="check-row separated"><input id="farmNearbyClear" type="checkbox"><span>Chủ động dọn quái sát người (có thể ngoài bộ lọc)</span></label>
+            <div class="input-action"><div><label for="farmNearbyRadius">Bán kính dọn gần (1–6 ô)</label><input id="farmNearbyRadius" type="number" min="1" max="6" step="1" value="2"></div></div>
+            <p class="hint">Không đuổi quái xa; ưu tiên đánh thường 1–2 quái ngoài bộ lọc. Luôn tôn trọng lựa chọn loại boss và nhường thao tác tay.</p>
             <label class="check-row separated"><input id="farmAutoMeditate" type="checkbox" checked><span>Tự thiền khi hết quái</span></label>
             <p class="hint">Độc lập với Tự vệ; chỉ dùng khi Auto Farm đang bật và đã nhặt đồ. Tắt sẽ ngừng phiên thiền do tool mở, không tắt thiền thủ công.</p>
             <label class="check-row separated"><input id="farmAutoRespawn" type="checkbox" checked><span>Tự động hồi sinh</span></label>
