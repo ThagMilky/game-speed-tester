@@ -5,7 +5,7 @@
   let enabled = false, configured = false, suspended = false, binding = null, episode = null, continuation = null;
   let message = "Chờ cài đặt tự vệ.", idleSince = null, idlePoint = null, lastIdleAt = -Infinity;
   let pendingHit = null, nearbySteer = null, nearbyAt = -Infinity, nearbyNote = "", nearbyNoteAt = -Infinity;
-  let nearbyOrigin = null, nearbyTarget = null;
+  let nearbyOrigin = null, nearbyTarget = null, nearbyPauseUntil = -Infinity;
   const nearbyIgnored = new Map();
   let groupIds = new Set(), groupUntil = -Infinity, groupOrigin = null;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
@@ -41,6 +41,18 @@
       && distance({ x: scene.px, y: scene.py }, groupOrigin)
         <= Math.min(3, settings.nearbyRadius || 2) + 0.25
       && Number.isFinite(scene.now()) && scene.now() < groupUntil && groupIds.size >= 3;
+  }
+  function nativeGroupInProgress(scene, time) {
+    if (!groupActive(scene) || !groupIds.has(scene.auto.target)
+        || !finite(time) || GSTFarmInput.movement(scene) || scene.auto.moved
+        || scene.leaving || scene.self?.dead || scene.auto.resting || scene.self.med
+        || scene.keyCapture || scene.heldAttack || scene.harvesting || scene.nav
+        || scene.uiBlocked || scene.overlay?.dialogOpen || scene.panels?.open
+        || GSTFarmRouting.blocked(scene) || otherOwner(scene, true)
+        || globalThis.GSTFarmBossSafety?.emergency?.(scene, time)) return false;
+    const target = actorFor(scene, scene.auto.target);
+    return !!target && !boss(target) && boundary(scene, target)
+      && distance(target, groupOrigin) <= (settings.nearbyRadius || 2) + 0.25;
   }
   function clearEpisode(note, retainContinuation = false) {
     const old = episode, scene = binding?.scene;
@@ -90,7 +102,7 @@
     const identity = `${scene.you}:${key}`;
     if (identity !== binding.identity || scene.auto.on !== binding.farmOn) {
       binding.identity = identity; binding.farmOn = scene.auto.on;
-      nearbyIgnored.clear();
+      nearbyIgnored.clear(); nearbyPauseUntil = -Infinity;
       clearEpisode("Tự vệ đang nhường; chờ trạng thái ổn định.");
       return false;
     }
@@ -185,7 +197,7 @@
         return;
       }
       const time = scene.now(), pos = { x: scene.px, y: scene.py };
-      if (!finite(time)) return;
+      if (!finite(time) || nativeGroupInProgress(scene, time)) return;
       const ownNearbyMove = nearbySteer && scene.autoX === nearbySteer[0] && scene.autoY === nearbySteer[1];
       if (blocked(scene, !!ownNearbyMove) || nativeBusy(scene, host) && !groupActive(scene)) {
         clearEpisode("Tự vệ đang nhường thao tác khác."); return;
@@ -249,12 +261,13 @@
       // A skill already started by native group combat is allowed to finish;
       // manual input, map changes and emergency boss dodges still abort it.
       const urgent = globalThis.GSTFarmBossSafety?.emergency?.(scene, time) === true;
-      if (groupActive(scene) && (scene.pendingSkill || scene.aiming)
-          && !urgent && !GSTFarmInput.movement(scene) && !scene.auto.moved
-          && !scene.leaving && !scene.self?.dead) {
-        groupUntil = time + 1;
+      if (!urgent && nativeGroupInProgress(scene, time)) {
+        // The game's native Auto Farm owns its movement, casts and attacks
+        // until the group target disappears or leaves the original sweep area.
+        groupUntil = time + 1.5;
         return false;
       }
+      if (groupIds.size && !nativeGroupInProgress(scene, time)) clearGroup();
       if (blocked(scene, true) || urgent) {
         clearNearby(); clearGroup(); return false;
       }
@@ -278,13 +291,15 @@
         .map((enemy) => ({ enemy, actor: actorFor(scene, enemy.id) }))
         .filter(({ actor }) => actor && !boss(actor))
         .sort((a, b) => distance(pos, a.actor) - distance(pos, b.actor));
-      const matching = nearby.filter(({ enemy }) => globalThis.GSTFarmPriority?.matches?.(enemy) !== false);
+      const matching = nearby.filter(({ enemy }) =>
+        globalThis.GSTFarmPriority?.matches?.(enemy) !== false && boundary(scene, enemy));
       if (groupIds.size && !groupActive(scene)) {
         for (const id of groupIds) nearbyIgnored.set(id, time + 5);
         clearGroup();
       }
       const outside = nearby.filter(({ enemy }) => globalThis.GSTFarmPriority?.matches?.(enemy) === false
-        && !nearbyIgnored.has(enemy.id) && boundary(scene, enemy));
+        && !nearbyIgnored.has(enemy.id) && boundary(scene, enemy)
+        && (!nearbyOrigin || distance(enemy, nearbyOrigin) <= radius + 0.25));
       if (matching.length) {
         clearNearby(); clearGroup();
         if (nativeBusy(scene, host)) return false;
@@ -301,6 +316,17 @@
       }
       if (!outside.length) {
         if (nearbyTarget !== null) nearbyIgnored.set(nearbyTarget, time + 5);
+        // The old sweep ends here. A brief gap prevents a chain of adjacent
+        // monsters from resetting the anchor every frame.
+        if (nearbyOrigin) nearbyPauseUntil = time + 2;
+        clearNearby(); clearGroup();
+        return false;
+      }
+      if (time < nearbyPauseUntil) return false;
+      if (!nearbyOrigin) nearbyOrigin = { ...pos };
+      const maxTravel = Math.min(3, radius);
+      if (distance(pos, nearbyOrigin) > maxTravel + 0.25) {
+        nearbyPauseUntil = time + 2;
         clearNearby(); clearGroup();
         return false;
       }
@@ -310,7 +336,7 @@
           <= radius + 0.25).map(({ enemy }) => enemy.id));
         if (groupIds.size >= 3) {
           groupUntil = time + 1.5;
-          clearNearby();
+          clearNearby(true);
           return false;
         }
         clearGroup();
@@ -318,9 +344,9 @@
       if (groupActive(scene) && outside.length < 3) clearGroup();
       if (nativeBusy(scene, host)) { clearNearby(); return false; }
       if (outside.length >= 3) {
-        clearNearby();
+        clearNearby(true);
         groupIds = new Set(outside.map(({ enemy }) => enemy.id));
-        groupOrigin = { ...pos };
+        groupOrigin = { ...nearbyOrigin };
         groupUntil = time + 1.5;
         const candidate = outside[0].enemy;
         // The filtered host will expose only these short-lived local targets
@@ -341,17 +367,17 @@
       }
       clearGroup();
       const target = outside[0].actor;
-      if (!nearbyOrigin || nearbyTarget !== target.id) {
-        clearNearby();
-        nearbyOrigin = { ...pos };
+      if (nearbyTarget !== target.id) {
+        // Retain the same anchor across consecutive targets in this sweep.
+        clearNearby(true);
         nearbyTarget = target.id;
       }
-      const maxTravel = Math.min(3, radius), dist = distance(pos, target);
+      const dist = distance(pos, target);
       if (distance(pos, nearbyOrigin) > maxTravel + 0.25
           || distance(target, nearbyOrigin) > radius + 0.25
           || !boundary(scene, target)) {
         nearbyIgnored.set(target.id, time + 6);
-        clearNearby();
+        clearNearby(true); nearbyTarget = null;
         nearbyNote = "Quái đã vượt vùng dọn gần; bỏ truy đuổi.";
         nearbyNoteAt = performance.now();
         return false;
@@ -363,7 +389,7 @@
         if (!host.clear(pos.x, pos.y, target.x, target.y) || !boundary(scene, step)
             || distance(step, nearbyOrigin) > maxTravel) {
           nearbyIgnored.set(target.id, time + 6);
-          clearNearby(); return false;
+          clearNearby(true); nearbyTarget = null; return false;
         }
         if (globalThis.GSTFarmMap?.controls?.(scene) || globalThis.GSTFarmMap?.nativeHandling?.(scene))
           globalThis.GSTFarmMap?.pauseForNearby?.(scene);
@@ -408,6 +434,14 @@
         const hit = pendingHit; pendingHit = null;
         record(hit.event, true);
       }
+      const time = scene.now();
+      if (nativeGroupInProgress(scene, time)) {
+        // Movement and casting are owned by native Auto Farm, not an unknown
+        // external controller. Do not let idle detection cancel the group.
+        idleSince = null; lastIdleAt = -Infinity;
+        return;
+      }
+      if (groupIds.size) clearGroup();
       if (blocked(scene, !!nearbySteer || !!episode)
           || nativeBusy(scene, host) && !groupActive(scene)) {
         if (episode) clearEpisode("Tự vệ đang nhường thao tác khác.");
@@ -415,7 +449,7 @@
         return;
       }
       if (episode) return;
-      const time = scene.now(), now = performance.now();
+      const now = performance.now();
       if (continuation && (time < continuation.hitAt || time > continuation.until
           || !continuation.ids.some((id) => actorFor(scene, id)))) continuation = null;
       if ((scene.autoX || scene.autoY) && !nearbySteer) {
@@ -429,7 +463,10 @@
       continuation = null;
       const pos = { x: scene.px, y: scene.py };
       if (!idlePoint || distance(pos, idlePoint) > 0.1) { idlePoint = pos; idleSince = now; }
-      if (now - idleSince >= 350) { lastIdleAt = now; message = "Tự vệ bật · đang chờ."; }
+      if (now - idleSince >= 350) {
+        lastIdleAt = now;
+        message = settings.selfDefense ? "Tự vệ bật · đang chờ." : "Dọn quái gần bật · đang chờ.";
+      }
     } catch { clearEpisode("Tự vệ không khả dụng; thiếu dữ liệu hoặc giao diện game."); }
   }
   function update(host, time) {
@@ -495,7 +532,8 @@
     } catch { clearEpisode("Tự vệ không khả dụng; đã nhường game."); return false; }
   }
   function detach() {
-    clearEpisode(); pendingHit = null; nearbyIgnored.clear(); const old = binding; binding = null;
+    clearEpisode(); pendingHit = null; nearbyIgnored.clear(); nearbyPauseUntil = -Infinity;
+    const old = binding; binding = null;
     if (!old) return;
     old.scene.events.off("preupdate", guard); old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach);
     old.removeInput(); old.removeEvent(); old.removeUpdate();
@@ -536,7 +574,9 @@
       const changed = enabled !== nextEnabled;
       settings = value; enabled = nextEnabled; configured = true;
       if (changed) detach();
-      if (!value.nearbyClear) { clearNearby(); clearGroup(); nearbyIgnored.clear(); }
+      if (!value.nearbyClear) {
+        clearNearby(); clearGroup(); nearbyIgnored.clear(); nearbyPauseUntil = -Infinity;
+      }
       if (binding) { binding.scope = value.searchScope; binding.expanded = value.enabled; binding.radius = value.radius; }
       attach(scene);
     },
