@@ -406,6 +406,7 @@
       globalThis.GSTFarmRevivePolicy?.attach(scene);
       globalThis.GSTFarmBehavior?.attach(scene);
       globalThis.GSTFarmDefense?.attach(scene);
+      globalThis.GSTFarmEncounter?.attach(scene);
       globalThis.GSTFarmBossSafety?.attach(scene);
       globalThis.GSTFarmMap?.attach(scene);
       globalThis.GSTFarmVisual?.attach(scene);
@@ -489,6 +490,7 @@
         stop("Player dead; extended range paused until revival.");
         return;
       }
+      globalThis.GSTFarmEncounter?.attach(s.scene);
       if (globalThis.GSTFarmDefense?.controls(s.scene)) return;
       const time = s.scene.now();
       const host = s.scene.autoHost();
@@ -715,11 +717,12 @@
         targetMinLevel: Number.isSafeInteger(data.targetMinLevel) && data.targetMinLevel > 0 ? data.targetMinLevel : 1,
         targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20,
         idleMode: ["home", "seek"].includes(data.idleMode) ? data.idleMode : "hold",
-        preferLoot: data.preferLoot !== false, selfDefense: data.selfDefense === true, excludeBoss: data.excludeBoss === true };
+        preferLoot: data.preferLoot !== false, selfDefense: data.selfDefense === true, autoEncounter: data.autoEncounter === true, excludeBoss: data.excludeBoss === true };
       globalThis.GSTFarmCombat?.configure(sceneNow(), settings.noRetreat);
       globalThis.GSTFarmBossSafety?.configure(sceneNow(), settings);
       globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);
       globalThis.GSTFarmDefense?.configure(sceneNow(), settings);
+      globalThis.GSTFarmEncounter?.configure(sceneNow(), settings);
       globalThis.GSTFarmMap?.configure(sceneNow(), settings);
       globalThis.GSTFarmVisual?.configure(sceneNow(), settings);
       globalThis.GSTFarmRouting?.configure(sceneNow(), settings);
@@ -763,9 +766,11 @@
         || globalThis.GSTFarmMap?.status(scene) || globalThis.GSTFarmBehavior?.status(scene)
         || globalThis.GSTFarmSession?.status(scene) || globalThis.GSTFarmSeals?.status(scene) || message;
       const defenseInfo = autoOn === false && !defense ? globalThis.GSTFarmDefense?.status(scene, true) : "";
+      const encounterInfo = globalThis.GSTFarmEncounter?.status(scene) || "";
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
         message: (settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage
           || (dead && respawnMessage ? respawnMessage : primary)) + (defenseInfo ? ` · ${defenseInfo}` : ""),
+        encounterStatus: encounterInfo,
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);
     }
   });

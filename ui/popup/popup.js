@@ -46,6 +46,7 @@ const farmTargetMaxLevel = document.getElementById("farmTargetMaxLevel");
 const farmIdleMode = document.getElementById("farmIdleMode");
 const farmPreferLoot = document.getElementById("farmPreferLoot");
 const farmSelfDefense = document.getElementById("farmSelfDefense");
+const farmAutoEncounter = document.getElementById("farmAutoEncounter");
 const positiveLevel = (value, fallback) => Number.isSafeInteger(value) && value > 0 ? value : fallback;
 const farmCompatibility = globalThis.GSTFarmCompatibility;
 function fillFarmThreshold(select, kind, current) {
@@ -146,10 +147,12 @@ async function refreshFarm() {
     autoFarmValue.textContent = status.autoOn === true ? "Đang bật" : status.autoOn === false ? "Đã tắt" : "Chưa rõ";
     autoFarmValue.dataset.state = status.autoOn === true ? "on" : status.autoOn === false ? "off" : "unknown";
     farmStatus.textContent = `Auto Farm của game: ${farmLabel}${status.dead ? " · Đã chết" : ""}. ${status.message}`;
+    document.getElementById("farmEncounterStatus").textContent = status.encounterStatus || "";
   } catch {
     autoFarmValue.textContent = "Chưa rõ";
     autoFarmValue.dataset.state = "unknown";
     farmStatus.textContent = "Mở tab game; tải lại tab sau khi cập nhật extension để đọc Auto Farm.";
+    document.getElementById("farmEncounterStatus").textContent = "";
   } finally { farmBusy = false; }
 }
 
@@ -167,6 +170,7 @@ function syncFarmScope() {
   farmRadius.closest(".input-action").hidden = farmSearchScope.value !== "radius";
 }
 function farmSummaries() {
+  document.getElementById("farmEncounterSummary").textContent = `Auto nhận kỳ ngộ · ${farmConfirmed.autoEncounter ? "bật" : "tắt"}`;
   document.getElementById("farmDefenseSummary").textContent = `Tự vệ khi đứng chờ · ${farmConfirmed.selfDefense ? "bật" : "tắt"}`;
   document.getElementById("farmBossSummary").textContent = `Boss · ${farmConfirmed.excludeBoss ? "không chọn boss" : "cho phép boss"}`;
   document.getElementById("farmRecoverySummary").textContent = `Hồi phục · ${farmConfirmed.noRetreat ? "không rút lui" : "theo game"}`;
@@ -184,7 +188,7 @@ async function saveFarmPatch(patch, rollback) {
   }
 }
 for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmNoRetreat, "noRetreat"],
-  [breakSeals, "breakSeals"], [farmPreferLoot, "preferLoot"], [farmSelfDefense, "selfDefense"], [farmBossDodge, "bossDodge"],
+  [breakSeals, "breakSeals"], [farmPreferLoot, "preferLoot"], [farmSelfDefense, "selfDefense"], [farmAutoEncounter, "autoEncounter"], [farmBossDodge, "bossDodge"],
   [farmBossRetreat, "bossRetreat"]]) {
   input.addEventListener("change", async () => {
     const next = input.checked;
@@ -425,6 +429,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   farmIdleMode.value = ["home", "seek"].includes(farmPreferences?.idleMode) ? farmPreferences.idleMode : "hold";
   farmPreferLoot.checked = farmPreferences?.preferLoot !== false;
   farmSelfDefense.checked = farmPreferences?.selfDefense === true;
+  farmAutoEncounter.checked = farmPreferences?.autoEncounter === true;
   farmExcludeBoss.checked = farmPreferences?.excludeBoss === true;
   farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
     : farmPreferences?.targetMode === "bossFirst" ? "bossLevel"
@@ -454,7 +459,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
     targetMode: farmTargetMode.value, targetLevel, targetMinLevel, targetMaxLevel,
     excludeBoss: farmExcludeBoss.checked,
     noRetreat: farmNoRetreat.checked, showTargetLine: farmShowTargetLine.checked,
-    breakSeals: breakSeals.checked, idleMode: farmIdleMode.value, preferLoot: farmPreferLoot.checked, selfDefense: farmSelfDefense.checked,
+    breakSeals: breakSeals.checked, idleMode: farmIdleMode.value, preferLoot: farmPreferLoot.checked, selfDefense: farmSelfDefense.checked, autoEncounter: farmAutoEncounter.checked,
     bossDodge: farmBossDodge.checked, bossRetreat: farmBossRetreat.checked
   };
   syncFarmScope();

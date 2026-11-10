@@ -42,6 +42,7 @@
       idleMode: ["home", "seek"].includes(value?.idleMode) ? value.idleMode : "hold",
       preferLoot: value?.preferLoot !== false,
       selfDefense: value?.selfDefense === true,
+      autoEncounter: value?.autoEncounter === true,
       excludeBoss: value?.excludeBoss === true,
       targetMode: value?.targetMode === "level" ? "maxLevel"
         : value?.targetMode === "bossFirst" ? "bossLevel"
@@ -79,6 +80,7 @@
     entry.respond({
       autoOn: typeof event.data.autoOn === "boolean" ? event.data.autoOn : null,
       dead: typeof event.data.dead === "boolean" ? event.data.dead : null,
+      encounterStatus: typeof event.data.encounterStatus === "string" ? event.data.encounterStatus.slice(0, 160) : "",
       message: typeof event.data.message === "string" ? event.data.message.slice(0, 240) : "No Auto Farm status."
     });
   });
