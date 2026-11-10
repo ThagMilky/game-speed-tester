@@ -258,8 +258,11 @@
       const host = original.apply(this, args);
       if ((!filteringActive() && !boundaryActive()) || !this.auto?.on) return host;
       // Keep the wrapper through recovery; the enemy getter exposes raw threats while resting.
-      const eligible = (enemy) => nativeEligible(enemy) && insideFarmBoundary(this, enemy)
-        && matchesTarget(enemy);
+      const eligible = (enemy) => nativeEligible(enemy) && (
+        insideFarmBoundary(this, enemy) && matchesTarget(enemy)
+        // Only a validated, opt-in nearby group may temporarily join native
+        // combat. This never includes an excluded boss or a distant actor.
+        || globalThis.GSTFarmDefense?.allowsNearbyTarget?.(this, enemy) === true);
       const allEligibleEnemies = () => {
         const enemies = typeof host?.enemies === "function" ? host.enemies() : [];
         return Array.isArray(enemies) ? enemies.filter(eligible) : [];
