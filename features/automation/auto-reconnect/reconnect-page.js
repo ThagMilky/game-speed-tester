@@ -104,9 +104,20 @@
     chat.feedback.textContent = "";
     send.disabled = false;
   }
+  function recoverableNetworkNotice() {
+    // The native retry loop emits this exact network error after exhaustion.
+    // An error received from the server can also set "noticed" for this text;
+    // that flag alone does not prove a permanently rejected session.
+    // Do not retry other errors, including rejection/other-login notices.
+    const panel = document.getElementById("lost");
+    return panel?.firstChild?.nodeType === Node.TEXT_NODE
+      && panel.firstChild.textContent?.trim() === "Mất kết nối máy chủ"
+      && panel.querySelector("button")?.textContent?.trim() === "Kết nối lại";
+  }
   function retry(owner, now, staleOpen) {
     const { driver } = owner;
-    if (owner.pending || owner.attempts >= retryDelays.length || driver.noticed
+    if (owner.pending || owner.attempts >= retryDelays.length
+        || (driver.noticed && !recoverableNetworkNotice())
         || driver.reconnecting || driver.handingOver || navigator.onLine === false
         || typeof driver.reconnect !== "function") return;
     const since = owner.attempts === 0
@@ -187,7 +198,7 @@
       try { open = driver.link.open() === true && !driver.reconnecting && !driver.handingOver; }
       catch { /* Report the last known state. */ }
       if (open && state.healthySince !== null && performance.now() - state.lastInbound < 10000) return "";
-      if (driver.displaced || driver.noticed)
+      if (driver.displaced || (driver.noticed && !recoverableNetworkNotice()))
         return "Mạng: phiên không thể tự khôi phục; hãy dùng Kết nối lại của game.";
       if (state.downSince === null) return "";
       if (state.attempts >= retryDelays.length && !state.pending && !driver.reconnecting)
