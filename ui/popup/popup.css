@@ -78,8 +78,11 @@ button:disabled, input:disabled, select:disabled { cursor: default; }
 .diagnostic p { margin: 8px 0 0; overflow-wrap: anywhere; }
 footer { padding: 0 2px; }
 input[type="search"] { width: 100%; min-height: 36px; padding: 7px 9px; font: inherit; color: var(--text); background: var(--subtle); border: 1px solid var(--border); border-radius: 7px; }
+.harvest-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.harvest-settings, .harvest-selection { min-width: 0; }
+.harvest-header { margin-bottom: 18px; }
 .harvest-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0; font-size: 11px; }
-.harvest-list { max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: 7px; padding: 6px 9px; }
+.harvest-list { max-height: clamp(220px, 48vh, 480px); overflow-y: auto; border: 1px solid var(--border); border-radius: 7px; padding: 6px 9px; }
 .harvest-list .check-row { align-items: flex-start; padding: 5px 0; }
 .harvest-list input { margin-top: 3px; }
 .harvest-list small { display: block; color: var(--muted); font-size: 10px; }
@@ -297,6 +300,9 @@ body.embedded {
 #farmControls .input-action { grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 760px) {
   body.embedded[data-orientation="horizontal"] .farm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 900px) {
+  body.embedded[data-orientation="horizontal"] .harvest-grid { grid-template-columns: minmax(230px, 1fr) minmax(0, 2fr); }
 }
 @media (min-width: 1050px) {
   body.embedded[data-orientation="horizontal"] .farm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

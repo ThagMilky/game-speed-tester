@@ -69,29 +69,38 @@
       if (!finite(time) || !finite(stamp) || time < stamp || time - stamp > 2 || stamp <= binding.freshAfter) {
         message = "Kỳ ngộ: đang chờ dữ liệu mới."; return;
       }
-      const current = scene.self?.kt?.kyngo, savedTotal = total(scene);
-      if (episode?.pending && !current && episode.baselineTotal !== null && savedTotal !== null && savedTotal > episode.baselineTotal
-          && stamp > episode.startSnapshot && scene.profile !== episode.profile) {
+      if (!scene.self || (scene.self.kt != null && typeof scene.self.kt !== "object")) {
+        message = "Kỳ ngộ: đang chờ dữ liệu nhân vật."; return;
+      }
+      // The snapshot omits kt entirely when no subsystem has live data.
+      const current = scene.self.kt?.kyngo, savedTotal = total(scene);
+      if (episode?.pending && current == null && episode.baselineTotal !== null && savedTotal !== null && savedTotal > episode.baselineTotal
+          && stamp > episode.startSnapshot && stamp > episode.snapshot && scene.profile !== episode.profile) {
         episode.confirmed = true; episode.pending = false; message = "Đã xác nhận nhận kỳ ngộ.";
       }
-      if (!current) {
-        if (episode) {
+      if (current == null) {
+        if (episode && stamp > episode.snapshot && !episode.ended) {
           episode.ended = true;
+          episode.absentSnapshot = stamp;
+          manualAt = -Infinity;
           if (!episode.confirmed) message = "Kỳ ngộ không còn; chưa xác nhận đã nhận.";
-        } else message = "Đang chờ kỳ ngộ.";
+        } else if (!episode) message = "Đang chờ kỳ ngộ.";
         return;
       }
       if (typeof current.k !== "string" || !current.k || typeof current.s !== "string" || !current.s
           || !finite(current.x) || !finite(current.y) || !finite(current.left) || current.left <= 0) {
         message = "Kỳ ngộ: dữ liệu không hợp lệ hoặc đã hết hạn."; return;
       }
-      if (!episode || !same(episode, current)) {
+      if (episode && !episode.ended && !same(episode, current)) {
+        message = "Kỳ ngộ: dữ liệu thay đổi; chờ xác nhận lượt mới."; return;
+      }
+      if (!episode || (episode.ended && stamp > episode.absentSnapshot)) {
         episode = { k: current.k, s: current.s, x: current.x, y: current.y, attempts: 0,
           lastAttempt: -Infinity, pending: false, confirmed: false, baselineTotal: savedTotal,
           profile: scene.profile, startSnapshot: stamp, snapshot: stamp, deadline: now + Math.max(0, current.left - 1 - (time - stamp)) * 1000 };
         if (now - manualAt < 5000) { episode.attempts = 1; episode.lastAttempt = manualAt; episode.pending = true; }
       } else if (episode.ended) {
-        return; // A vanished observation cannot acquire a new attempt budget.
+        return; // A new appearance requires a later fresh snapshot.
       } else if (stamp > episode.snapshot) {
         episode.snapshot = stamp;
         episode.deadline = Math.min(episode.deadline, now + Math.max(0, current.left - 1 - (time - stamp)) * 1000);

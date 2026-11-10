@@ -14,7 +14,11 @@
   let preferences = GSTHarvest.normalize(null);
   let catalog = [];
   let available = false;
-  let saving = false;
+  let confirmed = GSTHarvest.normalize(null);
+  let queue = Promise.resolve(), pending = [], storageRevision = 0, initialChange = null;
+  let mapAvailable = false, saveMessage = "";
+  const rangeErrors = new Map();
+  const dirty = new Set(), editVersions = new Map(), failedFields = new Set();
   let busy = false;
   let loaded = false;
   const debugPanel = byId("harvestDebugPanel");
@@ -82,139 +86,162 @@
     } catch { debugFeedback.textContent = "Chưa xóa được log; tab có thể đang tải lại."; }
   });
   const fold = (value) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
-  const kind = byId("harvestKind");
-  kind.addEventListener("change", () => save({ kind: kind.value }));
+  const kind = byId("harvestKind"), line = byId("harvestShowTargetLine");
+  function updateMessage() {
+    const draft = dirty.size ? " · Có số chưa xác nhận bằng Enter." : "";
+    feedback.textContent = ([...rangeErrors.values()][0] || (failedFields.size ? "Một lựa chọn chưa lưu; hãy kiểm tra và thử lại." : pending.length ? "Đang lưu…" : saveMessage)) + draft;
+  }
+  function derivePreferences() {
+    preferences = pending.reduce((value, action) => GSTHarvest.normalize({ ...value, ...action(value) }), confirmed);
+  }
   function renderList() {
-    byId("harvestShowTargetLine").checked = preferences.showTargetLine;
-    kind.value = preferences.kind;
-    scope.value = preferences.searchScope;
-    byId("harvestRadius").disabled = preferences.searchScope === "map";
+    enabled.checked = preferences.enabled; allowFarm.checked = preferences.allowFarm;
+    line.checked = preferences.showTargetLine; kind.value = preferences.kind;
+    scope.value = preferences.searchScope; mode.value = preferences.mode;
+    byId("harvestRadiusField").hidden = preferences.searchScope === "map";
+    byId("harvestEmptySelection").hidden = preferences.mode !== "selected" || preferences.items.length !== 0;
+    byId("harvestCoordSummary").textContent = `Phối hợp & hiển thị · farm ${confirmed.allowFarm ? "bật" : "tắt"} · đường ${confirmed.showTargetLine ? "bật" : "tắt"}`;
+    byId("harvestAdvancedSummary").textContent = `Nâng cao · dừng ${confirmed.reach} ô`;
     byId("harvestCount").textContent = `Đã chọn ${preferences.items.length} loại`;
     byId("clearHarvestItems").disabled = !preferences.items.length;
-    const focused = document.activeElement?.dataset?.item;
-    const inMap = new Map(catalog.map((item) => [item.name, item.inMap]));
-    const names = [...new Set([...preferences.items, ...inMap.keys()])]
+    const focused = document.activeElement?.dataset?.item, scroll = list.scrollTop;
+    const index = new Map(catalog.map((item) => [item.name, item]));
+    const names = [...new Set([...preferences.items, ...index.keys()])]
       .filter((name) => fold(name).includes(fold(search.value.trim())))
       .sort((a, b) => Number(preferences.items.includes(b)) - Number(preferences.items.includes(a)) || a.localeCompare(b, "vi"));
     const nodes = names.map((name) => {
-      const row = document.createElement("label");
-      row.className = "check-row";
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.dataset.item = name;
-      checkbox.checked = preferences.items.includes(name);
+      const row = document.createElement("label"); row.className = "check-row";
+      const checkbox = document.createElement("input"); checkbox.type = "checkbox";
+      checkbox.dataset.item = name; checkbox.checked = preferences.items.includes(name);
       checkbox.disabled = preferences.mode !== "selected";
-      const text = document.createElement("span");
-      const type = catalog.find((item) => item.name === name)?.kind;
-      text.textContent = `${type === "ore" ? "[Đào] " : type === "plant" ? "[Hái] " : type === "both" ? "[Hái/đào] " : ""}${name}`;
-      if (!inMap.get(name)) {
+      const text = document.createElement("span"), item = index.get(name), type = item?.kind;
+      text.textContent = `${type === "ore" ? "[Đào] " : type === "plant" ? "[Hái] " : type === "both" ? "[Hái & đào] " : ""}${name}`;
+      if (!mapAvailable || !item || item.inMap !== true) {
         const hint = document.createElement("small");
-        hint.textContent = available ? "Không có trong map" : "Đã lưu · chưa đọc được dữ liệu map";
+        hint.textContent = !mapAvailable ? "Chưa đọc được dữ liệu map"
+          : !item ? "Đã lưu · không có trong danh mục hiện tại" : "Không có trong map hiện tại";
         text.append(hint);
       }
-      row.append(checkbox, text);
-      return row;
+      row.append(checkbox, text); return row;
     });
     if (!nodes.length) {
-      const empty = document.createElement("p");
-      empty.className = "hint";
-      empty.textContent = available ? "Không có loại cây khớp tìm kiếm."
-        : "Bật Thu hoạch, chờ vào map để đọc danh sách cây từ game.";
+      const empty = document.createElement("p"); empty.className = "hint";
+      empty.textContent = available ? "Không có tài nguyên khớp tìm kiếm." : "Chưa đọc được danh mục tài nguyên từ game.";
       nodes.push(empty);
     }
     list.replaceChildren(...nodes);
-    if (focused) [...list.querySelectorAll("input")].find((input) => input.dataset.item === focused)?.focus();
+    if (focused) [...list.querySelectorAll("input")].find((input) => input.dataset.item === focused)?.focus({ preventScroll: true });
+    list.scrollTop = scroll;
   }
-  async function save(patch) {
-    if (saving) return;
-    const previous = preferences;
-    preferences = GSTHarvest.normalize({ ...preferences, ...patch });
-    saving = true;
-    controls.disabled = true;
-    try {
-      await chrome.storage.local.set({ harvestPreferences: preferences });
-      feedback.textContent = "";
+  function save(action, field) {
+    pending.push(action); derivePreferences(); renderList();
+    saveMessage = "Đang lưu…"; updateMessage();
+    const operation = queue.catch(() => {}).then(() => navigator.locks.request("gst:harvest-preferences", async () => {
+      const saved = await chrome.storage.local.get("harvestPreferences");
+      const current = GSTHarvest.normalize(saved.harvestPreferences);
+      const patch = action(current);
+      const merged = { ...saved.harvestPreferences, ...patch };
+      await chrome.storage.local.set({ harvestPreferences: merged });
+      const applied = GSTHarvest.normalize(merged);
+      let resultMessage = "Đã lưu cài đặt trên máy.";
       try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab?.id) throw new Error("No active tab");
-        const result = await chrome.tabs.sendMessage(tab.id, { type: "gst:harvest-configure", preferences });
-        if (result?.navigating) feedback.textContent = "Đã lưu. Game đang tải lại để áp dụng Thu hoạch.";
-        else if (!result?.accepted || !result.applied) throw new Error("Page has not confirmed configuration");
-      } catch {
-        feedback.textContent = "Đã lưu. Tải lại trang game nếu chưa áp dụng được.";
-      }
-      await refresh();
-    } catch {
-      preferences = previous;
-      feedback.textContent = "Chưa lưu được Thu hoạch. Hãy mở lại popup.";
-    } finally {
-      enabled.checked = preferences.enabled;
-      allowFarm.checked = preferences.allowFarm;
-      mode.value = preferences.mode;
-      renderList();
-      controls.disabled = false;
-      saving = false;
-    }
+        const result = await chrome.tabs.sendMessage(tab.id, { type: "gst:harvest-configure", preferences: applied });
+        if (result?.navigating) resultMessage = "Đã lưu; game đang tải lại để áp dụng.";
+        else if (result?.accepted && result.applied) resultMessage = "Đã lưu và game xác nhận áp dụng.";
+        else resultMessage = "Đã lưu; game chưa xác nhận áp dụng.";
+      } catch { resultMessage = "Đã lưu; chưa liên hệ được game để xác nhận áp dụng."; }
+      return { applied, resultMessage, revision: storageRevision };
+    }));
+    queue = operation;
+    operation.then(({ applied, resultMessage, revision }) => {
+      if (storageRevision === revision) confirmed = applied;
+      failedFields.delete(field); saveMessage = resultMessage;
+    }, () => { failedFields.add(field); saveMessage = "Chưa lưu được cài đặt; giá trị đã lưu vẫn được giữ."; }).finally(() => {
+      pending = pending.filter((item) => item !== action);
+      derivePreferences(); renderList(); updateMessage();
+      if (!pending.length) refresh();
+    });
   }
-  byId("harvestShowTargetLine").addEventListener("change", (event) => save({ showTargetLine: event.target.checked }));
-  enabled.addEventListener("change", () => save({ enabled: enabled.checked }));
-  allowFarm.addEventListener("change", () => save({ allowFarm: allowFarm.checked }));
-  mode.addEventListener("change", () => save({ mode: mode.value }));
+  const change = (key, input) => input.addEventListener("change", () => {
+    const value = input.type === "checkbox" ? input.checked : input.value;
+    save(() => ({ [key]: value }), key);
+  });
+  for (const [key, input] of [["showTargetLine", line], ["enabled", enabled], ["allowFarm", allowFarm],
+    ["mode", mode], ["searchScope", scope], ["kind", kind]]) change(key, input);
   search.addEventListener("input", renderList);
-  byId("clearHarvestItems").addEventListener("click", () => save({ items: [] }));
+  byId("clearHarvestItems").addEventListener("click", () => save(() => ({ items: [] }), "items"));
   list.addEventListener("change", (event) => {
     const name = event.target.dataset?.item;
     if (!name) return;
-    const items = new Set(preferences.items);
-    if (event.target.checked) items.add(name); else items.delete(name);
-    save({ items: [...items] });
+    const selected = event.target.checked;
+    save((current) => {
+      const items = new Set(current.items);
+      if (selected) items.add(name); else items.delete(name);
+      return { items: GSTHarvest.normalize({ ...current, items: [...items] }).items };
+    }, "items");
   });
-  scope.addEventListener("change", () => save({ searchScope: scope.value }));
-  function saveRanges() {
-    if (!ranges.every(([, input]) => input.reportValidity())) return;
-    save(Object.fromEntries(ranges.filter(([key]) => key !== "radius" || preferences.searchScope !== "map").map(([key, input]) => [key, input.valueAsNumber])));
+  for (const [key, input] of ranges) {
+    input.addEventListener("input", () => { dirty.add(key); editVersions.set(key, (editVersions.get(key) ?? 0) + 1); if (input.checkValidity()) rangeErrors.delete(key); updateMessage(); });
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      const value = input.valueAsNumber;
+      if (!input.checkValidity() || !Number.isFinite(value)) {
+        rangeErrors.set(key, "Số không hợp lệ; hãy kiểm tra giới hạn và bước nhập."); updateMessage(); return;
+      }
+      rangeErrors.delete(key);
+      const action = () => ({ [key]: value }), version = editVersions.get(key) ?? 0;
+      save(action, key);
+      // A later edit remains a draft even if this write completes.
+      queue.then(() => {
+        if ((editVersions.get(key) ?? 0) === version && input.valueAsNumber === value && input.checkValidity()) dirty.delete(key);
+        updateMessage();
+      }, () => {});
+    });
   }
-  byId("saveHarvestRange").addEventListener("click", saveRanges);
-  for (const [, input] of ranges) input.addEventListener("keydown", (event) => { if (event.key === "Enter") saveRanges(); });
   async function refresh() {
-    if (busy || !loaded) return;
+    if (busy || !loaded || pending.length) return;
     busy = true;
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab?.id) throw new Error("No active tab");
-      const data = await chrome.tabs.sendMessage(tab.id, { type: "gst:harvest-status", preferences });
+      const data = await chrome.tabs.sendMessage(tab.id, { type: "gst:harvest-status" });
       if (typeof data.applied !== "boolean") {
         status.textContent = "Tab game vẫn dùng cầu nối cũ. Tải lại extension tại chrome://extensions, rồi tải lại trang game.";
       } else if (typeof data.enabled !== "boolean") {
         status.textContent = `Trạng thái: ${data.message}`;
-      } else if (!data.applied || data.enabled !== preferences.enabled) {
-        status.textContent = `Đã lưu: ${preferences.enabled ? "BẬT" : "TẮT"} · Trang game: ${data.enabled ? "BẬT" : "TẮT"}. ${data.message}`;
+      } else if (!data.applied || data.enabled !== confirmed.enabled) {
+        status.textContent = `Đã lưu: ${confirmed.enabled ? "BẬT" : "TẮT"} · Trang game: ${data.enabled ? "BẬT" : "TẮT"}. ${data.message}`;
       } else {
         status.textContent = `Thu hoạch: ${data.enabled ? "BẬT" : "TẮT"} · ${data.message}`;
       }
       const next = Array.isArray(data.catalog) ? data.catalog : [];
-      if (JSON.stringify(next) !== JSON.stringify(catalog) || available !== (data.available === true)) {
-        catalog = next; available = data.available === true; renderList();
+      if (JSON.stringify(next) !== JSON.stringify(catalog) || available !== (data.available === true)
+          || mapAvailable !== (data.mapAvailable === true)) {
+        catalog = next; available = data.available === true; mapAvailable = data.mapAvailable === true; renderList();
       }
     } catch {
       status.textContent = "Mở tab game và tải lại sau khi cập nhật extension để đọc Thu hoạch.";
-      if (catalog.length || available) { catalog = []; available = false; renderList(); }
+      if (catalog.length || available || mapAvailable) { catalog = []; available = false; mapAvailable = false; renderList(); }
     } finally { busy = false; refreshDebug(); }
   }
   globalThis.GSTHarvestPopup = { refresh };
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== "local" || !changes.harvestPreferences || saving) return;
-    preferences = GSTHarvest.normalize(changes.harvestPreferences.newValue);
-    enabled.checked = preferences.enabled;
-    allowFarm.checked = preferences.allowFarm;
-    mode.value = preferences.mode;
-    renderList();
+    if (area !== "local" || !changes.harvestPreferences) return;
+    storageRevision++;
+    if (!loaded) { initialChange = { value: changes.harvestPreferences.newValue }; return; }
+    confirmed = GSTHarvest.normalize(changes.harvestPreferences.newValue);
+    for (const [key, input] of ranges) if (!dirty.has(key)) input.value = confirmed[key];
+    derivePreferences(); renderList(); updateMessage();
   });
   chrome.storage.local.get(["harvestPreferences", "harvestDebugEnabled"]).then((saved) => {
     debugToggle.checked = saved.harvestDebugEnabled === true;
     debugDetails.hidden = !debugToggle.checked;
     debugToggle.disabled = false;
-    preferences = GSTHarvest.normalize(saved.harvestPreferences);
+    confirmed = GSTHarvest.normalize(initialChange ? initialChange.value : saved.harvestPreferences);
+    preferences = confirmed;
     enabled.checked = preferences.enabled;
     allowFarm.checked = preferences.allowFarm;
     mode.value = preferences.mode;

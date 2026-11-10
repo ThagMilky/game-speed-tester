@@ -231,7 +231,7 @@
         attacked: row?.attacked === true, ready: row?.ready === true, fixChanged: row?.fixChanged === true,
         searchScope: row?.searchScope === "map" ? "map" : "radius"
       })),
-      available: data.available === true,
+      available: data.available === true, mapAvailable: data.mapAvailable === true,
       catalog: (Array.isArray(data.catalog) ? data.catalog : [])
         .filter((item) => typeof item?.name === "string" && item.name.length <= 120).slice(0, 200)
         .map((item) => ({ name: item.name, inMap: item.inMap === true, kind: ["plant", "ore", "both"].includes(item.kind) ? item.kind : "unknown" })) });
