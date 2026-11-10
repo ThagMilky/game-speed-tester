@@ -4,7 +4,7 @@
   const finite = Number.isFinite, deferred = new Map();
   const nativeEligible = (enemy) => enemy?.hostile === true || enemy?.aggro === false;
   const explored = new Map();
-  let scanAt = 0, correctionUntil = 0, lastFix;
+  let scanAt = 0, exhaustedUntil = 0, correctionUntil = 0, lastFix;
   let resumeTarget = null, handoff = null, resumeReason = null, centerSync = null;
   const nativeReach = 6.5, handoffReach = 5.5;
   function observeHit(scene, event) {
@@ -319,27 +319,36 @@
     const target = better || localPriority ? challenger : pursuing ?? returning ?? current ?? nearbyAggro ?? challenger;
     if (target?.id === resumeTarget) resumeTarget = null;
     if (target) return { ...target, actor: true, switchReason: better || localPriority || "" };
-    if (monsters.length) { message = "Các mục tiêu phù hợp đang được tạm bỏ do cooldown/đường bị chặn; chờ trước khi thử lại."; return null; }
-    if (!scouting && preferences.idleMode === "home") {
-      const home = globalThis.GSTHarvest?.farmOrigin?.(scene);
-      if (home && withinArea(area, home) && range(home, { x: scene.px, y: scene.py }) > 1.2)
-        return { id: "farm:home", x: home.x, y: home.y, actor: false, home: true };
+    if (monsters.length) {
+      // All known candidates are skipped/deferred. Rest only until the earliest retry.
+      if (preferences.idleMode === "seek" && !eligible.length) {
+        const retryTimes = monsters.map((enemy) => Math.max(scene.auto.skipped.get(enemy.id) || time,
+          deferred.get(enemy.id) || time)).filter((until) => until > time);
+        exhaustedUntil = retryTimes.length ? Math.min(...retryTimes) : 0;
+      }
+      message = "Các mục tiêu phù hợp đang được tạm bỏ do cooldown/đường bị chặn; chờ trước khi thử lại.";
+      return null;
     }
+    const returnHome = () => {
+      if (scouting || preferences.idleMode !== "home" || seekRealmBoss(scene)) return null;
+      const home = globalThis.GSTHarvest?.farmOrigin?.(scene);
+      return home && withinArea(area, home) && range(home, { x: scene.px, y: scene.py }) > 1.2
+        ? { id: "farm:home", x: home.x, y: home.y, actor: false, home: true } : null;
+    };
     if (preferences.targetMode !== "boss")
-      return scouting && preferences.idleMode === "seek" ? scout(scene, time) : null;
+      return scouting && preferences.idleMode === "seek" ? scout(scene, time) : returnHome();
     const known = [...scene.views.values()].some((actor) => actor.k === "m" && !actor.dead
       && (actor.st?.cls === "boss" || actor.st?.wb === true));
     if (known) { message = "Boss đã có dữ liệu nhưng không qua bộ lọc hiện tại."; return null; }
     const metadata = scene.self.realm?.inside?.boss;
-    if (!metadata || !finite(metadata.hp) || metadata.hp <= 0) {
-      message = metadata?.hp === 0 ? "Boss bí cảnh đã bị hạ; giữ bộ lọc Chỉ boss."
-        : "Chưa có tọa độ boss trong dữ liệu game gửi về; chưa thể tự đi tìm boss này.";
-      return metadata?.hp === 0 || !scouting || preferences.idleMode !== "seek" ? null : scout(scene, time);
-    }
-    if (!withinArea(area, metadata)) {
-      message = "Tọa độ boss nằm ngoài vùng farm đã chọn; không tự đi tới."; return null;
-    }
-    return { ...metadata, actor: false };
+    if (metadata && finite(metadata.hp) && metadata.hp > 0 && withinArea(area, metadata))
+      return scouting ? null : { ...metadata, actor: false };
+    if (metadata && finite(metadata.hp) && metadata.hp > 0 && !withinArea(area, metadata))
+      message = "Tọa độ boss nằm ngoài vùng farm đã chọn; không tự đi tới.";
+    else message = metadata?.hp === 0 ? "Boss bí cảnh đã bị hạ; giữ bộ lọc Chỉ boss."
+      : "Chưa có tọa độ boss trong dữ liệu game gửi về; chưa thể tự đi tìm boss này.";
+    if (scouting && preferences.idleMode === "seek" && metadata?.hp !== 0) return scout(scene, time);
+    return returnHome();
   }
   function scout(scene, time) {
     const area = searchArea(scene);
@@ -350,6 +359,7 @@
     if (job?.scout) { explored.set(job.id, Infinity); release(); }
     if (time < scanAt) { message = "Chưa thấy quái phù hợp; chờ nhịp dò vùng tiếp theo."; return null; }
     scanAt = time + 1;
+    exhaustedUntil = 0;
     // Prefer existing map/observed camp coordinates before sampling arbitrary cells.
     const camps = globalThis.GSTAreaMap?.knownCamps?.(scene) ?? [];
     const camp = camps.filter((item) => {
@@ -385,7 +395,8 @@
     }
     if (!best) {
       for (const [id, until] of explored) if (until === Infinity) explored.delete(id);
-      scanAt = time + 10; message = "Đã dò các điểm hiện có; chờ trước khi dò lại.";
+      scanAt = time + 10; exhaustedUntil = scanAt;
+      message = "Đã dò các điểm hiện có; chờ trước khi dò lại.";
     }
     return best;
   }
@@ -404,6 +415,8 @@
     if (sceneNow() !== scene || binding.auto !== scene.auto || !scene.sys?.isActive?.()) { detach(); return; }
     if (job && (globalThis.GSTMapTravel?.active(scene) || !allowed(scene) || scene.castAt !== job.castAt
         || globalThis.GSTFarmBossSafety?.controls(scene))) {
+      if (globalThis.GSTFarmDefense?.controls?.(scene) && job.actor)
+        resumeTarget = job.id;
       release(); retryAt = scene.now() + 0.5;
     }
   }
@@ -421,7 +434,8 @@
       const mapKey = hostMapKey(host);
       if (mapKey !== null && binding.mapKey !== mapKey) {
         release(); endHandoff("map_changed");
-        resumeTarget = null; resumeReason = null; deferred.clear(); explored.clear(); scanAt = 0; retryAt = 0;
+        resumeTarget = null; resumeReason = null; deferred.clear(); explored.clear();
+        scanAt = 0; exhaustedUntil = 0; retryAt = 0;
         lastFix = undefined; correctionUntil = 0; centerSync = null;
         binding.mapKey = mapKey;
         message = "Map/kênh đã đổi; xóa hành trình và cache cũ, chờ dữ liệu mới.";
@@ -460,6 +474,7 @@
       if (job?.scout && preferences.idleMode !== "seek") release();
       const target = destination(scene, host, time, scouting);
       if (!target) { if (scouting || !job?.scout) release(); return false; }
+      exhaustedUntil = 0;
       if (scouting && !target.scout) return false;
       if (!scouting && job?.actor && target.actor && job.id === target.id && !scene.auto.target
           && typeof host.enemies === "function") {
@@ -618,7 +633,8 @@
       old.scene.events.off("preupdate", guard);
       old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach);
     }
-    retryAt = 0; message = ""; deferred.clear(); explored.clear(); scanAt = 0; lastFix = undefined; correctionUntil = 0;
+    retryAt = 0; message = ""; deferred.clear(); explored.clear();
+    scanAt = 0; exhaustedUntil = 0; lastFix = undefined; correctionUntil = 0;
     resumeTarget = null; handoff = null; resumeReason = null; centerSync = null;
   }
   function attach(scene) {
@@ -642,6 +658,35 @@
     // advertise a lock that prevents those earlier handlers from starting.
     controls: (scene) => !!binding && binding.scene === scene && job !== null && !job.scout,
     nativeHandling: (scene) => !!binding && binding.scene === scene && !!scene?.auto?.on && handoff !== null,
+    mayMeditate(scene) {
+      // Only an actual exhaustion/cooldown pause can yield to meditation.
+      if (!binding || binding.scene !== scene || !scene?.auto?.on || !wanted(scene))
+        return true; // No extended navigator exists.
+      return preferences.idleMode === "seek" && !job && !handoff
+        && finite(scene.now()) && exhaustedUntil > scene.now();
+    },
+    actionable(scene, enemy) {
+      if (!enemy || !Number.isSafeInteger(enemy.id) || !scene?.auto || !finite(scene.now()))
+        return false;
+      const time = scene.now();
+      return !(scene.auto.skipped?.get?.(enemy.id) > time)
+        && !(binding?.scene === scene && deferred.get(enemy.id) > time);
+    },
+    pauseForNearby(scene) {
+      if (binding?.scene !== scene || !scene.auto?.on) return;
+      if (job?.actor) resumeTarget = job.id;
+      if (job) release();
+      if (handoff) endHandoff("nearby_priority");
+      retryAt = scene.now() + 0.2;
+    },
+    handoffNearby(scene, target) {
+      if (binding?.scene !== scene || !scene.auto?.on || !Number.isSafeInteger(target?.id)
+          || !nativeEligible(target) || !withinArea(searchArea(scene), target)) return false;
+      const time = scene.now();
+      if (!finite(time)) return false;
+      yieldToNative(scene, time, target, "nearby_priority");
+      return true;
+    },
     consumeCenter(scene) {
       if (binding?.scene !== scene) return null;
       const aligned = centerSync;
