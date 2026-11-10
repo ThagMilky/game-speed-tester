@@ -300,7 +300,6 @@ body.embedded {
 }
 @media (min-width: 1050px) {
   body.embedded[data-orientation="horizontal"] .farm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  body.embedded[data-orientation="horizontal"] .farm-extra { grid-column: 3; }
 }
 @media (max-width: 759px) {
   body.embedded .wide-groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }

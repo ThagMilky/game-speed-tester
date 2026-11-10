@@ -29,6 +29,7 @@ const fontEnabled = document.getElementById("fontEnabled");
 const fontFamily = document.getElementById("fontFamily");
 const fontFeedback = document.getElementById("fontFeedback");
 const farmControls = document.getElementById("farmControls");
+const farmRightControls = document.getElementById("farmRightControls");
 const farmNoRetreat = document.getElementById("farmNoRetreat");
 const farmReturnDeath = document.getElementById("farmReturnDeath");
 const breakSeals = document.getElementById("breakSeals");
@@ -158,7 +159,9 @@ async function refreshFarm() {
 let farmConfirmed = {};
 let farmDraftError = false;
 function farmHasDraft() {
-  return farmDraftError || [farmRadius, farmAvoidDistance].some((input) => input.value !== String(farmConfirmed[input === farmRadius ? "radius" : "avoidDistance"]));
+  return farmDraftError || Number(farmTargetMinLevel.value) !== farmConfirmed.targetMinLevel
+    || Number(farmTargetMaxLevel.value) !== farmConfirmed.targetMaxLevel
+    || [farmRadius, farmAvoidDistance].some((input) => input.value !== String(farmConfirmed[input === farmRadius ? "radius" : "avoidDistance"]));
 }
 function farmMessage(message) {
   farmFeedback.textContent = message + (farmDraftError ? " · Khoảng tu vi không hợp lệ, chưa lưu." : farmHasDraft() ? " · Có bản nháp chưa lưu." : "");
@@ -235,7 +238,7 @@ for (const input of [farmTargetMinLevel, farmTargetMaxLevel]) {
     }
     farmTargetMinLevel.disabled = farmTargetMaxLevel.disabled = true;
     farmDraftError = false;
-    await saveFarmPatch({ targetMinLevel: min, targetMaxLevel: max }, () => { farmDraftError = true; });
+    await saveFarmPatch({ targetMinLevel: min, targetMaxLevel: max });
     farmTargetMinLevel.disabled = farmTargetMaxLevel.disabled = false;
   });
 }
@@ -466,6 +469,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   syncFarmScope();
   farmSummaries();
   farmControls.disabled = false;
+  farmRightControls.disabled = false;
   const shortcutCode = farmShortcut?.code;
   if (Number.isInteger(shortcutCode) && ((shortcutCode >= 48 && shortcutCode <= 57)
       || (shortcutCode >= 65 && shortcutCode <= 90) || (shortcutCode >= 112 && shortcutCode <= 121 && shortcutCode !== 116))) {

@@ -115,14 +115,16 @@
             <p class="hint">Chỉ hoạt động khi Auto Farm đang BẬT. Quái từ mức né trở lên không được chọn để chủ động đánh, kể cả khi chọn Tất cả/Chỉ boss. Chỉ lùi sau đòn có nguồn xác định; không đoán từ con gần nhất. Chờ 3 giây giữa lượt né; ra xa thì tiếp tục farm quái phù hợp. 2 ô không bảo đảm thoát đòn đánh xa. Không có đường ngắn an toàn thì nhường xử lý gốc.</p>
           </div></details>
           </div>
+        </fieldset>
           <div class="farm-column farm-right">
+          <fieldset id="farmRightControls" disabled aria-label="Tùy chọn Boss và hồi phục">
           <details id="farmBossSafetyOptions" class="advanced separated"><summary id="farmBossSummary">Boss</summary><div class="advanced-body">
           <label class="check-row"><input id="farmExcludeBoss" type="checkbox"><span>Không chọn boss làm mục tiêu</span></label>
           <p class="hint">Tự lưu. Lọc boss theo dữ liệu game cung cấp; kỹ năng đánh lan vẫn có thể trúng boss gần đó. Không tự tránh đường đi gần boss. Bật tùy chọn này sẽ chuyển bộ lọc boss sang quái thường.</p>
             <p class="field-title">Tự bảo vệ khi đánh boss</p>
-            <label class="check-row"><input id="farmBossDodge" type="checkbox" checked><span>Né chiêu boss và dùng Q giữ khoảng cách khi tất cả skill tấn công đang hồi</span></label>
+            <label class="check-row"><input id="farmBossDodge" type="checkbox" checked><span>Né chiêu boss; giữ khoảng cách khi chờ kỹ năng</span></label>
             <label class="check-row"><input id="farmBossRetreat" type="checkbox" checked><span>HP dưới 30%: lùi giữ khoảng cách, chờ dùng đan (đánh lại khi HP ≥ 40%)</span></label>
-            <p class="hint">Áp dụng cho Chỉ boss và Boss trước → Level cao đến thấp. Khi toàn bộ skill tấn công còn hồi, ưu tiên Q rồi giữ khoảng cách; khi skill sẵn sàng thì game tiếp tục đánh. Né vòng cảnh báo bằng Q nếu đủ điều kiện, nếu Q đang hồi thì chạy ra ngoài. Đọc vòng thật từ game/bí cảnh nếu có; điểm ngắm của chiêu boss chỉ được coi là vùng ước lượng, không bảo đảm né mọi chiêu.</p>
+            <p class="hint">Khi chờ kỹ năng, nhân vật có thể đi bộ giữ khoảng cách. Q chỉ được xét khi nguy hiểm sắp xảy ra và đủ điều kiện; nếu không dùng được Q, nhân vật có thể đi né. Vùng cảnh báo có thể là ước lượng, không bảo đảm né mọi chiêu.</p>
           </div></details>
           <details class="advanced separated"><summary id="farmRecoverySummary">Hồi phục</summary><div class="advanced-body">
           <div class="separated">
@@ -139,8 +141,7 @@
           <details class="advanced separated"><summary>Hiển thị đường tới mục tiêu</summary><div class="advanced-body">
           <label class="check-row"><input id="farmShowTargetLine" type="checkbox"><span>Hiện đường tới mục tiêu</span></label>
           </div></details>
-          </div>
-        </fieldset>
+          </fieldset>
         <div class="farm-extra">
           <details class="advanced separated"><summary id="potionSummary">Đan HP/MP · độc lập Auto Farm</summary><div class="advanced-body">
         <fieldset id="potionControls" class="separated" disabled aria-label="Tự dùng đan HP và MP">
@@ -173,6 +174,7 @@
         </details>
           </div></details>
         </div>
+          </div>
         </div>
         <p id="farmFeedback" class="notice" role="alert"></p>
         <details class="diagnostic">

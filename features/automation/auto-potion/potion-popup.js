@@ -13,10 +13,10 @@
   }
   async function save(patch, rollback) {
     message("Đang lưu…");
-    const operation = queue.catch(() => {}).then(async () => {
+    const operation = queue.catch(() => {}).then(() => navigator.locks.request("gst:potion-preferences", async () => {
       const saved = await chrome.storage.local.get("potionPreferences");
       await chrome.storage.local.set({ potionPreferences: { ...saved.potionPreferences, ...patch } });
-    });
+    }));
     queue = operation;
     try { await operation; Object.assign(confirmed, patch); summary(); message("Đã lưu lựa chọn."); }
     catch { rollback(); sync(); message("Chưa lưu được lựa chọn; cài đặt cũ được giữ."); }
