@@ -128,7 +128,9 @@ window.addEventListener("keydown", (event) => {
 }, true);
 let farmBusy = false;
 let farmSaveQueue = Promise.resolve();
+let farmPendingSaves = 0;
 function updateFarmPreferences(patch) {
+  farmPendingSaves++;
   const save = farmSaveQueue.catch(() => {}).then(() => navigator.locks.request("gst:farm-preferences", async () => {
     const saved = await chrome.storage.local.get("farmPreferences");
     const current = saved.farmPreferences ?? {};
@@ -146,6 +148,7 @@ function updateFarmPreferences(patch) {
     return farmPreferences;
   }));
   farmSaveQueue = save;
+  void save.then(() => { farmPendingSaves--; }, () => { farmPendingSaves--; });
   return save;
 }
 
@@ -392,6 +395,7 @@ farmRadius.addEventListener("keydown", (event) => {
   void commitFarmRadius();
 });
 async function flushFarmNumericDrafts() {
+  if (!farmSyncReady) return { saved: false, reason: "load" };
   const pending = [];
   if (farmRangeCommit) pending.push(farmRangeCommit);
   else if (Number(farmTargetMinLevel.value) !== farmConfirmed.targetMinLevel
@@ -399,19 +403,31 @@ async function flushFarmNumericDrafts() {
     pending.push(commitFarmRange());
   if (farmRadiusCommit) pending.push(farmRadiusCommit);
   else if (farmRadius.value !== String(farmConfirmed.radius)) pending.push(commitFarmRadius());
+  const hadPendingSave = farmPendingSaves > 0;
   const results = await Promise.all(pending);
-  await farmSaveQueue.catch(() => {});
-  return results.every(Boolean) && !farmDraftError
-    && farmRadius.value === String(farmConfirmed.radius)
-    && Number(farmTargetMinLevel.value) === farmConfirmed.targetMinLevel
-    && Number(farmTargetMaxLevel.value) === farmConfirmed.targetMaxLevel;
+  const queueSaved = !hadPendingSave || await farmSaveQueue.then(() => true, () => false);
+  const min = Number(farmTargetMinLevel.value), max = Number(farmTargetMaxLevel.value);
+  if (!farmRadius.value.trim() || !farmRadius.checkValidity()
+      || !Number.isSafeInteger(farmRadius.valueAsNumber) || farmRadius.valueAsNumber < 1 || farmRadius.valueAsNumber > 1000)
+    return { saved: false, reason: "invalid", field: "radius" };
+  if (!Number.isSafeInteger(min) || min < 1)
+    return { saved: false, reason: "invalid", field: "min" };
+  if (!Number.isSafeInteger(max) || max < 1 || min > max)
+    return { saved: false, reason: "invalid", field: "max" };
+  if (!results.every(Boolean) || !queueSaved) return { saved: false, reason: "persistence" };
+  const saved = !farmDraftError && farmRadius.value === String(farmConfirmed.radius)
+    && min === farmConfirmed.targetMinLevel && max === farmConfirmed.targetMaxLevel;
+  return saved ? { saved: true } : { saved: false, reason: "persistence" };
 }
+const trustedGameOrigin = "https://nghichthienky.online";
 window.addEventListener("message", async (event) => {
-  if (event.source !== window.parent || event.origin !== location.origin
-      || event.data?.channel !== "gst:menu-before-close:v1") return;
-  let saved = false;
-  try { saved = await flushFarmNumericDrafts(); } catch { saved = false; }
-  window.parent.postMessage({ channel: "gst:menu-before-close-result:v1", id: event.data.id, saved }, event.origin);
+  if (window.top === window || event.source !== window.parent || event.origin !== trustedGameOrigin
+      || event.data?.channel !== "gst:menu-before-close:v1"
+      || !Number.isSafeInteger(event.data.id) || event.data.id <= 0) return;
+  let result;
+  try { result = await flushFarmNumericDrafts(); }
+  catch { result = { saved: false, reason: "persistence" }; }
+  window.parent.postMessage({ channel: "gst:menu-before-close-result:v1", id: event.data.id, ...result }, trustedGameOrigin);
 });
 farmReturnDeath.addEventListener("change", async () => {
   const next = farmReturnDeath.checked;

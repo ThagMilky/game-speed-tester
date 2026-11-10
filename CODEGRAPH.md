@@ -43,6 +43,7 @@ flowchart LR
 ```
 
 - **Popup** lưu cấu hình và hỏi status từ tab qua Chrome messaging.
+- Menu nhúng dùng `gst:menu-before-close:v1` (game → extension iframe) và `gst:menu-before-close-result:v1` (iframe → game), kiểm tra origin game/extension và khớp request ID. Phản hồi gồm `saved` và khi thất bại có `reason: invalid|persistence|load`, kèm `field: radius|min|max` nếu đầu vào sai; không có ACK trong 8 giây được phân loại timeout ở controller. Chỉ gỡ iframe sau khi lưu thành công.
 - **ISOLATED** làm cầu nối Chrome Storage/extension với trang. Các cặp `*-content.js` và `*-page.js` định nghĩa cách gửi, nhận và xác nhận message.
 - **MAIN** dùng scene và API gốc của game. `core/content.js`/`core/page.js` còn quản lý tốc độ và overlay trạng thái.
 - Channel xác nhận trong source gồm `gst:potion:v1`, `gst:farm:v1`, `gst:harvest:v1`, `gst:realm:v1`, `gst:chest:v1`, `gst:quest:v1`, `gst:fps:v1` và các channel status. Tên channel **không thay thế** việc đọc payload/ACK thực tế.

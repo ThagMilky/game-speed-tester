@@ -7,12 +7,13 @@
   };
   const extensionId = chrome.runtime.id;
   const popupUrl = chrome.runtime.getURL("popup.html?embedded=1");
+  const extensionOrigin = `chrome-extension://${extensionId}`;
   function contextAlive() {
     try { return chrome.runtime.id === extensionId; } catch { return false; }
   }
   let root = null, panel = null, frame = null, frameLoaded = false, opened = false, launch = null, editor = null, feedback = null, closeNotice = null, observer = null;
   let saved = GSTMenuPosition.normalize(null), draft = null, editing = false, dragging = null, saving = false, revision = 0;
-  let closeRequest = 0, closing = false;
+  let closeRequest = 0, closing = false, cancelPendingClose = null;
   function bounds() {
     const rect = launch.getBoundingClientRect();
     const margin = 12;
@@ -49,37 +50,79 @@
   async function requestFrameSave(target) {
     if (!frameLoaded) {
       const loaded = await new Promise((resolve) => {
-        const timer = setTimeout(() => resolve(false), 8000);
-        target.addEventListener("load", () => { clearTimeout(timer); resolve(frame === target); }, { once: true });
+        let timer, settled = false;
+        const cancel = () => finish(false);
+        const onLoad = () => finish(frame === target);
+        function finish(ok) {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer); target.removeEventListener("load", onLoad);
+          if (cancelPendingClose === cancel) cancelPendingClose = null;
+          resolve(ok);
+        }
+        cancelPendingClose = cancel;
+        target.addEventListener("load", onLoad);
+        timer = setTimeout(cancel, 8000);
       });
-      if (!loaded) return false;
+      if (!loaded || frame !== target) return { saved: false, reason: "timeout" };
     }
     const id = ++closeRequest;
     return new Promise((resolve) => {
-      const timer = setTimeout(() => finish(false), 8000);
+      let timer, settled = false;
+      const cancel = () => finish({ saved: false, reason: "timeout" });
+      const onLoad = () => cancel();
       const onMessage = (event) => {
-        if (event.source !== target.contentWindow || event.origin !== location.origin
+        if (event.source !== target.contentWindow || event.origin !== extensionOrigin
             || event.data?.channel !== "gst:menu-before-close-result:v1" || event.data.id !== id) return;
-        finish(event.data.saved === true);
+        const result = event.data.saved === true ? { saved: true } : {
+          saved: false,
+          reason: ["invalid", "persistence", "load"].includes(event.data.reason) ? event.data.reason : "timeout",
+          field: ["radius", "min", "max"].includes(event.data.field) ? event.data.field : null
+        };
+        finish(result);
       };
-      function finish(saved) {
-        clearTimeout(timer); window.removeEventListener("message", onMessage); resolve(saved);
+      function finish(result) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        target.removeEventListener("load", onLoad);
+        window.removeEventListener("message", onMessage);
+        if (cancelPendingClose === cancel) cancelPendingClose = null;
+        resolve(result);
       }
+      cancelPendingClose = cancel;
+      target.addEventListener("load", onLoad);
       window.addEventListener("message", onMessage);
-      target.contentWindow.postMessage({ channel: "gst:menu-before-close:v1", id }, new URL(popupUrl).origin);
+      timer = setTimeout(cancel, 8000);
+      try {
+        target.contentWindow.postMessage({ channel: "gst:menu-before-close:v1", id }, extensionOrigin);
+      } catch { cancel(); }
     });
   }
   async function close(force = false) {
-    if (closing) return false;
+    if (force) { cancelPendingClose?.(); closing = false; }
+    else if (closing) return false;
     const activeFrame = frame;
     if (!force && activeFrame && contextAlive()) {
       closing = true;
-      let savedFrame = false;
-      try { savedFrame = await requestFrameSave(activeFrame); } catch { savedFrame = false; }
+      let result;
+      try { result = await requestFrameSave(activeFrame); }
+      catch { result = { saved: false, reason: "timeout" }; }
       closing = false;
       if (frame !== activeFrame) return true;
-      if (!savedFrame) {
-        if (closeNotice) { closeNotice.textContent = "Chưa đóng menu: hãy sửa lỗi hoặc lưu xong các trường Auto Farm."; closeNotice.hidden = false; }
+      if (!result.saved) {
+        const notice = result.reason === "invalid"
+          ? ({
+            radius: "Giới hạn vùng farm",
+            min: "Tu vi tối thiểu",
+            max: "Tu vi tối đa / khoảng tu vi"
+          }[result.field] || "Trường Auto Farm")
+          : null;
+        const message = notice ? `Chưa đóng menu: ${notice} chưa hợp lệ. Hãy sửa giá trị.`
+          : result.reason === "persistence" ? "Chưa đóng menu: lưu cài đặt Auto Farm thất bại. Hãy thử lưu lại."
+          : result.reason === "load" ? "Chưa đóng menu: chưa tải được cài đặt Auto Farm. Hãy thử mở lại menu."
+          : "Chưa đóng menu: không nhận được phản hồi từ menu nhúng. Hãy thử lại.";
+        if (closeNotice) { closeNotice.textContent = message; closeNotice.hidden = false; }
         return false;
       }
     }
@@ -100,7 +143,8 @@
     mount(); if (!panel || opened || editing) return;
     opened = true; root.dataset.open = "true"; panel.hidden = false;
     frame = document.createElement("iframe"); frameLoaded = false; frame.title = "Menu Game Speed Tester";
-    frame.addEventListener("load", () => { if (frame) frameLoaded = true; });
+    const currentFrame = frame;
+    frame.addEventListener("load", () => { if (frame === currentFrame) frameLoaded = true; });
     frame.src = popupUrl;
     frame.style.cssText = "border:0;width:100%;flex:1;min-height:0;background:#11191f";
     panel.querySelector("section").append(frame); frame.focus();
@@ -164,7 +208,7 @@
     if (event.key === "Escape") { event.preventDefault(); if (editing) { if (!saving) endEdit(); } else void close(); }
   }, true);
   window.addEventListener("message", (event) => {
-    if (frame && event.source === frame.contentWindow && event.origin === `chrome-extension://${extensionId}`
+    if (frame && event.source === frame.contentWindow && event.origin === extensionOrigin
         && ["gst:menu-close:v1", "gst:menu-edit:v1"].includes(event.data?.channel)) {
       if (event.data.channel === "gst:menu-edit:v1") void beginEdit(); else void close();
     }
