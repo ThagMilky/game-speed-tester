@@ -256,7 +256,10 @@
         gstRawEnemies: () => host.enemies(),
         allEligibleEnemies, enemies: () => {
           const enemies = typeof host?.enemies === "function" ? host.enemies() : [];
-          const filtered = Array.isArray(enemies) ? enemies.filter(eligible) : [];
+          if (!Array.isArray(enemies)) return [];
+          // Native update can enter recovery after this host wrapper is created.
+          if (this.auto?.resting) return enemies;
+          const filtered = enemies.filter(eligible);
           return ranked() && !this.auto?.resting ? filtered.sort(comparePriority) : filtered;
         }, loot: () => {
           const loot = typeof host?.loot === "function" ? host.loot() : [];

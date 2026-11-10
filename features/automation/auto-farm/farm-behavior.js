@@ -9,6 +9,33 @@
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  function mapContext(scene) {
+    try {
+      const host = scene?.autoHost?.(), key = typeof host?.mapKey === "function" ? host.mapKey() : null;
+      return typeof key === "string" && key.length > 0 ? key : null;
+    } catch { return null; }
+  }
+  function clearContextState(scene) {
+    release(); hits.clear(); retryAt = 0; manualUntil = 0; noteUntil = 0; message = "";
+    lootTickAt = -Infinity; lootAt = -Infinity;
+    observedTarget = null; lootSite = null; lootActive = false; lootLastCount = 0; lootAbandoned = false;
+    if (binding?.scene === scene) { binding.usedHit = -Infinity; binding.idleAt = -Infinity; }
+  }
+  function syncContext(scene) {
+    if (binding?.scene !== scene) return false;
+    const key = mapContext(scene);
+    if (key === null) {
+      if (binding.contextKey !== null) clearContextState(scene);
+      binding.contextKey = null;
+      return false;
+    }
+    if (binding.contextKey === null) { binding.contextKey = key; return true; }
+    if (binding.contextKey !== key) {
+      clearContextState(scene);
+      binding.contextKey = key;
+    }
+    return true;
+  }
   const connected = (scene) => scene.driver && !scene.driver.closing && !scene.driver.reconnecting
     && !scene.driver.displaced && (scene.driver.online === false || scene.driver.link?.open?.() === true);
   function dangerous(actor) {
@@ -64,6 +91,7 @@
     const scene = binding?.scene;
     if (!scene) return;
     if (sceneNow() !== scene || scene.auto !== binding.auto || !scene.sys?.isActive?.()) { detach(); return; }
+    if (!syncContext(scene)) { release(); return; }
     if (!scene.auto.on || scene.self?.dead || !connected(scene) || scene.leaving) {
       release(); hits.clear(); manualUntil = 0; message = "";
       observedTarget = null; lootSite = null; lootActive = false; lootAbandoned = false; return;
@@ -75,7 +103,8 @@
   }
   function recordHit(scene, event) {
     if (!settings.avoidEnabled || suspended || !scene.auto.on || scene.self?.dead
-        || event?.e !== "dmg" || event.kind !== "p" || event.id !== scene.you || !finite(event.v) || event.v <= 0) return;
+        || event?.e !== "dmg" || event.kind !== "p" || event.id !== scene.you || !finite(event.v) || event.v <= 0
+        || !syncContext(scene)) return;
     // Observe the existing event only. Do not infer an attacker from proximity or HP drops.
     if (!Number.isSafeInteger(event.by) || !dangerous(scene.views.get(event.by))) {
       if (!Number.isSafeInteger(event.by) || !scene.views.has(event.by)) {
@@ -131,7 +160,9 @@
   function update(host, time) {
     const scene = binding?.scene;
     try {
-      if (!scene || !settings.avoidEnabled || suspended || blocked(scene) || !finite(time)) { release(); return false; }
+      if (!scene || !syncContext(scene) || !settings.avoidEnabled || suspended || blocked(scene) || !finite(time)) {
+        release(); return false;
+      }
       if (manual(scene) || performance.now() < manualUntil || modal(binding)) { release(); return false; }
       if (typeof GSTHarvest.needsRecovery !== "function" || GSTHarvest.needsRecovery(scene)) { release(); return false; }
       if (!["clear", "route", "steer"].every((key) => typeof host[key] === "function")) { release(); return false; }
@@ -222,7 +253,7 @@
       observedTarget = { id: actor.id, x: actor.x, y: actor.y, at: time };
   }
   function lootPlan(scene, host, time) {
-    if (!scene?.auto?.on || !finite(time)) return null;
+    if (!scene?.auto?.on || !finite(time) || !syncContext(scene)) return null;
     observeKill(scene, time);
     if (!settings.preferLoot || !lootSite || blocked(scene) || manual(scene)
         || !finite(scene.px) || !finite(scene.py)
@@ -364,7 +395,8 @@
         || typeof scene.auto.walk !== "function" || typeof scene.auto.update !== "function" || typeof scene.onEvent !== "function"
         || typeof scene.views?.get !== "function" || typeof scene.views?.values !== "function"
         || typeof scene.auto.lootSkip?.has !== "function" || typeof scene.now !== "function" || !scene.events?.on || !scene.events.off) return;
-    const owner = { scene, auto: scene.auto, undo: [], modalAt: -Infinity, modal: false, usedHit: -Infinity, idleAt: -Infinity };
+    const owner = { scene, auto: scene.auto, undo: [], modalAt: -Infinity, modal: false, usedHit: -Infinity,
+      idleAt: -Infinity, contextKey: mapContext(scene) };
     binding = owner;
     wrap(owner, scene.auto, "idle", (original) => function (host, time, x, y) {
       if (this !== owner.auto || !this.on || settings.idleMode !== "hold" || blocked(scene)
@@ -398,9 +430,10 @@
       settings = next; this.attach(scene);
     },
     attach(scene) { try { attach(scene); } catch { detach(); say("Chưa gắn được hành vi chờ/né quái."); } },
-    controls: (scene) => !!binding && binding.scene === scene && job !== null,
+    controls(scene) { return !!binding && binding.scene === scene && syncContext(scene) && job !== null; },
     pendingLoot: collecting,
     status(scene) {
+      if (binding?.scene === scene && !syncContext(scene)) return "";
       if (!scene?.auto?.on) return "";
       if (!binding || binding.scene !== scene) return settings.avoidEnabled ? "Chưa gắn được cơ chế né quái; chưa có lệnh né." : "";
       if (performance.now() < noteUntil) return message;
@@ -409,6 +442,7 @@
         ? "Hết mục tiêu phù hợp và đồ cần nhặt; đang đứng chờ quái xuất hiện." : "";
     },
     allowsTarget(scene, enemy) {
+      if (binding?.scene === scene && !syncContext(scene)) return true;
       if (!settings.avoidEnabled || binding?.scene !== scene) return true;
       if (!finite(enemy.lv) || enemy.lv >= settings.avoidLevel) return false;
       const pos = { x: scene.px, y: scene.py };
