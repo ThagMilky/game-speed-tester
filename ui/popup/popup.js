@@ -192,7 +192,8 @@ function updateFarmPreferences(patch) {
   const save = farmSaveQueue.catch(() => {}).then(() => navigator.locks.request("gst:farm-preferences", async () => {
     const saved = await chrome.storage.local.get("farmPreferences");
     const current = saved.farmPreferences ?? {};
-    const farmPreferences = { ...current, ...patch };
+    const farmPreferences = globalThis.GSTFarmPolicy.withMode({ ...current, ...patch },
+      globalThis.GSTFarmPolicy.read(current));
     if (["boss", "bossLevel"].includes(normalizeFarmTargetMode(patch.targetMode))) farmPreferences.excludeBoss = false;
     else if (patch.excludeBoss === true && ["boss", "bossLevel"].includes(normalizeFarmTargetMode(current.targetMode)))
       farmPreferences.targetMode = "highLevel";
@@ -244,6 +245,7 @@ function normalizedFarmPreferences(raw = {}) {
   const radius = Number.isSafeInteger(raw.radius)
     ? Math.max(1, Math.min(1000, raw.radius)) : 22;
   return {
+    policyMode: globalThis.GSTFarmPolicy.read(raw),
     enabled: raw.enabled === true, radius: raw.enabled === true ? radius : 11,
     searchScope: raw.enabled === true && raw.searchScope === "map" ? "map" : "radius",
     targetMode: mode, targetLevel: positiveLevel(raw.targetLevel, 1),
@@ -796,9 +798,11 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   farmReturnDeath.checked = areaMapOptions?.returnDeath === true;
   const initialFarmPreferences = farmLoadRevision === farmStorageRevision
     ? (farmPreferences ?? {}) : (latestFarmPreferences ?? {});
-  syncFarmPreferences(initialFarmPreferences, { preserveDraft: false });
+  const farmPreferencesWithPolicy = globalThis.GSTFarmPolicy.withMode(initialFarmPreferences,
+    globalThis.GSTFarmPolicy.read(initialFarmPreferences));
+  syncFarmPreferences(farmPreferencesWithPolicy, { preserveDraft: false });
   breakSeals.disabled = false;
-  latestFarmPreferences = initialFarmPreferences;
+  latestFarmPreferences = farmPreferencesWithPolicy;
   farmSyncReady = true;
   const migrationNeeded = initialFarmPreferences.excludeBoss && ["boss", "bossLevel"].includes(normalizeFarmTargetMode(initialFarmPreferences.targetMode))
     || ["bossFirst", "level"].includes(initialFarmPreferences.targetMode);

@@ -3,7 +3,7 @@
   const origin = "https://nghichthienky.online";
   const channel = "gst:farm:v1";
   globalThis.GSTFarmConfigurationReady = false;
-  let settings = { enabled: false, radius: 22, autoRespawn: true, autoMeditate: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
+  let settings = { policyMode: "extended", enabled: false, radius: 22, autoRespawn: true, autoMeditate: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
     searchScope: "radius", idleMode: "hold", preferLoot: true, excludeBoss: false,
     bossDodge: true, bossRetreat: true };
   let filterBinding = null;
@@ -733,7 +733,8 @@
         || settings.targetLevel !== data.targetLevel
         || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel
         || settings.excludeBoss !== (data.excludeBoss === true);
-      settings = { enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn !== false,
+      settings = { policyMode: globalThis.GSTFarmPolicy?.normalize(data.policyMode) ?? "extended",
+        enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn !== false,
         autoMeditate: data.autoMeditate !== false, noRetreat: data.noRetreat !== false,
         bossDodge: data.bossDodge !== false, bossRetreat: data.bossRetreat !== false,
         showTargetLine: data.showTargetLine === true, showRange: data.showRange === true,

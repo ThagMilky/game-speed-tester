@@ -30,7 +30,9 @@
   }
 
   function configure(value) {
+    const policyMode = globalThis.GSTFarmPolicy.read(value);
     settings = {
+      policyMode,
       enabled: value?.enabled === true,
       showTargetLine: value?.showTargetLine === true,
       showRange: value?.showRange === true,
