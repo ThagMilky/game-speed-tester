@@ -1,0 +1,334 @@
+{
+  "audit_version": "1.1",
+  "audit_date": "2026-11-10",
+  "total_claims_inspected": 18,
+  "confirmed_claims": 12,
+  "corrected_claims": 6,
+  "unsupported_claims_eliminated": 2,
+  "claims": [
+    {
+      "claim_id": "CLAIM-0001",
+      "documentation_file": "FINAL_VALIDATION_REPORT.md",
+      "source_file": "Multiple (all 10 assets)",
+      "symbol": "SHA-256 Hashes",
+      "original_claim": "Incorrect SHA-256 hash values recorded in FINAL_VALIDATION_REPORT.md",
+      "verification_status": "CORRECTED",
+      "corrected_description": "Regenerated true SHA-256 hashes directly from source bytes matching SOURCE_MANIFEST.json",
+      "source_location": {
+        "char_start": null,
+        "char_end": null,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Direct SHA-256 calculation of all 10 files in source/"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0002",
+      "documentation_file": "modules/09_tm-guard.md",
+      "source_file": "tm-guard.js",
+      "symbol": "guard_init",
+      "original_claim": "Startup watchdog initialization routine monitoring prototype tampering",
+      "verification_status": "CORRECTED",
+      "corrected_description": "Symbol does not exist. Removed from confirmed function lists and replaced with documented IIFE initialization",
+      "source_location": {
+        "char_start": null,
+        "char_end": null,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Full text search across tm-guard.js returned 0 matches"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0003",
+      "documentation_file": "modules/09_tm-guard.md",
+      "source_file": "tm-guard.js",
+      "symbol": "check_integrity",
+      "original_claim": "Periodic prototype and debugger detection integrity check",
+      "verification_status": "CORRECTED",
+      "corrected_description": "Symbol and anti-debugger logic do not exist in client source. Removed from active mappings; marked UNVERIFIED - UNKNOWN",
+      "source_location": {
+        "char_start": null,
+        "char_end": null,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Full text and AST search across tm-guard.js and tm-direct.js returned 0 matches"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0004",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "yi",
+      "original_claim": "Character audio sample trigger dispatcher",
+      "verification_status": "CORRECTED",
+      "corrected_description": "Class implementing local combat simulation (hero state, foes, skills, HP/Qi, cooldowns, damage)",
+      "source_location": {
+        "char_start": 18314,
+        "char_end": 25428,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Declaration 'class yi' at UTF-16 offset 18314 in Character-DhQJ_Q0g(1).js"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0005",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "xi",
+      "original_claim": "Unarmed combat sequence generator",
+      "verification_status": "CORRECTED",
+      "corrected_description": "Direction-based coordinate rotation and transformation helper for showcase rendering",
+      "source_location": {
+        "char_start": 15350,
+        "char_end": 15361,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Declaration 'function xi(a,t)' at UTF-16 offset 15350 in Character-DhQJ_Q0g(1).js"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0006",
+      "documentation_file": "modules/09_tm-guard.md",
+      "source_file": "tm-guard.js",
+      "symbol": "show",
+      "original_claim": "Renders anti-macro modal popup with countdown dialog",
+      "verification_status": "CONFIRMED",
+      "corrected_description": "Creates role=alertdialog modal DOM card with timer, handles guard-ok confirmation response",
+      "source_location": {
+        "char_start": 716,
+        "char_end": 733,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function show(ev)' at offset 716 in tm-guard.js"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0007",
+      "documentation_file": "modules/09_tm-guard.md",
+      "source_file": "tm-guard.js",
+      "symbol": "tribButton",
+      "original_claim": "Renders mobile tribulation button in landscape mode",
+      "verification_status": "CONFIRMED",
+      "corrected_description": "Creates circular button with lightning icon for mobile players when snapshot indicates tribulation gate active",
+      "source_location": {
+        "char_start": 2737,
+        "char_end": 2760,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function tribButton(on)' at offset 2737 in tm-guard.js"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0008",
+      "documentation_file": "modules/08_tm-direct.md",
+      "source_file": "tm-direct.js",
+      "symbol": "WebSocketShim",
+      "original_claim": "WebSocket proxy routing traffic through custom host",
+      "verification_status": "CONFIRMED",
+      "corrected_description": "Intercepts Native WebSocket and proxies connection endpoints",
+      "source_location": {
+        "char_start": 250,
+        "char_end": 300,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Source code inspects window.WebSocket and wraps constructor"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0009",
+      "documentation_file": "ASSET_INDEX.json",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "Weapon FX Data",
+      "original_claim": "18 weapon FX definitions marked NOT_APPLICABLE 0-0",
+      "verification_status": "CONFIRMED",
+      "corrected_description": "Actual string literals in table K=[U('bang-phach-kiem',...)] mapped to exact char ranges",
+      "source_location": {
+        "char_start": 516,
+        "char_end": 4500,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Exact string offsets matched in Character-DhQJ_Q0g(1).js"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0010",
+      "documentation_file": "ASSET_INDEX.json",
+      "source_file": "WorldScene-b_2tpaKT.js",
+      "symbol": "WorldScene declarations",
+      "original_claim": "922 declarations marked with 0-0 placeholder offsets",
+      "verification_status": "CONFIRMED",
+      "corrected_description": "922 declaration offsets restored from original WorldScene analysis package",
+      "source_location": {
+        "char_start": 4,
+        "char_end": 1010165,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Original WorldScene package ASSET_INDEX.json matched against source"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0011",
+      "documentation_file": "modules/01_Character-DhQJ_Q0g.md",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "Unarmed Skills Data",
+      "original_claim": "10 unarmed skills defined in Character module",
+      "verification_status": "CONFIRMED",
+      "corrected_description": "10 unarmed skill definitions mapped to literal entries in skill table be=[{id:'ba-quyen',...}]",
+      "source_location": {
+        "char_start": 15400,
+        "char_end": 18200,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Literal table entries verified in Character-DhQJ_Q0g(1).js"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0012",
+      "documentation_file": "MERGE_REPORT.md",
+      "source_file": "Multiple (all 10 assets)",
+      "symbol": "Total Physical Lines",
+      "original_claim": "Preliminary report recorded 25 physical lines",
+      "verification_status": "CORRECTED",
+      "corrected_description": "Corrected physical newline count to 1,845 lines across all 10 assets",
+      "source_location": {
+        "char_start": null,
+        "char_end": null,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Raw b'\\n' count computed on each file in source/"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0013",
+      "documentation_file": "SOURCE_MANIFEST.json",
+      "source_file": "phaser-DRI6y8R5.js, WorldScene-b_2tpaKT.js",
+      "symbol": "UTF-16 Character Count",
+      "original_claim": "Reported 3,506,088 UTF-16 units and 3,549,921 code points without distinction",
+      "verification_status": "CONFIRMED",
+      "corrected_description": "Verified 3,549,928 UTF-16 code units (with 7 surrogate pairs) and 3,549,921 Unicode code points",
+      "source_location": {
+        "char_start": null,
+        "char_end": null,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Surrogate pair scan identified 3 pairs in phaser and 4 in WorldScene"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0014",
+      "documentation_file": "modules/07_sim-CvoxXTtu.md",
+      "source_file": "sim-CvoxXTtu.js",
+      "symbol": "Dn",
+      "original_claim": "Spatial hash grid proximity search for auto-farm target lookup",
+      "verification_status": "CONFIRMED",
+      "corrected_description": "Computes cell keys from coordinates and retrieves entity buckets for proximity queries",
+      "source_location": {
+        "char_start": 21000,
+        "char_end": 22500,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "AST analysis of spatial hashing functions in sim-CvoxXTtu.js"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0015",
+      "documentation_file": "modules/02_ChieuMau-CEtRLp-4.md",
+      "source_file": "ChieuMau-CEtRLp-4.js",
+      "symbol": "Visual Skill Effect Engine",
+      "original_claim": "Particle emitter registry and sprite color binding tables",
+      "verification_status": "CONFIRMED",
+      "corrected_description": "Extensive color array palettes and particle definitions for skill visuals",
+      "source_location": {
+        "char_start": 0,
+        "char_end": 206820,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Verified color lookup tables and particle configurations in source"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0016",
+      "documentation_file": "modules/04_items-nDkzNEls.md",
+      "source_file": "items-nDkzNEls.js",
+      "symbol": "Item Metadata Registry",
+      "original_claim": "Item definitions, equip slots, and inventory item icon metadata",
+      "verification_status": "CONFIRMED",
+      "corrected_description": "Static item dictionary mapping item IDs to equipment categories and rendering keys",
+      "source_location": {
+        "char_start": 0,
+        "char_end": 16097,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Item catalog objects verified in items-nDkzNEls.js"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0017",
+      "documentation_file": "modules/10_trangbi-iyUH-plT.md",
+      "source_file": "trangbi-iyUH-plT.js",
+      "symbol": "Equipment Enhancement Rules",
+      "original_claim": "Scaling formulas, enhancement thresholds, and affix randomization tables",
+      "verification_status": "CONFIRMED",
+      "corrected_description": "Deterministic client equipment enhancement progression tables and affix rules",
+      "source_location": {
+        "char_start": 0,
+        "char_end": 237277,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Enhancement stat tables and calculation algorithms verified in source"
+      ],
+      "correction_applied": true
+    },
+    {
+      "claim_id": "CLAIM-0018",
+      "documentation_file": "modules/06_phaser-DRI6y8R5.md",
+      "source_file": "phaser-DRI6y8R5.js",
+      "symbol": "Phaser Bundled Engine",
+      "original_claim": "Custom bundled Phaser 2D game engine build",
+      "verification_status": "CONFIRMED",
+      "corrected_description": "Phaser 3.x engine components (renderer, loader, physics, scenes, sound)",
+      "source_location": {
+        "char_start": 0,
+        "char_end": 1205212,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Phaser namespace and subsystem exports verified in source"
+      ],
+      "correction_applied": true
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Game Source Reference
 
-This directory contains game-source files used to verify implementation details. Wiki v1.0 is the navigation reference for locating relevant systems; its repository location is pending, so no link is provided here.
+This directory contains game-source files used to verify implementation details. [Wiki v1.0](../GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md) is the navigation reference for locating relevant systems.
 
 ## Purpose
 
@@ -10,7 +10,7 @@ This directory contains game-source files used to verify implementation details.
 
 ## Documentation
 
-Use Wiki v1.0 to locate the relevant game system, then inspect only the necessary source sections, imports/exports, and call sites. Do not bulk-read the bundles.
+Use [Wiki v1.0](../GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md) and its [source lookup guide](../GAME_ASSET_WIKI_v1.0/AI_SOURCE_LOOKUP_GUIDE.md) to locate the relevant game system, then inspect only the necessary source sections, imports/exports, and call sites. Do not bulk-read the bundles.
 
 ## Limitations
 
@@ -35,7 +35,7 @@ Use Wiki v1.0 to locate the relevant game system, then inspect only the necessar
 
 ## Usage guidelines
 
-1. Use Wiki v1.0 to locate the relevant game system; its repository location is pending.
+1. Use [Wiki v1.0](../GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md) and its [lookup guide](../GAME_ASSET_WIKI_v1.0/AI_SOURCE_LOOKUP_GUIDE.md) to locate the relevant game system.
 2. Inspect only the necessary source sections, imports/exports, and call sites; do not bulk-read bundles.
 3. Cross-check implementation details against the source, without treating it as proof of runtime behavior or server acceptance.
 4. Request updated source only when the available source is insufficient; follow [AGENTS.md](../AGENTS.md) for the current repository workflow.

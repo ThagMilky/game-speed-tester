@@ -1,0 +1,61 @@
+{
+  "asset": "ChieuMau-CEtRLp-4.js",
+  "status": "STATIC_ANALYSIS_COMPLETED",
+  "source_sha256": "25f88bcc7f67f5ce1dab6426b995c3f7b1a82196690c62fde656fe9216407c4f",
+  "complete_file_read": true,
+  "source_untouched": true,
+  "runtime_tested": false,
+  "previous_versions_compared": false,
+  "generated_files": [
+    "source/ChieuMau-CEtRLp-4.js",
+    "ASSET_INDEX.json",
+    "FUNCTION_MAP.md",
+    "DEPENDENCY_MAP.md",
+    "ANALYSIS_PROGRESS.json",
+    "modules/00_OVERVIEW.md",
+    "modules/01_EFFECT_ENGINE.md",
+    "modules/02_SKILL_REGISTRY.md",
+    "modules/03_GENERATED_SKILLS.md",
+    "modules/04_EXPLICIT_SKILLS.md",
+    "modules/05_ADDITIONAL_CLASS_SYSTEMS.md",
+    "modules/06_SPRITE_CATALOG.md",
+    "modules/07_AUDIO_TERRAIN_NETWORK.md"
+  ],
+  "method": "Full 206820-character static text scanned; indexed class, methods, function declarations, ID occurrences, literal sprite metadata and imports/exports. No AST parser/runtime executed.",
+  "metrics": {
+    "source_bytes": 206820,
+    "source_characters": 206820,
+    "indexed_records": 1701,
+    "asset_metadata_records": 596,
+    "explicit_skills": 58,
+    "pattern_occurrences": {
+      "fetch(": 0,
+      "WebSocket": 0,
+      "XMLHttpRequest": 0,
+      "send(": 0,
+      ".impact(": 58,
+      ".spike(": 9,
+      ".crater(": 9,
+      ".burst(": 15
+    }
+  },
+  "limitations": [
+    "Minified one-line source: all offsets identify character ranges rather than useful line numbers.",
+    "Lexical method and symbol extraction is systematic but not a full JavaScript AST, so not all anonymous closures or nested object members are indexed individually.",
+    "Runtime and server authority unverified; no PNGs nor dependent imported modules supplied.",
+    "Dynamic class/skill registry construction documented by templates; generated IDs are not guaranteed to be exhaustive without execution."
+  ],
+  "unresolved_cross_module": [
+    "./phaser-DRI6y8R5.js",
+    "./index-BIkbGDKp.js",
+    "./Character-DhQJ_Q0g.js",
+    "host.actor/host.me/host.env/host.toWorld",
+    "kit definitions and event origin",
+    "PNG resource directories and optional additive light assets"
+  ],
+  "confidence_policy": {
+    "CONFIRMED": "directly represented by supplied source",
+    "INFERRED": "interpretation of observed structure",
+    "UNKNOWN": "unsupported without external source/runtime"
+  }
+}

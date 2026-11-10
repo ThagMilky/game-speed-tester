@@ -1,0 +1,56 @@
+{
+  "schema": "GAME_ASSET_WIKI_v1.0",
+  "asset": "sim-CvoxXTtu.js",
+  "status": "STATIC_ANALYSIS_COMPLETED_WITH_LIMITATIONS",
+  "source_read": "complete original file parsed as UTF-8",
+  "syntax_errors": 0,
+  "source_unchanged": true,
+  "verification": {
+    "runtime_tests": false,
+    "network_tests": false,
+    "server_authority_verified": false
+  },
+  "coverage": {
+    "top_level_symbols_indexed": 1119,
+    "methods_indexed": 352,
+    "imports_indexed": 2,
+    "export_aliases_indexed": 263,
+    "call_graph": "AST direct call expressions; dynamic calls and implicit relationships may be missed",
+    "constants": "Top-level variable ranges indexed; full semantic classification not guaranteed"
+  },
+  "unresolved": [
+    {
+      "status": "UNKNOWN",
+      "topic": "External module contracts",
+      "details": [
+        "./trangbi-iyUH-plT.js",
+        "./index-BIkbGDKp.js"
+      ]
+    },
+    {
+      "status": "UNKNOWN",
+      "topic": "Client/server authority",
+      "details": "File structure and world methods alone are insufficient to establish deployment boundary."
+    },
+    {
+      "status": "UNKNOWN",
+      "topic": "Network protocol consumers",
+      "details": "Events and snapshots generated locally require corresponding consumer modules."
+    },
+    {
+      "status": "UNKNOWN",
+      "topic": "Actual runtime",
+      "details": "No runtime tests were requested or executed."
+    },
+    {
+      "status": "UNKNOWN",
+      "topic": "Dynamic property dispatch",
+      "details": "Static call graph may omit computed access and reflective use."
+    }
+  ],
+  "confidence_legend": {
+    "CONFIRMED": "Visible in this source as extracted by parser",
+    "INFERRED": "Reasonable model from static control flow, not execution",
+    "UNKNOWN": "Not established by this asset"
+  }
+}

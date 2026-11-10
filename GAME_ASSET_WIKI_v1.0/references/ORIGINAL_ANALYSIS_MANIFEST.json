@@ -1,0 +1,87 @@
+{
+  "total_packages": 9,
+  "total_contained_sources": 10,
+  "packages": [
+    {
+      "package_filename": "GAME_ASSET_WIKI_v1.0_Character-DhQJ_Q0g.zip",
+      "archive_size_bytes": 41533,
+      "entries_count": 8,
+      "js_sources_contained": 1,
+      "markdown_docs_contained": 5,
+      "json_indexes_contained": 2,
+      "note": "Checkpoint 01 initial format"
+    },
+    {
+      "package_filename": "GAME_ASSET_WIKI_v1.0_ChieuMau.zip",
+      "archive_size_bytes": 120216,
+      "entries_count": 13,
+      "js_sources_contained": 1,
+      "markdown_docs_contained": 10,
+      "json_indexes_contained": 2,
+      "note": "Standard asset analysis package"
+    },
+    {
+      "package_filename": "GAME_ASSET_WIKI_v1.0_WorldScene.zip",
+      "archive_size_bytes": 1105412,
+      "entries_count": 61,
+      "js_sources_contained": 1,
+      "markdown_docs_contained": 58,
+      "json_indexes_contained": 2,
+      "note": "Standard asset analysis package"
+    },
+    {
+      "package_filename": "GAME_ASSET_WIKI_v1.0_index-BIkbGDKp.zip",
+      "archive_size_bytes": 78822,
+      "entries_count": 15,
+      "js_sources_contained": 1,
+      "markdown_docs_contained": 12,
+      "json_indexes_contained": 2,
+      "note": "Standard asset analysis package"
+    },
+    {
+      "package_filename": "GAME_ASSET_WIKI_v1.0_items-nDkzNEls.zip",
+      "archive_size_bytes": 31303,
+      "entries_count": 12,
+      "js_sources_contained": 1,
+      "markdown_docs_contained": 9,
+      "json_indexes_contained": 2,
+      "note": "Standard asset analysis package"
+    },
+    {
+      "package_filename": "GAME_ASSET_WIKI_v1.0_phaser.zip",
+      "archive_size_bytes": 655052,
+      "entries_count": 55,
+      "js_sources_contained": 1,
+      "markdown_docs_contained": 52,
+      "json_indexes_contained": 2,
+      "note": "Standard asset analysis package"
+    },
+    {
+      "package_filename": "GAME_ASSET_WIKI_v1.0_sim-CvoxXTtu.zip",
+      "archive_size_bytes": 542121,
+      "entries_count": 22,
+      "js_sources_contained": 1,
+      "markdown_docs_contained": 18,
+      "json_indexes_contained": 3,
+      "note": "Standard asset analysis package"
+    },
+    {
+      "package_filename": "GAME_ASSET_WIKI_v1.0_tm_direct_guard.zip",
+      "archive_size_bytes": 19366,
+      "entries_count": 9,
+      "js_sources_contained": 2,
+      "markdown_docs_contained": 5,
+      "json_indexes_contained": 2,
+      "note": "Contains both tm-direct and tm-guard"
+    },
+    {
+      "package_filename": "GAME_ASSET_WIKI_v1.0_trangbi.zip",
+      "archive_size_bytes": 300058,
+      "entries_count": 25,
+      "js_sources_contained": 1,
+      "markdown_docs_contained": 19,
+      "json_indexes_contained": 2,
+      "note": "Standard asset analysis package"
+    }
+  ]
+}

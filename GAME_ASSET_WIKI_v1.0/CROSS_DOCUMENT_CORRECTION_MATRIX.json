@@ -1,0 +1,164 @@
+{
+  "matrix_version": "1.0",
+  "audit_date": "2026-11-10",
+  "corrections": [
+    {
+      "issue_id": "ISSUE-001",
+      "source_asset": "Character-DhQJ_Q0g(1).js",
+      "symbol": "yi",
+      "incorrect_description": "Character audio sample trigger",
+      "verified_description": "Class implementing local combat simulation (state, hero, foes, skills, HP/Qi, cooldowns, damage, shields, healing)",
+      "affected_files": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md",
+        "TECHNICAL_CLAIM_AUDIT.json",
+        "TECHNICAL_CLAIM_AUDIT.md",
+        "CORRECTION_LOG.md"
+      ],
+      "updated_files": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md",
+        "TECHNICAL_CLAIM_AUDIT.json",
+        "TECHNICAL_CLAIM_AUDIT.md",
+        "CORRECTION_LOG.md"
+      ],
+      "remaining_invalid_references": [],
+      "source_evidence": [
+        "Declaration 'class yi' at UTF-16 char 18314 in Character-DhQJ_Q0g(1).js with methods constructor, script, reset, reason, input, cast, heroAt, resolve, advanceTo, snapshot"
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "issue_id": "ISSUE-002",
+      "source_asset": "Character-DhQJ_Q0g(1).js",
+      "symbol": "xi",
+      "incorrect_description": "Unarmed combat sequence generator",
+      "verified_description": "Direction-based coordinate rotation and transformation helper for character showcase rendering",
+      "affected_files": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md",
+        "TECHNICAL_CLAIM_AUDIT.json",
+        "TECHNICAL_CLAIM_AUDIT.md",
+        "CORRECTION_LOG.md"
+      ],
+      "updated_files": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md",
+        "TECHNICAL_CLAIM_AUDIT.json",
+        "TECHNICAL_CLAIM_AUDIT.md",
+        "CORRECTION_LOG.md"
+      ],
+      "remaining_invalid_references": [],
+      "source_evidence": [
+        "Declaration 'function xi(a,t)' at UTF-16 char 15350 in Character-DhQJ_Q0g(1).js: const e=ke.indexOf(t)*Math.PI/4; return {x:540+Math.cos(e)*a.x-Math.sin(e)*a.y, y:470+(Math.sin(e)*a.x+Math.cos(e)*a.y)*xe}"
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "issue_id": "ISSUE-003",
+      "source_asset": "tm-guard.js",
+      "symbol": "guard_init",
+      "incorrect_description": "Watchdog startup routine and prototype integrity validator",
+      "verified_description": "Nonexistent symbol in client source. Script is a standalone IIFE wrapping window.WebSocket",
+      "affected_files": [
+        "GAME_ASSET_WIKI_v1.0.md",
+        "FUNCTION_MAP.md",
+        "modules/09_tm-guard.md",
+        "references/FEATURE_INDEX.json",
+        "TECHNICAL_CLAIM_AUDIT.json",
+        "TECHNICAL_CLAIM_AUDIT.md",
+        "CORRECTION_LOG.md"
+      ],
+      "updated_files": [
+        "GAME_ASSET_WIKI_v1.0.md",
+        "FUNCTION_MAP.md",
+        "modules/09_tm-guard.md",
+        "references/FEATURE_INDEX.json",
+        "TECHNICAL_CLAIM_AUDIT.json",
+        "TECHNICAL_CLAIM_AUDIT.md",
+        "CORRECTION_LOG.md"
+      ],
+      "remaining_invalid_references": [],
+      "source_evidence": [
+        "Full text search across tm-guard.js returned 0 matches for guard_init"
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "issue_id": "ISSUE-004",
+      "source_asset": "tm-guard.js",
+      "symbol": "check_integrity",
+      "incorrect_description": "Prototype integrity validator checking Object.getOwnProperty & debugger presence",
+      "verified_description": "Nonexistent symbol and behavior. Removed from confirmed function mappings; marked UNVERIFIED - UNKNOWN",
+      "affected_files": [
+        "GAME_ASSET_WIKI_v1.0.md",
+        "FUNCTION_MAP.md",
+        "modules/09_tm-guard.md",
+        "UNRESOLVED.md",
+        "TECHNICAL_CLAIM_AUDIT.json",
+        "TECHNICAL_CLAIM_AUDIT.md",
+        "CORRECTION_LOG.md"
+      ],
+      "updated_files": [
+        "GAME_ASSET_WIKI_v1.0.md",
+        "FUNCTION_MAP.md",
+        "modules/09_tm-guard.md",
+        "UNRESOLVED.md",
+        "TECHNICAL_CLAIM_AUDIT.json",
+        "TECHNICAL_CLAIM_AUDIT.md",
+        "CORRECTION_LOG.md"
+      ],
+      "remaining_invalid_references": [],
+      "source_evidence": [
+        "Full text and AST search across tm-guard.js and tm-direct.js returned 0 matches for check_integrity or debugger"
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "issue_id": "ISSUE-005",
+      "source_asset": "tm-guard.js",
+      "symbol": "tm-guard.js module role",
+      "incorrect_description": "Anti-Tamper Watchdog / Environment guard & socket hooking watchdog",
+      "verified_description": "Client-side anti-macro guard challenge dialog, countdown presentation, response dispatching, and mobile tribulation button UI",
+      "affected_files": [
+        "GAME_ASSET_WIKI_v1.0.md",
+        "SOURCE_MANIFEST.json",
+        "references/FEATURE_INDEX.json",
+        "modules/09_tm-guard.md"
+      ],
+      "updated_files": [
+        "GAME_ASSET_WIKI_v1.0.md",
+        "SOURCE_MANIFEST.json",
+        "references/FEATURE_INDEX.json",
+        "modules/09_tm-guard.md"
+      ],
+      "remaining_invalid_references": [],
+      "source_evidence": [
+        "Source code inspects window.WebSocket messages for {e:'guard'} and {t:'snap', tg:1}, creates DOM alertdialog and tribulation button"
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "issue_id": "ISSUE-006",
+      "source_asset": "Multiple (all 10 assets)",
+      "symbol": "Source Hashes & Lines",
+      "incorrect_description": "Discrepancies in reported SHA-256 prefixes and physical line counts (25 vs 1,845)",
+      "verified_description": "Exact SHA-256 computed on all 10 files; physical line count verified at 1,845",
+      "affected_files": [
+        "FINAL_VALIDATION_REPORT.md",
+        "MERGE_REPORT.md",
+        "FINAL_CONSISTENCY_REPORT.md"
+      ],
+      "updated_files": [
+        "FINAL_VALIDATION_REPORT.md",
+        "MERGE_REPORT.md",
+        "FINAL_CONSISTENCY_REPORT.md"
+      ],
+      "remaining_invalid_references": [],
+      "source_evidence": [
+        "Computed 10 SHA-256 hashes matching SOURCE_MANIFEST.json exactly; counted 1,845 physical newline bytes"
+      ],
+      "status": "RESOLVED"
+    }
+  ]
+}

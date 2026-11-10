@@ -1,0 +1,1039 @@
+{
+  "schema": "GAME_ASSET_WIKI_v1.0.asset_index",
+  "version": "1.0",
+  "scope": "Two independently analyzed auxiliary scripts; not the core game bundle",
+  "offset_policy": "0-based Unicode codepoint offsets and UTF-16 code-unit offsets; byte offsets are UTF-8; lines/columns 1-based. Anchor strings are exact source substrings, not necessarily whole declaration spans.",
+  "assets": [
+    {
+      "filename": "tm-direct.js",
+      "path": "source/tm-direct.js",
+      "size_bytes": 5362,
+      "sha256": "ac013042e8be620365ae650b48d4da80c40f0efa3ac9a2d061d74372f01a3965",
+      "line_count": 71,
+      "minified": false,
+      "module_syntax": "classic IIFE script; no ES import/export",
+      "symbols_indexed": 36
+    },
+    {
+      "filename": "tm-guard.js",
+      "path": "source/tm-guard.js",
+      "size_bytes": 5286,
+      "sha256": "4a9ef0f8ae1a11556ba4f3ef386de7bc0c76cf0fa32b97d5309db4dff9dada47",
+      "line_count": 66,
+      "minified": false,
+      "module_syntax": "classic IIFE script; no ES import/export",
+      "symbols_indexed": 34
+    }
+  ],
+  "symbols": [
+    {
+      "file": "source/tm-direct.js",
+      "kind": "functions",
+      "name": "function production()",
+      "location": {
+        "line": 9,
+        "column": 3,
+        "character_offset_0based": 804,
+        "utf16_offset_0based": 804,
+        "byte_offset_utf8_0based": 828,
+        "length_characters": 21,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "functions",
+      "name": "function allowed()",
+      "location": {
+        "line": 10,
+        "column": 3,
+        "character_offset_0based": 898,
+        "utf16_offset_0based": 898,
+        "byte_offset_utf8_0based": 922,
+        "length_characters": 18,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "functions",
+      "name": "function failed()",
+      "location": {
+        "line": 11,
+        "column": 3,
+        "character_offset_0based": 1050,
+        "utf16_offset_0based": 1050,
+        "byte_offset_utf8_0based": 1074,
+        "length_characters": 17,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "functions",
+      "name": "function gameUrl(u)",
+      "location": {
+        "line": 12,
+        "column": 3,
+        "character_offset_0based": 1167,
+        "utf16_offset_0based": 1167,
+        "byte_offset_utf8_0based": 1191,
+        "length_characters": 19,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "functions",
+      "name": "function note(route)",
+      "location": {
+        "line": 13,
+        "column": 3,
+        "character_offset_0based": 1329,
+        "utf16_offset_0based": 1329,
+        "byte_offset_utf8_0based": 1353,
+        "length_characters": 20,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "functions",
+      "name": "function DirectSocket(url)",
+      "location": {
+        "line": 15,
+        "column": 3,
+        "character_offset_0based": 1474,
+        "utf16_offset_0based": 1474,
+        "byte_offset_utf8_0based": 1498,
+        "length_characters": 26,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "functions",
+      "name": "function fire(type, init)",
+      "location": {
+        "line": 22,
+        "column": 5,
+        "character_offset_0based": 2237,
+        "utf16_offset_0based": 2237,
+        "byte_offset_utf8_0based": 2263,
+        "length_characters": 25,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "functions",
+      "name": "function bind(ws)",
+      "location": {
+        "line": 26,
+        "column": 5,
+        "character_offset_0based": 2521,
+        "utf16_offset_0based": 2521,
+        "byte_offset_utf8_0based": 2547,
+        "length_characters": 17,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "functions",
+      "name": "function fallback()",
+      "location": {
+        "line": 33,
+        "column": 5,
+        "character_offset_0based": 2967,
+        "utf16_offset_0based": 2967,
+        "byte_offset_utf8_0based": 2993,
+        "length_characters": 19,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "functions",
+      "name": "function WebSocketShim(url, protocols)",
+      "location": {
+        "line": 61,
+        "column": 3,
+        "character_offset_0based": 4751,
+        "utf16_offset_0based": 4751,
+        "byte_offset_utf8_0based": 4780,
+        "length_characters": 38,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "constants",
+      "name": "DIRECT = 'wss://ws.nghichthienky.online/ws'",
+      "location": {
+        "line": 8,
+        "column": 7,
+        "character_offset_0based": 694,
+        "utf16_offset_0based": 694,
+        "byte_offset_utf8_0based": 718,
+        "length_characters": 43
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "constants",
+      "name": "KEY = 'tm-dws-fail'",
+      "location": {
+        "line": 8,
+        "column": 52,
+        "character_offset_0based": 739,
+        "utf16_offset_0based": 739,
+        "byte_offset_utf8_0based": 763,
+        "length_characters": 19
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "constants",
+      "name": "OPEN_MS = 2500",
+      "location": {
+        "line": 8,
+        "column": 73,
+        "character_offset_0based": 760,
+        "utf16_offset_0based": 760,
+        "byte_offset_utf8_0based": 784,
+        "length_characters": 14
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "constants",
+      "name": "RETRY_MS = 5 * 60 * 1000",
+      "location": {
+        "line": 8,
+        "column": 89,
+        "character_offset_0based": 776,
+        "utf16_offset_0based": 776,
+        "byte_offset_utf8_0based": 800,
+        "length_characters": 24
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "state",
+      "name": "var Native = window.WebSocket",
+      "location": {
+        "line": 7,
+        "column": 3,
+        "character_offset_0based": 636,
+        "utf16_offset_0based": 636,
+        "byte_offset_utf8_0based": 660,
+        "length_characters": 29
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "state",
+      "name": "var self = this, target = new EventTarget(), inner = null, done = false, closedByGame = false, binaryType = 'blob'",
+      "location": {
+        "line": 16,
+        "column": 5,
+        "character_offset_0based": 1507,
+        "utf16_offset_0based": 1507,
+        "byte_offset_utf8_0based": 1531,
+        "length_characters": 114
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "state",
+      "name": "var t0 = Date.now(), direct = new Native(DIRECT), timer = setTimeout(fallback, OPEN_MS)",
+      "location": {
+        "line": 39,
+        "column": 5,
+        "character_offset_0based": 3284,
+        "utf16_offset_0based": 3284,
+        "byte_offset_utf8_0based": 3310,
+        "length_characters": 87
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "interfaces",
+      "name": "Object.defineProperty(self, 'url'",
+      "location": {
+        "line": 19,
+        "column": 5,
+        "character_offset_0based": 1881,
+        "utf16_offset_0based": 1881,
+        "byte_offset_utf8_0based": 1907,
+        "length_characters": 33
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "interfaces",
+      "name": "Object.defineProperties(self, {",
+      "location": {
+        "line": 45,
+        "column": 5,
+        "character_offset_0based": 3685,
+        "utf16_offset_0based": 3685,
+        "byte_offset_utf8_0based": 3714,
+        "length_characters": 31
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "interfaces",
+      "name": "self.send = function (d)",
+      "location": {
+        "line": 52,
+        "column": 5,
+        "character_offset_0based": 4215,
+        "utf16_offset_0based": 4215,
+        "byte_offset_utf8_0based": 4244,
+        "length_characters": 24
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "interfaces",
+      "name": "self.close = function (code, reason)",
+      "location": {
+        "line": 53,
+        "column": 5,
+        "character_offset_0based": 4351,
+        "utf16_offset_0based": 4351,
+        "byte_offset_utf8_0based": 4380,
+        "length_characters": 36
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "interfaces",
+      "name": "WebSocketShim.prototype = Native.prototype",
+      "location": {
+        "line": 65,
+        "column": 3,
+        "character_offset_0based": 4976,
+        "utf16_offset_0based": 4976,
+        "byte_offset_utf8_0based": 5005,
+        "length_characters": 42
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "interfaces",
+      "name": "DirectSocket.prototype = Object.create(Native.prototype",
+      "location": {
+        "line": 66,
+        "column": 3,
+        "character_offset_0based": 5022,
+        "utf16_offset_0based": 5022,
+        "byte_offset_utf8_0based": 5051,
+        "length_characters": 55
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "interfaces",
+      "name": "window.WebSocket = WebSocketShim",
+      "location": {
+        "line": 70,
+        "column": 3,
+        "character_offset_0based": 5293,
+        "utf16_offset_0based": 5293,
+        "byte_offset_utf8_0based": 5322,
+        "length_characters": 32
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "network",
+      "name": "direct.onerror = fallback",
+      "location": {
+        "line": 40,
+        "column": 5,
+        "character_offset_0based": 3377,
+        "utf16_offset_0based": 3377,
+        "byte_offset_utf8_0based": 3403,
+        "length_characters": 25
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "network",
+      "name": "direct.onclose = fallback",
+      "location": {
+        "line": 40,
+        "column": 32,
+        "character_offset_0based": 3404,
+        "utf16_offset_0based": 3404,
+        "byte_offset_utf8_0based": 3430,
+        "length_characters": 25
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "network",
+      "name": "direct.onopen = function ()",
+      "location": {
+        "line": 41,
+        "column": 5,
+        "character_offset_0based": 3435,
+        "utf16_offset_0based": 3435,
+        "byte_offset_utf8_0based": 3461,
+        "length_characters": 27
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "network",
+      "name": "bind(new Native(self.url))",
+      "location": {
+        "line": 37,
+        "column": 39,
+        "character_offset_0based": 3246,
+        "utf16_offset_0based": 3246,
+        "byte_offset_utf8_0based": 3272,
+        "length_characters": 26
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "network",
+      "name": "ws.addEventListener('message'",
+      "location": {
+        "line": 29,
+        "column": 7,
+        "character_offset_0based": 2659,
+        "utf16_offset_0based": 2659,
+        "byte_offset_utf8_0based": 2685,
+        "length_characters": 29
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "network",
+      "name": "new MessageEvent('message'",
+      "location": {
+        "line": 23,
+        "column": 37,
+        "character_offset_0based": 2301,
+        "utf16_offset_0based": 2301,
+        "byte_offset_utf8_0based": 2327,
+        "length_characters": 26
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "externals",
+      "name": "window.__tmNet",
+      "location": {
+        "line": 13,
+        "column": 34,
+        "character_offset_0based": 1360,
+        "utf16_offset_0based": 1360,
+        "byte_offset_utf8_0based": 1384,
+        "length_characters": 14
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "externals",
+      "name": "window.__tmWsRoute",
+      "location": {
+        "line": 13,
+        "column": 115,
+        "character_offset_0based": 1441,
+        "utf16_offset_0based": 1441,
+        "byte_offset_utf8_0based": 1465,
+        "length_characters": 18
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "externals",
+      "name": "sessionStorage.getItem(KEY)",
+      "location": {
+        "line": 10,
+        "column": 45,
+        "character_offset_0based": 940,
+        "utf16_offset_0based": 940,
+        "byte_offset_utf8_0based": 964,
+        "length_characters": 27
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "externals",
+      "name": "sessionStorage.setItem(KEY",
+      "location": {
+        "line": 11,
+        "column": 29,
+        "character_offset_0based": 1076,
+        "utf16_offset_0based": 1076,
+        "byte_offset_utf8_0based": 1100,
+        "length_characters": 26
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "externals",
+      "name": "location.hostname",
+      "location": {
+        "line": 9,
+        "column": 73,
+        "character_offset_0based": 874,
+        "utf16_offset_0based": 874,
+        "byte_offset_utf8_0based": 898,
+        "length_characters": 17
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-direct.js",
+      "kind": "externals",
+      "name": "location.host",
+      "location": {
+        "line": 9,
+        "column": 73,
+        "character_offset_0based": 874,
+        "utf16_offset_0based": 874,
+        "byte_offset_utf8_0based": 898,
+        "length_characters": 13
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "functions",
+      "name": "function out(m)",
+      "location": {
+        "line": 8,
+        "column": 3,
+        "character_offset_0based": 562,
+        "utf16_offset_0based": 562,
+        "byte_offset_utf8_0based": 564,
+        "length_characters": 15,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "functions",
+      "name": "function show(ev)",
+      "location": {
+        "line": 9,
+        "column": 3,
+        "character_offset_0based": 716,
+        "utf16_offset_0based": 716,
+        "byte_offset_utf8_0based": 718,
+        "length_characters": 17,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "functions",
+      "name": "function close()",
+      "location": {
+        "line": 28,
+        "column": 3,
+        "character_offset_0based": 2512,
+        "utf16_offset_0based": 2512,
+        "byte_offset_utf8_0based": 2566,
+        "length_characters": 16,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "functions",
+      "name": "function tribButton(on)",
+      "location": {
+        "line": 31,
+        "column": 3,
+        "character_offset_0based": 2737,
+        "utf16_offset_0based": 2737,
+        "byte_offset_utf8_0based": 2810,
+        "length_characters": 23,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "functions",
+      "name": "function Wrapped(url, protocols)",
+      "location": {
+        "line": 46,
+        "column": 3,
+        "character_offset_0based": 4045,
+        "utf16_offset_0based": 4045,
+        "byte_offset_utf8_0based": 4130,
+        "length_characters": 32,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "functions",
+      "name": "function feed(data)",
+      "location": {
+        "line": 52,
+        "column": 3,
+        "character_offset_0based": 4269,
+        "utf16_offset_0based": 4269,
+        "byte_offset_utf8_0based": 4354,
+        "length_characters": 19,
+        "note": "Anchor at declaration; no AST-based end boundary asserted."
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "state",
+      "name": "var Native = window.WebSocket",
+      "location": {
+        "line": 4,
+        "column": 3,
+        "character_offset_0based": 250,
+        "utf16_offset_0based": 250,
+        "byte_offset_utf8_0based": 252,
+        "length_characters": 29
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "state",
+      "name": "var sock = null, box = null, timer = 0",
+      "location": {
+        "line": 5,
+        "column": 3,
+        "character_offset_0based": 304,
+        "utf16_offset_0based": 304,
+        "byte_offset_utf8_0based": 306,
+        "length_characters": 38
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "state",
+      "name": "var left = Math.max(1, ev.seconds | 0)",
+      "location": {
+        "line": 11,
+        "column": 5,
+        "character_offset_0based": 789,
+        "utf16_offset_0based": 789,
+        "byte_offset_utf8_0based": 791,
+        "length_characters": 38
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "state",
+      "name": "var trib = null",
+      "location": {
+        "line": 30,
+        "column": 3,
+        "character_offset_0based": 2718,
+        "utf16_offset_0based": 2718,
+        "byte_offset_utf8_0based": 2791,
+        "length_characters": 15
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "interfaces",
+      "name": "window.__tmGuard = { feed: feed }",
+      "location": {
+        "line": 62,
+        "column": 3,
+        "character_offset_0based": 4993,
+        "utf16_offset_0based": 4993,
+        "byte_offset_utf8_0based": 5078,
+        "length_characters": 33
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "interfaces",
+      "name": "Wrapped.prototype = Native.prototype",
+      "location": {
+        "line": 63,
+        "column": 3,
+        "character_offset_0based": 5030,
+        "utf16_offset_0based": 5030,
+        "byte_offset_utf8_0based": 5115,
+        "length_characters": 36
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "interfaces",
+      "name": "window.WebSocket = Wrapped",
+      "location": {
+        "line": 65,
+        "column": 3,
+        "character_offset_0based": 5167,
+        "utf16_offset_0based": 5167,
+        "byte_offset_utf8_0based": 5252,
+        "length_characters": 26
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "network",
+      "name": "window.__tmSend(m)",
+      "location": {
+        "line": 8,
+        "column": 48,
+        "character_offset_0based": 607,
+        "utf16_offset_0based": 607,
+        "byte_offset_utf8_0based": 609,
+        "length_characters": 18
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "network",
+      "name": "sock.send(JSON.stringify(m))",
+      "location": {
+        "line": 8,
+        "column": 108,
+        "character_offset_0based": 667,
+        "utf16_offset_0based": 667,
+        "byte_offset_utf8_0based": 669,
+        "length_characters": 28
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "network",
+      "name": "action: 'guard-ok'",
+      "location": {
+        "line": 23,
+        "column": 52,
+        "character_offset_0based": 2137,
+        "utf16_offset_0based": 2137,
+        "byte_offset_utf8_0based": 2170,
+        "length_characters": 18
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "network",
+      "name": "action: 'tribulation'",
+      "location": {
+        "line": 39,
+        "column": 93,
+        "character_offset_0based": 3804,
+        "utf16_offset_0based": 3804,
+        "byte_offset_utf8_0based": 3889,
+        "length_characters": 21
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "network",
+      "name": "ws.addEventListener('message'",
+      "location": {
+        "line": 49,
+        "column": 5,
+        "character_offset_0based": 4184,
+        "utf16_offset_0based": 4184,
+        "byte_offset_utf8_0based": 4269,
+        "length_characters": 29
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "network",
+      "name": "JSON.parse(data)",
+      "location": {
+        "line": 57,
+        "column": 24,
+        "character_offset_0based": 4627,
+        "utf16_offset_0based": 4627,
+        "byte_offset_utf8_0based": 4712,
+        "length_characters": 16
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "conditions",
+      "name": "document.body.classList.contains('mobile')",
+      "location": {
+        "line": 32,
+        "column": 28,
+        "character_offset_0based": 2790,
+        "utf16_offset_0based": 2790,
+        "byte_offset_utf8_0based": 2863,
+        "length_characters": 42
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "conditions",
+      "name": "window.innerHeight > window.innerWidth",
+      "location": {
+        "line": 33,
+        "column": 9,
+        "character_offset_0based": 2854,
+        "utf16_offset_0based": 2854,
+        "byte_offset_utf8_0based": 2927,
+        "length_characters": 38
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "conditions",
+      "name": "data.charCodeAt(6) === 115",
+      "location": {
+        "line": 54,
+        "column": 9,
+        "character_offset_0based": 4341,
+        "utf16_offset_0based": 4341,
+        "byte_offset_utf8_0based": 4426,
+        "length_characters": 26
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "conditions",
+      "name": "data.indexOf('\"t\":\"snap\"') === 1",
+      "location": {
+        "line": 54,
+        "column": 39,
+        "character_offset_0based": 4371,
+        "utf16_offset_0based": 4371,
+        "byte_offset_utf8_0based": 4456,
+        "length_characters": 32
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "conditions",
+      "name": "data.indexOf('\"tg\":1') > 0",
+      "location": {
+        "line": 54,
+        "column": 84,
+        "character_offset_0based": 4416,
+        "utf16_offset_0based": 4416,
+        "byte_offset_utf8_0based": 4501,
+        "length_characters": 26
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "conditions",
+      "name": "data.indexOf('\"t\":\"snap2\"') === 1",
+      "location": {
+        "line": 56,
+        "column": 9,
+        "character_offset_0based": 4539,
+        "utf16_offset_0based": 4539,
+        "byte_offset_utf8_0based": 4624,
+        "length_characters": 33
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "conditions",
+      "name": "gate[g][0] === 'tg'",
+      "location": {
+        "line": 57,
+        "column": 89,
+        "character_offset_0based": 4692,
+        "utf16_offset_0based": 4692,
+        "byte_offset_utf8_0based": 4777,
+        "length_characters": 19
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "conditions",
+      "name": "gate[g][1] === 1",
+      "location": {
+        "line": 57,
+        "column": 121,
+        "character_offset_0based": 4724,
+        "utf16_offset_0based": 4724,
+        "byte_offset_utf8_0based": 4809,
+        "length_characters": 16
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "conditions",
+      "name": "list[i].e === 'guard'",
+      "location": {
+        "line": 60,
+        "column": 122,
+        "character_offset_0based": 4932,
+        "utf16_offset_0based": 4932,
+        "byte_offset_utf8_0based": 5017,
+        "length_characters": 21
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "rendering",
+      "name": "document.createElement('div')",
+      "location": {
+        "line": 12,
+        "column": 11,
+        "character_offset_0based": 839,
+        "utf16_offset_0based": 839,
+        "byte_offset_utf8_0based": 841,
+        "length_characters": 29
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "rendering",
+      "name": "document.createElement('button')",
+      "location": {
+        "line": 21,
+        "column": 15,
+        "character_offset_0based": 1866,
+        "utf16_offset_0based": 1866,
+        "byte_offset_utf8_0based": 1896,
+        "length_characters": 32
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "rendering",
+      "name": "box.setAttribute('role', 'alertdialog')",
+      "location": {
+        "line": 13,
+        "column": 5,
+        "character_offset_0based": 874,
+        "utf16_offset_0based": 874,
+        "byte_offset_utf8_0based": 876,
+        "length_characters": 39
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "rendering",
+      "name": "document.body.appendChild(box)",
+      "location": {
+        "line": 24,
+        "column": 66,
+        "character_offset_0based": 2257,
+        "utf16_offset_0based": 2257,
+        "byte_offset_utf8_0based": 2290,
+        "length_characters": 30
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "rendering",
+      "name": "document.body.appendChild(trib)",
+      "location": {
+        "line": 42,
+        "column": 7,
+        "character_offset_0based": 3966,
+        "utf16_offset_0based": 3966,
+        "byte_offset_utf8_0based": 4051,
+        "length_characters": 31
+      },
+      "confidence": "CONFIRMED"
+    },
+    {
+      "file": "source/tm-guard.js",
+      "kind": "rendering",
+      "name": "timer = setInterval(paint, 1000)",
+      "location": {
+        "line": 26,
+        "column": 14,
+        "character_offset_0based": 2472,
+        "utf16_offset_0based": 2472,
+        "byte_offset_utf8_0based": 2526,
+        "length_characters": 32
+      },
+      "confidence": "CONFIRMED"
+    }
+  ],
+  "labels": [
+    "CONFIRMED",
+    "INFERRED",
+    "UNKNOWN"
+  ],
+  "cross_asset_links": [
+    {
+      "from": "tm-direct.js",
+      "to": "tm-guard.js",
+      "relation": "Both wrap window.WebSocket; effective chaining depends on load order",
+      "confidence": "CONFIRMED"
+    }
+  ]
+}

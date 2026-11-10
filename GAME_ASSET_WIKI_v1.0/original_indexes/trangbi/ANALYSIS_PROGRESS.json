@@ -1,0 +1,105 @@
+{
+  "schema": "GAME_ASSET_WIKI_v1.0/analysis-progress-1",
+  "asset": "trangbi-iyUH-plT.js",
+  "analysis_type": "static_ast_and_manual_source_review",
+  "original_untouched": true,
+  "complete_source_read": true,
+  "parser": "Acorn ECMAScript module",
+  "source_sha256": "c591d321899db406ed7387c54c21e303582505396e6d815fe0441dcdc4f11cec",
+  "source_bytes": 254736,
+  "source_utf16_length": 237277,
+  "ast_parse": "success",
+  "top_level_symbols": 678,
+  "named_exports": 388,
+  "top_level_statements": 247,
+  "documentation_modules": 16,
+  "status": "STATIC_ANALYSIS_COMPLETED_RUNTIME_UNVERIFIED",
+  "tested_runtime": false,
+  "server_authority_verified": false,
+  "findings": {
+    "CONFIRMED": [
+      "Source parses as ECMAScript module",
+      "All top-level named declarations and named export aliases indexed",
+      "Ranges stored as UTF-16 and UTF-8 byte offsets",
+      "Configuration data and static control structures mapped"
+    ],
+    "INFERRED": [
+      "Many registries describe player-facing equipment, combat and economy functionality",
+      "Dr appears to dispatch equipment commands using actor and world state"
+    ],
+    "UNKNOWN": [
+      "Whether source code exactly matches live version",
+      "Which exports are consumed by which external chunks",
+      "Whether server independently validates stat and item operations",
+      "Actual network and persistence behavior",
+      "Runtime graphics/asset loading and effects",
+      "Runtime execution of branch cases"
+    ]
+  },
+  "unresolved_dependencies": [
+    {
+      "topic": "Server authority and state persistence",
+      "required_from": "server/world and network handlers",
+      "status": "UNKNOWN"
+    },
+    {
+      "topic": "External import sites",
+      "required_from": "other compiled JS assets",
+      "status": "UNKNOWN"
+    },
+    {
+      "topic": "Graphics assets and rendering registration",
+      "required_from": "image atlas and renderer chunks",
+      "status": "UNKNOWN"
+    },
+    {
+      "topic": "Combat effect execution",
+      "required_from": "combat actor and simulation chunks",
+      "status": "UNKNOWN"
+    },
+    {
+      "topic": "Equipment command protocol and ownership",
+      "required_from": "caller of Dr / server handlers",
+      "status": "UNKNOWN"
+    }
+  ],
+  "merge_contract": {
+    "asset_id": "trangbi-iyUH-plT.js",
+    "index": "ASSET_INDEX.json",
+    "symbol_key": "name + source_sha256 + start",
+    "locations": "zero-based UTF-16 [start,end), UTF-8 byte [start,end)",
+    "classification": [
+      "CONFIRMED",
+      "INFERRED",
+      "UNKNOWN"
+    ],
+    "no_renaming": true
+  },
+  "dispatch_commands": [
+    "equip",
+    "unequip",
+    "enh",
+    "enh-n",
+    "equip-best",
+    "combine",
+    "reforge",
+    "setswap",
+    "salvage-filter",
+    "auto",
+    "lock",
+    "reroll",
+    "keep",
+    "ascend",
+    "inlay",
+    "unsocket",
+    "merge",
+    "guard",
+    "salvage",
+    "forge",
+    "buy",
+    "awaken",
+    "fashion",
+    "use",
+    "buygem"
+  ]
+}

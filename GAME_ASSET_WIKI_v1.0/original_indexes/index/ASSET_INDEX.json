@@ -1,0 +1,7455 @@
+{
+  "schema": "GAME_ASSET_WIKI_v1.0/ASSET_INDEX",
+  "asset_id": "index-BIkbGDKp.js",
+  "original_file": "source/index-BIkbGDKp.js",
+  "sha256": "501ae57d733b2dd15554e606eb96352b4e6f1994e125890f32871dd411a78550",
+  "source_bytes": 115984,
+  "source_utf16_characters": 113882,
+  "source_lines": 469,
+  "locations": {
+    "offsets": "UTF-16 code units, 0-based, half-open [start,end)",
+    "line": "1-based",
+    "syntax_recovery": "1-character semicolon inserted only in parsing memory; offsets converted back to original"
+  },
+  "parse": {
+    "original_valid_js": false,
+    "failure_at_utf16": 108034,
+    "line": 468,
+    "reason": "missing separator before en()",
+    "recovered_for_indexing": true
+  },
+  "symbols": [
+    {
+      "name": "__vite__mapDeps",
+      "kind": "arrow_function",
+      "start": 6,
+      "end": 292,
+      "line_start": 1,
+      "line_end": 1,
+      "calls": [
+        "i.map"
+      ],
+      "literals": [
+        "./LocalDriver-DMfdN3Dc.js",
+        "./trangbi-iyUH-plT.js",
+        "./sim-CvoxXTtu.js",
+        "./items-nDkzNEls.js",
+        "./WorldScene-b_2tpaKT.js",
+        "./phaser-DRI6y8R5.js",
+        "./Character-DhQJ_Q0g.js",
+        "./ChieuMau-CEtRLp-4.js",
+        "./boot-B_u-AwaO.js"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ve",
+      "kind": "variable",
+      "start": 298,
+      "end": 322,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [],
+      "declaration": "var",
+      "initializer_type": "MemberExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Be",
+      "kind": "arrow_function",
+      "start": 327,
+      "end": 412,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "Ve"
+      ],
+      "literals": [
+        0
+      ],
+      "declaration": "var",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "L",
+      "kind": "arrow_function",
+      "start": 417,
+      "end": 461,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "Be"
+      ],
+      "literals": [
+        "symbol",
+        ""
+      ],
+      "declaration": "var",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ue",
+      "kind": "variable",
+      "start": 1178,
+      "end": 1196,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "modulepreload"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ge",
+      "kind": "function_expression",
+      "start": 1197,
+      "end": 1239,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "URL"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "FunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Rt",
+      "kind": "object",
+      "start": 1240,
+      "end": 1245,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ObjectExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "et",
+      "kind": "function_expression",
+      "start": 1246,
+      "end": 2304,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "Promise.resolve",
+        "document.getElementsByTagName",
+        "document.querySelector",
+        "s.getAttribute",
+        "Promise.allSettled",
+        "o.map",
+        "Ge",
+        "d.endsWith",
+        "document.createElement",
+        "h.setAttribute",
+        "appendChild",
+        "Promise",
+        "h.addEventListener",
+        "T",
+        "Error",
+        "Event",
+        "window.dispatchEvent",
+        "a.then",
+        "i",
+        "catch",
+        "e"
+      ],
+      "literals": [
+        0,
+        "link",
+        "meta[property=csp-nonce]",
+        "nonce",
+        ".css",
+        "[rel=\"stylesheet\"]",
+        "",
+        1,
+        "stylesheet",
+        "script",
+        "load",
+        "error",
+        "vite:preloadError",
+        "rejected"
+      ],
+      "declaration": "const",
+      "initializer_type": "FunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "a7"
+      ]
+    },
+    {
+      "name": "We",
+      "kind": "variable",
+      "start": 2305,
+      "end": 2310,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        1
+      ],
+      "declaration": "const",
+      "initializer_type": "UnaryExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "pe",
+      "kind": "variable",
+      "start": 2315,
+      "end": 2317,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [],
+      "declaration": "var",
+      "initializer_type": null,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "he",
+      "kind": "variable",
+      "start": 2318,
+      "end": 2320,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [],
+      "declaration": "var",
+      "initializer_type": null,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ht",
+      "kind": "variable",
+      "start": 2327,
+      "end": 2405,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        0
+      ],
+      "declaration": "const",
+      "initializer_type": "ConditionalExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ge",
+      "kind": "variable",
+      "start": 2406,
+      "end": 2423,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "1"
+      ],
+      "declaration": "const",
+      "initializer_type": "ConditionalExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "D"
+      ]
+    },
+    {
+      "name": "sn",
+      "kind": "variable",
+      "start": 2424,
+      "end": 2458,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "Động phủ đang đóng để tu sửa."
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "ac"
+      ]
+    },
+    {
+      "name": "ln",
+      "kind": "variable",
+      "start": 2459,
+      "end": 2486,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "động phủ",
+        "tông môn"
+      ],
+      "declaration": "const",
+      "initializer_type": "ConditionalExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "H"
+      ]
+    },
+    {
+      "name": "Xe",
+      "kind": "arrow_function",
+      "start": 2487,
+      "end": 2519,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "t.startsWith"
+      ],
+      "literals": [
+        "TtkDongPhu"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "l"
+      ]
+    },
+    {
+      "name": "Je",
+      "kind": "arrow_function",
+      "start": 2520,
+      "end": 2553,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "t.filter",
+        "Xe"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ye",
+      "kind": "function",
+      "start": 2554,
+      "end": 2658,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "Math.trunc"
+      ],
+      "literals": [
+        0
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "be",
+      "kind": "variable",
+      "start": 3333,
+      "end": 3347,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "untrained"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "U"
+      ]
+    },
+    {
+      "name": "Qe",
+      "kind": "object",
+      "start": 3348,
+      "end": 3587,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "kiem-tien",
+        "Kiếm tu",
+        "co-su",
+        "Cổ sư",
+        "ma-tong",
+        "Ma tu",
+        "the-tu",
+        "Thể Tu",
+        "anh-sat",
+        "Ảnh Sát Lâu",
+        "phu-su",
+        "Thiên Phù Tông",
+        "ngu-thu-su",
+        "Vạn Thú Sơn",
+        "ky-mon",
+        "Dược Vương Cốc",
+        "am-tong",
+        "Thiên Âm Tông",
+        "tran-phap-su",
+        "Huyền Trận Các"
+      ],
+      "declaration": "const",
+      "initializer_type": "ObjectExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "b"
+      ]
+    },
+    {
+      "name": "Ze",
+      "kind": "arrow_function",
+      "start": 3588,
+      "end": 3613,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "Object.hasOwn"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "m"
+      ]
+    },
+    {
+      "name": "F",
+      "kind": "array",
+      "start": 3614,
+      "end": 4203,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "player_nu",
+        "Nữ · Bạch y",
+        "kiem-tien",
+        "player_nam",
+        "Nam · Huyền y",
+        "ma-tong",
+        "player_nam_den",
+        "Nam · Hắc y",
+        "co-su",
+        "player_nam_tim",
+        "Nam · Tử y",
+        "ky-mon",
+        "player_nu_nau_vang",
+        "Nữ · Hoàng y",
+        "thieu-lam",
+        "player_nu_hong",
+        "Nữ · Hồng y",
+        "am-tong",
+        "player_nu_luc",
+        "Nữ · Lục y",
+        "ngu-thu-su",
+        "player_nam_cham",
+        "Nam · Lam y",
+        "phu-su",
+        "player_nam_nau",
+        "Nam · Nâu",
+        "tran-phap-su",
+        "player_nu_hac_bac",
+        "Nữ · Hắc bạc",
+        "anh-sat"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrayExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "a5"
+      ]
+    },
+    {
+      "name": "fe",
+      "kind": "arrow_function",
+      "start": 4204,
+      "end": 4229,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "F.some"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "ad"
+      ]
+    },
+    {
+      "name": "ve",
+      "kind": "arrow_function",
+      "start": 4230,
+      "end": 4368,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "F.find"
+      ],
+      "literals": [
+        0
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "w"
+      ]
+    },
+    {
+      "name": "to",
+      "kind": "function",
+      "start": 4369,
+      "end": 4488,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "ve",
+        "Ze"
+      ],
+      "literals": [],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "ab"
+      ]
+    },
+    {
+      "name": "cn",
+      "kind": "variable",
+      "start": 4494,
+      "end": 4499,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        32
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "P"
+      ]
+    },
+    {
+      "name": "M",
+      "kind": "async_function",
+      "start": 4500,
+      "end": 4610,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "fetch",
+        "Error",
+        "e.json"
+      ],
+      "literals": [],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "v"
+      ]
+    },
+    {
+      "name": "dn",
+      "kind": "function",
+      "start": 4610,
+      "end": 4740,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "t.replace",
+        "parseInt",
+        "e.slice"
+      ],
+      "literals": [
+        "#",
+        "",
+        0,
+        6,
+        16,
+        8,
+        255,
+        1
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "y"
+      ]
+    },
+    {
+      "name": "wt",
+      "kind": "array",
+      "start": 4746,
+      "end": 4776,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "x",
+        "y",
+        "d",
+        "a",
+        "hp",
+        "fx"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrayExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "eo",
+      "kind": "class",
+      "start": 4807,
+      "end": 5931,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "L",
+        "Set",
+        "i.split",
+        "s.slice",
+        "Error",
+        "Object.keys",
+        "map",
+        "Array.isArray",
+        "filter",
+        "n.has",
+        "clear",
+        "add",
+        "delete",
+        "Object.assign"
+      ],
+      "literals": [
+        "self",
+        "seen",
+        ".",
+        0,
+        1,
+        "__proto__",
+        "constructor",
+        "prototype",
+        "Invalid snapshot path",
+        "Invalid snapshot key",
+        "snap",
+        2
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "eo.constructor",
+      "kind": "method",
+      "start": 4816,
+      "end": 4871,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "L",
+        "Set"
+      ],
+      "literals": [
+        "self",
+        "seen"
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "eo.decode",
+      "kind": "method",
+      "start": 4871,
+      "end": 5930,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "i.split",
+        "s.slice",
+        "Error",
+        "Object.keys",
+        "Set",
+        "map",
+        "Array.isArray",
+        "filter",
+        "n.has",
+        "clear",
+        "add",
+        "delete",
+        "Object.assign"
+      ],
+      "literals": [
+        ".",
+        0,
+        1,
+        "__proto__",
+        "constructor",
+        "prototype",
+        "Invalid snapshot path",
+        "Invalid snapshot key",
+        "snap",
+        2
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "oo",
+      "kind": "variable",
+      "start": 5937,
+      "end": 5950,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "tm-save2"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "S"
+      ]
+    },
+    {
+      "name": "Kt",
+      "kind": "function",
+      "start": 5951,
+      "end": 6292,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "JSON.parse",
+        "localStorage.getItem"
+      ],
+      "literals": [
+        "null",
+        "tm-save",
+        "Lữ Khách",
+        "kiem-tien",
+        1,
+        0,
+        ""
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "dt",
+      "kind": "variable",
+      "start": 6298,
+      "end": 6349,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "get",
+        "URLSearchParams"
+      ],
+      "literals": [
+        "slot"
+      ],
+      "declaration": "const",
+      "initializer_type": "CallExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "B",
+      "kind": "variable",
+      "start": 6350,
+      "end": 6382,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "tm-token"
+      ],
+      "declaration": "const",
+      "initializer_type": "ConditionalExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "T"
+      ]
+    },
+    {
+      "name": "ht",
+      "kind": "variable",
+      "start": 6383,
+      "end": 6422,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "tm-remember"
+      ],
+      "declaration": "const",
+      "initializer_type": "ConditionalExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "St",
+      "kind": "variable",
+      "start": 6423,
+      "end": 6443,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "tm-remember-off"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "xe",
+      "kind": "variable",
+      "start": 6444,
+      "end": 6461,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "tm-last-user"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "mt",
+      "kind": "function",
+      "start": 6462,
+      "end": 6534,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "localStorage.getItem"
+      ],
+      "literals": [
+        "1",
+        1
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "$"
+      ]
+    },
+    {
+      "name": "Ft",
+      "kind": "function",
+      "start": 6534,
+      "end": 6650,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "localStorage.removeItem",
+        "localStorage.setItem"
+      ],
+      "literals": [
+        "1"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "a0"
+      ]
+    },
+    {
+      "name": "Vt",
+      "kind": "function",
+      "start": 6650,
+      "end": 6720,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "localStorage.getItem"
+      ],
+      "literals": [
+        ""
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "a2"
+      ]
+    },
+    {
+      "name": "$t",
+      "kind": "function",
+      "start": 6720,
+      "end": 6914,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "sessionStorage.setItem",
+        "t.includes",
+        "t.startsWith",
+        "localStorage.setItem",
+        "mt",
+        "JSON.stringify"
+      ],
+      "literals": [
+        "@",
+        "guest_"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "a1"
+      ]
+    },
+    {
+      "name": "ye",
+      "kind": "function",
+      "start": 6914,
+      "end": 6997,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "sessionStorage.removeItem",
+        "localStorage.removeItem"
+      ],
+      "literals": [],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "a3"
+      ]
+    },
+    {
+      "name": "Bt",
+      "kind": "function",
+      "start": 6997,
+      "end": 7086,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "JSON.parse",
+        "localStorage.getItem"
+      ],
+      "literals": [
+        "null"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ut",
+      "kind": "arrow_function",
+      "start": 7092,
+      "end": 7178,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "t.send",
+        "t.close"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "no",
+      "kind": "arrow_function",
+      "start": 7179,
+      "end": 7273,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "t.send",
+        "t.close",
+        "e.close"
+      ],
+      "literals": [
+        "open"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "io",
+      "kind": "class",
+      "start": 7274,
+      "end": 14836,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "L",
+        "eo",
+        "Ut",
+        "watchWs",
+        "send",
+        "e.addEventListener",
+        "receive",
+        "String",
+        "displacedNotice",
+        "reconnect",
+        "l.feed",
+        "JSON.parse",
+        "decode",
+        "moved",
+        "q.sample",
+        "performance.now",
+        "$t",
+        "test",
+        "merge",
+        "onMessage",
+        "push",
+        "setTimeout",
+        "upgrade",
+        "open",
+        "JSON.stringify",
+        "close",
+        "sessionStorage.getItem",
+        "ro",
+        "q.fallback",
+        "fetch",
+        "AbortSignal.timeout",
+        "m.json",
+        "Math.min",
+        "Math.round",
+        "r.close",
+        "s.close",
+        "Gt",
+        "Wt",
+        "RTCPeerConnection",
+        "s.createDataChannel",
+        "m.push",
+        "c",
+        "Promise",
+        "g",
+        "k",
+        "Error",
+        "s.setLocalDescription",
+        "s.createOffer",
+        "Promise.race",
+        "X",
+        "Math.max",
+        "h",
+        "d",
+        "s.setRemoteDescription",
+        "w.json",
+        "then",
+        "so",
+        "m.shift",
+        "_.push",
+        "m.splice",
+        "r.send",
+        "no",
+        "_.splice",
+        "q.direct",
+        "O.close",
+        "onStatus",
+        "WebSocket",
+        "l.send",
+        "clearTimeout",
+        "l.close",
+        "a.close",
+        "n.close"
+      ],
+      "literals": [
+        "online",
+        0,
+        "delay",
+        0.1,
+        "onMessage",
+        "snapshots",
+        "queue",
+        "ready",
+        1,
+        "pingAt",
+        "link",
+        "held",
+        "closing",
+        "latency",
+        "moved",
+        "movedSeen",
+        "handingOver",
+        "displaced",
+        "noticed",
+        "reconnecting",
+        "waitingSince",
+        "dc",
+        "tickAt",
+        "onStatus",
+        "message",
+        "ws",
+        "close",
+        "WebRTC",
+        4002,
+        4000,
+        1008,
+        4001,
+        "Tài khoản vừa đăng nhập ở nơi khác",
+        "Mất kết nối máy chủ",
+        "WebSocket đóng",
+        "rtc",
+        "snap2",
+        "resumed",
+        "pong",
+        "auth",
+        "error",
+        "profile",
+        800,
+        64,
+        2000,
+        1000,
+        "ping",
+        8000,
+        "không nhận phản hồi 8 giây",
+        "",
+        "u",
+        "trình duyệt không hỗ trợ",
+        "chưa có phiên",
+        "đã lỗi trong tab này: ",
+        "/api/rtc/config",
+        1500,
+        "chưa bật cho tài khoản",
+        6000,
+        5000,
+        "Chuyển đường truyền chưa hoàn tất",
+        "stun:stun.cloudflare.com:3478",
+        "stun:stun.l.google.com:19302",
+        "game",
+        "kênh đóng",
+        "complete",
+        700,
+        "/api/rtc/offer",
+        "POST",
+        "content-type",
+        "application/json",
+        200,
+        429,
+        "giới hạn tần suất",
+        403,
+        "máy chủ từ chối",
+        "answer",
+        300,
+        "rtc-pair",
+        "public",
+        "máy chủ không xác nhận đường trực tiếp",
+        "joined",
+        "máy chủ không chuyển phiên",
+        "hello",
+        "không nhận chuyển phiên",
+        "kênh WebRTC rớt",
+        "TimeoutError",
+        "lỗi",
+        "Mất kết nối · đang kết nối lại…",
+        4,
+        "https:",
+        "wss",
+        "retry",
+        "gone",
+        "Đã kết nối lại"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "io.constructor",
+      "kind": "method",
+      "start": 7283,
+      "end": 7842,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "L",
+        "eo",
+        "Ut",
+        "watchWs",
+        "send"
+      ],
+      "literals": [
+        "online",
+        0,
+        "delay",
+        0.1,
+        "onMessage",
+        "snapshots",
+        "queue",
+        "ready",
+        1,
+        "pingAt",
+        "link",
+        "held",
+        "closing",
+        "latency",
+        "moved",
+        "movedSeen",
+        "handingOver",
+        "displaced",
+        "noticed",
+        "reconnecting",
+        "waitingSince",
+        "dc",
+        "tickAt",
+        "onStatus"
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "io.watchWs",
+      "kind": "method",
+      "start": 7842,
+      "end": 8271,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "e.addEventListener",
+        "receive",
+        "String",
+        "displacedNotice",
+        "reconnect"
+      ],
+      "literals": [
+        "message",
+        "ws",
+        "close",
+        "WebRTC",
+        4002,
+        4000,
+        1008,
+        4001,
+        "Tài khoản vừa đăng nhập ở nơi khác",
+        "Mất kết nối máy chủ",
+        "WebSocket đóng"
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "io.receive",
+      "kind": "method",
+      "start": 8271,
+      "end": 8934,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "l.feed",
+        "JSON.parse",
+        "decode",
+        "moved",
+        "q.sample",
+        "performance.now",
+        "$t",
+        "test",
+        "merge",
+        "onMessage",
+        "push"
+      ],
+      "literals": [
+        "rtc",
+        "snap2",
+        "moved",
+        0,
+        "resumed",
+        "pong",
+        "auth",
+        "error",
+        "profile"
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "io.merge",
+      "kind": "method",
+      "start": 8934,
+      "end": 9075,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "profile"
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "io.start",
+      "kind": "method",
+      "start": 9075,
+      "end": 9195,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "onMessage",
+        "setTimeout",
+        "upgrade"
+      ],
+      "literals": [
+        0,
+        800
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "io.send",
+      "kind": "method",
+      "start": 9195,
+      "end": 9315,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "push",
+        "open",
+        "send",
+        "JSON.stringify"
+      ],
+      "literals": [
+        64
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "io.update",
+      "kind": "method",
+      "start": 9315,
+      "end": 9673,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "performance.now",
+        "send",
+        "reconnect"
+      ],
+      "literals": [
+        2000,
+        0,
+        1000,
+        "ping",
+        8000,
+        "không nhận phản hồi 8 giây"
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "io.close",
+      "kind": "method",
+      "start": 9673,
+      "end": 9731,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "close"
+      ],
+      "literals": [
+        0
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "io.upgrade",
+      "kind": "method",
+      "start": 9731,
+      "end": 13161,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "sessionStorage.getItem",
+        "ro",
+        "q.fallback",
+        "fetch",
+        "AbortSignal.timeout",
+        "m.json",
+        "performance.now",
+        "Math.min",
+        "Math.round",
+        "r.close",
+        "s.close",
+        "send",
+        "Gt",
+        "Wt",
+        "open",
+        "reconnect",
+        "RTCPeerConnection",
+        "s.createDataChannel",
+        "m.push",
+        "c",
+        "String",
+        "Promise",
+        "g",
+        "k",
+        "Error",
+        "s.setLocalDescription",
+        "s.createOffer",
+        "Promise.race",
+        "X",
+        "Math.max",
+        "JSON.stringify",
+        "h",
+        "d",
+        "s.setRemoteDescription",
+        "w.json",
+        "then",
+        "so",
+        "m.shift",
+        "JSON.parse",
+        "_.push",
+        "m.splice",
+        "r.send",
+        "no",
+        "receive",
+        "_.splice",
+        "q.direct",
+        "O.close"
+      ],
+      "literals": [
+        "",
+        "u",
+        "trình duyệt không hỗ trợ",
+        "chưa có phiên",
+        "đã lỗi trong tab này: ",
+        "/api/rtc/config",
+        1500,
+        "chưa bật cho tài khoản",
+        6000,
+        5000,
+        1000,
+        1,
+        "Chuyển đường truyền chưa hoàn tất",
+        "stun:stun.cloudflare.com:3478",
+        "stun:stun.l.google.com:19302",
+        "game",
+        0,
+        "kênh đóng",
+        "complete",
+        700,
+        "/api/rtc/offer",
+        "POST",
+        "content-type",
+        "application/json",
+        200,
+        429,
+        "giới hạn tần suất",
+        403,
+        "máy chủ từ chối",
+        "answer",
+        300,
+        "rtc-pair",
+        "public",
+        "máy chủ không xác nhận đường trực tiếp",
+        "resumed",
+        "joined",
+        "error",
+        "máy chủ không chuyển phiên",
+        "hello",
+        "không nhận chuyển phiên",
+        "rtc",
+        "kênh WebRTC rớt",
+        "TimeoutError",
+        "lỗi"
+      ],
+      "static": false,
+      "async": true,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "io.displacedNotice",
+      "kind": "method",
+      "start": 13161,
+      "end": 13283,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "onMessage"
+      ],
+      "literals": [
+        0,
+        "error"
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "io.reconnect",
+      "kind": "method",
+      "start": 13283,
+      "end": 14835,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "displacedNotice",
+        "q.fallback",
+        "onStatus",
+        "sessionStorage.getItem",
+        "X",
+        "WebSocket",
+        "Promise",
+        "setTimeout",
+        "d",
+        "l.send",
+        "JSON.stringify",
+        "JSON.parse",
+        "String",
+        "clearTimeout",
+        "l.close",
+        "Ut",
+        "watchWs",
+        "a.close",
+        "n.close",
+        "send",
+        "onMessage"
+      ],
+      "literals": [
+        "Tài khoản vừa đăng nhập ở nơi khác",
+        0,
+        "Mất kết nối · đang kết nối lại…",
+        "",
+        4,
+        700,
+        "https:",
+        "wss",
+        "ws",
+        "retry",
+        5000,
+        "hello",
+        1,
+        "resumed",
+        "joined",
+        "error",
+        "gone",
+        "Đã kết nối lại",
+        "Mất kết nối máy chủ"
+      ],
+      "static": false,
+      "async": true,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Et",
+      "kind": "variable",
+      "start": 14842,
+      "end": 14858,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        "tm-rtc-fail"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ao",
+      "kind": "variable",
+      "start": 14859,
+      "end": 14867,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [],
+      "literals": [
+        5,
+        60000
+      ],
+      "declaration": "const",
+      "initializer_type": "BinaryExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ro",
+      "kind": "function",
+      "start": 14868,
+      "end": 15100,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "sessionStorage.getItem",
+        "JSON.parse",
+        "Date.now",
+        "sessionStorage.removeItem"
+      ],
+      "literals": [
+        0,
+        "number",
+        "lỗi"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Gt",
+      "kind": "function",
+      "start": 15100,
+      "end": 15190,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "sessionStorage.setItem",
+        "JSON.stringify",
+        "Date.now"
+      ],
+      "literals": [],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "X",
+      "kind": "arrow_function",
+      "start": 15196,
+      "end": 15232,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "Promise",
+        "setTimeout"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Wt",
+      "kind": "function",
+      "start": 15233,
+      "end": 15400,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "catch",
+        "fetch",
+        "JSON.stringify"
+      ],
+      "literals": [
+        "/api/rtc/report",
+        "POST",
+        "content-type",
+        "application/json"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "so",
+      "kind": "async_function",
+      "start": 15400,
+      "end": 16451,
+      "line_start": 2,
+      "line_end": 2,
+      "calls": [
+        "t.getStats",
+        "Map",
+        "e.forEach",
+        "o.set",
+        "o.forEach",
+        "o.get",
+        "String",
+        "s.includes",
+        "s.toLowerCase",
+        "map",
+        "m.split",
+        "m.endsWith",
+        "m.startsWith",
+        "test"
+      ],
+      "literals": [
+        "",
+        "transport",
+        "candidate-pair",
+        "succeeded",
+        1,
+        "không đọc được cặp ICE",
+        ":",
+        6,
+        4,
+        "relay",
+        "đi qua TURN",
+        ".",
+        ".local",
+        "mDNS",
+        "fd7a:115c:a1e0:",
+        "Tailscale",
+        "mạng riêng",
+        100,
+        64,
+        127,
+        10,
+        172,
+        16,
+        31,
+        192,
+        168,
+        169,
+        254,
+        "LAN",
+        0
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "q",
+      "kind": "object",
+      "start": 16457,
+      "end": 17215,
+      "line_start": 2,
+      "line_end": 5,
+      "calls": [
+        "e.push",
+        "e.shift",
+        "sort",
+        "reduce",
+        "e.slice",
+        "Math.abs",
+        "Math.round"
+      ],
+      "literals": [
+        "WebSocket (Cloudflare)",
+        0,
+        "",
+        20,
+        1,
+        "WebRTC"
+      ],
+      "declaration": "const",
+      "initializer_type": "ObjectExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ke",
+      "kind": "class",
+      "start": 17826,
+      "end": 17850,
+      "line_start": 5,
+      "line_end": 5,
+      "calls": [],
+      "literals": [],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "lo",
+      "kind": "function",
+      "start": 17850,
+      "end": 18966,
+      "line_start": 5,
+      "line_end": 5,
+      "calls": [
+        "Promise",
+        "WebSocket",
+        "window.setTimeout",
+        "s",
+        "Error",
+        "clearTimeout",
+        "a.removeEventListener",
+        "l",
+        "a.close",
+        "o",
+        "a.send",
+        "JSON.stringify",
+        "JSON.parse",
+        "String",
+        "$t",
+        "ke",
+        "e",
+        "io",
+        "a.addEventListener"
+      ],
+      "literals": [
+        "https:",
+        "wss",
+        "ws",
+        "Máy chủ phản hồi quá lâu. Vui lòng thử lại.",
+        15000,
+        "message",
+        "open",
+        "error",
+        "close",
+        2,
+        "Không kết nối được máy chủ. Vui lòng thử lại.",
+        "Kết nối bị ngắt khi đăng nhập. Vui lòng thử lại.",
+        1,
+        "string",
+        "Phản hồi máy chủ không hợp lệ. Vui lòng thử lại.",
+        "auth",
+        "session_expired",
+        "joined"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "At",
+      "kind": "object",
+      "start": 18972,
+      "end": 19003,
+      "line_start": 5,
+      "line_end": 5,
+      "calls": [],
+      "literals": [
+        "Vảy Kraken",
+        "Vảy Hải Yêu"
+      ],
+      "declaration": "const",
+      "initializer_type": "ObjectExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "co",
+      "kind": "variable",
+      "start": 19004,
+      "end": 19022,
+      "line_start": 5,
+      "line_end": 5,
+      "calls": [
+        "Object.keys"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "CallExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "un",
+      "kind": "arrow_function",
+      "start": 19023,
+      "end": 19037,
+      "line_start": 5,
+      "line_end": 5,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "k"
+      ]
+    },
+    {
+      "name": "uo",
+      "kind": "function",
+      "start": 19038,
+      "end": 19122,
+      "line_start": 5,
+      "line_end": 5,
+      "calls": [
+        "t.includes",
+        "join",
+        "t.split"
+      ],
+      "literals": [],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "s"
+      ]
+    },
+    {
+      "name": "Tt",
+      "kind": "array",
+      "start": 19128,
+      "end": 19316,
+      "line_start": 5,
+      "line_end": 5,
+      "calls": [],
+      "literals": [
+        "rgb(199,204,209)",
+        "rgb(102,230,128)",
+        "rgb(89,179,255)",
+        "rgb(191,115,255)",
+        "rgb(255,214,77)",
+        "rgb(255,148,51)",
+        "rgb(255,82,71)",
+        "rgb(255,89,166)",
+        "rgb(115,242,255)",
+        "rgb(255,242,217)"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrayExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "It",
+      "kind": "object",
+      "start": 19317,
+      "end": 20507,
+      "line_start": 5,
+      "line_end": 5,
+      "calls": [],
+      "literals": [
+        "the-tu",
+        "22,16,8",
+        "34,25,12",
+        "50,37,18",
+        "142,106,44",
+        "245,206,101",
+        "82,58,22",
+        "112,80,28",
+        "230,201,139",
+        "ky-mon",
+        "18,12,26",
+        "27,18,39",
+        "38,26,54",
+        "92,60,124",
+        "186,132,236",
+        "58,36,86",
+        "82,46,118",
+        "186,170,222",
+        "thieu-lam",
+        "22,12,12",
+        "34,18,17",
+        "50,27,23",
+        "122,62,42",
+        "232,140,82",
+        "84,36,28",
+        "116,48,32",
+        "214,180,150",
+        "kiem-tien",
+        "12,17,25",
+        "17,27,39",
+        "24,39,55",
+        "56,92,120",
+        "128,204,228",
+        "30,58,80",
+        "40,80,106",
+        "160,198,214",
+        "am-tong",
+        "24,12,20",
+        "36,18,30",
+        "52,26,44",
+        "128,64,104",
+        "240,150,200",
+        "82,36,66",
+        "114,46,90",
+        "226,184,210",
+        "co-su",
+        "12,18,12",
+        "18,28,18",
+        "26,40,24",
+        "70,108,58",
+        "168,220,96",
+        "36,60,30",
+        "50,84,38",
+        "186,214,160",
+        "ma-tong",
+        "22,8,10",
+        "34,12,15",
+        "50,16,20",
+        "132,34,44",
+        "240,84,92",
+        "86,22,30",
+        "120,28,38",
+        "220,160,164",
+        "ngu-thu-su",
+        "18,16,10",
+        "28,25,15",
+        "42,37,21",
+        "112,96,50",
+        "226,196,104",
+        "66,56,26",
+        "92,78,34",
+        "214,200,156",
+        "phu-su",
+        "20,16,8",
+        "32,25,12",
+        "46,36,16",
+        "130,98,40",
+        "250,206,92",
+        "80,58,22",
+        "110,80,28",
+        "232,210,150",
+        "tran-phap-su",
+        "10,16,22",
+        "15,25,34",
+        "21,36,50",
+        "48,98,128",
+        "110,196,240",
+        "26,58,82",
+        "34,80,112",
+        "156,196,220",
+        "anh-sat",
+        "12,12,16",
+        "19,19,25",
+        "28,28,37",
+        "84,84,110",
+        "196,196,230",
+        "44,44,62",
+        "64,64,90",
+        "200,200,220"
+      ],
+      "declaration": "const",
+      "initializer_type": "ObjectExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "po",
+      "kind": "array",
+      "start": 20508,
+      "end": 20580,
+      "line_start": 5,
+      "line_end": 5,
+      "calls": [],
+      "literals": [
+        "bg",
+        "inset",
+        "raised",
+        "border",
+        "accent",
+        "button",
+        "selected",
+        "frame"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrayExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "pn",
+      "kind": "function",
+      "start": 20581,
+      "end": 20652,
+      "line_start": 5,
+      "line_end": 5,
+      "calls": [],
+      "literals": [
+        4,
+        "rgb(222,96,112)"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "j"
+      ]
+    },
+    {
+      "name": "ho",
+      "kind": "variable",
+      "start": 20658,
+      "end": 34286,
+      "line_start": 5,
+      "line_end": 130,
+      "calls": [
+        "join",
+        "Tt.map",
+        "map",
+        "Object.entries",
+        "e.map"
+      ],
+      "literals": [
+        " ",
+        0
+      ],
+      "declaration": "const",
+      "initializer_type": "TemplateLiteral",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Xt",
+      "kind": "variable",
+      "start": 34291,
+      "end": 34296,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [],
+      "literals": [
+        1
+      ],
+      "declaration": "let",
+      "initializer_type": "UnaryExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ut",
+      "kind": "variable",
+      "start": 34303,
+      "end": 34313,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "Map"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "NewExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "gt",
+      "kind": "function",
+      "start": 34314,
+      "end": 34850,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "document.createElement",
+        "prepend",
+        "contains",
+        "Math.min",
+        "Math.max",
+        "Math.sqrt",
+        "setProperty",
+        "toFixed",
+        "e",
+        "addEventListener",
+        "we",
+        "getPropertyValue",
+        "getComputedStyle"
+      ],
+      "literals": [
+        0,
+        "style",
+        "ui-theme",
+        "mobile",
+        1,
+        0.78,
+        430,
+        1600,
+        900,
+        "--s",
+        0.85,
+        1.6,
+        3,
+        "resize",
+        "--ui-frame",
+        "rgb(156,182,186)"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "i"
+      ]
+    },
+    {
+      "name": "hn",
+      "kind": "function",
+      "start": 34850,
+      "end": 35057,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "gt",
+        "Array.from",
+        "o.startsWith",
+        "remove",
+        "add",
+        "we"
+      ],
+      "literals": [
+        "class-",
+        7
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "u"
+      ]
+    },
+    {
+      "name": "mo",
+      "kind": "function",
+      "start": 35057,
+      "end": 35157,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "Promise",
+        "Image",
+        "e"
+      ],
+      "literals": [],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "go",
+      "kind": "function",
+      "start": 35157,
+      "end": 35262,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "t.match"
+      ],
+      "literals": [
+        1,
+        2,
+        3,
+        255
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "tt",
+      "kind": "async_function",
+      "start": 35262,
+      "end": 35709,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "ut.get",
+        "mo",
+        "document.createElement",
+        "i.getContext",
+        "l.drawImage",
+        "l.getImageData",
+        "go",
+        "l.putImageData",
+        "i.toDataURL",
+        "ut.set"
+      ],
+      "literals": [
+        "canvas",
+        "2d",
+        0,
+        4,
+        255,
+        1,
+        2
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "we",
+      "kind": "function",
+      "start": 35709,
+      "end": 36292,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "e.setProperty",
+        "catch",
+        "then",
+        "tt",
+        "t.trim",
+        "o",
+        "ut.has",
+        "ut.set",
+        "Tt.forEach"
+      ],
+      "literals": [
+        "data/ui/panel-frame.png",
+        "--img-panel",
+        "data/ui/slot-frame.png",
+        "--img-slot-frame",
+        "slots",
+        "1",
+        "rgb(246,204,114)",
+        "--img-slot-gold",
+        "rgb(58,46,56)",
+        "--img-slot-empty"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "bo",
+      "kind": "function",
+      "start": 36292,
+      "end": 36404,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "document.createElement",
+        "uo"
+      ],
+      "literals": [
+        ""
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "d"
+      ]
+    },
+    {
+      "name": "fo",
+      "kind": "class",
+      "start": 36404,
+      "end": 37061,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "L",
+        "bo",
+        "appendChild",
+        "o",
+        "setProperty",
+        "move",
+        "add",
+        "Math.round",
+        "Math.max",
+        "Math.min",
+        "remove"
+      ],
+      "literals": [
+        "node",
+        "owner",
+        "div",
+        "ui-tooltip",
+        "",
+        "--tip-accent",
+        "var(--ui-accent)",
+        "on",
+        16,
+        4,
+        12
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "fo.constructor",
+      "kind": "method",
+      "start": 36413,
+      "end": 36468,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "L"
+      ],
+      "literals": [
+        "node",
+        "owner"
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "fo.show",
+      "kind": "method",
+      "start": 36468,
+      "end": 36745,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "bo",
+        "appendChild",
+        "o",
+        "setProperty",
+        "move",
+        "add"
+      ],
+      "literals": [
+        "div",
+        "ui-tooltip",
+        "",
+        "--tip-accent",
+        "var(--ui-accent)",
+        "on"
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "fo.move",
+      "kind": "method",
+      "start": 36745,
+      "end": 36963,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "Math.round",
+        "Math.max",
+        "Math.min"
+      ],
+      "literals": [
+        16,
+        4,
+        12
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "fo.hide",
+      "kind": "method",
+      "start": 36963,
+      "end": 37060,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "remove"
+      ],
+      "literals": [
+        "on"
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "rt",
+      "kind": "variable",
+      "start": 37067,
+      "end": 37076,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "fo"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "NewExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "t"
+      ]
+    },
+    {
+      "name": "mn",
+      "kind": "function",
+      "start": 37077,
+      "end": 37388,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "t.addEventListener",
+        "rt.show",
+        "rt.move",
+        "rt.hide"
+      ],
+      "literals": [
+        "pointerenter",
+        "mouse",
+        "pointermove",
+        "pointerleave",
+        "pointerdown"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "h"
+      ]
+    },
+    {
+      "name": "Se",
+      "kind": "variable",
+      "start": 37394,
+      "end": 37522,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "Set"
+      ],
+      "literals": [
+        "kiem-tien",
+        "co-su",
+        "ma-tong",
+        "the-tu",
+        "anh-sat",
+        "phu-su",
+        "ngu-thu-su",
+        "ky-mon",
+        "am-tong",
+        "tran-phap-su",
+        "tan-thu"
+      ],
+      "declaration": "const",
+      "initializer_type": "NewExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "vo",
+      "kind": "variable",
+      "start": 37523,
+      "end": 37537,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [],
+      "literals": [
+        "untrained"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "xo",
+      "kind": "variable",
+      "start": 37538,
+      "end": 37545,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [],
+      "literals": [
+        "v1"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "yo",
+      "kind": "variable",
+      "start": 37546,
+      "end": 37664,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "Set"
+      ],
+      "literals": [
+        "kiem-tien",
+        "phu-su",
+        "ngu-thu-su",
+        "ky-mon",
+        "am-tong",
+        "tran-phap-su",
+        "anh-sat",
+        "ma-tong",
+        "the-tu",
+        "co-su"
+      ],
+      "declaration": "const",
+      "initializer_type": "NewExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ee",
+      "kind": "variable",
+      "start": 37665,
+      "end": 37706,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [],
+      "literals": [
+        "u",
+        ""
+      ],
+      "declaration": "const",
+      "initializer_type": "ConditionalExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "me",
+      "kind": "variable",
+      "start": 37711,
+      "end": 37713,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [],
+      "literals": [],
+      "declaration": "var",
+      "initializer_type": null,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ko",
+      "kind": "variable",
+      "start": 37720,
+      "end": 37781,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "exec"
+      ],
+      "literals": [
+        0,
+        1
+      ],
+      "declaration": "const",
+      "initializer_type": "ConditionalExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Lt",
+      "kind": "variable",
+      "start": 37782,
+      "end": 37820,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "test"
+      ],
+      "literals": [
+        "ctl"
+      ],
+      "declaration": "const",
+      "initializer_type": "ConditionalExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "pt",
+      "kind": "variable",
+      "start": 37821,
+      "end": 37834,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [],
+      "literals": [
+        "ctl"
+      ],
+      "declaration": "const",
+      "initializer_type": "BinaryExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "K"
+      ]
+    },
+    {
+      "name": "wo",
+      "kind": "function",
+      "start": 37835,
+      "end": 38118,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "Se.has",
+        "yo.has",
+        "exec",
+        "jt"
+      ],
+      "literals": [
+        "tan-thu",
+        "v1",
+        "u",
+        0,
+        1,
+        "-v1",
+        ""
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "r"
+      ]
+    },
+    {
+      "name": "gn",
+      "kind": "arrow_function",
+      "start": 38124,
+      "end": 38167,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "Se.has",
+        "jt"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "B"
+      ]
+    },
+    {
+      "name": "jt",
+      "kind": "arrow_function",
+      "start": 38168,
+      "end": 38239,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "t.startsWith",
+        "test"
+      ],
+      "literals": [
+        "player_nu",
+        "",
+        "nu",
+        "nam"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "E"
+      ]
+    },
+    {
+      "name": "Ct",
+      "kind": "arrow_function",
+      "start": 38240,
+      "end": 38262,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "n"
+      ]
+    },
+    {
+      "name": "So",
+      "kind": "arrow_function",
+      "start": 38263,
+      "end": 38281,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "o"
+      ]
+    },
+    {
+      "name": "Jt",
+      "kind": "object",
+      "start": 38282,
+      "end": 38616,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [],
+      "literals": [
+        "idle",
+        "meditate",
+        "cast",
+        "walk",
+        "run",
+        "hit",
+        "melee",
+        "cau_quang"
+      ],
+      "declaration": "const",
+      "initializer_type": "ObjectExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "aa"
+      ]
+    },
+    {
+      "name": "Yt",
+      "kind": "variable",
+      "start": 38617,
+      "end": 38627,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "Map"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "NewExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "bn",
+      "kind": "function",
+      "start": 38628,
+      "end": 39163,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "Yt.get",
+        "Map",
+        "split",
+        "a.set",
+        "a.get",
+        "Set",
+        "map",
+        "a.has",
+        "i.push",
+        "slice",
+        "Math.max",
+        "Yt.set"
+      ],
+      "literals": [
+        "/",
+        0,
+        "",
+        "idle",
+        "static",
+        "run",
+        14,
+        "sprint",
+        13
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "p"
+      ]
+    },
+    {
+      "name": "Qt",
+      "kind": "variable",
+      "start": 39169,
+      "end": 39179,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "Map"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "NewExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "fn",
+      "kind": "function",
+      "start": 39180,
+      "end": 39563,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [
+        "Qt.get",
+        "catch",
+        "then",
+        "fetch",
+        "Ct",
+        "n.json",
+        "Promise",
+        "a",
+        "So",
+        "exists",
+        "image",
+        "once",
+        "isLoading",
+        "start",
+        "Qt.set"
+      ],
+      "literals": [
+        "set.json",
+        "atlas.png",
+        "loaderror"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "F"
+      ]
+    },
+    {
+      "name": "st",
+      "kind": "variable",
+      "start": 39569,
+      "end": 39634,
+      "line_start": 130,
+      "line_end": 130,
+      "calls": [],
+      "literals": [
+        "player_nam",
+        "Nam",
+        "player_nu",
+        "Nữ"
+      ],
+      "declaration": "const",
+      "initializer_type": "ConditionalExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Te",
+      "kind": "function",
+      "start": 39635,
+      "end": 41583,
+      "line_start": 130,
+      "line_end": 138,
+      "calls": [
+        "gt",
+        "document.getElementById",
+        "document.createElement",
+        "appendChild",
+        "n.append",
+        "st.find",
+        "forEach",
+        "a.querySelectorAll",
+        "h.setAttribute",
+        "String",
+        "i.replaceChildren",
+        "d.setAttribute",
+        "m.append",
+        "i.append",
+        "e",
+        "Eo",
+        "l",
+        "a.appendChild",
+        "fe",
+        "jt"
+      ],
+      "literals": [
+        "skin-picker-style",
+        "style",
+        "div",
+        "skin-picker",
+        "skin-grid",
+        "skin-preview",
+        "button",
+        "aria-pressed",
+        "canvas",
+        150,
+        180,
+        "aria-label",
+        "h3",
+        "p",
+        "Hình nhân vật theo môn phái bạn nhập. Có thể đổi nam / nữ trong Trang bị → Ngoại hình.",
+        "Ngoại hình tự do · dùng được với mọi đường tu. Có thể đổi trong Trang bị → Ngoại hình.",
+        "b ui-btn",
+        "nu",
+        1,
+        0
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "J"
+      ]
+    },
+    {
+      "name": "Eo",
+      "kind": "arrow_function",
+      "start": 41589,
+      "end": 42754,
+      "line_start": 138,
+      "line_end": 138,
+      "calls": [
+        "wo",
+        "Image",
+        "Ct",
+        "t.getContext",
+        "Math.max",
+        "Math.floor",
+        "Math.min",
+        "i.clearRect",
+        "i.drawImage",
+        "Math.round",
+        "Promise.all",
+        "then",
+        "fetch",
+        "c.json",
+        "find",
+        "Map",
+        "catch",
+        "h.decode",
+        "s.set",
+        "s.get",
+        "r.clearRect",
+        "r.drawImage",
+        "setTimeout",
+        "m"
+      ],
+      "literals": [
+        "static-south.png",
+        "2d",
+        1,
+        6,
+        0,
+        2,
+        "data/textures.json",
+        "walk/south",
+        "idle/south",
+        "data/",
+        140,
+        160,
+        3,
+        10,
+        1000,
+        4,
+        8
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "To",
+      "kind": "variable",
+      "start": 42755,
+      "end": 42787,
+      "line_start": 138,
+      "line_end": 138,
+      "calls": [],
+      "literals": [
+        "data/ui/controls-titles-v2/"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "C"
+      ]
+    },
+    {
+      "name": "Mt",
+      "kind": "arrow_function",
+      "start": 42788,
+      "end": 42817,
+      "line_start": 138,
+      "line_end": 138,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "q"
+      ]
+    },
+    {
+      "name": "Zt",
+      "kind": "object",
+      "start": 42818,
+      "end": 42892,
+      "line_start": 138,
+      "line_end": 138,
+      "calls": [],
+      "literals": [
+        "meditate",
+        "mount",
+        "auto",
+        "interact",
+        "tribulation",
+        "dash"
+      ],
+      "declaration": "const",
+      "initializer_type": "ObjectExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "te",
+      "kind": "function",
+      "start": 42893,
+      "end": 43025,
+      "line_start": 138,
+      "line_end": 138,
+      "calls": [
+        "document.createElement",
+        "Mt"
+      ],
+      "literals": [
+        "img",
+        "ui-icon control-art",
+        "",
+        1
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Lo",
+      "kind": "variable",
+      "start": 43031,
+      "end": 45419,
+      "line_start": 138,
+      "line_end": 159,
+      "calls": [
+        "Mt"
+      ],
+      "literals": [
+        "button-round"
+      ],
+      "declaration": "const",
+      "initializer_type": "TemplateLiteral",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "g"
+      ]
+    },
+    {
+      "name": "Co",
+      "kind": "arrow_function",
+      "start": 45420,
+      "end": 45506,
+      "line_start": 159,
+      "line_end": 159,
+      "calls": [
+        "localStorage.getItem"
+      ],
+      "literals": [
+        "tm-skill-drag-aim",
+        "true",
+        1
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "O"
+      ]
+    },
+    {
+      "name": "Le",
+      "kind": "arrow_function",
+      "start": 45507,
+      "end": 45628,
+      "line_start": 159,
+      "line_end": 159,
+      "calls": [
+        "localStorage.getItem"
+      ],
+      "literals": [
+        "tm-input-mode",
+        "touch",
+        "desktop",
+        "auto"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "L"
+      ]
+    },
+    {
+      "name": "Mo",
+      "kind": "arrow_function",
+      "start": 45629,
+      "end": 45852,
+      "line_start": 159,
+      "line_end": 159,
+      "calls": [
+        "localStorage.setItem",
+        "URL",
+        "delete",
+        "set",
+        "history.replaceState"
+      ],
+      "literals": [
+        "tm-input-mode",
+        "mobile",
+        "auto",
+        "touch",
+        "1",
+        "0",
+        ""
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "N"
+      ]
+    },
+    {
+      "name": "zo",
+      "kind": "variable",
+      "start": 45853,
+      "end": 61652,
+      "line_start": 159,
+      "line_end": 308,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "TemplateLiteral",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Po",
+      "kind": "function",
+      "start": 61653,
+      "end": 61922,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "get",
+        "URLSearchParams",
+        "Le",
+        "matchMedia",
+        "test"
+      ],
+      "literals": [
+        "mobile",
+        "1",
+        0,
+        "0",
+        1,
+        "auto",
+        "touch",
+        "(pointer: coarse) and (hover: none)"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "a"
+      ]
+    },
+    {
+      "name": "vn",
+      "kind": "class",
+      "start": 61922,
+      "end": 67389,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "L",
+        "document.createElement",
+        "add",
+        "dispatchEvent",
+        "Event",
+        "appendChild",
+        "a.setAttribute",
+        "i.setAttribute",
+        "i.append",
+        "remove",
+        "l.removeAttribute",
+        "s.removeAttribute",
+        "move",
+        "i.addEventListener",
+        "g.preventDefault",
+        "i.setPointerCapture",
+        "i.getBoundingClientRect",
+        "Math.max",
+        "Math.min",
+        "Math.hypot",
+        "c",
+        "addEventListener",
+        "aimEnd",
+        "k.setAttribute",
+        "setProperty",
+        "String",
+        "k.querySelector",
+        "dragAim",
+        "document.getElementById",
+        "y.setAttribute",
+        "S.append",
+        "te",
+        "document.createTextNode",
+        "S.setAttribute",
+        "S.addEventListener",
+        "press",
+        "_.appendChild",
+        "w.querySelector",
+        "x.append",
+        "T.append",
+        "w.append",
+        "z.setAttribute",
+        "z.append",
+        "z.addEventListener",
+        "z.blur",
+        "document.addEventListener",
+        "T.contains",
+        "A.setAttribute",
+        "O.append",
+        "O.contains",
+        "e.addEventListener",
+        "r.preventDefault",
+        "r.stopPropagation",
+        "Co",
+        "tap",
+        "e.setPointerCapture",
+        "aimStart",
+        "aimDrag",
+        "getBoundingClientRect",
+        "toggle",
+        "contains"
+      ],
+      "literals": [
+        "cancel",
+        "div",
+        "mobile",
+        "resize",
+        "style",
+        "rotate-hint",
+        "role",
+        "status",
+        "<span class=\"turn\" aria-hidden=\"true\">↻</span><strong>Xoay ngang để chơi</strong><span>Giữ điện thoại nằm ngang để di chuyển và dùng kỹ năng thoải mái hơn.</span>",
+        "joy",
+        "aria-label",
+        "Joystick di chuyển",
+        "base",
+        "knob",
+        1,
+        0,
+        "active",
+        "pointerdown",
+        62,
+        "pointermove",
+        48,
+        38,
+        0.15,
+        "pointerup",
+        "pointercancel",
+        "lostpointercapture",
+        "blur",
+        "none",
+        58,
+        54,
+        64,
+        139,
+        42,
+        45,
+        134,
+        2,
+        101,
+        3,
+        157,
+        4,
+        190,
+        5,
+        6,
+        "button",
+        "Space",
+        "Đánh thường",
+        "Q",
+        "Né",
+        "--x",
+        "--y",
+        "--d",
+        "touch-attack",
+        "touch-dash",
+        ".k",
+        "Đánh",
+        "HỦY",
+        "skills",
+        "details",
+        "touch-utility",
+        "summary",
+        "touch-opener",
+        "Chức năng bổ trợ",
+        "<span aria-hidden=\"true\">⋯</span>",
+        "Hành động: thiền, cưỡi, tự luyện",
+        "touch-utility-row",
+        "aria-controls",
+        "touch-tools",
+        "Thiền",
+        "T",
+        "Cưỡi thú",
+        "R",
+        "Tự luyện",
+        "V",
+        "Gặp",
+        "F",
+        "Tương tác",
+        "Độ kiếp",
+        "G",
+        "mbtn",
+        "aria-pressed",
+        "false",
+        "click",
+        ".pills",
+        "touch-multi touch-auto",
+        "Tự đánh",
+        "Tự đánh quái quanh đây",
+        "mobile-menu",
+        "Menu",
+        "nav",
+        "Chức năng nhân vật",
+        "hot",
+        "flex",
+        10,
+        80
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "M"
+      ]
+    },
+    {
+      "name": "vn.constructor",
+      "kind": "method",
+      "start": 61931,
+      "end": 66312,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "L",
+        "document.createElement",
+        "add",
+        "dispatchEvent",
+        "Event",
+        "appendChild",
+        "a.setAttribute",
+        "i.setAttribute",
+        "i.append",
+        "remove",
+        "l.removeAttribute",
+        "s.removeAttribute",
+        "move",
+        "i.addEventListener",
+        "g.preventDefault",
+        "i.setPointerCapture",
+        "i.getBoundingClientRect",
+        "Math.max",
+        "Math.min",
+        "Math.hypot",
+        "c",
+        "addEventListener",
+        "aimEnd",
+        "k.setAttribute",
+        "setProperty",
+        "String",
+        "k.querySelector",
+        "dragAim",
+        "document.getElementById",
+        "y.setAttribute",
+        "S.append",
+        "te",
+        "document.createTextNode",
+        "S.setAttribute",
+        "S.addEventListener",
+        "press",
+        "_.appendChild",
+        "w.querySelector",
+        "x.append",
+        "T.append",
+        "w.append",
+        "z.setAttribute",
+        "z.append",
+        "z.addEventListener",
+        "z.blur",
+        "document.addEventListener",
+        "T.contains",
+        "A.setAttribute",
+        "O.append",
+        "O.contains"
+      ],
+      "literals": [
+        "cancel",
+        "div",
+        "mobile",
+        "resize",
+        "style",
+        "rotate-hint",
+        "role",
+        "status",
+        "<span class=\"turn\" aria-hidden=\"true\">↻</span><strong>Xoay ngang để chơi</strong><span>Giữ điện thoại nằm ngang để di chuyển và dùng kỹ năng thoải mái hơn.</span>",
+        "joy",
+        "aria-label",
+        "Joystick di chuyển",
+        "base",
+        "knob",
+        1,
+        0,
+        "active",
+        "pointerdown",
+        62,
+        "pointermove",
+        48,
+        38,
+        0.15,
+        "pointerup",
+        "pointercancel",
+        "lostpointercapture",
+        "blur",
+        "none",
+        58,
+        54,
+        64,
+        139,
+        42,
+        45,
+        134,
+        2,
+        101,
+        3,
+        157,
+        4,
+        190,
+        5,
+        6,
+        "button",
+        "Space",
+        "Đánh thường",
+        "Q",
+        "Né",
+        "--x",
+        "--y",
+        "--d",
+        "touch-attack",
+        "touch-dash",
+        ".k",
+        "Đánh",
+        "HỦY",
+        "skills",
+        "details",
+        "touch-utility",
+        "summary",
+        "touch-opener",
+        "Chức năng bổ trợ",
+        "<span aria-hidden=\"true\">⋯</span>",
+        "Hành động: thiền, cưỡi, tự luyện",
+        "touch-utility-row",
+        "aria-controls",
+        "touch-tools",
+        "Thiền",
+        "T",
+        "Cưỡi thú",
+        "R",
+        "Tự luyện",
+        "V",
+        "Gặp",
+        "F",
+        "Tương tác",
+        "Độ kiếp",
+        "G",
+        "mbtn",
+        "aria-pressed",
+        "false",
+        "click",
+        ".pills",
+        "touch-multi touch-auto",
+        "Tự đánh",
+        "Tự đánh quái quanh đây",
+        "mobile-menu",
+        "Menu",
+        "nav",
+        "Chức năng nhân vật"
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "vn.dragAim",
+      "kind": "method",
+      "start": 66312,
+      "end": 67388,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "e.addEventListener",
+        "r.preventDefault",
+        "r.stopPropagation",
+        "Co",
+        "tap",
+        "e.setPointerCapture",
+        "aimStart",
+        "remove",
+        "Math.hypot",
+        "aimDrag",
+        "Math.min",
+        "getBoundingClientRect",
+        "toggle",
+        "contains",
+        "aimEnd"
+      ],
+      "literals": [
+        1,
+        0,
+        "pointerdown",
+        "hot",
+        "flex",
+        "pointermove",
+        10,
+        80,
+        "none",
+        "pointerup",
+        "pointercancel"
+      ],
+      "static": false,
+      "async": false,
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ce",
+      "kind": "variable",
+      "start": 67395,
+      "end": 67410,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [],
+      "literals": [
+        "tm-loading"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "zt",
+      "kind": "variable",
+      "start": 67411,
+      "end": 67427,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [],
+      "literals": [
+        "kt-boot.png"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ee",
+      "kind": "object",
+      "start": 67428,
+      "end": 68098,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [],
+      "literals": [
+        "village",
+        "forest",
+        "swamp",
+        "ice",
+        "fire",
+        "tomb",
+        "sword",
+        "island"
+      ],
+      "declaration": "const",
+      "initializer_type": "ObjectExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Me",
+      "kind": "arrow_function",
+      "start": 68099,
+      "end": 68147,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "vt",
+      "kind": "array",
+      "start": 68148,
+      "end": 69038,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [],
+      "literals": [
+        "Chuột phải để di chuyển, chuột trái để đánh — bấm vào quái là tự chạy tới và đánh liên tục.",
+        "Bấm R để cưỡi kiếm hoặc thú bay, đi nhanh hơn nhiều so với chạy bộ.",
+        "Bấm V để bật tự luyện; bấm T để thiền hồi phục khi rảnh tay.",
+        "Linh thảo mọc ngẫu nhiên khắp các vùng — thấy cây phát sáng thì lại gần bấm F để hái.",
+        "Đồ không dùng tới hãy rã ở Xưởng (U) để lấy Bột luyện khí — rã ở đâu cũng được.",
+        "Bấm M mở bản đồ thế giới để đi nhanh tới vùng đã mở.",
+        "Cài đặt có bộ lọc nhặt đồ: bỏ qua đồ phẩm thấp cho túi luôn gọn.",
+        "Z và X uống đan hồi máu, hồi linh lực — nhớ mang theo khi đi xa.",
+        "Lập tổ đội (P) để săn quái cùng nhau và nhận thêm kinh nghiệm.",
+        "Boss thế giới chia đồ cho người kết liễu và những người gây sát thương nhiều nhất.",
+        "Đạt Luyện Khí tầng 7 mới được đăng bán trên chợ; mua thì cảnh giới nào cũng được.",
+        "Đủ kinh nghiệm ở bình cảnh, bấm G để độ kiếp lên cảnh giới mới."
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrayExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "D",
+      "kind": "arrow_function",
+      "start": 69039,
+      "end": 69070,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "document.getElementById"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ze",
+      "kind": "variable",
+      "start": 69075,
+      "end": 69079,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [],
+      "literals": [
+        0
+      ],
+      "declaration": "let",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "J",
+      "kind": "variable",
+      "start": 69080,
+      "end": 69083,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [],
+      "literals": [
+        0
+      ],
+      "declaration": "let",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "xt",
+      "kind": "variable",
+      "start": 69084,
+      "end": 69088,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [],
+      "literals": [
+        0
+      ],
+      "declaration": "let",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "xn",
+      "kind": "function",
+      "start": 69089,
+      "end": 69203,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "sessionStorage.setItem",
+        "JSON.stringify",
+        "Me",
+        "Date.now"
+      ],
+      "literals": [],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "G"
+      ]
+    },
+    {
+      "name": "Pt",
+      "kind": "function",
+      "start": 69203,
+      "end": 69624,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "D",
+        "contains",
+        "remove",
+        "performance.now",
+        "toggle",
+        "Pe",
+        "Me",
+        "oe",
+        "window.setInterval"
+      ],
+      "literals": [
+        "Đang tiến vào",
+        "loading",
+        "gone",
+        "done",
+        0,
+        "ld-title",
+        "map",
+        "ld-eyebrow",
+        4500
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "I"
+      ]
+    },
+    {
+      "name": "Pe",
+      "kind": "function",
+      "start": 69624,
+      "end": 69956,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "D",
+        "Image",
+        "String",
+        "toggle",
+        "test",
+        "$o",
+        "add",
+        "Pe"
+      ],
+      "literals": [
+        "ld-bg",
+        "px",
+        "on"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "$o",
+      "kind": "arrow_function",
+      "start": 69962,
+      "end": 70029,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "t.call"
+      ],
+      "literals": [
+        0
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "$e",
+      "kind": "function",
+      "start": 70030,
+      "end": 70178,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "Math.max",
+        "Math.ceil"
+      ],
+      "literals": [
+        1
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "V",
+      "kind": "function",
+      "start": 70178,
+      "end": 70407,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "Math.max",
+        "Math.min",
+        "D",
+        "n.toFixed",
+        "Math.round"
+      ],
+      "literals": [
+        1,
+        0,
+        100,
+        "ld-fill",
+        "%",
+        "ld-pct",
+        "ld-step"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "z"
+      ]
+    },
+    {
+      "name": "Ao",
+      "kind": "function",
+      "start": 70407,
+      "end": 70487,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "D",
+        "add"
+      ],
+      "literals": [
+        "ld-step",
+        "bad"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "a9"
+      ]
+    },
+    {
+      "name": "Ae",
+      "kind": "function",
+      "start": 70487,
+      "end": 70864,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "D",
+        "contains",
+        "V",
+        "add",
+        "window.setTimeout",
+        "clearInterval",
+        "Math.max",
+        "performance.now",
+        "sessionStorage.removeItem"
+      ],
+      "literals": [
+        1,
+        "loading",
+        "done",
+        100,
+        "Sẵn sàng",
+        "gone",
+        520,
+        0,
+        600
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "A"
+      ]
+    },
+    {
+      "name": "oe",
+      "kind": "function",
+      "start": 70864,
+      "end": 71091,
+      "line_start": 308,
+      "line_end": 308,
+      "calls": [
+        "D",
+        "Number",
+        "Math.floor",
+        "Math.random",
+        "remove",
+        "String",
+        "add"
+      ],
+      "literals": [
+        "ld-tip",
+        "in",
+        1
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ie",
+      "kind": "variable",
+      "start": 71097,
+      "end": 75873,
+      "line_start": 308,
+      "line_end": 356,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "TemplateLiteral",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "je",
+      "kind": "variable",
+      "start": 75874,
+      "end": 80051,
+      "line_start": 356,
+      "line_end": 400,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "TemplateLiteral",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "$",
+      "kind": "object",
+      "start": 80052,
+      "end": 80118,
+      "line_start": 400,
+      "line_end": 400,
+      "calls": [],
+      "literals": [
+        "",
+        0
+      ],
+      "declaration": "const",
+      "initializer_type": "ObjectExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ot",
+      "kind": "variable",
+      "start": 80123,
+      "end": 80130,
+      "line_start": 400,
+      "line_end": 400,
+      "calls": [],
+      "literals": [],
+      "declaration": "let",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "lt",
+      "kind": "function",
+      "start": 80131,
+      "end": 80247,
+      "line_start": 400,
+      "line_end": 400,
+      "calls": [
+        "replace",
+        "toLowerCase",
+        "t.normalize"
+      ],
+      "literals": [
+        "NFD",
+        "",
+        "d"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ne",
+      "kind": "array",
+      "start": 80253,
+      "end": 80391,
+      "line_start": 400,
+      "line_end": 400,
+      "calls": [],
+      "literals": [
+        "Lăng Vân",
+        "Mặc Trần",
+        "Thanh Phong",
+        "Tiêu Dao",
+        "Huyền Minh",
+        "Cô Hồng",
+        "Vân Khê",
+        "Bạch Lộ",
+        "Hàn Giang",
+        "Lạc Anh",
+        "Phong Vũ",
+        "Dạ Tuyết"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrayExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ie",
+      "kind": "arrow_function",
+      "start": 80392,
+      "end": 80480,
+      "line_start": 400,
+      "line_end": 400,
+      "calls": [
+        "Math.floor",
+        "Math.random"
+      ],
+      "literals": [
+        100,
+        900
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Io",
+      "kind": "arrow_function",
+      "start": 80481,
+      "end": 80531,
+      "line_start": 400,
+      "line_end": 400,
+      "calls": [
+        "t.includes",
+        "toLowerCase",
+        "t.trim",
+        "lt"
+      ],
+      "literals": [
+        "@"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ae",
+      "kind": "variable",
+      "start": 80532,
+      "end": 80554,
+      "line_start": 400,
+      "line_end": 400,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "jo",
+      "kind": "variable",
+      "start": 80555,
+      "end": 80582,
+      "line_start": 400,
+      "line_end": 400,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "No",
+      "kind": "variable",
+      "start": 80583,
+      "end": 80614,
+      "line_start": 400,
+      "line_end": 400,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ne",
+      "kind": "function",
+      "start": 80615,
+      "end": 80851,
+      "line_start": 400,
+      "line_end": 400,
+      "calls": [
+        "mt",
+        "catch",
+        "store",
+        "e"
+      ],
+      "literals": [
+        ""
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "_o",
+      "kind": "async_function",
+      "start": 80851,
+      "end": 95386,
+      "line_start": 400,
+      "line_end": 441,
+      "calls": [
+        "gt",
+        "fetch",
+        "AbortSignal.timeout",
+        "n.json",
+        "Promise",
+        "document.createElement",
+        "appendChild",
+        "forEach",
+        "i.querySelectorAll",
+        "add",
+        "f.setAttribute",
+        "setProperty",
+        "$e",
+        "l",
+        "b.addEventListener",
+        "W.addEventListener",
+        "i.querySelector",
+        "Le",
+        "Mo",
+        "namedItem",
+        "trim",
+        "c",
+        "Vt",
+        "includes",
+        "ie",
+        "mt",
+        "focus",
+        "p.addEventListener",
+        "remove",
+        "h",
+        "toggle",
+        "u",
+        "indexOf",
+        "join",
+        "Fe.map",
+        "K.setAttribute",
+        "String",
+        "r.setAttribute",
+        "Math.max",
+        "Math.ceil",
+        "Date.now",
+        "window.setInterval",
+        "A",
+        "clearInterval",
+        "f.removeEventListener",
+        "v.removeEventListener",
+        "Ft",
+        "k",
+        "i.remove",
+        "a.remove",
+        "n",
+        "E",
+        "ye",
+        "S",
+        "addEventListener",
+        "lt",
+        "Te",
+        "Po",
+        "slice",
+        "replace",
+        "v.getData",
+        "p.preventDefault",
+        "JSON.stringify",
+        "catch",
+        "v.json",
+        "Number",
+        "Error",
+        "I",
+        "p",
+        "H",
+        "toLowerCase",
+        "No.test",
+        "C",
+        "ae.test",
+        "jo.test",
+        "normalize",
+        "$t",
+        "Ne",
+        "G",
+        "Io",
+        "f.includes",
+        "Y",
+        "at",
+        "test",
+        "Q"
+      ],
+      "literals": [
+        "",
+        1,
+        "/api/auth/email",
+        3000,
+        0,
+        "style",
+        "div",
+        "login",
+        "<div class=\"saved\"><button type=\"button\" class=\"go primary cont\">Vào game · <span class=\"saved-user\"></span></button><button type=\"button\" class=\"quiet other\">Dùng tài khoản khác</button></div>",
+        "button",
+        "ui-btn",
+        "input",
+        "checkbox",
+        "hidden",
+        "ui-input",
+        "LABEL",
+        "for",
+        "--login-height",
+        "--login-top",
+        256,
+        144,
+        "resize",
+        "scroll",
+        "#login-controls",
+        "form",
+        ".err",
+        ".status",
+        ".submit",
+        ".resend",
+        "guest",
+        "@",
+        "user",
+        "pass",
+        "pass2",
+        "email",
+        "name",
+        "skin",
+        "keep",
+        "Sai tên đăng nhập hoặc mật khẩu",
+        "Sai tài khoản/Gmail hoặc mật khẩu. Quên mật khẩu? Bấm “Quên mật khẩu?” bên dưới. Chưa có tài khoản ở bản web mới? Chọn “Đăng ký”.",
+        "bad",
+        "register",
+        "forgot",
+        ".saved",
+        ".saved-user",
+        ".tabs",
+        ".f-login",
+        ".f-account",
+        ".f-email",
+        ".f-code",
+        "code",
+        ".f-newpass",
+        ".reg",
+        "character",
+        ".to-guest",
+        "reg-on",
+        ".check",
+        ".email-hint",
+        "Nhập Gmail đã dùng khi đăng ký, mã đặt lại mật khẩu sẽ được gửi về đó.",
+        "Dùng để nhận mã xác nhận, đăng nhập và lấy lại mật khẩu khi quên.",
+        ".sent",
+        "đặt lại mật khẩu",
+        "xác nhận",
+        ".steps",
+        "1 · Gmail",
+        "2 · Mã + mật khẩu mới",
+        "1 · Tài khoản",
+        "2 · Mã xác nhận",
+        "3 · Nhân vật",
+        "on",
+        "done",
+        "#login-title",
+        "Chơi ngay",
+        "Quên mật khẩu",
+        "Đăng ký",
+        "Đăng nhập",
+        ".intro",
+        "Vào game ngay, không cần tài khoản. Nhân vật được giữ 7 ngày trên máy này; liên kết Gmail trong Cài đặt để giữ mãi và chơi trên máy khác.",
+        "Nhận mã qua Gmail để đặt mật khẩu mới.",
+        "Nhập mã trong thư và đặt mật khẩu mới.",
+        "Tạo tài khoản bằng tên đăng nhập, mật khẩu và Gmail.",
+        "Tạo tài khoản và nhân vật rồi vào game ngay.",
+        "Mở Gmail và nhập mã 6 số vừa nhận.",
+        "Gmail đã xác nhận. Đặt tên và chọn ngoại hình.",
+        "Đăng nhập bằng tài khoản hoặc Gmail cùng mật khẩu.",
+        ".tabs button",
+        "aria-selected",
+        "role",
+        "tab",
+        ".to-forgot",
+        ".to-back",
+        "Đã có tài khoản? Đăng nhập",
+        "← Quay lại đăng nhập",
+        "← Quay lại bước trước",
+        ".resend-row",
+        "aria-busy",
+        1000,
+        "Gửi lại mã",
+        "Đang xử lý…",
+        "Vào game"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Oo",
+      "kind": "function",
+      "start": 95386,
+      "end": 96637,
+      "line_start": 441,
+      "line_end": 441,
+      "calls": [
+        "gt",
+        "Promise",
+        "document.createElement",
+        "append",
+        "$e",
+        "o.querySelector",
+        "Te",
+        "a.preventDefault",
+        "replace",
+        "trim",
+        "normalize",
+        "test",
+        "o.remove",
+        "e.remove",
+        "t"
+      ],
+      "literals": [
+        "style",
+        "div",
+        "login",
+        256,
+        144,
+        "<form class=\"ui-frame reg-on\"><div class=\"brand\"><img class=\"logo\" src=\"kt-logo.png\" alt=\"Nghịch Thiên Ký\" width=\"258\" height=\"42\"></div><p class=\"sub\">Khởi đầu hành trình · Ngoại hình độc lập với đường tu</p><label for=\"local-name\">Tên nhân vật</label><input id=\"local-name\" name=\"name\" class=\"ui-input\" required minlength=\"2\" maxlength=\"16\" autocomplete=\"off\"><div class=\"skins\"></div><p class=\"sub\">Chọn ngoại hình → thức tỉnh linh căn → chọn một trong mười môn phái.</p><button class=\"go b primary\" type=\"submit\">Bắt đầu hành trình</button><div class=\"err\" role=\"alert\"></div></form>",
+        0,
+        ".skins",
+        "form",
+        "input",
+        "NFC",
+        " ",
+        2,
+        16,
+        ".err",
+        "Tên cần 2–16 ký tự chữ hoặc số."
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "qo",
+      "kind": "variable",
+      "start": 96643,
+      "end": 99752,
+      "line_start": 441,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "TemplateLiteral",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "re",
+      "kind": "variable",
+      "start": 99753,
+      "end": 99771,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [
+        "tm-fullscreen"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "R",
+      "kind": "arrow_function",
+      "start": 99772,
+      "end": 99876,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "t.closest"
+      ],
+      "literals": [
+        "input, textarea, select, [contenteditable=\"true\"], .selectable"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "nt",
+      "kind": "variable",
+      "start": 99877,
+      "end": 99888,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "Identifier",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "it",
+      "kind": "arrow_function",
+      "start": 99889,
+      "end": 99950,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "yt",
+      "kind": "function",
+      "start": 99951,
+      "end": 100134,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "matchMedia"
+      ],
+      "literals": [
+        "(display-mode: fullscreen), (display-mode: standalone)"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ct",
+      "kind": "async_function",
+      "start": 100134,
+      "end": 100534,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "it",
+        "t.requestFullscreen",
+        "e.call",
+        "n.call",
+        "i.call"
+      ],
+      "literals": [
+        "hide",
+        0,
+        "landscape",
+        "Escape"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Do",
+      "kind": "async_function",
+      "start": 100534,
+      "end": 100717,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "it",
+        "ct",
+        "t.call",
+        "e.call"
+      ],
+      "literals": [
+        0
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ro",
+      "kind": "arrow_function",
+      "start": 100723,
+      "end": 100871,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "test",
+        "matchMedia"
+      ],
+      "literals": [
+        "(display-mode: fullscreen), (display-mode: standalone)"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ho",
+      "kind": "function",
+      "start": 100872,
+      "end": 101364,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "document.getElementById",
+        "document.createElement",
+        "t.setAttribute",
+        "t.querySelector",
+        "t.remove",
+        "appendChild"
+      ],
+      "literals": [
+        "ios-home-hint",
+        "div",
+        "role",
+        "dialog",
+        "iPhone không cho trang web tự bật toàn màn hình.<br>Bấm nút <b>Chia sẻ</b> (ô vuông có mũi tên) → <b>Thêm vào Màn hình chính</b>, rồi mở game từ biểu tượng <b>Nghịch Thiên Ký</b> để chơi toàn màn hình.<br><button type=\"button\">Đã hiểu</button>",
+        "button"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "se",
+      "kind": "variable",
+      "start": 101368,
+      "end": 101373,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [
+        1
+      ],
+      "declaration": "let",
+      "initializer_type": "UnaryExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ko",
+      "kind": "function",
+      "start": 101374,
+      "end": 103918,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "document.createElement",
+        "appendChild",
+        "document.addEventListener",
+        "closest",
+        "R",
+        "r.preventDefault",
+        "d.preventDefault",
+        "Vo",
+        "matchMedia",
+        "yt",
+        "add",
+        "Ro",
+        "addEventListener",
+        "sessionStorage.getItem",
+        "it",
+        "d",
+        "ct",
+        "removeEventListener",
+        "sessionStorage.setItem",
+        "toggle",
+        "setTimeout",
+        "dispatchEvent",
+        "Event",
+        "contains",
+        "Ho",
+        "r.stopPropagation",
+        "Do",
+        "l.setAttribute",
+        "document.querySelector",
+        "Fo"
+      ],
+      "literals": [
+        0,
+        "style",
+        "touchend",
+        "button, summary, a, [role=\"button\"]",
+        320,
+        1,
+        "dblclick",
+        "gesturestart",
+        "gesturechange",
+        "gestureend",
+        "touchmove",
+        "contextmenu",
+        "selectstart",
+        "dragstart",
+        "copy",
+        "cut",
+        "(pointer: coarse)",
+        "can-fullscreen",
+        "ios-home",
+        "beforeunload",
+        "pagehide",
+        "1",
+        "Escape",
+        "Enter",
+        "keydown",
+        "pointerdown",
+        "0",
+        "is-fullscreen",
+        "resize",
+        120,
+        "fullscreenchange",
+        "webkitfullscreenchange",
+        "button",
+        "fullscreen-btn",
+        "⛶ Toàn màn hình",
+        "⛶",
+        "Toàn màn hình (Alt+Enter)",
+        "aria-label",
+        "Toàn màn hình",
+        "#game canvas",
+        "pointerup"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Fo",
+      "kind": "function",
+      "start": 103918,
+      "end": 104541,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "test",
+        "sessionStorage.getItem",
+        "sessionStorage.setItem",
+        "document.createElement",
+        "e.setAttribute",
+        "e.querySelector",
+        "e.remove",
+        "appendChild"
+      ],
+      "literals": [
+        "tm-inapp-hint",
+        "1",
+        "div",
+        "inapp-hint",
+        "role",
+        "status",
+        "Safari",
+        "Chrome",
+        "button"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Vo",
+      "kind": "function",
+      "start": 104541,
+      "end": 105138,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "addEventListener",
+        "toUpperCase",
+        "includes",
+        "e.preventDefault",
+        "e.stopImmediatePropagation",
+        "ce",
+        "matchMedia",
+        "setInterval"
+      ],
+      "literals": [
+        "keydown",
+        "F12",
+        "I",
+        "J",
+        "C",
+        "K",
+        "U",
+        "S",
+        "Ctrl+",
+        "",
+        "Cmd+",
+        "Alt+",
+        "Shift+",
+        0,
+        "(pointer: fine)",
+        1,
+        200,
+        260,
+        "mở DevTools",
+        2000
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "le",
+      "kind": "variable",
+      "start": 105144,
+      "end": 105154,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "Map"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "NewExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ce",
+      "kind": "function",
+      "start": 105155,
+      "end": 105553,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "Date.now",
+        "le.get",
+        "le.set",
+        "sessionStorage.getItem",
+        "JSON.stringify",
+        "slice",
+        "a.call",
+        "Blob",
+        "fetch"
+      ],
+      "literals": [
+        0,
+        30000,
+        "",
+        40,
+        "/api/devtools",
+        "text/plain",
+        "POST"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Bo",
+      "kind": "array",
+      "start": 105559,
+      "end": 105575,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [
+        84,
+        77,
+        88,
+        49
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrayExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Uo",
+      "kind": "variable",
+      "start": 105576,
+      "end": 105589,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [
+        1797074579
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "_e",
+      "kind": "function",
+      "start": 105590,
+      "end": 105980,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "Bo.some",
+        "t.slice",
+        "DataView",
+        "i.setUint32",
+        "i.getUint32"
+      ],
+      "literals": [
+        8,
+        4,
+        5,
+        6,
+        16,
+        7,
+        24,
+        0,
+        1,
+        2,
+        13,
+        17,
+        255
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Go",
+      "kind": "variable",
+      "start": 105986,
+      "end": 106038,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "kt",
+      "kind": "variable",
+      "start": 106039,
+      "end": 106049,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "Map"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "NewExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Wo",
+      "kind": "function",
+      "start": 106050,
+      "end": 106304,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "kt.get",
+        "then",
+        "fetch",
+        "Error",
+        "String",
+        "o.arrayBuffer",
+        "URL.createObjectURL",
+        "Blob",
+        "_e",
+        "Uint8Array",
+        "e.catch",
+        "kt.delete",
+        "kt.set"
+      ],
+      "literals": [
+        "image/png"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "de",
+      "kind": "variable",
+      "start": 106308,
+      "end": 106313,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [
+        1
+      ],
+      "declaration": "let",
+      "initializer_type": "UnaryExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Xo",
+      "kind": "function",
+      "start": 106314,
+      "end": 106783,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "Object.getOwnPropertyDescriptor",
+        "WeakMap",
+        "Object.defineProperty",
+        "Go.test",
+        "call",
+        "then",
+        "Wo",
+        "URL",
+        "n.set",
+        "n.get",
+        "o.call"
+      ],
+      "literals": [
+        0,
+        "src",
+        "string"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "a6"
+      ]
+    },
+    {
+      "name": "Jo",
+      "kind": "function",
+      "start": 106783,
+      "end": 107035,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "catch",
+        "then",
+        "n.arrayBuffer",
+        "URL.createObjectURL",
+        "Blob",
+        "_e",
+        "Uint8Array",
+        "i.call",
+        "Event"
+      ],
+      "literals": [
+        0,
+        "error"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "a8"
+      ]
+    },
+    {
+      "name": "Oe",
+      "kind": "arrow_function",
+      "start": 107041,
+      "end": 107105,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "localStorage.getItem"
+      ],
+      "literals": [
+        "1",
+        1
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "bt",
+      "kind": "arrow_function",
+      "start": 107106,
+      "end": 107163,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "localStorage.setItem"
+      ],
+      "literals": [
+        "1",
+        "0"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "qe",
+      "kind": "variable",
+      "start": 107164,
+      "end": 107213,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "matchMedia"
+      ],
+      "literals": [
+        "(prefers-reduced-motion: reduce)"
+      ],
+      "declaration": "const",
+      "initializer_type": "CallExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "R"
+      ]
+    },
+    {
+      "name": "Nt",
+      "kind": "variable",
+      "start": 107218,
+      "end": 107235,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "Oe"
+      ],
+      "literals": [
+        "tm-shake"
+      ],
+      "declaration": "let",
+      "initializer_type": "CallExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "_t",
+      "kind": "variable",
+      "start": 107236,
+      "end": 107253,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "Oe"
+      ],
+      "literals": [
+        "tm-flash"
+      ],
+      "declaration": "let",
+      "initializer_type": "CallExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "yn",
+      "kind": "arrow_function",
+      "start": 107260,
+      "end": 107282,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "c"
+      ]
+    },
+    {
+      "name": "kn",
+      "kind": "arrow_function",
+      "start": 107283,
+      "end": 107305,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "f"
+      ]
+    },
+    {
+      "name": "wn",
+      "kind": "function",
+      "start": 107306,
+      "end": 107343,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "bt"
+      ],
+      "literals": [
+        "tm-shake"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "Q"
+      ]
+    },
+    {
+      "name": "Sn",
+      "kind": "function",
+      "start": 107343,
+      "end": 107380,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "bt"
+      ],
+      "literals": [
+        "tm-flash"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "W"
+      ]
+    },
+    {
+      "name": "En",
+      "kind": "arrow_function",
+      "start": 107386,
+      "end": 107395,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "a4"
+      ]
+    },
+    {
+      "name": "Tn",
+      "kind": "arrow_function",
+      "start": 107396,
+      "end": 107405,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "V"
+      ]
+    },
+    {
+      "name": "De",
+      "kind": "variable",
+      "start": 107410,
+      "end": 107490,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "localStorage.getItem"
+      ],
+      "literals": [
+        "tm-env-off",
+        "1",
+        0
+      ],
+      "declaration": "let",
+      "initializer_type": "CallExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ln",
+      "kind": "arrow_function",
+      "start": 107497,
+      "end": 107506,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "e"
+      ]
+    },
+    {
+      "name": "Cn",
+      "kind": "function",
+      "start": 107507,
+      "end": 107584,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "localStorage.setItem"
+      ],
+      "literals": [
+        "tm-env-off",
+        "0",
+        "1"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "X"
+      ]
+    },
+    {
+      "name": "Yo",
+      "kind": "variable",
+      "start": 107590,
+      "end": 107602,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "Identifier",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Qo",
+      "kind": "variable",
+      "start": 107603,
+      "end": 107668,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [
+        8,
+        3,
+        2
+      ],
+      "declaration": "const",
+      "initializer_type": "LogicalExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Re",
+      "kind": "arrow_function",
+      "start": 107669,
+      "end": 107758,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "localStorage.getItem"
+      ],
+      "literals": [
+        "1"
+      ],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "He",
+      "kind": "variable",
+      "start": 107763,
+      "end": 107784,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "Re"
+      ],
+      "literals": [
+        "tm-low-fx"
+      ],
+      "declaration": "let",
+      "initializer_type": "CallExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ke",
+      "kind": "variable",
+      "start": 107785,
+      "end": 107806,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "Re"
+      ],
+      "literals": [
+        "tm-fps-30",
+        1
+      ],
+      "declaration": "let",
+      "initializer_type": "CallExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Mn",
+      "kind": "arrow_function",
+      "start": 107813,
+      "end": 107822,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "x"
+      ]
+    },
+    {
+      "name": "zn",
+      "kind": "function",
+      "start": 107823,
+      "end": 107861,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "bt"
+      ],
+      "literals": [
+        "tm-low-fx"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "Y"
+      ]
+    },
+    {
+      "name": "Zo",
+      "kind": "arrow_function",
+      "start": 107867,
+      "end": 107876,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "ArrowFunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "Z"
+      ]
+    },
+    {
+      "name": "Pn",
+      "kind": "function",
+      "start": 107877,
+      "end": 107915,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "bt"
+      ],
+      "literals": [
+        "tm-fps-30"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": [
+        "_"
+      ]
+    },
+    {
+      "name": "tn",
+      "kind": "function_expression",
+      "start": 107921,
+      "end": 108034,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "console.log"
+      ],
+      "literals": [
+        "%c",
+        "font-family: monospace; font-size: 9px; line-height: 9px; color: #e8c170"
+      ],
+      "declaration": "const",
+      "initializer_type": "FunctionExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ue",
+      "kind": "variable",
+      "start": 108045,
+      "end": 108070,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [
+        "SuoiDa_CharacterTest"
+      ],
+      "declaration": "const",
+      "initializer_type": "Literal",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "N",
+      "kind": "variable",
+      "start": 108071,
+      "end": 108109,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "URLSearchParams"
+      ],
+      "literals": [],
+      "declaration": "const",
+      "initializer_type": "NewExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ot",
+      "kind": "variable",
+      "start": 108110,
+      "end": 108143,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "document.getElementById"
+      ],
+      "literals": [
+        "hud"
+      ],
+      "declaration": "const",
+      "initializer_type": "CallExpression",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "on",
+      "kind": "async_function",
+      "start": 108144,
+      "end": 108676,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "sessionStorage.getItem",
+        "mt",
+        "Bt",
+        "Ae",
+        "_o",
+        "Pt",
+        "V",
+        "lo",
+        "sessionStorage.setItem",
+        "Ne",
+        "ye"
+      ],
+      "literals": [
+        "",
+        0,
+        "hello",
+        "Đang vào thế giới…",
+        22,
+        "token",
+        "pass"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "nn",
+      "kind": "function",
+      "start": 108676,
+      "end": 108950,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "Promise",
+        "setTimeout",
+        "t",
+        "e.push",
+        "requestAnimationFrame",
+        "clearTimeout",
+        "sort",
+        "map",
+        "e.slice"
+      ],
+      "literals": [
+        0,
+        600,
+        16,
+        1,
+        7,
+        9.5,
+        65
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "an",
+      "kind": "async_function",
+      "start": 108950,
+      "end": 113072,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [
+        "Ko",
+        "Xo",
+        "N.get",
+        "V",
+        "Promise.all",
+        "M",
+        "catch",
+        "on",
+        "Promise.resolve",
+        "Kt",
+        "Ae",
+        "Object.assign",
+        "Oo",
+        "Pt",
+        "fe",
+        "Math.max",
+        "Number",
+        "n.includes",
+        "map",
+        "at.split",
+        "b.every",
+        "Je",
+        "to",
+        "ve",
+        "Map",
+        "filter",
+        "Set",
+        "set",
+        "et",
+        "__vite__mapDeps",
+        "p",
+        "z.has",
+        "O.map",
+        "C.map",
+        "A",
+        "then",
+        "E",
+        "S",
+        "Jo",
+        "I.Game",
+        "N.has",
+        "Zo",
+        "nn",
+        "add"
+      ],
+      "literals": [
+        "online",
+        "1",
+        "0",
+        0,
+        "Đang tải…",
+        6,
+        "Đang tải dữ liệu thế giới…",
+        "data/textures.json",
+        "data/classes.json",
+        "data/scenes.json",
+        "data/regions.json",
+        "data/worldmap.json",
+        "worldmap.png",
+        "Lữ Khách",
+        1,
+        "",
+        "name",
+        "skin",
+        "level",
+        "map",
+        "at",
+        ",",
+        2,
+        30,
+        "Đang tải bản đồ…",
+        40,
+        "Đang tải nhân vật, quái và vật phẩm…",
+        "data/world.json",
+        "data/posts.json",
+        "data/herbs.json",
+        "data/camps.json",
+        "data/quests.json",
+        "data/items.json",
+        "data/fishing.json",
+        "data/realm-cores.json",
+        "./LocalDriver-DMfdN3Dc.js",
+        62,
+        "Đang tải biểu tượng…",
+        "./items-nDkzNEls.js",
+        3,
+        72,
+        "Đang khởi động đồ hoạ…",
+        "./phaser-DRI6y8R5.js",
+        "./WorldScene-b_2tpaKT.js",
+        4,
+        5,
+        7,
+        "game",
+        "#0e0c12",
+        "timer",
+        60,
+        "uncapped",
+        32,
+        "world"
+      ],
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "mt",
+      "kind": "export_specifier",
+      "start": 113326,
+      "end": 113333,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "$",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ae",
+      "kind": "export_specifier",
+      "start": 113334,
+      "end": 113341,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "A",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "gn",
+      "kind": "export_specifier",
+      "start": 113342,
+      "end": 113349,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "B",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "To",
+      "kind": "export_specifier",
+      "start": 113350,
+      "end": 113357,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "C",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ge",
+      "kind": "export_specifier",
+      "start": 113358,
+      "end": 113365,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "D",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "jt",
+      "kind": "export_specifier",
+      "start": 113366,
+      "end": 113373,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "E",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "fn",
+      "kind": "export_specifier",
+      "start": 113374,
+      "end": 113381,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "F",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "xn",
+      "kind": "export_specifier",
+      "start": 113382,
+      "end": 113389,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "G",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ln",
+      "kind": "export_specifier",
+      "start": 113390,
+      "end": 113397,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "H",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Pt",
+      "kind": "export_specifier",
+      "start": 113398,
+      "end": 113405,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "I",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Te",
+      "kind": "export_specifier",
+      "start": 113406,
+      "end": 113413,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "J",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "pt",
+      "kind": "export_specifier",
+      "start": 113414,
+      "end": 113421,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "K",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Le",
+      "kind": "export_specifier",
+      "start": 113422,
+      "end": 113429,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "L",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "vn",
+      "kind": "export_specifier",
+      "start": 113430,
+      "end": 113437,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "M",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Mo",
+      "kind": "export_specifier",
+      "start": 113438,
+      "end": 113445,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "N",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Co",
+      "kind": "export_specifier",
+      "start": 113446,
+      "end": 113453,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "O",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "cn",
+      "kind": "export_specifier",
+      "start": 113454,
+      "end": 113461,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "P",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "wn",
+      "kind": "export_specifier",
+      "start": 113462,
+      "end": 113469,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "Q",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "qe",
+      "kind": "export_specifier",
+      "start": 113470,
+      "end": 113477,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "R",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "oo",
+      "kind": "export_specifier",
+      "start": 113478,
+      "end": 113485,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "S",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "B",
+      "kind": "export_specifier",
+      "start": 113486,
+      "end": 113492,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "T",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "be",
+      "kind": "export_specifier",
+      "start": 113493,
+      "end": 113500,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "U",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Tn",
+      "kind": "export_specifier",
+      "start": 113501,
+      "end": 113508,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "V",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Sn",
+      "kind": "export_specifier",
+      "start": 113509,
+      "end": 113516,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "W",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Cn",
+      "kind": "export_specifier",
+      "start": 113517,
+      "end": 113524,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "X",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "zn",
+      "kind": "export_specifier",
+      "start": 113525,
+      "end": 113532,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "Y",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Zo",
+      "kind": "export_specifier",
+      "start": 113533,
+      "end": 113540,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "Z",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Pn",
+      "kind": "export_specifier",
+      "start": 113541,
+      "end": 113548,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "_",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Po",
+      "kind": "export_specifier",
+      "start": 113549,
+      "end": 113556,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "a",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ft",
+      "kind": "export_specifier",
+      "start": 113557,
+      "end": 113565,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "a0",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "$t",
+      "kind": "export_specifier",
+      "start": 113566,
+      "end": 113574,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "a1",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Vt",
+      "kind": "export_specifier",
+      "start": 113575,
+      "end": 113583,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "a2",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ye",
+      "kind": "export_specifier",
+      "start": 113584,
+      "end": 113592,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "a3",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "En",
+      "kind": "export_specifier",
+      "start": 113593,
+      "end": 113601,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "a4",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "F",
+      "kind": "export_specifier",
+      "start": 113602,
+      "end": 113609,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "a5",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Xo",
+      "kind": "export_specifier",
+      "start": 113610,
+      "end": 113618,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "a6",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "et",
+      "kind": "export_specifier",
+      "start": 113619,
+      "end": 113627,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "a7",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Jo",
+      "kind": "export_specifier",
+      "start": 113628,
+      "end": 113636,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "a8",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ao",
+      "kind": "export_specifier",
+      "start": 113637,
+      "end": 113645,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "a9",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Jt",
+      "kind": "export_specifier",
+      "start": 113646,
+      "end": 113654,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "aa",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "to",
+      "kind": "export_specifier",
+      "start": 113655,
+      "end": 113663,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "ab",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "sn",
+      "kind": "export_specifier",
+      "start": 113664,
+      "end": 113672,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "ac",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "fe",
+      "kind": "export_specifier",
+      "start": 113673,
+      "end": 113681,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "ad",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Qe",
+      "kind": "export_specifier",
+      "start": 113682,
+      "end": 113689,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "b",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "yn",
+      "kind": "export_specifier",
+      "start": 113690,
+      "end": 113697,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "c",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "bo",
+      "kind": "export_specifier",
+      "start": 113698,
+      "end": 113705,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "d",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ln",
+      "kind": "export_specifier",
+      "start": 113706,
+      "end": 113713,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "e",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "kn",
+      "kind": "export_specifier",
+      "start": 113714,
+      "end": 113721,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "f",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Lo",
+      "kind": "export_specifier",
+      "start": 113722,
+      "end": 113729,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "g",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "mn",
+      "kind": "export_specifier",
+      "start": 113730,
+      "end": 113737,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "h",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "gt",
+      "kind": "export_specifier",
+      "start": 113738,
+      "end": 113745,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "i",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "pn",
+      "kind": "export_specifier",
+      "start": 113746,
+      "end": 113753,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "j",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "un",
+      "kind": "export_specifier",
+      "start": 113754,
+      "end": 113761,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "k",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Xe",
+      "kind": "export_specifier",
+      "start": 113762,
+      "end": 113769,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "l",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ze",
+      "kind": "export_specifier",
+      "start": 113770,
+      "end": 113777,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "m",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Ct",
+      "kind": "export_specifier",
+      "start": 113778,
+      "end": 113785,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "n",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "So",
+      "kind": "export_specifier",
+      "start": 113786,
+      "end": 113793,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "o",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "bn",
+      "kind": "export_specifier",
+      "start": 113794,
+      "end": 113801,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "p",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Mt",
+      "kind": "export_specifier",
+      "start": 113802,
+      "end": 113809,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "q",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "wo",
+      "kind": "export_specifier",
+      "start": 113810,
+      "end": 113817,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "r",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "uo",
+      "kind": "export_specifier",
+      "start": 113818,
+      "end": 113825,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "s",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "rt",
+      "kind": "export_specifier",
+      "start": 113826,
+      "end": 113833,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "t",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "hn",
+      "kind": "export_specifier",
+      "start": 113834,
+      "end": 113841,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "u",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "M",
+      "kind": "export_specifier",
+      "start": 113842,
+      "end": 113848,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "v",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "ve",
+      "kind": "export_specifier",
+      "start": 113849,
+      "end": 113856,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "w",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "Mn",
+      "kind": "export_specifier",
+      "start": 113857,
+      "end": 113864,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "x",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "dn",
+      "kind": "export_specifier",
+      "start": 113865,
+      "end": 113872,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "y",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    },
+    {
+      "name": "V",
+      "kind": "export_specifier",
+      "start": 113873,
+      "end": 113879,
+      "line_start": 468,
+      "line_end": 468,
+      "calls": [],
+      "literals": [],
+      "export_as": "z",
+      "status": "CONFIRMED",
+      "location_convention": "UTF-16 half-open, 0-based",
+      "exports_as": []
+    }
+  ],
+  "static_imports": [],
+  "dynamic_imports": [
+    {
+      "path": "./LocalDriver-DMfdN3Dc.js",
+      "start": 111223
+    },
+    {
+      "path": "./items-nDkzNEls.js",
+      "start": 112150
+    },
+    {
+      "path": "./phaser-DRI6y8R5.js",
+      "start": 112393
+    },
+    {
+      "path": "./WorldScene-b_2tpaKT.js",
+      "start": 112464
+    },
+    {
+      "path": "./boot-B_u-AwaO.js",
+      "start": 113098
+    }
+  ],
+  "exports": [
+    {
+      "local": "mt",
+      "exported": "$",
+      "start": 113326,
+      "end": 113333
+    },
+    {
+      "local": "Ae",
+      "exported": "A",
+      "start": 113334,
+      "end": 113341
+    },
+    {
+      "local": "gn",
+      "exported": "B",
+      "start": 113342,
+      "end": 113349
+    },
+    {
+      "local": "To",
+      "exported": "C",
+      "start": 113350,
+      "end": 113357
+    },
+    {
+      "local": "ge",
+      "exported": "D",
+      "start": 113358,
+      "end": 113365
+    },
+    {
+      "local": "jt",
+      "exported": "E",
+      "start": 113366,
+      "end": 113373
+    },
+    {
+      "local": "fn",
+      "exported": "F",
+      "start": 113374,
+      "end": 113381
+    },
+    {
+      "local": "xn",
+      "exported": "G",
+      "start": 113382,
+      "end": 113389
+    },
+    {
+      "local": "ln",
+      "exported": "H",
+      "start": 113390,
+      "end": 113397
+    },
+    {
+      "local": "Pt",
+      "exported": "I",
+      "start": 113398,
+      "end": 113405
+    },
+    {
+      "local": "Te",
+      "exported": "J",
+      "start": 113406,
+      "end": 113413
+    },
+    {
+      "local": "pt",
+      "exported": "K",
+      "start": 113414,
+      "end": 113421
+    },
+    {
+      "local": "Le",
+      "exported": "L",
+      "start": 113422,
+      "end": 113429
+    },
+    {
+      "local": "vn",
+      "exported": "M",
+      "start": 113430,
+      "end": 113437
+    },
+    {
+      "local": "Mo",
+      "exported": "N",
+      "start": 113438,
+      "end": 113445
+    },
+    {
+      "local": "Co",
+      "exported": "O",
+      "start": 113446,
+      "end": 113453
+    },
+    {
+      "local": "cn",
+      "exported": "P",
+      "start": 113454,
+      "end": 113461
+    },
+    {
+      "local": "wn",
+      "exported": "Q",
+      "start": 113462,
+      "end": 113469
+    },
+    {
+      "local": "qe",
+      "exported": "R",
+      "start": 113470,
+      "end": 113477
+    },
+    {
+      "local": "oo",
+      "exported": "S",
+      "start": 113478,
+      "end": 113485
+    },
+    {
+      "local": "B",
+      "exported": "T",
+      "start": 113486,
+      "end": 113492
+    },
+    {
+      "local": "be",
+      "exported": "U",
+      "start": 113493,
+      "end": 113500
+    },
+    {
+      "local": "Tn",
+      "exported": "V",
+      "start": 113501,
+      "end": 113508
+    },
+    {
+      "local": "Sn",
+      "exported": "W",
+      "start": 113509,
+      "end": 113516
+    },
+    {
+      "local": "Cn",
+      "exported": "X",
+      "start": 113517,
+      "end": 113524
+    },
+    {
+      "local": "zn",
+      "exported": "Y",
+      "start": 113525,
+      "end": 113532
+    },
+    {
+      "local": "Zo",
+      "exported": "Z",
+      "start": 113533,
+      "end": 113540
+    },
+    {
+      "local": "Pn",
+      "exported": "_",
+      "start": 113541,
+      "end": 113548
+    },
+    {
+      "local": "Po",
+      "exported": "a",
+      "start": 113549,
+      "end": 113556
+    },
+    {
+      "local": "Ft",
+      "exported": "a0",
+      "start": 113557,
+      "end": 113565
+    },
+    {
+      "local": "$t",
+      "exported": "a1",
+      "start": 113566,
+      "end": 113574
+    },
+    {
+      "local": "Vt",
+      "exported": "a2",
+      "start": 113575,
+      "end": 113583
+    },
+    {
+      "local": "ye",
+      "exported": "a3",
+      "start": 113584,
+      "end": 113592
+    },
+    {
+      "local": "En",
+      "exported": "a4",
+      "start": 113593,
+      "end": 113601
+    },
+    {
+      "local": "F",
+      "exported": "a5",
+      "start": 113602,
+      "end": 113609
+    },
+    {
+      "local": "Xo",
+      "exported": "a6",
+      "start": 113610,
+      "end": 113618
+    },
+    {
+      "local": "et",
+      "exported": "a7",
+      "start": 113619,
+      "end": 113627
+    },
+    {
+      "local": "Jo",
+      "exported": "a8",
+      "start": 113628,
+      "end": 113636
+    },
+    {
+      "local": "Ao",
+      "exported": "a9",
+      "start": 113637,
+      "end": 113645
+    },
+    {
+      "local": "Jt",
+      "exported": "aa",
+      "start": 113646,
+      "end": 113654
+    },
+    {
+      "local": "to",
+      "exported": "ab",
+      "start": 113655,
+      "end": 113663
+    },
+    {
+      "local": "sn",
+      "exported": "ac",
+      "start": 113664,
+      "end": 113672
+    },
+    {
+      "local": "fe",
+      "exported": "ad",
+      "start": 113673,
+      "end": 113681
+    },
+    {
+      "local": "Qe",
+      "exported": "b",
+      "start": 113682,
+      "end": 113689
+    },
+    {
+      "local": "yn",
+      "exported": "c",
+      "start": 113690,
+      "end": 113697
+    },
+    {
+      "local": "bo",
+      "exported": "d",
+      "start": 113698,
+      "end": 113705
+    },
+    {
+      "local": "Ln",
+      "exported": "e",
+      "start": 113706,
+      "end": 113713
+    },
+    {
+      "local": "kn",
+      "exported": "f",
+      "start": 113714,
+      "end": 113721
+    },
+    {
+      "local": "Lo",
+      "exported": "g",
+      "start": 113722,
+      "end": 113729
+    },
+    {
+      "local": "mn",
+      "exported": "h",
+      "start": 113730,
+      "end": 113737
+    },
+    {
+      "local": "gt",
+      "exported": "i",
+      "start": 113738,
+      "end": 113745
+    },
+    {
+      "local": "pn",
+      "exported": "j",
+      "start": 113746,
+      "end": 113753
+    },
+    {
+      "local": "un",
+      "exported": "k",
+      "start": 113754,
+      "end": 113761
+    },
+    {
+      "local": "Xe",
+      "exported": "l",
+      "start": 113762,
+      "end": 113769
+    },
+    {
+      "local": "Ze",
+      "exported": "m",
+      "start": 113770,
+      "end": 113777
+    },
+    {
+      "local": "Ct",
+      "exported": "n",
+      "start": 113778,
+      "end": 113785
+    },
+    {
+      "local": "So",
+      "exported": "o",
+      "start": 113786,
+      "end": 113793
+    },
+    {
+      "local": "bn",
+      "exported": "p",
+      "start": 113794,
+      "end": 113801
+    },
+    {
+      "local": "Mt",
+      "exported": "q",
+      "start": 113802,
+      "end": 113809
+    },
+    {
+      "local": "wo",
+      "exported": "r",
+      "start": 113810,
+      "end": 113817
+    },
+    {
+      "local": "uo",
+      "exported": "s",
+      "start": 113818,
+      "end": 113825
+    },
+    {
+      "local": "rt",
+      "exported": "t",
+      "start": 113826,
+      "end": 113833
+    },
+    {
+      "local": "hn",
+      "exported": "u",
+      "start": 113834,
+      "end": 113841
+    },
+    {
+      "local": "M",
+      "exported": "v",
+      "start": 113842,
+      "end": 113848
+    },
+    {
+      "local": "ve",
+      "exported": "w",
+      "start": 113849,
+      "end": 113856
+    },
+    {
+      "local": "Mn",
+      "exported": "x",
+      "start": 113857,
+      "end": 113864
+    },
+    {
+      "local": "dn",
+      "exported": "y",
+      "start": 113865,
+      "end": 113872
+    },
+    {
+      "local": "V",
+      "exported": "z",
+      "start": 113873,
+      "end": 113879
+    }
+  ],
+  "source_paths": [
+    {
+      "value": "./LocalDriver-DMfdN3Dc.js",
+      "start": 57
+    },
+    {
+      "value": "./trangbi-iyUH-plT.js",
+      "start": 85
+    },
+    {
+      "value": "./sim-CvoxXTtu.js",
+      "start": 109
+    },
+    {
+      "value": "./items-nDkzNEls.js",
+      "start": 129
+    },
+    {
+      "value": "./WorldScene-b_2tpaKT.js",
+      "start": 151
+    },
+    {
+      "value": "./phaser-DRI6y8R5.js",
+      "start": 178
+    },
+    {
+      "value": "./Character-DhQJ_Q0g.js",
+      "start": 201
+    },
+    {
+      "value": "./ChieuMau-CEtRLp-4.js",
+      "start": 227
+    },
+    {
+      "value": "./boot-B_u-AwaO.js",
+      "start": 252
+    },
+    {
+      "value": "/api/rtc/config",
+      "start": 10082
+    },
+    {
+      "value": "/api/rtc/offer",
+      "start": 11332
+    },
+    {
+      "value": "/api/rtc/report",
+      "start": 15256
+    },
+    {
+      "value": "data/ui/VT323-Regular.ttf",
+      "start": 20707
+    },
+    {
+      "value": "data/ui/panel-frame.png",
+      "start": 35806
+    },
+    {
+      "value": "data/ui/slot-frame.png",
+      "start": 35887
+    },
+    {
+      "value": "data/ui/slot-frame.png",
+      "start": 36029
+    },
+    {
+      "value": "data/ui/slot-frame.png",
+      "start": 36108
+    },
+    {
+      "value": "data/ui/slot-frame.png",
+      "start": 36202
+    },
+    {
+      "value": "data/textures.json",
+      "start": 42066
+    },
+    {
+      "value": "data/ui/controls-titles-v2/",
+      "start": 42758
+    },
+    {
+      "value": "/api/auth/email",
+      "start": 80920
+    },
+    {
+      "value": "/api/devtools",
+      "start": 105434
+    },
+    {
+      "value": "/api/devtools",
+      "start": 105492
+    },
+    {
+      "value": "data/textures.json",
+      "start": 109149
+    },
+    {
+      "value": "data/classes.json",
+      "start": 109173
+    },
+    {
+      "value": "data/scenes.json",
+      "start": 109196
+    },
+    {
+      "value": "data/regions.json",
+      "start": 109234
+    },
+    {
+      "value": "data/worldmap.json",
+      "start": 109273
+    },
+    {
+      "value": "data/world.json",
+      "start": 110277
+    },
+    {
+      "value": "data/posts.json",
+      "start": 110298
+    },
+    {
+      "value": "data/herbs.json",
+      "start": 110319
+    },
+    {
+      "value": "data/camps.json",
+      "start": 110340
+    },
+    {
+      "value": "data/quests.json",
+      "start": 110377
+    },
+    {
+      "value": "data/items.json",
+      "start": 110399
+    },
+    {
+      "value": "data/fishing.json",
+      "start": 110452
+    },
+    {
+      "value": "data/realm-cores.json",
+      "start": 111079
+    },
+    {
+      "value": "./LocalDriver-DMfdN3Dc.js",
+      "start": 111230
+    },
+    {
+      "value": "./items-nDkzNEls.js",
+      "start": 112157
+    },
+    {
+      "value": "./phaser-DRI6y8R5.js",
+      "start": 112400
+    },
+    {
+      "value": "./WorldScene-b_2tpaKT.js",
+      "start": 112471
+    },
+    {
+      "value": "./boot-B_u-AwaO.js",
+      "start": 113105
+    }
+  ],
+  "finding_statuses": [
+    "CONFIRMED",
+    "INFERRED",
+    "UNKNOWN"
+  ]
+}

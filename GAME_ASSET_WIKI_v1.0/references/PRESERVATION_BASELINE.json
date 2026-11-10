@@ -1,0 +1,835 @@
+{
+  "schema": "restoration-preservation-v1",
+  "raw_module_documents": [
+    {
+      "path": "modules/Character/01_Character.md",
+      "sha256": "2a022a064aacc06e14d361f52e4d0c28ff789fc02c853ce6c4ba48615151b38c"
+    },
+    {
+      "path": "modules/ChieuMau/00_OVERVIEW.md",
+      "sha256": "dcb421ef626261468b0202001e33fc0cfdd80a46ea28a32bc33122c9ba6878d2"
+    },
+    {
+      "path": "modules/ChieuMau/01_EFFECT_ENGINE.md",
+      "sha256": "ebb8dfa83993e392690d701179fee07aac554bc3fbb146ab241ab35178e07d85"
+    },
+    {
+      "path": "modules/ChieuMau/02_SKILL_REGISTRY.md",
+      "sha256": "d4287258478e38d7aa9fb2808b3a846010fea084aaf66722fab528ece050cf58"
+    },
+    {
+      "path": "modules/ChieuMau/03_GENERATED_SKILLS.md",
+      "sha256": "591076baeede91cb5624dfa19850c8988ff2964c06dab43433fc074e06a830c7"
+    },
+    {
+      "path": "modules/ChieuMau/04_EXPLICIT_SKILLS.md",
+      "sha256": "b2a0d9513e40d147f9d3b8b3a796aedae5f361469845c10dc56ed2d691d24e65"
+    },
+    {
+      "path": "modules/ChieuMau/05_ADDITIONAL_CLASS_SYSTEMS.md",
+      "sha256": "3b6a1f50a3d6de2c0e307ee6d4605f662e3a77ce7f58b82caa58572804ef3705"
+    },
+    {
+      "path": "modules/ChieuMau/06_SPRITE_CATALOG.md",
+      "sha256": "4315d6f792f9dcc6870b3a191e210c8a18cb46fda9788401c688a8b8543e1fb4"
+    },
+    {
+      "path": "modules/ChieuMau/07_AUDIO_TERRAIN_NETWORK.md",
+      "sha256": "888da6c39b2f8bcd32fdb930cb3f9c3edbe6537c779a048d7c457615613d204d"
+    },
+    {
+      "path": "modules/WorldScene/01_SCENE_LIFECYCLE_NETWORK.md",
+      "sha256": "9d282ae4359464d3ec181140e604624dcdb1fa48bdeb6798c19bd9454596d2fa"
+    },
+    {
+      "path": "modules/WorldScene/02_MOVEMENT_NAVIGATION.md",
+      "sha256": "dd9b3b6c0e0b52779da1b0a37cdb837ec4196774db08399667fcc1b20606f253"
+    },
+    {
+      "path": "modules/WorldScene/03_COMBAT_SKILLS_TARGETING.md",
+      "sha256": "6ba41cf2b083b6bf9e1ade76aec3a3daafe0041bf8512bfebb4f799301816f17"
+    },
+    {
+      "path": "modules/WorldScene/04_AUTO_FARM.md",
+      "sha256": "808f1cb25fe759191b555a8233747e70fc544f1aec6ac73f9d340dcd08c90099"
+    },
+    {
+      "path": "modules/WorldScene/05_WORLD_ENTITIES_MAP.md",
+      "sha256": "af5a67f660b7f4e409787acf6da9ea9e5ba726c38d588253100caec78938e409"
+    },
+    {
+      "path": "modules/WorldScene/06_UI_PANELS_CHAT.md",
+      "sha256": "f0893a0e488d25d5e8fb3c84a00aa72a1be837c1ecb82cbbe3ce05886c753c78"
+    },
+    {
+      "path": "modules/WorldScene/07_FISHING_MEDICINE.md",
+      "sha256": "3c2f4905e932c4b095696b9704c073d1969de59d77b391bfdfe8a9f75c930a14"
+    },
+    {
+      "path": "modules/WorldScene/08_PVP_RANKS_TITLES.md",
+      "sha256": "0830610221aee8d52b5ca78af4cead48b064e2259e7e22480bfcc10fc918f7b1"
+    },
+    {
+      "path": "modules/WorldScene/09_RENDERING_FX_ENVIRONMENT.md",
+      "sha256": "da41bbe67ae22f3304f2fb2db7d3d61298bab3c01021581ff8865f5fda0dc951"
+    },
+    {
+      "path": "modules/WorldScene/10_QUEST_NPC_INTERACTION.md",
+      "sha256": "ab4facf724a995899951330b784ae1897b37594dd0afa6f32a9f849edf1e3d5a"
+    },
+    {
+      "path": "modules/WorldScene/11_INVENTORY_ECONOMY.md",
+      "sha256": "7b72e91b51461fe9ea665451d93d2187cf5afa673aeaa3b86b756082ae248058"
+    },
+    {
+      "path": "modules/WorldScene/12_NETWORK_PROTOCOL.md",
+      "sha256": "e163e469c59ccd7d8c84ee4cce2515c48511dbb7c3b5fde4d5b9a15a4480f883"
+    },
+    {
+      "path": "modules/WorldScene/13_CLIENT_SIMULATORS.md",
+      "sha256": "ebbdf80f4c339c945dd94fab3025ee26b815ceef13c5c839d546f3bc6501e3e2"
+    },
+    {
+      "path": "modules/WorldScene/14_KNOWN_LIMITATIONS.md",
+      "sha256": "cdcd4715150a75a667f0397df098b76c92cb9e11d4f0aa5088e5dbff1b19dce1"
+    },
+    {
+      "path": "modules/WorldScene/NESTED_FUNCTIONS.md",
+      "sha256": "077a8bfd3257d7db16b352f822dfd8bcb87267696f855102943947b57a37fa99"
+    },
+    {
+      "path": "modules/WorldScene/README.md",
+      "sha256": "7cda1c742eca134f0f7750582b13e9e10fe4e1a225017fdff91a4dda4cbab212"
+    },
+    {
+      "path": "modules/WorldScene/TOP_LEVEL_SYMBOLS.md",
+      "sha256": "5168b3b7a77713a5dbd747743ebf83df283cac263941e51f36d1bfe320ff94b2"
+    },
+    {
+      "path": "modules/WorldScene/classes/$k.md",
+      "sha256": "c41a49290c545e7ec571e71986c850e015834e80744300bee827cf3893532d0a"
+    },
+    {
+      "path": "modules/WorldScene/classes/A3.md",
+      "sha256": "3764a0e0e9fecf6093ed4a5c52f089676f26bade84de5a24731bc2aa77ffccfb"
+    },
+    {
+      "path": "modules/WorldScene/classes/Bh.md",
+      "sha256": "1aefb003b6132c0013b790812ee90f03cbd1ad8b8686e57edb7e8a79fba736f6"
+    },
+    {
+      "path": "modules/WorldScene/classes/Bu.md",
+      "sha256": "2dcfba9b6f27d0ece17b3a4f53b23998b7e36c8090c8b9e58b3d70706785dc05"
+    },
+    {
+      "path": "modules/WorldScene/classes/Fu.md",
+      "sha256": "6a99083676c709c8ec554f697240a3203e936f5ca468ac091df4e7488f1c8835"
+    },
+    {
+      "path": "modules/WorldScene/classes/L4.md",
+      "sha256": "627ce420e9b811b4e80b518bae6a91172bc84fef94e355fa0e6f9bbaf62ea1ca"
+    },
+    {
+      "path": "modules/WorldScene/classes/Lv.md",
+      "sha256": "f1234daf8bd6ea93f566f4c4028dc793555d22ac3bd7355fe26660869c38398d"
+    },
+    {
+      "path": "modules/WorldScene/classes/Mv.md",
+      "sha256": "662535b11d29d8fd31a50a55c5a99cae993c31b14985ec25ddbbc9ca46670975"
+    },
+    {
+      "path": "modules/WorldScene/classes/Nf.md",
+      "sha256": "6777bb2c82767b06952c5abe2bf86d7bc122bea968f345608416a7ba29ae3b4a"
+    },
+    {
+      "path": "modules/WorldScene/classes/Ou.md",
+      "sha256": "0ba966bde0a9b03f1c6959848e14b2887f73501009702410faf02344a3129478"
+    },
+    {
+      "path": "modules/WorldScene/classes/Q4.md",
+      "sha256": "865de13dc57f62e776e488eecc6763d25ef5a46531e78d7cfc6d34cc28b8f40f"
+    },
+    {
+      "path": "modules/WorldScene/classes/R4.md",
+      "sha256": "f2f4806215a91be2284beab53c2a79eece698fed27618a3029cb83673c59b35a"
+    },
+    {
+      "path": "modules/WorldScene/classes/Su.md",
+      "sha256": "238ddfff6272b1f0d13f062f42d279aecd0d6099b95058823913ae3fbf87ba70"
+    },
+    {
+      "path": "modules/WorldScene/classes/Sv.md",
+      "sha256": "b2e1072ed65bd557458b7694c9b8d98841b5d89734e43ba30944973b362e2659"
+    },
+    {
+      "path": "modules/WorldScene/classes/Tv.md",
+      "sha256": "8f4a60f529c961b8dca8356c17ae4018c1460f24f0d535e3947d4662e3eb64df"
+    },
+    {
+      "path": "modules/WorldScene/classes/U2.md",
+      "sha256": "40c6d9881fef1fa90bffdc6efa307a61575e6ee34178d492eb7bac8a15166271"
+    },
+    {
+      "path": "modules/WorldScene/classes/Wv.md",
+      "sha256": "e5af22eeee15919e30a3e2e448b58bfc96beb408e18091262f92c78cf0bd138a"
+    },
+    {
+      "path": "modules/WorldScene/classes/X2.md",
+      "sha256": "fd00748ed5fd964cb1cef874cf2f2b9c9daae7f20768a3b84f4c75918f88ab41"
+    },
+    {
+      "path": "modules/WorldScene/classes/Z2.md",
+      "sha256": "6762285737223bd506c8eccfec3b337217ae45ccd79ecb1d728604def76e55c8"
+    },
+    {
+      "path": "modules/WorldScene/classes/Z5.md",
+      "sha256": "122405c22f3d6c20798ef0337075f416ee0aa4982f004e226c168631de9773f8"
+    },
+    {
+      "path": "modules/WorldScene/classes/b$.md",
+      "sha256": "e017830bee119208ce21043e3bd640770ca9801c56564cd19c680348018fefbe"
+    },
+    {
+      "path": "modules/WorldScene/classes/ew.md",
+      "sha256": "82d68d898f0d64d4c97e212a30cd841ceb7a950ece90a96fec01ce75204b3123"
+    },
+    {
+      "path": "modules/WorldScene/classes/fv.md",
+      "sha256": "5efbbc9d2eb2f2babf2357def3b0a1ed61789b0e75927813984fce9b9101b682"
+    },
+    {
+      "path": "modules/WorldScene/classes/hv.md",
+      "sha256": "45ef83625d05910994dbb41c2705f049e5452c19d4fca5f0d11f296acfac0a5d"
+    },
+    {
+      "path": "modules/WorldScene/classes/ik.md",
+      "sha256": "2570ea4e82fa170a9e1ac31f513c3384c5523a24ac022931ffa745853806113b"
+    },
+    {
+      "path": "modules/WorldScene/classes/k$.md",
+      "sha256": "5b40ffc04a8be21ab3fac00cf0aee69a804a617596672906ae8c7d97972712ad"
+    },
+    {
+      "path": "modules/WorldScene/classes/nv.md",
+      "sha256": "2410fabbc4fee23b1c561945dc4cdd5c6df119b5e10a6e8e8be61431778dee37"
+    },
+    {
+      "path": "modules/WorldScene/classes/nw.md",
+      "sha256": "444d636f21761333de16e3130fa9865473394a0f9768f08fd30c1848152aa96b"
+    },
+    {
+      "path": "modules/WorldScene/classes/ok.md",
+      "sha256": "d5ae5fc62ebd9142e3e75224c8a72d4e6931c705a9dda9560aae05d3b390817a"
+    },
+    {
+      "path": "modules/WorldScene/classes/rk.md",
+      "sha256": "b7d22a74b48d4f49a76616235f790addf7ee304d0a3eda6121c3bd841637c594"
+    },
+    {
+      "path": "modules/WorldScene/classes/sk.md",
+      "sha256": "f11ac865d5c632aac2c46c212c030a561584173ed736c9ce527026e3d2c7c12a"
+    },
+    {
+      "path": "modules/WorldScene/classes/vc.md",
+      "sha256": "c63c39e6ad6cf4cad9f1cef41d06416b826e13de70b4b62ecbc4f5743a5be8b0"
+    },
+    {
+      "path": "modules/WorldScene/classes/w4.md",
+      "sha256": "f3441a3eedab04c842ffa2c6087443186ec1c5c08dcb7cce65cdbba77023cf3f"
+    },
+    {
+      "path": "modules/WorldScene/classes/x$.md",
+      "sha256": "98ab35ee87d3f0addea945063379b4efedab1273080e3ae4d5cb40d6a0bd20ab"
+    },
+    {
+      "path": "modules/WorldScene/classes/xk.md",
+      "sha256": "3c853c11b8dd12153d90db68783c10787e12e35d9155860c1f0242b75e78c8dd"
+    },
+    {
+      "path": "modules/WorldScene/classes/xm.md",
+      "sha256": "c214b4571b260ea9a112211a610474a8f1bb36133d7942aa80bb9fcecc66a3c4"
+    },
+    {
+      "path": "modules/WorldScene/classes/y4.md",
+      "sha256": "4fe6a17dc75438f33517cc57dc7ea38180a0a1686cf1356396c1046f5da9f8f1"
+    },
+    {
+      "path": "modules/WorldScene/classes/z4.md",
+      "sha256": "00ab8c2e426db1100636ed10d2662863d32cfbea66cf2beefface4f911bd1468"
+    },
+    {
+      "path": "modules/WorldScene/classes/zu.md",
+      "sha256": "9c11f269ea3b8bfb0943b5bfc5dad90b78fec576b31ee3f7a04d8ed608d2f978"
+    },
+    {
+      "path": "modules/index/01_ENTRY_BOOTSTRAP.md",
+      "sha256": "e331d75a984b9be322e86111323b61c07026645a618956da1d6b89b156fbec55"
+    },
+    {
+      "path": "modules/index/02_NETWORK_PROTOCOL.md",
+      "sha256": "5d1be6f915355df4d6fe0148911e7a7861030ea7de10adb99a1f3af2f2821921"
+    },
+    {
+      "path": "modules/index/03_SNAPSHOT_STATE.md",
+      "sha256": "0e40355680cdf86fb2b5d5816ad16ddea6e7e7c97b040cb677e5708b65931128"
+    },
+    {
+      "path": "modules/index/04_AUTH_PROFILE_STORAGE.md",
+      "sha256": "3166aee60b43590d1a30cbc4ec5b91c7e1535f5c1058174e38c5f6d4cd013b9d"
+    },
+    {
+      "path": "modules/index/05_VISUALS_THEME_ASSETS.md",
+      "sha256": "173e9279afcf4d6abe719ae451bb76cfe0a2c948ecfcc0e31efdbe1e5ff5699a"
+    },
+    {
+      "path": "modules/index/06_MOBILE_INPUT_FULLSCREEN.md",
+      "sha256": "c8d1b48987f9fbf77a4f6e31b683a7cc78d83f9e3c6e8f7024517abbacfafda2"
+    },
+    {
+      "path": "modules/index/07_SETTINGS_DIAGNOSTICS_SECURITY.md",
+      "sha256": "333f8bc41c49b03803e6b94cce6435b54f4b99c432e0e9ab76515315df0ccf9f"
+    },
+    {
+      "path": "modules/index/08_GAMEPLAY_SURFACE_AND_LIMITS.md",
+      "sha256": "099ee122b5815295f8a0e5cb9180ea101e81428c22998578ce4c0a1e23905a38"
+    },
+    {
+      "path": "modules/index/09_SYNTAX_SOURCE_INTEGRITY.md",
+      "sha256": "2135702f9cd0dc220fae5fe78af0cb96d8d59a0c6412f29d11b4856ea919173c"
+    },
+    {
+      "path": "modules/items/00_OVERVIEW.md",
+      "sha256": "ad9dbe43bb9c6a4cb23fe69442f3fd3e73bdbf4d938acc4cf3d2363582987ce9"
+    },
+    {
+      "path": "modules/items/01_CONTROLS.md",
+      "sha256": "ae20f1400fa785b7812638b3ed33cc11a73120f12c6bfe170c1b61d72c4478c6"
+    },
+    {
+      "path": "modules/items/02_ITEM_METADATA.md",
+      "sha256": "54baf840e5bf0d4cf9004d63cb8ec3239dc920c419a37e8502e25d2b808ba9d2"
+    },
+    {
+      "path": "modules/items/03_ICONS_RENDERING.md",
+      "sha256": "bb36556ae7dbd05b886403c402f251c24b7f8a6d9ba045576b3fd8dc1dd6e104"
+    },
+    {
+      "path": "modules/items/04_DATA_DEPENDENCIES.md",
+      "sha256": "d72bf819b58f0022a1cca97430b9d556b1369d7bd1f0a81332858c768a2455aa"
+    },
+    {
+      "path": "modules/items/05_SYMBOL_CATALOG.md",
+      "sha256": "e804454d4b0e44df070429dabb5da4c49ce44ff2f2df041b18ca65c17b78911d"
+    },
+    {
+      "path": "modules/items/06_FINDINGS_AND_GAPS.md",
+      "sha256": "94e7961c0f2efc3e38e26f4789e80abe5bad9b6ea0a4e468acabaab069857e5f"
+    },
+    {
+      "path": "modules/phaser/00_CRITICAL_SYSTEMS.md",
+      "sha256": "f85b137a4669c92f0307c8000e803396637365ff7e2ef4b3dea7cd655f0fe736"
+    },
+    {
+      "path": "modules/phaser/ANIMATION.md",
+      "sha256": "f5b7514c0b611a9de9a0ffbd8a3b2c801e9433ff463b7f0714184759219788f2"
+    },
+    {
+      "path": "modules/phaser/ARCADE.md",
+      "sha256": "fa2c4da842af4386a98616006dc6f8b3bff78215e68033cc7b1df07f4d93913d"
+    },
+    {
+      "path": "modules/phaser/AUDIO.md",
+      "sha256": "49b2c85b59f37c04a4020e51539f55c8ad0b472127bfe3f2a9615b71812019c2"
+    },
+    {
+      "path": "modules/phaser/BODY.md",
+      "sha256": "fbb5132e6f4f3967cb8bc25b9d2f0c723311aa7b9b27aa182ddcbdca426fff57"
+    },
+    {
+      "path": "modules/phaser/CACHE.md",
+      "sha256": "ecfff5d3f512acbebfeba1154519022c30aa7af1274bd3ad8894247f29eb364e"
+    },
+    {
+      "path": "modules/phaser/CAMERA.md",
+      "sha256": "270727343c11847eaa697132c64c6e7a3b62783c0b33186f7ead0745d5d21f16"
+    },
+    {
+      "path": "modules/phaser/CANVAS.md",
+      "sha256": "58617931ecdb3b763690a8f01487ef24d55fadc9ad58051b48285f1523ae8cb8"
+    },
+    {
+      "path": "modules/phaser/COLLISION.md",
+      "sha256": "365447471e6295a7249a5494933f5435905501494d1b866063841dfd8c4720fe"
+    },
+    {
+      "path": "modules/phaser/COLOR.md",
+      "sha256": "f8a1270caaf7bab376aef13506837c2ac6506df02790f3f34e5c07b55c37dc31"
+    },
+    {
+      "path": "modules/phaser/CORE_UTILITIES.md",
+      "sha256": "b95d3553757de29a75ce3b55eac1e4380dd1e5f057f50b2183e3b145bd6f232c"
+    },
+    {
+      "path": "modules/phaser/DATA.md",
+      "sha256": "a5562b50dad24ba941ac2360f37ad7ece0337fce4b85d4dea2426806225bd2dd"
+    },
+    {
+      "path": "modules/phaser/DISPLAY.md",
+      "sha256": "c09217949370e042393bb3d8efd2366cde008a4b56be8dec6c8356b8f8c2d464"
+    },
+    {
+      "path": "modules/phaser/DOM.md",
+      "sha256": "5d6cfa5878324885593122ba398e89384603970d0cf4d3576354f0551f55421c"
+    },
+    {
+      "path": "modules/phaser/EASING.md",
+      "sha256": "ee9afd802e5fb4c43fac3b4d996a694cf842dcf375878f2c715e1173c4209f83"
+    },
+    {
+      "path": "modules/phaser/EVENT.md",
+      "sha256": "79faa176a086b334fc5e302f2af8d34eb1eabef44adad42959bd4920caf038e8"
+    },
+    {
+      "path": "modules/phaser/GAMEOBJECT.md",
+      "sha256": "ba4d3475cc5f09a1018422e7b04e1446ad3a6310aa29be76f5855c55dd81f36d"
+    },
+    {
+      "path": "modules/phaser/GAMEPAD.md",
+      "sha256": "f0bccb8a2fdd417db2c4226c943be5cd5f0468cdca0469fcfc6b1f5b9bae7393"
+    },
+    {
+      "path": "modules/phaser/GEOM.md",
+      "sha256": "73cf8009c8a41f7b97039df9aafba5eec1361a64ec9923ad6208ab17db414e42"
+    },
+    {
+      "path": "modules/phaser/GROUP.md",
+      "sha256": "1857911de9561344046e82d27b44db8c3569e7dc198fde478e025fb8d0b92624"
+    },
+    {
+      "path": "modules/phaser/INPUT.md",
+      "sha256": "875368e6d503d52afaff0782bbc5c83bec8ce7693a6325a91ebfdad03b0d0c10"
+    },
+    {
+      "path": "modules/phaser/KEYBOARD.md",
+      "sha256": "ebbe254951539ec80fd5d9cdde984ddafa8c3be9b7175cf22827f62e572958dd"
+    },
+    {
+      "path": "modules/phaser/LOADER.md",
+      "sha256": "e1301e8577388645f5224ce6c909dca9de2b8be9792f89a3eb088502f18e13d2"
+    },
+    {
+      "path": "modules/phaser/MASK.md",
+      "sha256": "35f91308e3ed861a3880db57c65b667a43718a93816a501488caa152e32ea783"
+    },
+    {
+      "path": "modules/phaser/MATH.md",
+      "sha256": "7e32b1804489b45c650cd77a0623c956265be43a0ca67a88dd8d46cd9dcddbb5"
+    },
+    {
+      "path": "modules/phaser/MATTER.md",
+      "sha256": "71e10613bfdd609d6c621ef9bbfb14cb2e410bc7a9b2f2ca2fe7345d5386a1c5"
+    },
+    {
+      "path": "modules/phaser/PARTICLE.md",
+      "sha256": "5b26438b4b904c0bb62141176f2cb42b441bfaa3f4cbabb434144073db432f8d"
+    },
+    {
+      "path": "modules/phaser/PATH.md",
+      "sha256": "134ada4c91f0bc3456312b591f7888f65e5064d3571510b82357467f18d9d3b3"
+    },
+    {
+      "path": "modules/phaser/PHYSICS.md",
+      "sha256": "cbcdc5c727c12324146963c307f6be64d2953f88b06ab00ea3578f6ee07b8d86"
+    },
+    {
+      "path": "modules/phaser/PIPELINE.md",
+      "sha256": "29685ac2bb457657bcac26ce6dcce4d5b8070947a5fefb250c83b3561d5152fd"
+    },
+    {
+      "path": "modules/phaser/PLUGIN.md",
+      "sha256": "8174ec4255bbe872251c4c5afd58ae54bd2c46e0dd0ace5bf7a799cf5f4b076e"
+    },
+    {
+      "path": "modules/phaser/POINTER.md",
+      "sha256": "ee5d1326b968cf271a4a9200ac35c15ded0117763972ce076df1f21ca75ec99c"
+    },
+    {
+      "path": "modules/phaser/RANDOM.md",
+      "sha256": "03c079cf261820eea06b567152441f36c7c34311431a6d9dab078d10a15801cb"
+    },
+    {
+      "path": "modules/phaser/RENDER.md",
+      "sha256": "be3ac6d8d0af0e662e88a67f99f992d8cbf4b0b1af859d9df2dc5ce0147aee11"
+    },
+    {
+      "path": "modules/phaser/SCALE.md",
+      "sha256": "56827c55287afb04007c756e0d35c71c201fa6e375f19f84de0346357862208f"
+    },
+    {
+      "path": "modules/phaser/SCENE.md",
+      "sha256": "b174441e44588630f2ee939635be6ac52fd2ea4a68acf4210bc3f81924dc024a"
+    },
+    {
+      "path": "modules/phaser/SHADER.md",
+      "sha256": "3b112d17892d6465e81733f4bb9da560a971c83f093f91bf99efd294f433b631"
+    },
+    {
+      "path": "modules/phaser/SOUND.md",
+      "sha256": "1320f5df1385c51dc9d389bb7d19c4de0e46830a483ec57c518084d3e128d40c"
+    },
+    {
+      "path": "modules/phaser/SPRITE.md",
+      "sha256": "82136a3efcbc76a4b22f9cf3a13b673650fe533499569dc436a5b41c9bef3fc9"
+    },
+    {
+      "path": "modules/phaser/TEXT.md",
+      "sha256": "8eaaa08e1cdc14cb99b12964f5ecc70b8304cf59f2c554fa321517999f73f56a"
+    },
+    {
+      "path": "modules/phaser/TEXTURE.md",
+      "sha256": "d08528b596331fee5f9e79dcd76989602f9fa9a815f89ac108881526bafa9bce"
+    },
+    {
+      "path": "modules/phaser/TILE.md",
+      "sha256": "07b19042c64c579b56843dce16821b21b1dc59432aaba47fc93c2de30d167fac"
+    },
+    {
+      "path": "modules/phaser/TILEMAP.md",
+      "sha256": "c0d91c1f93b9c53d24e89b75a487a3bcc416c0c643a8c7e890ba73156f9855fd"
+    },
+    {
+      "path": "modules/phaser/TIME.md",
+      "sha256": "78b8c59f9fef827957f2340345bc9c9557a900081b2ff7dc07d319cffd0eb87c"
+    },
+    {
+      "path": "modules/phaser/TOUCH.md",
+      "sha256": "335bada20bc7c45e2e4fb0f4a50520decd43e05c8477cb79e3f6fa89e0fa0993"
+    },
+    {
+      "path": "modules/phaser/TRANSFORM.md",
+      "sha256": "89b3cc22b91a3494eab712b47dcca86548c4cb912c4e261f1b56ad164bdfce79"
+    },
+    {
+      "path": "modules/phaser/TWEEN.md",
+      "sha256": "a96b3c9ae210e2908e2911a87a723c7feb8ce3102f1b2eebbbc2763b2e63e8f6"
+    },
+    {
+      "path": "modules/phaser/WEBGL.md",
+      "sha256": "7e41537a66c4bb70443f230d849c69e7e780fee3cbcbe21cdc50588ddf230ce3"
+    },
+    {
+      "path": "modules/phaser/WORLD.md",
+      "sha256": "8c248ca4d896dcecfe01d4209a112e241471b77d15bc16e63fa18a3dc3151abf"
+    },
+    {
+      "path": "modules/sim/COLLISION.md",
+      "sha256": "775c8a71b554e874d6c69fe5b7f5cf0530f0dc2079f545ea2b322c8be302517f"
+    },
+    {
+      "path": "modules/sim/COMBAT.md",
+      "sha256": "4766f31a7f08f6df62cfe00e107c3564a9e6dd65e2df2b16a604293b684a28e4"
+    },
+    {
+      "path": "modules/sim/ELEMENTS.md",
+      "sha256": "af4c5e58a2e42b879080b98c254de973a6247ef2f5661aa0d23e08d2426a44f3"
+    },
+    {
+      "path": "modules/sim/EQUIPMENT.md",
+      "sha256": "19bd5922de91fae66f9b6b332a11d4004a65457a15b10a4b924e391e8e71fca4"
+    },
+    {
+      "path": "modules/sim/FISHING.md",
+      "sha256": "613828e3aab1726f74c62fbab68974b2751b160cd479acd17f79d46acd2fea9b"
+    },
+    {
+      "path": "modules/sim/GAME_DATA.md",
+      "sha256": "5c324bc9c98d3fdca5ea27967a20cd6891cef9830946ca368d9b2ca8ee77d139"
+    },
+    {
+      "path": "modules/sim/PLAYER.md",
+      "sha256": "8081a79f38b98870824b0c64af2c97abd9d811a083671f190dd2e4365489520c"
+    },
+    {
+      "path": "modules/sim/PROGRESS.md",
+      "sha256": "a74f57d276c2a7878e7bf2d3d73a6b9fc7a3cc42342330dfacaa736210482e26"
+    },
+    {
+      "path": "modules/sim/QUESTS.md",
+      "sha256": "829be7e144345ce6aa8b6f926fad643853425f420a54e3967729cfb915a29987"
+    },
+    {
+      "path": "modules/sim/REALMS.md",
+      "sha256": "033cb5e0ef3e5edf37f8facca9ec0d68f66ec57fb732eba10d993394c5591ef9"
+    },
+    {
+      "path": "modules/sim/ROOMS.md",
+      "sha256": "03d8cb0e64ad9bd2625884d90304dc43ceddcd4c234b4ce59fda79302ff2fdf0"
+    },
+    {
+      "path": "modules/sim/SPATIAL.md",
+      "sha256": "ca63d9568f490631e9ed78fd8c5458853ecffae9646fb96b4cb143d5729b9cdb"
+    },
+    {
+      "path": "modules/sim/STORAGE.md",
+      "sha256": "b3da86a4acd748d269647d96b06ce1ce4f397658ea38815ffd79a3f4372acaf9"
+    },
+    {
+      "path": "modules/sim/UTILITIES.md",
+      "sha256": "7236eb04b474d4a537acc56782fb3a46f564011e641652337bdada24f2739014"
+    },
+    {
+      "path": "modules/sim/WORLD.md",
+      "sha256": "f4101981f5d08d4676a6922e69b1453146831f1f4676efedb0ddf20e2e4bbe22"
+    },
+    {
+      "path": "modules/tm_direct_guard/tm-direct.md",
+      "sha256": "4c9cfff0a4c751511c871aba493bfdc49cef833824b96926536a6903ecc6086e"
+    },
+    {
+      "path": "modules/tm_direct_guard/tm-guard.md",
+      "sha256": "0c4ea405c6e11efbad91877889161f99b5b4e98a765a828f7dfef512f4bb6d9f"
+    },
+    {
+      "path": "modules/trangbi/00_OVERVIEW.md",
+      "sha256": "1fa9cc5bc3549acd643bca4ce9a2aa7aa43d8042228bccadfbcd92d919a90460"
+    },
+    {
+      "path": "modules/trangbi/01_level_and_combat_scaling.md",
+      "sha256": "4ba44367f3724d3c68ea9b3143c474e6fc8289671bcde8a9b6d8edd618dbd2c9"
+    },
+    {
+      "path": "modules/trangbi/02_sets_and_affixes.md",
+      "sha256": "4131e9e0e6e5e150f4588c22f8e8d34d9048cc60c47969b326992f225ce252b6"
+    },
+    {
+      "path": "modules/trangbi/03_weapons_and_icons.md",
+      "sha256": "a623a54f4208320a8037fc855accea2b806ff5e8ccc471424fd1130cde409b0f"
+    },
+    {
+      "path": "modules/trangbi/04_attributes_upgrade_and_loot_tables.md",
+      "sha256": "60f607fcfe01ddd34ec948aa12f51c52fa7d7a76c43546b17581953ef417ad29"
+    },
+    {
+      "path": "modules/trangbi/05_effects_and_pvp.md",
+      "sha256": "35d9e01ecbbad110565a02f3cd0cf4f1453914f0849fa8ab578140f1e05f96e0"
+    },
+    {
+      "path": "modules/trangbi/06_skills_and_talents.md",
+      "sha256": "8d6c9630aeadf241fab01a97d8a87409dac577cfe1ad9077f288123d02ce2dcc"
+    },
+    {
+      "path": "modules/trangbi/07_gear_slots_gems.md",
+      "sha256": "6e63746ad41405864428033d39f79da834bcfb3eb10d8ed00f538f9b3a4d1f00"
+    },
+    {
+      "path": "modules/trangbi/08_visual_assets_and_cosmetics.md",
+      "sha256": "555e99410bc1734e5291c701b2c260b0ad510630be54ea30233898a3bec66ea3"
+    },
+    {
+      "path": "modules/trangbi/09_equipment_rules_and_generation.md",
+      "sha256": "5d0e9e7689418e6d294707f083a496e58697770581c823a267e41df72cecfe09"
+    },
+    {
+      "path": "modules/trangbi/10_items_potions_and_shop.md",
+      "sha256": "1d773b848f21001e489622aff4811b4628d1d4b8a73602165802af710e53ca14"
+    },
+    {
+      "path": "modules/trangbi/11_loot_crafting_and_inventory.md",
+      "sha256": "8eca9b2f80b75671b906843deabcdac71c5d998feaf45e6cb2ff4ef1022fea3b"
+    },
+    {
+      "path": "modules/trangbi/12_gear_command_dispatch.md",
+      "sha256": "3df4f9a0c6364019d9a6a7d446f25b4a85b6a571cfb0c21b0bbcaed290aa28ba"
+    },
+    {
+      "path": "modules/trangbi/13_exports.md",
+      "sha256": "6687cf75676a1378c5def2a7b91d35cb56a037f374a252b884d37cbc95dff063"
+    },
+    {
+      "path": "modules/trangbi/14_formulas_and_conditions.md",
+      "sha256": "0ec74cfd3dc52a1aaf43adec8f8acd36e8ce0b4e4daf215b0010655e43846b66"
+    },
+    {
+      "path": "modules/trangbi/15_dispatch_cases.md",
+      "sha256": "89e92525e166ad632b93744cc259149efba33d41ea93899b09f7cbfe087e2279"
+    }
+  ],
+  "original_companions": [
+    {
+      "path": "original_indexes/Character/ANALYSIS_PROGRESS.json",
+      "sha256": "8909b5580cf61776e60bef9955636e755801648f06b728b99cb626ba6cd32bc7"
+    },
+    {
+      "path": "original_indexes/Character/ASSET_INDEX.json",
+      "sha256": "c148a79e37514601c17dd4b93e7f0dab8e13285fcfd1ada1ce1d91b5307e1b49"
+    },
+    {
+      "path": "original_indexes/Character/CHANGELOG.md",
+      "sha256": "ce1f9bf04c64c92dcc974bad728aeb1843357b42528394b5d909bbf033eca44d"
+    },
+    {
+      "path": "original_indexes/Character/DEPENDENCY_MAP.md",
+      "sha256": "1f8e63aefbd3954701dd59598086b9e0a5ccdd77a8b3be25cbe7555576757f4f"
+    },
+    {
+      "path": "original_indexes/Character/FUNCTION_MAP.md",
+      "sha256": "c4e265c39d94934dc2f9f9b30ad6813fedb40093b67e4fbca1117992f7a7840e"
+    },
+    {
+      "path": "original_indexes/Character/GAME_ASSET_WIKI_v1.0.md",
+      "sha256": "324356aa997e45840c5caf4f37ea6ffcc33af8d5c7f2cfeb734156c4c837e08d"
+    },
+    {
+      "path": "original_indexes/ChieuMau/ANALYSIS_PROGRESS.json",
+      "sha256": "5cdd04fcb4a0094f4529c6a5177a21e83396e5bf5d3aac326caad1b12f55030f"
+    },
+    {
+      "path": "original_indexes/ChieuMau/ASSET_INDEX.json",
+      "sha256": "6e738de54227b4996c82c0d94fcb029c491d87dcd14c0fa3701ee6efcf88d38c"
+    },
+    {
+      "path": "original_indexes/ChieuMau/DEPENDENCY_MAP.md",
+      "sha256": "fe5c55ec31900f6ee28d681f35c7314c983ba1a4b0a15735b6edf0c60574ad4d"
+    },
+    {
+      "path": "original_indexes/ChieuMau/FUNCTION_MAP.md",
+      "sha256": "87ae781fe736603c5727f2584a90c0c50873b43a57c0a204fc452d72a3b423ea"
+    },
+    {
+      "path": "original_indexes/WorldScene/ANALYSIS_PROGRESS.json",
+      "sha256": "e179bfb03fd3a2fe13d904e2b86b6046a0a8687299993ab02eb533dd142c1b51"
+    },
+    {
+      "path": "original_indexes/WorldScene/ASSET_INDEX.json",
+      "sha256": "6a57e37568b4b8022dc73679a95d7cf8ef87f846ac2589267f8bc87e4c8c15a5"
+    },
+    {
+      "path": "original_indexes/WorldScene/DEPENDENCY_MAP.md",
+      "sha256": "2fcb41d154d663b2e85d4dad6314edf1741eae4b28e0aacfbf5092b38ef05f3c"
+    },
+    {
+      "path": "original_indexes/WorldScene/FUNCTION_MAP.md",
+      "sha256": "4e9d5e496bb0e653917804d7575300046c11831ec84bee16c86bde6baef646c0"
+    },
+    {
+      "path": "original_indexes/index/ANALYSIS_PROGRESS.json",
+      "sha256": "ae286271651b84d00cbf0bbf1d2f53249094bb2cc9ed37edce2bc8fcf6d63d35"
+    },
+    {
+      "path": "original_indexes/index/ASSET_INDEX.json",
+      "sha256": "220fda13b805d9ec974d9312ef11e5defa2f508941ec047e53f9e089aafc924c"
+    },
+    {
+      "path": "original_indexes/index/DEPENDENCY_MAP.md",
+      "sha256": "ce0e72d2b06a008b4c1d89b2c50addf6c580da38a706d25cdc92eb261cb84f9b"
+    },
+    {
+      "path": "original_indexes/index/FUNCTION_MAP.md",
+      "sha256": "1e3b3bc8a921c320cf9e5ede876c8fb914d5d3b00ba3f8d952f39e78e1718209"
+    },
+    {
+      "path": "original_indexes/index/README.md",
+      "sha256": "977ae2650aaa313a56362f3c07943904ad6b51341b2191406cd02cd43b6626dc"
+    },
+    {
+      "path": "original_indexes/items/ANALYSIS_PROGRESS.json",
+      "sha256": "38e4dbc00d0d8e0635e42821652387298e2136087feb70de0c5ef7a5cf412059"
+    },
+    {
+      "path": "original_indexes/items/ASSET_INDEX.json",
+      "sha256": "c10b817838ae273d4762f60cd0c74a0c3eb55cd0c24dfd1c2d6a749fd3a37deb"
+    },
+    {
+      "path": "original_indexes/items/DEPENDENCY_MAP.md",
+      "sha256": "911b9d32794a544d6afc80fe4041dd9ab2f9ab9c7e54c88a88e9f511563d20ad"
+    },
+    {
+      "path": "original_indexes/items/FUNCTION_MAP.md",
+      "sha256": "d066b16484421c684fe1e89b0dce0719fc308ea0d7d7e02e4fd084946fdc3c80"
+    },
+    {
+      "path": "original_indexes/phaser/ANALYSIS_PROGRESS.json",
+      "sha256": "2da6d72e8b7d359f350bc976bb3e841493e1418ec86af8b8abb88ac35390de73"
+    },
+    {
+      "path": "original_indexes/phaser/ASSET_INDEX.json",
+      "sha256": "9cd23ab0cf88aabfc9e5bcaf5154708f2cdd4563ff1a827275ecc6d1f6cfd59d"
+    },
+    {
+      "path": "original_indexes/phaser/DEPENDENCY_MAP.md",
+      "sha256": "db45108a33ffc45fffee3d3e2c2b2ba975659677167e31914ff83d91fc6e33f0"
+    },
+    {
+      "path": "original_indexes/phaser/FUNCTION_MAP.md",
+      "sha256": "7b2577e9de79165455a48b15b0b5c27f273ae3d99cd1f15003d8c2abb9c464e2"
+    },
+    {
+      "path": "original_indexes/phaser/README.md",
+      "sha256": "03cb1599070a8fec5768055292c2068f37f8857452cc1bfe8a8b90e4f51e5aaa"
+    },
+    {
+      "path": "original_indexes/sim/ANALYSIS_PROGRESS.json",
+      "sha256": "b5673233faa4d0a8462632ddf436a8a5f5d8148be8b3629a3c52b48c6dc200ce"
+    },
+    {
+      "path": "original_indexes/sim/ASSET_INDEX.json",
+      "sha256": "888885136f7af06650955cde21f586f4aa7dcf04cacef8d4f32c7b1024b28788"
+    },
+    {
+      "path": "original_indexes/sim/DEPENDENCY_MAP.json",
+      "sha256": "8364ed20019f4b1380b2e0cf2f4275db04e187ea5947b10b698bab134f84a26b"
+    },
+    {
+      "path": "original_indexes/sim/DEPENDENCY_MAP.md",
+      "sha256": "e2893a01277572747ec4481d6bb48315ab4efbb55fd8613683e0b6af410baef0"
+    },
+    {
+      "path": "original_indexes/sim/FUNCTION_MAP.md",
+      "sha256": "ddf83f761bda3b604a55304b83e3cda393d3cc975dd0df94230875baeae53ad9"
+    },
+    {
+      "path": "original_indexes/sim/README.md",
+      "sha256": "57e7685289a4363ee87cdde744fc80b0565f786f376211e7a182c1ec7191e913"
+    },
+    {
+      "path": "original_indexes/tm_direct_guard/ANALYSIS_PROGRESS.json",
+      "sha256": "395f9c8c781668bd07bc672ef7fe805aa9228c0b9b224cf477963251aab1adb9"
+    },
+    {
+      "path": "original_indexes/tm_direct_guard/ASSET_INDEX.json",
+      "sha256": "83d2139458b065546cc6547408449b4231cef808777b5ffd78bece45b1dfe7dc"
+    },
+    {
+      "path": "original_indexes/tm_direct_guard/DEPENDENCY_MAP.md",
+      "sha256": "4d97dc054247ae3d863a685d7140c1ca5f042726ac5a509fbb5e833a6af81670"
+    },
+    {
+      "path": "original_indexes/tm_direct_guard/FUNCTION_MAP.md",
+      "sha256": "a7995303c4c2a50fbb7370ffeb0a7310c82037dee8001ffb06825681a5db3430"
+    },
+    {
+      "path": "original_indexes/tm_direct_guard/README.md",
+      "sha256": "4fd5ab2e665991bf06a6f2785a44830b37ee72a4d381839d0f5f25180e3ca97b"
+    },
+    {
+      "path": "original_indexes/trangbi/ANALYSIS_PROGRESS.json",
+      "sha256": "5f17027f462cb2893da445ef6b3d790105ff375e9356f454f59bcbb137e1984a"
+    },
+    {
+      "path": "original_indexes/trangbi/ASSET_INDEX.json",
+      "sha256": "f7148a0a3b09ecbb603ae87d5e1771f96e6c60cef266dea675f18499eeb5bb2d"
+    },
+    {
+      "path": "original_indexes/trangbi/DEPENDENCY_MAP.md",
+      "sha256": "0836929feb7c4383fd670561dcd5bb46023b5da76a875ddb7848dcb3b9a9ff7b"
+    },
+    {
+      "path": "original_indexes/trangbi/FUNCTION_MAP.md",
+      "sha256": "8065b36f843ae86eb22d0226806dcdd2e165971aa59ab5a06b027b729415f04b"
+    },
+    {
+      "path": "original_indexes/trangbi/README.md",
+      "sha256": "100b5d9759abc7898c51013e275f6690eef71796736e10d10956568b50934624"
+    }
+  ]
+}

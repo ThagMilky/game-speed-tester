@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0",
+  "asset_file": "items-nDkzNEls.js",
+  "analysis_mode": "static_only",
+  "source_preserved": true,
+  "source_sha256": "5f77311ae9d6e9fab8eff378a809fcacf3f16af2304aa3f577bee1aab1d0b343",
+  "coverage": {
+    "full_file_read": true,
+    "imports_exports_indexed": true,
+    "top_level_symbols_indexed": true,
+    "function_and_branch_documented": true,
+    "rendering_documented": true,
+    "network_and_storage_documented": true,
+    "runtime_tested": false,
+    "external_modules_read": false,
+    "json_assets_read": false
+  },
+  "status": "DOCUMENTED_WITH_EXTERNAL_GAPS",
+  "confidence_legend": {
+    "CONFIRMED": "direct evidence in this file",
+    "INFERRED": "plausible interpretation not corroborated by call sites",
+    "UNKNOWN": "not established by this source"
+  },
+  "unresolved": [
+    {
+      "id": "DEP-001",
+      "status": "UNKNOWN",
+      "target": "./trangbi-iyUH-plT.js",
+      "question": "resolve minified import aliases and runtime values"
+    },
+    {
+      "id": "DEP-002",
+      "status": "UNKNOWN",
+      "target": "./index-BIkbGDKp.js",
+      "question": "implementation of DOM factory p"
+    },
+    {
+      "id": "DEP-003",
+      "status": "UNKNOWN",
+      "target": "data/gear/gear.json",
+      "question": "icons map values and asset existence"
+    },
+    {
+      "id": "DEP-004",
+      "status": "UNKNOWN",
+      "target": "data/items/items-meta.json",
+      "question": "item metadata, cell and atlas values"
+    },
+    {
+      "id": "DEP-005",
+      "status": "UNKNOWN",
+      "target": "data/items.json",
+      "question": "recipe inputs and outputs"
+    },
+    {
+      "id": "DEP-006",
+      "status": "UNKNOWN",
+      "target": "callers of module exports",
+      "question": "initialization order and input contracts"
+    },
+    {
+      "id": "DEP-007",
+      "status": "UNKNOWN",
+      "target": "server/gameplay logic",
+      "question": "authoritative item usage, buffs, damage, crafting, drops"
+    },
+    {
+      "id": "DEP-008",
+      "status": "UNKNOWN",
+      "target": "asset hosting",
+      "question": "relative path resolution and browser image loading"
+    }
+  ],
+  "deliverables": [
+    "source/items-nDkzNEls.js",
+    "modules/00_OVERVIEW.md",
+    "modules/01_CONTROLS.md",
+    "modules/02_ITEM_METADATA.md",
+    "modules/03_ICONS_RENDERING.md",
+    "modules/04_DATA_DEPENDENCIES.md",
+    "modules/05_SYMBOL_CATALOG.md",
+    "modules/06_FINDINGS_AND_GAPS.md",
+    "ASSET_INDEX.json",
+    "FUNCTION_MAP.md",
+    "DEPENDENCY_MAP.md",
+    "ANALYSIS_PROGRESS.json"
+  ]
+}

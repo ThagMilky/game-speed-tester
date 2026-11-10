@@ -1,0 +1,87 @@
+{
+  "wiki_version": "1.0",
+  "consolidation_status": "COMPLETED",
+  "total_packages_input": 9,
+  "total_source_assets": 10,
+  "processed_sources": [
+    {
+      "filename": "Character-DhQJ_Q0g(1).js",
+      "sha256": "854dbfbd6105f551b6c110ef4895a5beedb0ddfd4afbbcc4f59c69809e7b67d1",
+      "status": "VERIFIED_100_PERCENT"
+    },
+    {
+      "filename": "ChieuMau-CEtRLp-4.js",
+      "sha256": "25f88bcc7f67f5ce1dab6426b995c3f7b1a82196690c62fde656fe9216407c4f",
+      "status": "VERIFIED_100_PERCENT"
+    },
+    {
+      "filename": "WorldScene-b_2tpaKT.js",
+      "sha256": "5d5ede1b50cdcebed76efae6fea1836f067fc61f153cab5b02eb3f8a7cb29d18",
+      "status": "VERIFIED_100_PERCENT"
+    },
+    {
+      "filename": "index-BIkbGDKp.js",
+      "sha256": "501ae57d733b2dd15554e606eb96352b4e6f1994e125890f32871dd411a78550",
+      "status": "VERIFIED_100_PERCENT"
+    },
+    {
+      "filename": "items-nDkzNEls.js",
+      "sha256": "5f77311ae9d6e9fab8eff378a809fcacf3f16af2304aa3f577bee1aab1d0b343",
+      "status": "VERIFIED_100_PERCENT"
+    },
+    {
+      "filename": "phaser-DRI6y8R5.js",
+      "sha256": "5920a4fd5e79aa7f0f3f87a914b4591ba68a8a87a0f6a5c3d49005a870a5d7b1",
+      "status": "VERIFIED_100_PERCENT"
+    },
+    {
+      "filename": "sim-CvoxXTtu.js",
+      "sha256": "8ddd24caae7b39e86a6525117ef6619bba015d4698e3d09b2177af465fab9dc7",
+      "status": "VERIFIED_100_PERCENT"
+    },
+    {
+      "filename": "tm-direct.js",
+      "sha256": "ac013042e8be620365ae650b48d4da80c40f0efa3ac9a2d061d74372f01a3965",
+      "status": "VERIFIED_100_PERCENT"
+    },
+    {
+      "filename": "tm-guard.js",
+      "sha256": "4a9ef0f8ae1a11556ba4f3ef386de7bc0c76cf0fa32b97d5309db4dff9dada47",
+      "status": "VERIFIED_100_PERCENT"
+    },
+    {
+      "filename": "trangbi-iyUH-plT.js",
+      "sha256": "c591d321899db406ed7387c54c21e303582505396e6d815fe0441dcdc4f11cec",
+      "status": "VERIFIED_100_PERCENT"
+    }
+  ],
+  "unified_indexes_generated": [
+    "ASSET_INDEX.json",
+    "SOURCE_MANIFEST.json",
+    "FUNCTION_GRAPH.json",
+    "references/IMPORT_EXPORT_MAP.json",
+    "references/SYMBOL_ALIASES.json",
+    "references/FEATURE_INDEX.json",
+    "references/ORIGINAL_ANALYSIS_MANIFEST.json"
+  ],
+  "documentation_generated": [
+    "README.md",
+    "GAME_ASSET_WIKI_v1.0.md",
+    "DEPENDENCY_MAP.md",
+    "CROSS_MODULE_ANALYSIS.md",
+    "FUNCTION_MAP.md",
+    "UNRESOLVED.md",
+    "MERGE_REPORT.md",
+    "modules/01_Character-DhQJ_Q0g.md",
+    "modules/02_ChieuMau-CEtRLp-4.md",
+    "modules/03_WorldScene-b_2tpaKT.md",
+    "modules/04_index-BIkbGDKp.md",
+    "modules/05_items-nDkzNEls.md",
+    "modules/06_phaser-DRI6y8R5.md",
+    "modules/07_sim-CvoxXTtu.md",
+    "modules/08_tm-direct.md",
+    "modules/09_tm-guard.md",
+    "modules/10_trangbi-iyUH-plT.md"
+  ],
+  "verification_passed": true
+}

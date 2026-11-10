@@ -1,0 +1,634 @@
+{
+  "audit_version": "2.1",
+  "audit_date": "2026-11-10",
+  "total_active_entries": 23,
+  "verified_unchanged": 4,
+  "corrected": 19,
+  "unsupported": 0,
+  "unresolved": 0,
+  "entries": [
+    {
+      "entry_id": "FM-0001",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "at",
+      "original_description": "Composite sprite container",
+      "actual_construct_type": "class",
+      "verified_description": "Composite character view container (clips, equipment, weapon, body layers)",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 59120,
+        "char_end": 68085,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Class declaration 'const at=class at' at offset 59120"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "correction_required": false,
+      "correction_applied": true,
+      "final_status": "VERIFIED_UNCHANGED"
+    },
+    {
+      "entry_id": "FM-0002",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "wt",
+      "original_description": "Weapon grip offset calculator",
+      "actual_construct_type": "array",
+      "verified_description": "Weapon directional frame index mapping array [4,3,2,1,0,7,6,5]",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 58980,
+        "char_end": 59000,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Constant array 'wt=[4,3,2,1,0,7,6,5]' in Character module"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0003",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "yi",
+      "original_claim": "Character audio sample trigger",
+      "actual_construct_type": "class",
+      "verified_description": "Local combat simulation engine (state, hero, foes, skills, HP/Qi, cooldowns, damage)",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 18314,
+        "char_end": 25428,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Declaration 'class yi' at offset 18314 in Character-DhQJ_Q0g(1).js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md",
+        "TECHNICAL_CLAIM_AUDIT.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0004",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "xi",
+      "original_description": "Unarmed combat sequence generator",
+      "actual_construct_type": "function",
+      "verified_description": "Direction-based coordinate transformation helper for character showcase",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 15350,
+        "char_end": 15361,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function xi(a,t)' at offset 15350"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0005",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "ri",
+      "original_description": "Directional frame angle mapper",
+      "actual_construct_type": "function",
+      "verified_description": "Directional sprite texture validator and frame binder",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 57998,
+        "char_end": 58009,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function ri(a,t,e)' at offset 57998"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0006",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "li",
+      "original_description": "Directional frame angle mapper",
+      "actual_construct_type": "function",
+      "verified_description": "Texture frame cache lookup and dimension provider",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 58193,
+        "char_end": 58204,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function li(a,t)' at offset 58193"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0007",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "ui",
+      "original_description": "Directional frame angle mapper",
+      "actual_construct_type": "function",
+      "verified_description": "Frame coordinate scaler based on frame dimensions",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 58837,
+        "char_end": 58848,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function ui(a,t,e)' at offset 58837"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0008",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "vi",
+      "original_description": "Directional frame angle mapper",
+      "actual_construct_type": "function",
+      "verified_description": "Vector angle to 8-directional frame index mapper",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 59001,
+        "char_end": 59012,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function vi(a,t)' at offset 59001"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "correction_required": false,
+      "correction_applied": true,
+      "final_status": "VERIFIED_UNCHANGED"
+    },
+    {
+      "entry_id": "FM-0009",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "sim-CvoxXTtu.js",
+      "symbol": "xm",
+      "original_description": "Master combat simulation controller class",
+      "actual_construct_type": "array",
+      "verified_description": "Linh Căn (Spiritual Root) breakthrough configuration table (pills, chance, luck)",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 24869,
+        "char_end": 25000,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Array literal 'xm=[{pills:1,chance:.5,luck:34},...]' in sim-CvoxXTtu.js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/07_sim-CvoxXTtu.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0010",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "sim-CvoxXTtu.js",
+      "symbol": "Hs",
+      "original_description": "Damage and critical strike pipeline function",
+      "actual_construct_type": "constant",
+      "verified_description": "Fixed Dan required constant (Hs = 30) for refining Dịch Căn Đan",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 24987,
+        "char_end": 24992,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Number constant 'Hs=30' in sim-CvoxXTtu.js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/07_sim-CvoxXTtu.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0011",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "sim-CvoxXTtu.js",
+      "symbol": "Dn",
+      "original_description": "Spatial grid proximity search function",
+      "actual_construct_type": "array",
+      "verified_description": "Spiritual root quality definitions table (Phàm căn, Ngũ hệ tạp căn, weight, exp, potency, atk, hp)",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 24328,
+        "char_end": 24860,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Array literal 'Dn=[{name:\"Phàm căn\",...}]' in sim-CvoxXTtu.js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/07_sim-CvoxXTtu.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0012",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "sim-CvoxXTtu.js",
+      "symbol": "c1",
+      "original_description": "Fishing bite and tension evaluator function",
+      "actual_construct_type": "function",
+      "verified_description": "Clamped cost calculator a => Math.max(20000, Math.min(400000, Math.floor(a)*400)) for Linh Thạch root refinement",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 25004,
+        "char_end": 25060,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Arrow function 'c1=a=>Math.max(2e4,Math.min(4e5,Math.floor(a)*400))'"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/07_sim-CvoxXTtu.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0013",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "trangbi-iyUH-plT.js",
+      "symbol": "ji",
+      "original_description": "Level progression, HP & hit curves",
+      "actual_construct_type": "object",
+      "verified_description": "Level progression milestones, HP & stat threshold curves",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 0,
+        "char_end": 215,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Object literal 'const ji={levels:[...],hp:[...]}' starts at UTF-16 offset 0 (file start) in trangbi-iyUH-plT.js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/10_trangbi-iyUH-plT.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0014",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "trangbi-iyUH-plT.js",
+      "symbol": "mt",
+      "original_description": "Set bonus definitions (2/4/6 pcs)",
+      "actual_construct_type": "function",
+      "verified_description": "Set bonus color / affix attribute resolver n => ui[yn(n)]",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 162707,
+        "char_end": 162723,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Arrow function 'mt=n=>ui[yn(n)],' verified at UTF-16 offset 162707 in trangbi-iyUH-plT.js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/10_trangbi-iyUH-plT.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0015",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "trangbi-iyUH-plT.js",
+      "symbol": "Qu",
+      "original_description": "Weapon attributes and tier matrix",
+      "actual_construct_type": "object",
+      "verified_description": "Weapon attributes, material types, and visual effect colors table",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 141703,
+        "char_end": 142285,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Object literal 'Qu={\"the-tu\":{color:\"#e8c46a\",...}}' verified at UTF-16 offset 141703 in trangbi-iyUH-plT.js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/10_trangbi-iyUH-plT.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0016",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "items-nDkzNEls.js",
+      "symbol": "Nn",
+      "original_description": "Inventory item icon renderer",
+      "actual_construct_type": "function",
+      "verified_description": "Keyboard key code to human-readable string mapper (e.g. 9: Tab, 13: Enter, 32: Space)",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 1856,
+        "char_end": 1947,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function Nn(n){return{9:\"Tab\",13:\"Enter\",...}[n]??String.fromCharCode(n)}' at UTF-16 offset 1856 in items-nDkzNEls.js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/04_items-nDkzNEls.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0017",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "items-nDkzNEls.js",
+      "symbol": "N",
+      "original_description": "Equipment stat comparison builder",
+      "actual_construct_type": "function",
+      "verified_description": "Item ID normalization and item definition lookup helper",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 2262,
+        "char_end": 2755,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function N(n){n={...n,id:O(n.id)??n.id};...}' verified at UTF-16 offset 2262 in items-nDkzNEls.js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/04_items-nDkzNEls.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0018",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "tm-direct.js",
+      "symbol": "production",
+      "original_description": "Host route selector and validator",
+      "actual_construct_type": "function",
+      "verified_description": "Domain host validator regex checking nghichthienky.online",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 804,
+        "char_end": 895,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function production() { return /^(www\\.)?nghichthienky\\.online$/.test(location.hostname); }' at UTF-16 offset 804 in tm-direct.js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/08_tm-direct.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0019",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "tm-direct.js",
+      "symbol": "WebSocketShim",
+      "original_description": "Socket message pass-through",
+      "actual_construct_type": "function",
+      "verified_description": "Direct WebSocket constructor wrapper proxying game endpoints",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 4751,
+        "char_end": 4973,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function WebSocketShim(url, protocols)' at UTF-16 offset 4751 in tm-direct.js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/08_tm-direct.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0020",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "tm-guard.js",
+      "symbol": "show",
+      "original_description": "Anti-macro challenge modal UI & mobile tribulation trigger",
+      "actual_construct_type": "function",
+      "verified_description": "Renders anti-macro guard alertdialog with countdown timer",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 716,
+        "char_end": 733,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function show(ev)' at offset 716 in tm-guard.js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/09_tm-guard.md"
+      ],
+      "correction_required": false,
+      "correction_applied": true,
+      "final_status": "VERIFIED_UNCHANGED"
+    },
+    {
+      "entry_id": "FM-0021",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "tm-guard.js",
+      "symbol": "feed",
+      "original_description": "Fast WebSocket message parser",
+      "actual_construct_type": "function",
+      "verified_description": "Fast WebSocket message parser for guard challenges & mobile tribulation",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 4269,
+        "char_end": 4288,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function feed(data)' at offset 4269 in tm-guard.js"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/09_tm-guard.md"
+      ],
+      "correction_required": false,
+      "correction_applied": true,
+      "final_status": "VERIFIED_UNCHANGED"
+    },
+    {
+      "entry_id": "FM-0022",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "index-BIkbGDKp.js",
+      "symbol": "Pt",
+      "original_description": "Outgoing command framing / Pt.sendPacket",
+      "actual_construct_type": "function",
+      "verified_description": "Loading screen overlay presenter function Pt(t, e, o=\"Đang tiến vào\")",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 69212,
+        "char_end": 69300,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Function declaration 'function Pt(t,e,o=\"Đang tiến vào\")' at char 69212"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/03_index-BIkbGDKp.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    },
+    {
+      "entry_id": "FM-0023",
+      "documentation_file": "FUNCTION_MAP.md",
+      "source_file": "WorldScene-b_2tpaKT.js",
+      "symbol": "onSnap",
+      "original_description": "A3.handleSnapshot snapshot processing",
+      "actual_construct_type": "method",
+      "verified_description": "WorldScene snapshot handler method onSnap(t) updating entities, clocks, and scene state",
+      "symbol_existence": "CONFIRMED",
+      "semantic_status": "CONFIRMED",
+      "location_status": "VERIFIED",
+      "source_location": {
+        "char_start": 897468,
+        "char_end": 898500,
+        "offset_unit": "utf16"
+      },
+      "evidence": [
+        "Method declaration 'onSnap(t)' at char 897468 in WorldScene class A3"
+      ],
+      "related_documents": [
+        "FUNCTION_MAP.md",
+        "modules/WorldScene/*.md"
+      ],
+      "correction_required": true,
+      "correction_applied": true,
+      "final_status": "CORRECTED"
+    }
+  ],
+  "notes": "v2.1: Corrected 7 invalid source offsets (FM-0013 to FM-0019) with programmatically verified UTF-16 positions."
+}

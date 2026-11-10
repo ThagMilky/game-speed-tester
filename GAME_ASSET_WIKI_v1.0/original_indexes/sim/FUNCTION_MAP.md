@@ -1,0 +1,1520 @@
+# FUNCTION_MAP — sim-CvoxXTtu.js
+
+All locations are zero-based UTF-16 `start_char` (inclusive) / `end_char_exclusive` from untouched file. `CONFIRMED` means the symbol/call exists in source, not that gameplay was runtime-tested.
+
+## Combat, skills, effects (92 indexed symbols)
+
+- `j1.constructor` — constructor, [83320, 83817); calls: `T`, `j1.heal`, `j1.damage`, `j1.enemies`, `j1.guMark`
+- `j1.t` — getter, [83817, 83844); calls: —
+- `j1.basic` — method, [83844, 84769); calls: `wm`, `Sm`, `j1.speedFactor`, `t.events.push`, `j1.later`, `j1.enemies`, `Math.hypot`, `Math.max`, `j1.radius`, `j1.damage`
+- `j1.slash` — method, [84769, 85960); calls: `this.enemies(t,n).filter`, `j1.enemies`, `Math.hypot`, `j1.radius`, `F`, `j1.damage`, `t.events.push`, `r`, `j1.heal`, `j1.dot`
+- `j1.dodge` — method, [85960, 86374); calls: `F`, `E1`, `this.w.record`, `t.events.push`
+- `j1.cast` — method, [86374, 89748); calls: `n.learnedRealms.includes`, `ee`, `Nu`, `n.def.skills.slice(5).some`, `n.def.skills.slice`, `n.learnedSkills.includes`, `ma`, `n.note`, `h1`, `vu`
+- `j1.releaseGuard` — method, [89748, 89947); calls: —
+- `j1.run` — method, [89947, 93143); calls: `Math.max`, `j1.releaseGuard`, `j1.selfEffects`, `j1.later`, `g`, `d`, `j1.area`, `j1.bonusRaw`, `j1.detonate`, `j1.makhiAfter`
+- `j1.area` — method, [93143, 93816); calls: `this.enemies(t,n).filter(f=>Math.hypot(f.x-s,f.y-i)-this.radius(f)<o).sort`, `this.enemies(t,n).filter`, `j1.enemies`, `Math.hypot`, `j1.radius`, `h.slice`, `u.forEach`, `j1.damage`, `j1.statuses`, `F`
+- `j1.cone` — method, [93816, 94091); calls: `Math.cos`, `j1.enemies`, `Math.hypot`, `j1.radius`, `j1.damage`, `j1.statuses`
+- `j1.line` — method, [94091, 94317); calls: `j1.enemies`, `Math.abs`, `j1.radius`, `j1.damage`, `j1.statuses`
+- `j1.nearest` — method, [94317, 94492); calls: `this.enemies(t,n).filter(r=>Math.hypot(r.x-n.x,r.y-n.y)<=i+this.radius(r)).sort((r,h)=>Math.hypot(r.x-e,r.y-s)-Math.hypot(h.x-e,h.y-s)).slice`, `this.enemies(t,n).filter(r=>Math.hypot(r.x-n.x,r.y-n.y)<=i+this.radius(r)).sort`, `this.enemies(t,n).filter`, `j1.enemies`, `Math.hypot`, `j1.radius`
+- `j1.enemies` — method, [94492, 94635); calls: `e.push`, `this.w.pkOk`
+- `j1.radius` — method, [94635, 94669); calls: `X`
+- `j1.damage` — method, [94669, 99733); calls: `this.w.realms.protected`, `X`, `this.w.pkOk`, `Math.min`, `En`, `et`, `Math.random`, `t.events.push`, `this.equipment.multiplier`, `fa`
+- `j1.proc` — method, [99733, 102214); calls: `F`, `j1.heal`, `j1.dot`, `e.st.dots.some`, `f.startsWith`, `this.enemies(t,n).filter`, `j1.enemies`, `Math.hypot`, `j1.radius`, `t.events.push`
+- `j1.behind` — method, [102214, 102364); calls: `Math.cos`, `Math.sin`, `Math.hypot`
+- `j1.bonusRaw` — method, [102364, 102616); calls: —
+- `j1.onKill` — method, [102616, 102980); calls: `F`, `j1.heal`, `j1.setSkillCd`, `Math.max`, `Math.min`
+- `j1.statuses` — method, [102980, 105460); calls: `this.w.realms.protected`, `X`, `this.w.pkOk`, `Math.min`, `Or`, `xu`, `ma`, `["stun","knock","root","slow","pull","silence"].includes`, `["stun","knock","root","slow","pull","silence","taunt"].includes`, `["stun","knock","root","slow","silence"].includes`
+- `j1.hitType` — method, [105460, 105533); calls: `Kg`
+- `j1.typeK` — method, [105533, 105634); calls: `X`, `P1`, `Tu`
+- `j1.statusDamage` — method, [105634, 106243); calls: `Ta`, `et`, `X`, `un`, `j1.inZone`
+- `j1.inZone` — method, [106243, 106547); calls: `Math.hypot`, `Math.max`
+- `j1.afterHit` — method, [106547, 107275); calls: `et`, `un`, `j1.heal`, `Math.max`, `j1.dot`, `X`, `En`, `Math.min`, `Math.round`, `t.events.push`
+- `j1.speedFactor` — method, [107275, 107428); calls: `En`, `Math.max`, `Math.min`
+- `j1.wake` — method, [107428, 107536); calls: `X`, `this.hot.get`, `this.hot.set`, `e.set.add`
+- `j1.setSkillCd` — method, [107536, 107635); calls: `t.skillSlots.indexOf`, `String`
+- `j1.shiftKeyCd` — method, [107635, 107730); calls: `Number`
+- `j1.cdrOf` — method, [107730, 107772); calls: `fa`, `r1`
+- `j1.sx` — method, [107772, 108248); calls: `Ig`, `X`, `o.push`, `n.split`, `r.findIndex`, `g.startsWith`, `Math.round`, `r.push`, `Number`, `r[u].split`
+- `j1.controlDuration` — method, [108248, 108383); calls: `X`, `Math.min`, `Math.max`, `et`
+- `j1.hardControl` — method, [108383, 108732); calls: `ma`, `j1.controlDuration`, `X`, `Fg`, `Math.max`
+- `j1.dot` — method, [108732, 109280); calls: `F`, `t.st.dots.find`, `Math.max`, `Math.min`, `t.st.dots.push`, `j1.wake`
+- `j1.healingMultiplier` — method, [109280, 109554); calls: `fa`, `Bt`, `Math.min`, `Math.max`, `Et`, `En`, `j1.poisonCut`
+- `j1.poisonCut` — method, [109554, 109718); calls: `Math.max`, `et`, `this.w.players.get`
+- `j1.pvpBurst` — method, [109718, 109847); calls: `qg`, `j1.pvpTime`, `this.pvpLog.get`, `this.pvpLog.set`, `Og`
+- `j1.pvpMana` — method, [109847, 109889); calls: `j1.inPvp`
+- `j1.pvpTouch` — method, [109889, 109996); calls: `j1.inPvp`, `this.pvpStart.set`, `this.pvpAt.set`
+- `j1.pvpTime` — method, [109996, 110068); calls: `j1.inPvp`, `this.pvpStart.get`
+- `j1.inPvp` — method, [110068, 110120); calls: `this.pvpAt.get`
+- `j1.heal` — method, [110120, 110742); calls: `j1.inPvp`, `Vr`, `j1.pvpTime`, `Math.round`, `et`, `j1.healingMultiplier`, `Math.min`, `t.events.push`, `F`
+- `j1.selfEffects` — method, [110742, 112872); calls: `j1.friends`, `F`, `[...t.players].filter(l=>l!==n&&!l.dead&&l.party&&l.party===n.party).sort`, `[...t.players].filter`, `Math.hypot`, `i.push`, `e.id.startsWith`, `["heal","hot","buff","guard","shield"].includes`, `j1.heal`, `j1.hpScale`
+- `j1.friends` — method, [112872, 113012); calls: `Math.hypot`, `this.w.pkOk`, `s.push`
+- `j1.hpScale` — method, [113012, 113098); calls: `Math.max`, `ir`
+- `j1.beat` — method, [113098, 113723); calls: `Math.round`, `Math.abs`, `F`, `Math.min`, `j1.maxStacks`, `j1.hpScale`, `j1.heal`, `Math.hypot`, `Math.max`
+- `j1.maxStacks` — method, [113723, 113801); calls: `F`
+- `j1.jarMax` — method, [113801, 113872); calls: `F`
+- `j1.soulMax` — method, [113872, 113943); calls: `F`
+- `j1.makhiGain` — method, [113943, 114261); calls: `Math.max`, `Math.min`, `F`, `t.note`, `t.toast`
+- `j1.makhiAfter` — method, [114261, 114345); calls: `j1.makhiGain`
+- `j1.gainSat` — method, [114345, 114443); calls: `Math.min`, `F`
+- `j1.classAfter` — method, [114443, 115943); calls: `j1.makhiAfter`, `j1.jarMax`, `o.jar.push`, `F`, `this.enemies(t,n).filter`, `j1.enemies`, `g.st.dots.some`, `Math.hypot`, `j1.statuses`, `o.nodes.push`
+- `j1.sealed` — method, [115943, 116043); calls: `t.monsters.filter`, `Math.hypot`
+- `j1.detonate` — method, [116043, 117024); calls: `F`, `j1.sealed`, `m.st.seals.splice`, `j1.damage`, `Math.min`, `j1.dot`, `Math.max`, `t.monsters.find`, `Math.hypot`, `j1.shiftKeyCd`
+- `j1.brew` — method, [117024, 117389); calls: `o.filter`, `Math.hypot`, `j1.dot`, `Math.max`, `Math.min`
+- `j1.tame` — method, [117389, 118225); calls: `t.monsters.filter(u=>!u.dead&&!u.owner&&u.cls!=="boss"&&(o?u.cls==="gu":!0)&&Math.hypot(u.x-s,u.y-i)-u.radius<e.range+.6).sort`, `t.monsters.filter`, `Math.hypot`, `n.note`, `j1.damage`, `F`, `this.w.dealMonster`, `j1.jarMax`, `n.cls.jar.push`, `Math.floor`
+- `j1.tick` — method, [118225, 119813); calls: `this.hot.get`, `this.hot.set`, `Pu`, `h.set.add`, `h.set.delete`, `j1.statusTick`, `this.equipment.tick`, `j1.passiveTick`, `F`, `Math.max`
+- `j1.passiveTick` — method, [119813, 120372); calls: `un`, `this.cleanseAt.get`, `wa`, `this.cleanseAt.set`, `t.events.push`, `Math.abs`, `Math.hypot`, `this.w.pkOk`
+- `j1.statusTick` — method, [120372, 121708); calls: `s.debuffs.filter`, `X`, `this.w.players.get`, `this.w.pkOk`, `j1.mobDotTick`, `Ru`, `this.castFirst.get`, `Au`, `Math.hypot`, `et`
+- `j1.array` — method, [121708, 123113); calls: `s.nodes.filter`, `F`, `s.nodes.map`, `Math.max`, `Math.min`, `Math.hypot`, `c`, `this.w.pkOk`, `j1.damage`, `j1.statuses`
+- `j1.avatarTick` — method, [123113, 123555); calls: `Nu`, `j1.area`, `t.events.push`, `j1.nearest`
+- `j1.petTick` — method, [123555, 125552); calls: `Sn`, `this.w.spawnPet`, `Math.round`, `t.events.push`, `Math.max`, `this.lastFoe.get`, `Math.hypot`, `m`, `X`, `this.w.pkOk`
+- `j1.petSkill` — method, [125552, 126815); calls: `Sn`, `this.lastFoe.get`, `X`, `this.w.dealMonster`, `Math.max`, `Math.round`, `j1.typeK`, `j1.damage`, `j1.dot`, `j1.enemies`
+- `j1.quyShell` — method, [126815, 127248); calls: `Sn`, `o.events.push`, `this.w.dropPet`, `t.note`
+- `j1.roarEffects` — method, [127248, 127503); calls: `Sn`
+- `j1.petSwapCombo` — method, [127503, 127977); calls: `Sn`, `Math.max`, `n.note`, `j1.heal`, `t.events.push`
+- `j1.guTop` — method, [127977, 128271); calls: `j1.guStacks`, `this.w.pkOk`
+- `j1.guStacks` — method, [128271, 128391); calls: `t.st.dots.find`
+- `j1.guMark` — method, [128391, 128896); calls: `this.w.realms.protected`, `X`, `this.w.pkOk`, `t.st.dots.find`, `Math.min`, `t.st.dots.push`
+- `j1.blood` — method, [128896, 128984); calls: `Math.min`
+- `j1.bodyCast` — method, [128984, 131968); calls: `vu`, `Yl([...n.worn.values()].map(H=>{var L;return((L=n.gear.find(N=>N.uid===H))==null?void 0:L.id)??""}).filter(H=>{var L;return!(((L=n.stats)==null?void 0:L.ignored.some(N=>N.id===H))??!0)}),n.classId).find`, `Yl`, `[...n.worn.values()].map(H=>{var L;return((L=n.gear.find(N=>N.uid===H))==null?void 0:L.id)??""}).filter`, `[...n.worn.values()].map`, `n.worn.values`, `n.gear.find`, `L.ignored.some`, `Math.max`, `j1.later`
+- `j1.cultivationCast` — method, [131968, 134652); calls: `j1.releaseGuard`, `j1.later`, `r`, `m`, `this.enemies(t,n).filter(g=>Math.hypot(g.x-s,g.y-i)-this.radius(g)<=u).sort((g,d)=>Math.hypot(g.x-s,g.y-i)-Math.hypot(d.x-s,d.y-i)).slice`, `this.enemies(t,n).filter(g=>Math.hypot(g.x-s,g.y-i)-this.radius(g)<=u).sort`, `this.enemies(t,n).filter`, `j1.enemies`, `Math.hypot`, `j1.radius`
+- `j1.rootHit` — method, [134652, 138103); calls: `Bt`, `u`, `this.rootCasts.get`, `f.has`, `Number`, `e.st.dots.some`, `Ls`, `Math.min`, `j1.heal`, `j1.rootDot`
+- `j1.rootNote` — method, [138103, 138186); calls: `t.events.push`
+- `j1.rootDot` — method, [138186, 138512); calls: `Ls`, `t.st.dots.find`, `Math.max`, `t.st.dots.push`
+- `j1.rootResource` — method, [138512, 138739); calls: `Ls`, `j1.blood`, `Math.min`
+- `j1.rootDebuff` — method, [138739, 139025); calls: `this.w.realms.protected`, `X`, `this.w.pkOk`, `Bt`, `po`
+- `j1.rootCleanse` — method, [139025, 139566); calls: `s.some`, `e.debuffs.find`, `e.debuffs.filter`, `e.dots.find`, `e.dots.filter`, `j1.rootNote`
+- `j1.rootCast` — method, [139566, 140276); calls: `Bt`, `Ls`, `e`, `Number`, `j1.rootResource`, `j1.rootCleanse`, `j1.heal`, `j1.enemies`, `Math.hypot`, `j1.statuses`
+- `j1.mobTaken` — method, [140276, 140377); calls: `Ta`, `Et`
+- `j1.mobStatuses` — method, [140377, 141679); calls: `this.w.realms.protected`, `Math.min`, `Or`, `xu`, `ma`, `["stun","knock","root","slow","silence","taunt"].includes`, `j1.mobDot`, `j1.controlDuration`, `Math.max`, `At`
+- `j1.mobDot` — method, [141679, 141984); calls: `t.st.dots.find`, `Math.max`, `Math.min`, `t.st.dots.push`
+- `j1.mobDotTick` — method, [141984, 142468); calls: `et`, `Math.hypot`, `Math.max`, `Math.round`, `j1.absorb`, `t.events.push`, `this.w.die`
+- `j1.mobProc` — method, [142468, 142839); calls: `R1`, `this.mobCd.get`, `Math.random`, `this.mobCd.set`, `j1.mobStatuses`, `i.effects.map`, `Math.max`
+- `j1.incomingScale` — method, [142839, 143853); calls: `Bt`, `Math.hypot`, `F`, `Tu`, `Cm`, `j1.mobTaken`, `et`
+- `j1.onHurt` — method, [143853, 144841); calls: `Math.min`, `En`, `et`, `Math.random`, `t.events.push`, `this.w.dealMonster`, `Math.max`, `Math.round`, `F`
+- `j1.absorb` — method, [144841, 146159); calls: `j1.quyShell`, `j1.blood`, `this.equipment.absorb`, `X`, `Math.min`, `j1.damage`, `j1.guMark`, `this.enemies(i,t).filter`, `j1.enemies`, `Math.hypot`
+- `j1.flags` — method, [146159, 146776); calls: `e.dots.some`, `Et`, `ma`
+- `j1.gauge` — method, [146776, 147673); calls: `j1.maxStacks`, `Math.round`, `F`, `j1.guTop`, `Math.max`, `Sn`, `Math.ceil`, `this.sealed(t.room,t).reduce`, `j1.sealed`
+- `j1.fieldPulse` — method, [147673, 148184); calls: `j1.area`, `j1.enemies`, `Math.hypot`, `j1.radius`, `j1.statuses`, `j1.heal`, `j1.hpScale`, `Math.max`, `j1.controlDuration`
+- `j1.later` — method, [148184, 148241); calls: `e`, `t.pending.push`
+
+## World, movement, AI, networking (91 indexed symbols)
+
+- `e2.constructor` — constructor, [571367, 572197); calls: `T`, `Date.now`
+- `e2.newEntityId` — method, [572197, 572229); calls: —
+- `e2.bossState` — method, [572229, 572364); calls: —
+- `e2.bossRanking` — method, [572364, 572677); calls: `bi`, `Object.entries`, `this.realms.events.find`, `e2.bossState`, `[...e.dmg].map`, `[...n.tag??[]].map`
+- `e2.bossContribution` — method, [572677, 573378); calls: `this.bossCache.get`, `n.monsters.filter`, `this.bossCache.set`, `e.bosses.filter(h=>!h.dead&&Math.hypot(h.x-t.x,h.y-t.y)<=32).sort`, `e.bosses.filter`, `Math.hypot`, `this.damageCache.get`, `e2.bossRanking`, `this.damageCache.set`, `o.rows.find`
+- `e2.saveRoaming` — method, [573378, 573669); calls: `Object.fromEntries`, `this.bossRanking(t.room,n).map`, `e2.bossRanking`
+- `e2.restoreRoaming` — method, [573669, 574078); calls: `e2.room`, `e2.epoch`, `e2.worldBossTick`, `Math.min`
+- `e2.spawnRoamingBoss` — method, [574078, 575311); calls: `[...this.rooms.values()].filter`, `this.rooms.values`, `Ot`, `this.realms.inRoom`, `Y.some`, `e.hosts.includes`, `[...n.players].some`, `t.some`, `t.filter`, `t.sort`
+- `e2.startRoaming` — method, [575311, 575807); calls: `Math.round`, `Wt`, `e2.epoch`, `e2.worldBossTick`
+- `e2.endRoaming` — method, [575807, 576157); calls: `n.room.monsters.indexOf`, `n.room.monsters.splice`, `n.room.slams.filter`, `e2.announce`
+- `e2.roamingTick` — method, [576157, 576573); calls: `e2.epoch`, `Math.ceil`, `e2.endRoaming`, `e2.worldBossTick`, `e2.spawnRoamingBoss`
+- `e2.createRealmRoom` — method, [576573, 576758); calls: `e2.newId`, `this.rooms.set`
+- `e2.newId` — method, [576758, 576784); calls: —
+- `e2.addField` — method, [576784, 576834); calls: `t.fields.push`
+- `e2.addShot` — method, [576834, 576863); calls: `t.shots.push`
+- `e2.spawnPet` — method, [576863, 577299); calls: `wt`, `t.pets.push`
+- `e2.dropPet` — method, [577299, 577343); calls: `t.pets.filter`
+- `e2.room` — method, [577343, 577489); calls: `this.rooms.get`, `this.data.maps.get`, `this.rooms.set`
+- `e2.join` — method, [577489, 579603); calls: `this.realms.resume`, `this.players.set`, `this.data.maps.has`, `this.data.maps.get`, `e2.place`, `ek`, `this.realms.join`, `e2.resumeParty`, `Number.isFinite`, `Math.max`
+- `e2.leave` — method, [579603, 579772); calls: `n.call`, `e2.failTribulation`, `this.realms.disconnect`, `e2.removePlayer`
+- `e2.holdParty` — method, [579772, 580025); calls: `n.members.filter`, `this.partyHold.set`, `t.name.toLowerCase`
+- `e2.resumeParty` — method, [580025, 580276); calls: `t.name.toLowerCase`, `this.partyHold.get`, `this.partyHold.delete`, `e.party.members.push`
+- `e2.expirePartyHolds` — method, [580276, 580630); calls: `this.partyHold.delete`, `e2.sys`, `[...this.partyHold.values()].some`, `this.partyHold.values`
+- `e2.removePlayer` — method, [580630, 580811); calls: `e2.holdParty`, `e2.dropPet`, `n.players.delete`, `this.players.delete`
+- `e2.place` — method, [580811, 580863); calls: `e2.placeInRoom`, `e2.room`
+- `e2.placeInRoom` — method, [580863, 581451); calls: `e2.failTribulation`, `e2.dropPet`, `r.players.delete`, `n.players.add`, `n.collision.nearestOpen`, `t.inside.clear`, `n.map.gates.some`, `Ot`, `Math.hypot`, `t.known.clear`
+- `e2.handle` — method, [581451, 582650); calls: `e2.move`, `Number.isFinite`, `Math.hypot`, `e2.skill`, `String`, `e2.action`, `String(n.text??"").replace(/[\u0000-\u001f]/g,"").trim().slice`, `String(n.text??"").replace(/[\u0000-\u001f]/g,"").trim`, `String(n.text??"").replace`, `e.startsWith`
+- `e2.announce` — method, [582650, 582825); calls: `this.global.push`, `Date.now().toString`, `Date.now`
+- `e2.announceLoot` — method, [582825, 583122); calls: `e2.announce`, `Jr`, `K0`
+- `e2.sys` — method, [583122, 583189); calls: `t.events.push`
+- `e2.partySay` — method, [583189, 583401); calls: `e2.sys`, `e.events.push`, `As`, `e2.epoch`
+- `e2.command` — method, [583401, 585626); calls: `n.slice(1).split`, `n.slice`, `s.join(" ").trim`, `s.join`, `e.toLowerCase`, `h.members.some`, `["p","to","w","tg","tuchoi","từchối"].includes`, `t.note`, `[...this.players.values()].find`, `this.players.values`
+- `e2.leaveParty` — method, [585626, 586044); calls: `e.members.filter`, `e2.sys`
+- `e2.sharers` — method, [586044, 586232); calls: `n.party.members.filter`, `Math.hypot`
+- `e2.allyNear` — method, [586232, 586363); calls: `n.members.some`, `Math.hypot`
+- `e2.tick` — method, [586363, 589804); calls: `n.call`, `e2.expirePartyHolds`, `this.realms.tick`, `e2.roamingTick`, `i.loot.filter`, `i.monsters.some`, `e2.worldBossTick`, `Ot`, `this.realms.inRoom`, `this.rooms.delete`
+- `e2.updatePlayer` — method, [589804, 591366); calls: `I0`, `e2.epoch`, `Math.floor`, `Object.keys`, `Math.min`, `this.combat.healingMultiplier`, `this.combat.pvpMana`, `e2.allyNear`, `this.combat.equipment.speed`, `Zr`
+- `e2.rootStatus` — method, [591366, 592085); calls: `Math.ceil`, `"●".repeat`, `Math.min`, `"○".repeat`, `Math.max`, `c.includes`, `s.query`, `Math.abs`, `h`, `Math.round`
+- `e2.move` — method, [592085, 592861); calls: `Number.isFinite`, `Math.hypot`, `r.collision.blocked`, `Math.floor`, `this.realms.cancel`, `t.note`, `this.fishing.cancel`, `e2.record`, `/^[a-z_]{1,16}$/.test`
+- `e2.updateMonsters` — method, [592861, 597918); calls: `t.playerGrid.rebuild`, `Ot`, `this.realms.inRoom`, `this.realms.protected`, `Math.hypot`, `t.playerGrid.query`, `this.paths.delete`, `s.push`, `Ta`, `this.players.get`
+- `e2.requestPath` — method, [597918, 597990); calls: `this.paths.set`
+- `e2.processPaths` — method, [597990, 598302); calls: `this.paths.delete`, `e2.pathFor`
+- `e2.lineOpen` — method, [598302, 598476); calls: `Math.hypot`, `Math.ceil`, `t.collision.blocked`
+- `e2.pathFor` — method, [598476, 600149); calls: `Math.max`, `Math.min`, `Math.ceil`, `Math.floor`, `new Int8Array(h*c).fill`, `t.collision.blocked`, `u`, `m`, `f`, `new Float32Array(h*c).fill`
+- `e2.updateShots` — method, [600149, 600590); calls: `this.combat.enemies`, `e.hit.has`, `Math.hypot`, `this.combat.radius`, `e.hit.add`, `e.onHit`, `this.combat.damage`, `t.collision.blockedCell`, `t.shots.filter`
+- `e2.skill` — method, [600590, 600940); calls: `this.fishing.cancel`, `this.realms.protected`, `this.realms.unprotect`, `this.realms.cancel`, `t.note`, `fe`, `this.combat.basic`, `this.combat.dodge`, `this.combat.cast`
+- `e2.pkOk` — method, [600940, 601541); calls: `this.realms.protected`, `this.realms.inBossRoom`, `t.ktPk`, `i.call`, `this.realms.inRoom`, `Jt.has`, `zs`, `V`, `e2.dosatZone`, `Yy`
+- `e2.dosatZone` — method, [601541, 601675); calls: `this.realms.inRoom`, `Jt.has`, `Vs`
+- `e2.dosatKill` — method, [601675, 603448); calls: `this.realms.inRoom`, `Jt.has`, `Rt`, `xi`, `e.applyLevel`, `Math.min`, `Math.floor`, `e.count`, `e.give`, `n.give`
+- `e2.dosatToggle` — method, [603448, 604193); calls: `Date.now`, `t.note`, `Math.ceil`, `t.toast`, `Rt`, `Nt`
+- `e2.hurtByPlayer` — method, [604193, 605611); calls: `e2.pkOk`, `t.events.push`, `Et`, `q0`, `O0`, `V`, `m.call`, `g.call`, `G0`, `this.combat.incomingScale`
+- `e2.dealMonster` — method, [605611, 606623); calls: `this.realms.protected`, `Et`, `this.realms.damage`, `Math.max`, `Math.round`, `e2.bossState`, `g.dmg.set`, `g.dmg.get`, `Math.min`, `(e.tag??(e.tag=new Map)).set`
+- `e2.worldBossKill` — method, [606623, 609010); calls: `e2.bossState`, `e2.bossRanking`, `t.events.push`, `[...t.players].find`, `f.note`, `e2.record`, `e2.gainExp`, `Math.max`, `Math.round`, `eh`
+- `e2.codeRewardOk` — method, [609010, 609265); calls: `mt`, `e.some`, `E0.some`, `Bn`, `Object.values(eu).includes`, `Object.values`
+- `e2.pillView` — method, [609265, 609611); calls: `i.push`, `Math.ceil`, `o`
+- `e2.fishShop` — method, [609611, 611083); calls: `t.note`, `e2.npcNear`, `Object.values(s.lakes).flat`, `Object.values`, `[...new Map(i.map(m=>[m.name,m])).values()].filter`, `new Map(i.map(m=>[m.name,m])).values`, `i.map`, `t.freeCount`, `e2.sellable`, `ro`
+- `e2.usePill` — method, [611083, 613432); calls: `n.note`, `n.count`, `Math.ceil`, `Math.max`, `Math.min`, `Math.round`, `this.combat.healingMultiplier`, `t.events.push`, `c`, `n.st.dots.filter`
+- `e2.redeemCode` — method, [613432, 614396); calls: `t.note`, `t.mailVerified`, `Qa`, `this.codes.check`, `Date.now`, `this.codes.get`, `o.rewards.reduce`, `Ki`, `t.gearFits`, `o.rewards.flatMap`
+- `e2.cttCommand` — method, [614396, 614464); calls: `e2.gmAction`
+- `e2.cttBoss` — method, [614464, 615053); calls: `Ot`, `this.realms.inRoom`, `e.collision.blocked`, `e.collision.nearestOpen`, `Y.find`, `r.hosts.includes`, `Math.max`, `Math.min`, `e2.startRoaming`
+- `e2.gmAction` — method, [615053, 619623); calls: `JSON.parse`, `this.codes.put`, `Date.now`, `e2.codeRewardOk`, `n.note`, `this.codes.get`, `this.codes.setDisabled`, `this.codes.remove`, `Qa`, `n.events.push`
+- `e2.later` — method, [619623, 619674); calls: `t.pending.push`
+- `e2.kill` — method, [619674, 621896); calls: `this.paths.delete`, `this.realms.killed`, `e2.worldBossKill`, `wt`, `Ot`, `this.realms.inRoom`, `t.events.push`, `e2.bossRanking`, `e2.announce`, `vi`
+- `e2.drops` — method, [621896, 624089); calls: `iu`, `e2.announce`, `as`, `o.sets.includes`, `Math.random`, `s.push`, `Math.floor`, `Math.max`, `Math.round`, `this.realms.inRoom`
+- `e2.pickup` — method, [624089, 625080); calls: `Math.hypot`, `W0`, `gh`, `n.gearFits`, `n.gear.push`, `i.push`, `lo`, `e2.announceLoot`, `li`, `n.grantRewardGear`
+- `e2.gainExp` — method, [625080, 625845); calls: `Number.isFinite`, `up`, `ga`, `V`, `nv`, `Xn`, `l1`, `Math.floor`, `Math.max`, `vt`
+- `e2.worldBossTick` — method, [625845, 627776); calls: `e2.epoch`, `sy`, `iy`, `oy`, `wt`, `t.monsters.push`, `n.dmg.clear`, `ui`, `Math.round`, `e2.announce`
+- `e2.meditate` — method, [627776, 628537); calls: `n.note`, `Math.floor`, `e2.record`, `Math.max`, `vt`, `Xs`, `Do`, `e2.gainExp`
+- `e2.dailyClaim` — method, [628537, 630504); calls: `Iu`, `Date.now`, `Number`, `i.dailies.find`, `Fa`, `gk`, `o.claimed.filter`, `n.give`, `e2.gainExp`, `e2.record`
+- `e2.startTribulation` — method, [630504, 631743); calls: `Pe`, `n.note`, `mc`, `vt`, `Math.ceil`, `Ot`, `/Cave/.test`, `V`, `n.count`, `n.give`
+- `e2.failTribulation` — method, [631743, 632079); calls: `Math.ceil`, `vt`, `Math.max`, `this.rooms.values`, `i.bolts.filter`, `t.toast`, `t.note`
+- `e2.tribTick` — method, [632079, 633034); calls: `Math.hypot`, `e2.failTribulation`, `t.bolts.push`, `i`, `Math.cos`, `Math.sin`, `t.bolts.some`, `n.applyLevel`, `n.toast`, `X0`
+- `e2.hurt` — method, [633034, 633886); calls: `t.events.push`, `this.combat.onHurt`, `Math.max`, `Math.round`, `this.combat.absorb`, `Math.random`, `this.combat.incomingScale`, `this.realms.inRoom`, `tm`, `V`
+- `e2.die` — method, [633886, 634373); calls: `n.note`, `wt`, `Ia`, `e2.failTribulation`, `this.realms.onDeath`, `t.events.push`
+- `e2.sellable` — method, [634373, 634736); calls: `Q0`, `t.note`, `t.freeCount`
+- `e2.soldBack` — method, [634736, 634900); calls: `Date.now`, `t.buyback.push`, `e.toString`, `(++this.ids).toString`, `t.buyback.filter(s=>e-s.at<jh).slice`, `t.buyback.filter`
+- `e2.recordSale` — method, [634900, 635000); calls: `Math.min`, `e2.record`
+- `e2.record` — method, [635000, 635544); calls: `/^(monster\|rare\|discover\|worldboss):/.test`, `bk`, `t.note`, `gy`, `t.book.refreshState`, `t.book.record`, `i.call`, `t.book.active().find`, `t.book.active`, `t.book.complete`
+- `e2.npcNear` — method, [635544, 635671); calls: `s.npcs.find`, `Math.hypot`
+- `e2.action` — method, [635671, 669070); calls: `n.startsWith`, `n.split`, `rp`, `xt.find`, `h.call`, `ee`, `t.realmBooks.indexOf`, `t.note`, `ui`, `t.learnedRealms.some`
+- `e2.travel` — method, [669070, 669227); calls: `this.data.maps.has`, `e2.place`, `t.events.push`
+- `e2.snapshotPlayers` — method, [669227, 669789); calls: `this.rooms.values`, `c.push`, `t.set`, `new Ys().rebuild`, `Object.assign`, `[...this.players.values()].map`, `this.players.values`, `e2.playerSnapshot`
+- `e2.dosatSelf` — method, [669789, 670495); calls: `[...this.players.values()].filter(o=>Rt(o.dosat)&&o.room&&!o.dead).slice(0,20).map`, `[...this.players.values()].filter(o=>Rt(o.dosat)&&o.room&&!o.dead).slice`, `[...this.players.values()].filter`, `this.players.values`, `Rt`, `Math.round`, `t.dsRetaliate.delete`, `i.push`, `td`, `Math.max`
+- `e2.playerSnapshot` — method, [670495, 671794); calls: `t.x.toFixed`, `t.y.toFixed`, `Math.ceil`, `t.weeklyGlow`, `e2.epoch`, `this.combat.flags`, `this.combat.sx`, `Yf`, `vf`, `m.find`
+- `e2.monsterSnapshot` — method, [671794, 672473); calls: `this.combat.flags`, `this.combat.sx`, `this.monsterSnaps.get`, `e2.monsterSnapshotBuild`, `this.monsterSnaps.set`
+- `e2.monsterSnapshotBuild` — method, [672473, 672951); calls: `t.x.toFixed`, `t.y.toFixed`, `Math.max`, `Math.ceil`
+- `e2.ktSelf` — method, [672951, 673083); calls: `e.self`
+- `e2.snapshot` — method, [673083, 678877); calls: `o.add`, `t.known.get`, `i.push`, `H.has`, `$.deltas.get`, `Object.keys`, `Array.isArray`, `D.every`, `($.deltas??($.deltas=new Map)).set`, `t.known.set`
+- `e2.eventsFor` — method, [678877, 679007); calls: `n.events.filter`, `n.near`, `e.push`
+- `e2.endTick` — method, [679007, 679128); calls: `this.rooms.values`, `this.players.values`
+- `e2.nodeStates` — method, [679128, 679208); calls: `n.nodes.map`, `Qo`
+
+## Dungeon / realm (56 indexed symbols)
+
+- `Xa.constructor` — constructor, [318233, 318632); calls: `T`, `Object.create`
+- `Xa.now` — getter, [318632, 318664); calls: `this.w.epoch`
+- `Xa.protected` — method, [318664, 318737); calls: —
+- `Xa.event` — method, [318737, 318807); calls: `this.events.find`
+- `Xa.inBossRoom` — method, [318807, 318916); calls: `Xa.event`, `Lt`, `Math.hypot`
+- `Xa.inRoom` — method, [318916, 318993); calls: `this.rooms.values`
+- `Xa.live` — method, [318993, 319029); calls: `this.rooms.get`
+- `Xa.portalOf` — method, [319029, 319086); calls: `this.portals.find`
+- `Xa.announce` — method, [319086, 319483); calls: `Lt`, `this.rooms.get`, `i.note`, `this.w.announce`, `this.w.global.push`
+- `Xa.reachable` — method, [319483, 320146); calls: `this.points.get`, `Math.ceil`, `e.nearestOpen`, `Math.floor`, `u.has`, `e.blocked`, `e.move`, `Math.hypot`, `u.add`, `c.push`
+- `Xa.openAt` — method, [320146, 320315); calls: `this.openCache.get`, `this.reachable(t).filter`, `Xa.reachable`, `t.collision.blocked`, `this.openCache.set`
+- `Xa.pointFar` — method, [320315, 320515); calls: `t.filter`, `n.every`, `Math.hypot`, `Math.floor`, `Math.random`
+- `Xa.openBands` — method, [320515, 320682); calls: `this.w.epoch`, `Ud.level`, `Y.map((n,e)=>({b:n,i:e})).filter(({b:n})=>n.min<=t&&!0&&n.hosts.some(e=>this.w.data.maps.has(e))).map`, `Y.map((n,e)=>({b:n,i:e})).filter`, `Y.map`, `n.hosts.some`, `this.w.data.maps.has`
+- `Xa.pickHost` — method, [320682, 320793); calls: `Y[t].hosts.filter`, `this.w.data.maps.has`, `Math.floor`, `Math.random`
+- `Xa.spawnAll` — method, [320793, 321005); calls: `La`, `Xa.openBands`, `Xa.spawn`, `e.push`, `console.error`, `Math.max`
+- `Xa.portalSpot` — method, [321005, 321790); calls: `n.map.gates.map`, `e.push`, `this.openAt(n,1.5).filter`, `Xa.openAt`, `e.every`, `Math.hypot`, `i.filter`, `h`, `Math.floor`, `Math.random`
+- `Xa.guardianPool` — method, [321790, 322008); calls: `Math.min`, `Math.max`, `Math.floor`, `t.monsters.filter(s=>!s.passive&&s.cls!=="boss"&&Math.hypot(s.hx-n.bossX,s.hy-n.bossY)>Se+4).filter((s,i)=>i%tx===0).slice`, `t.monsters.filter(s=>!s.passive&&s.cls!=="boss"&&Math.hypot(s.hx-n.bossX,s.hy-n.bossY)>Se+4).filter`, `t.monsters.filter`, `Math.hypot`
+- `Xa.layout` — method, [322008, 322331); calls: `this.w.room`, `Xa.openAt`, `Xa.pointFar`, `this.openAt(n,.6).slice`, `o.push`
+- `Xa.defs` — method, [322331, 322407); calls: `at.map((t,n)=>n).filter`, `at.map`, `this.w.data.maps.has`
+- `Xa.spawn` — method, [322407, 326253); calls: `La`, `this.portals.some`, `Xa.pickHost`, `this.w.data.maps.has`, `Xa.defs`, `r.includes`, `Math.floor`, `Math.random`, `this.w.room`, `Xa.portalSpot`
+- `Xa.instance` — method, [326253, 327853); calls: `Xa.defs`, `Math.floor`, `Math.random`, `Xa.layout`, `this.w.newId`, `Xa.pointFar`, `[0,1].map`, `Jv`, `[1,2,3].map`, `Zv`
+- `Xa.bossMonster` — method, [327853, 328358); calls: `this.w.newId`, `Math.min`, `Wt`, `wt`
+- `Xa.guardian` — method, [328358, 328812); calls: `Math.max`, `Math.round`, `xn`, `this.w.newId`, `Wt`, `Je`, `wt`
+- `Xa.makeRoom` — method, [328812, 329730); calls: `this.w.room`, `this.openAt(e,.6).slice`, `Xa.openAt`, `this.w.createRealmRoom`, `Ma`, `Lt`, `this.rooms.set`, `Xa.spawnFloor`, `Qs`, `cl`
+- `Xa.spawnFloor` — method, [329730, 330368); calls: `this.w.room`, `Ma`, `Qs`, `i.monsters.filter`, `t.points.filter`, `Math.hypot`, `c.has`, `n.room.monsters.push`, `Xa.guardian`, `Xa.bossMonster`
+- `Xa.save` — method, [330368, 330875); calls: `this.rooms.get`, `this.portals.map`, `structuredClone`, `this.events.map`, `Object.fromEntries`, `[...this.w.players.values()].filter(t=>t.realm\|\|this.disconnected.has(t)).map`, `[...this.w.players.values()].filter`, `this.w.players.values`, `this.disconnected.has`, `t.profile`
+- `Xa.restore` — method, [330875, 331454); calls: `Object.assign`, `Object.create`, `Io`, `La`, `Number.isInteger`, `Ma`, `Xa.makeRoom`, `Xa.tick`
+- `Xa.resume` — method, [331454, 331730); calls: `[...this.disconnected.keys()].find`, `this.disconnected.keys`, `this.disconnected.delete`, `n.known.clear`, `Object.hasOwn`
+- `Xa.join` — method, [331730, 332000); calls: `Xa.event`, `this.w.placeInRoom`, `Xa.live`, `Math.max`, `Xa.extract`
+- `Xa.disconnect` — method, [332000, 332161); calls: `Xa.cancel`, `this.disconnected.set`
+- `Xa.payItems` — method, [332161, 332313); calls: `s`, `n`
+- `Xa.offlineChau` — method, [332313, 332541); calls: `sa`, `xs`, `Math.floor`, `Math.random`
+- `Xa.bagToProfile` — method, [332541, 333290); calls: `ts`, `yl`, `s.set`, `s.get`, `Xa.payItems`, `(n.rewards??[]).flatMap`, `Xa.offlineChau`, `pv`, `hl`, `P0`
+- `Xa.extract` — method, [333290, 334699); calls: `yl`, `t.give`, `Xa.payItems`, `(e.rewards??[]).flatMap`, `Fn`, `t.note`, `hl`, `yv`, `t.grantRewardGear`, `as`
+- `Xa.closeIfEmpty` — method, [334699, 334913); calls: `[...this.w.players.values()].some`, `this.w.players.values`, `Object.values(this.sleeping).some`, `Object.values`, `Xa.close`
+- `Xa.close` — method, [334913, 335431); calls: `this.events.includes`, `this.events.filter`, `this.w.players.values`, `Xa.extract`, `Object.values`, `Xa.bagToProfile`, `Lt`, `Xa.announce`, `this.w.rooms.delete`, `this.rooms.delete`
+- `Xa.onDeath` — method, [335431, 336315); calls: `Xa.event`, `Lt`, `[...((i=t.room)==null?void 0:i.players)??[]].find`, `this.w.record`, `Qv`, `Xa.bag`, `r.items.map`, `o.realm.gear.slice(-r.gear.length).map`, `o.realm.gear.slice`, `o.note`
+- `Xa.cancel` — method, [336315, 336445); calls: `this.channels.get`, `this.channels.delete`, `this.opening.get`, `this.opening.delete`
+- `Xa.unprotect` — method, [336445, 336678); calls: `Xa.event`
+- `Xa.enter` — method, [336678, 338908); calls: `this.portals.find`, `$v.includes`, `Math.hypot`, `R0`, `dv`, `this.events.find`, `S.includes`, `v.members.some`, `c.members.includes`, `gv`
+- `Xa.action` — method, [338908, 340378); calls: `Xa.unprotect`, `Xa.extract`, `n.startsWith`, `Xa.enter`, `t.note`, `Xa.event`, `Xa.nextFloor`, `i.chests.find`, `i.exits.some`, `Math.hypot`
+- `Xa.nextFloor` — method, [340378, 340861); calls: `t.note`, `Xa.live`, `Xa.spawnFloor`, `n.points.find`, `Math.hypot`, `this.w.placeInRoom`, `t.events.push`
+- `Xa.damage` — method, [340861, 342342); calls: `this.events.find`, `this.rooms.get`, `Xa.protected`, `Lt`, `Math.max`, `i.seals.some`, `o.owners.set`, `o.owners.delete`, `o.owners.get`, `Math.min`
+- `Xa.hitSeals` — method, [342342, 342823); calls: `Xa.event`, `Xa.protected`, `Math.hypot`, `n.seals.every`, `Lt`, `t.note`, `Xa.announce`
+- `Xa.killed` — method, [342823, 345681); calls: `this.events.find`, `Xa.live`, `Lt`, `s.room.events.push`, `[...s.room.players].filter`, `this.disconnected.has`, `Sv`, `this.w.record`, `e.chests.push`, `Xa.pointFar`
+- `Xa.eliteLoot` — method, [345681, 345913); calls: `this.events.find`, `this.rooms.get`
+- `Xa.guardianSlain` — method, [345913, 346743); calls: `this.events.find`, `this.rooms.get`, `(s.slain??(s.slain=[])).includes`, `s.slain.push`, `Math.floor`, `this.live(s).room.monsters.some`, `Xa.live`, `s.chests.push`, `Xa.announce`
+- `Xa.bag` — method, [346743, 347483); calls: `s.items.find`, `s.items.push`, `Xa.event`, `ja`, `Math.imul`, `p.charCodeAt`, `mn`, `Ma`, `ds`, `Vt`
+- `Xa.realmGear` — method, [347483, 348028); calls: `es.includes`, `Vt`, `ja`, `Math.random`, `ot`, `B0`, `this.w.newId`, `Math.max`, `Math.min`, `Ye.filter`
+- `Xa.claim` — method, [348028, 348843); calls: `t.mailVerified`, `t.note`, `Nt`, `this.opening.delete`, `Xa.bag`, `((i=t.realm).rewards??(i.rewards=[])).push`, `Ml[e.kind].toLowerCase`, `[...s.items.map(([r,h])=>`${h} ${r}`),...s.gear?[((o=t.realm.gear.at(-1))==null?void 0:o.name)??s.gear.name]:[],...s.skill?["Bí kíp truyền thừa"]:[]].join`, `s.items.map`, `t.realm.gear.at`
+- `Xa.bossTick` — method, [348843, 350558); calls: `Xa.live`, `Lt`, `Xa.protected`, `Math.hypot`, `Math.min`, `c.push`, `Math.cos`, `Math.sin`, `t.hazards.push`, `this.w.newId`
+- `Xa.heraldNext` — method, [350558, 351051); calls: `Fo`, `Xa.openBands`, `Xa.pickHost`, `Object.entries(e).map(([o,r])=>{var h;return`${Y[+o].name}: ${((h=this.w.data.titles[r])==null?void 0:h.title)??r}`}).join`, `Object.entries(e).map`, `Object.entries`, `this.w.global.push`, `il`, `Math.ceil`
+- `Xa.gmOpen` — method, [351051, 351324); calls: `this.portals.filter(s=>s.ends>this.now).map`, `this.portals.filter`, `Xa.openBands`, `n.has`, `Xa.spawn`, `Math.max`, `Math.min`, `console.error`
+- `Xa.gmList` — method, [351324, 351994); calls: `this.events.filter(t=>!t.closeAt\|\|t.closeAt>this.now).map`, `this.events.filter`, `this.rooms.get`, `[...n.players].filter`, `Lt`, `this.w.data.maps.get`, `e.filter`, `Math.max`, `Math.round`
+- `Xa.tick` — method, [351994, 353854); calls: `this.w.epoch`, `Xa.close`, `Lt`, `e.announced.includes`, `e.announced.push`, `Xa.announce`, `Xa.bossTick`, `this.portals.some`, `this.portals.filter`, `Xa.event`
+- `Xa.state` — method, [353854, 356219); calls: `Xa.event`, `this.rooms.get`, `this.channels.get`, `wv`, `Xa.portalOf`, `this.portals.filter(l=>l.band===o\|\|l.host===r\|\|l===h).map`, `this.portals.filter`, `this.events.find`, `Fo`, `Lt`
+
+## Player profile, progression (18 indexed symbols)
+
+- `Ql.constructor` — constructor, [549471, 559166); calls: `T`, `wf`, `Am`, `Zm`, `th`, `wt`, `Ia`, `ts`, `kn`, `mh`
+- `Ql.applyLevel` — method, [559166, 561085); calls: `kn`, `[...this.worn.values()].map(r=>this.gear.find(h=>h.uid===r)).filter`, `[...this.worn.values()].map`, `this.worn.values`, `this.gear.find`, `ge`, `n.map`, `Cf`, `Hf`, `is`
+- `Ql.give` — method, [561085, 561644); calls: `Number.isSafeInteger`, `Object.hasOwn`, `Math.max`, `fo`, `zn`, `gu`, `ot`, `Date.now().toString`, `Date.now`, `this.gear.push`
+- `Ql.count` — method, [561644, 561679); calls: `this.inv.get`
+- `Ql.freeCount` — method, [561679, 561864); calls: `Ql.count`, `Object.hasOwn`, `Number.isSafeInteger`, `Math.max`
+- `Ql.takeFree` — method, [561864, 561990); calls: `Number.isSafeInteger`, `Ql.freeCount`, `this.inv.set`, `Ql.count`
+- `Ql.grantRewardGear` — method, [561990, 562370); calls: `He`, `this.gear.some`, `n.gear.some`, `this.pendingGear.some`, `Ql.gearFits`, `this.gear.push`, `this.pendingGear.push`, `Ql.note`
+- `Ql.grantGmSkills` — method, [562370, 562419); calls: `Ql.grantAllSkills`
+- `Ql.grantAllSkills` — method, [562419, 562877); calls: `this.def.skills.slice`, `this.learnedSkills.includes`, `this.learnedSkills.push`, `ea`, `this.def.skills.slice(5).find`, `this.skillSlots.includes`
+- `Ql.gearFits` — method, [562877, 562940); calls: `Lf`, `this.worn.values`
+- `Ql.giveGear` — method, [562940, 563159); calls: `gu`, `ot`, `zn`, `Date.now().toString`, `Date.now`, `Math.max`, `Math.min`, `this.gear.push`
+- `Ql.savePills` — method, [563159, 563337); calls: `s.push`
+- `Ql.profile` — method, [563337, 565980); calls: `t.epoch`, `Date.now`, `Object.fromEntries`, `Object.entries(this.rootExtra).map`, `Object.entries`, `Math.max`, `Object.entries(this.cd).filter(([g,d])=>/^[1-6]$/.test(g)\|\|g.startsWith("skill:")).filter(([,g])=>g>e).map`, `Object.entries(this.cd).filter(([g,d])=>/^[1-6]$/.test(g)\|\|g.startsWith("skill:")).filter`, `Object.entries(this.cd).filter`, `/^[1-6]$/.test`
+- `Ql.statSheet` — method, [565980, 566347); calls: `Math.round`, `Hm`, `t`, `Math.min`
+- `Ql.note` — method, [566347, 566391); calls: `this.events.push`
+- `Ql.toast` — method, [566391, 566437); calls: `this.events.push`
+- `Ql.weeklyGlow` — method, [566437, 566503); calls: `this.titles.owned.some`, `os`, `Ei`
+- `Ql.outfitCheck` — method, [566503, 567376); calls: `o.uid.startsWith`, `this.gear.some`, `this.pendingGear.some`, `r.startsWith`, `this.worn.delete`, `this.gear.filter`, `e`, `this.pendingGear.filter`, `Ql.applyLevel`, `Ql.note`
+
+## Collision and spatial (14 indexed symbols)
+
+- `Ln.constructor` — constructor, [2794, 4581); calls: `T`, `e.slice`, `m.every`, `Math.abs`, `[0,2,4].map(d=>`${m[d]},${m[d+1]}`).sort().join`, `[0,2,4].map(d=>`${m[d]},${m[d+1]}`).sort`, `[0,2,4].map`, `s.has`, `s.add`, `i.push`
+- `Ln.segmentCount` — getter, [4581, 4626); calls: —
+- `Ln.fill` — method, [4626, 5101); calls: `Math.max`, `Math.floor`, `Math.min`, `Math.ceil`, `Math.abs`
+- `Ln.blockedCell` — method, [5101, 5246); calls: `Math.floor`
+- `Ln.near` — method, [5246, 5650); calls: `this.seen.fill`, `Math.max`, `Math.floor`, `this.cells.get`
+- `Ln.wallDistance` — method, [5650, 5943); calls: `Ln.near`, `Math.max`, `Math.min`, `Math.hypot`
+- `Ln.blocked` — method, [5943, 6097); calls: `Ln.blockedCell`, `Ln.wallDistance`
+- `Ln.nearestOpen` — method, [6097, 6442); calls: `Number.isFinite`, `Ln.clampX`, `Ln.clampY`, `Ln.blocked`, `Math.ceil`, `Math.cos`, `Math.sin`
+- `Ln.cast` — method, [6442, 7581); calls: `Math.min`, `Math.max`, `Ln.near`, `Math.hypot`, `Math.sqrt`
+- `Ln.sweep` — method, [7581, 7853); calls: `Math.hypot`, `Ln.cast`, `Math.max`, `Math.min`
+- `Ln.move` — method, [7853, 8088); calls: `Math.hypot`, `Ln.clampX`, `Ln.clampY`, `Math.max`, `Math.ceil`, `Ln.sweep`
+- `Ln.walk` — method, [8088, 8432); calls: `Math.hypot`, `Ln.move`, `m`, `Math.cos`, `Math.sin`
+- `Ln.clampX` — method, [8432, 8488); calls: `Math.max`, `Math.min`
+- `Ln.clampY` — method, [8488, 8545); calls: `Math.max`, `Math.min`
+
+## Equipment modifiers (10 indexed symbols)
+
+- `Jf.constructor` — constructor, [11013, 11081); calls: —
+- `Jf.cast` — method, [11081, 11677); calls: `hn`, `rn`, `lt`, `Math.min`, `["van-kiem","co-vuong","thien-ma","loi-kiem","van-co","huyet-nguyet"].includes`
+- `Jf.multiplier` — method, [11677, 12245); calls: `hn`, `lt`, `n.st.dots.some`
+- `Jf.landed` — method, [12245, 13998); calls: `hn`, `String`, `Jf.heal`, `rn`, `Math.min`, `Jf.hit`, `this.foes(t,n).filter(l=>l!==e&&!l.dead&&Math.hypot(l.x-e.x,l.y-e.y)<=la.radius).slice`, `this.foes(t,n).filter`, `Jf.foes`, `Math.hypot`
+- `Jf.hurt` — method, [13998, 14695); calls: `hn`, `r.world.epoch`, `Date.now`, `lt`, `t.note`, `Math.round`, `rn`
+- `Jf.absorb` — method, [14695, 14893); calls: `hn`, `lt`, `Math.min`
+- `Jf.shield` — method, [14893, 14953); calls: `hn`
+- `Jf.speed` — method, [14953, 15051); calls: `hn`
+- `Jf.detonate` — method, [15051, 15173); calls: `hn`, `rn`
+- `Jf.tick` — method, [15173, 15667); calls: `hn`, `lt`, `Jf.heal`, `this.foes(t,n).filter(r=>Math.hypot(r.x-i.x,r.y-i.y)<=2.5).slice`, `this.foes(t,n).filter`, `Jf.foes`, `Math.hypot`, `i.marked.has`, `i.marked.add`, `Jf.mark`
+
+## Quests (25 indexed symbols)
+
+- `Fk.constructor` — constructor, [185218, 185432); calls: `T`
+- `Fk.def` — method, [185432, 185577); calls: `this.data.quests.map`, `this.index.get`
+- `Fk.rec` — method, [185577, 185611); calls: `this.records.get`
+- `Fk.claimed` — method, [185611, 185688); calls: `this.records.get`
+- `Fk.available` — method, [185688, 185823); calls: `this.records.has`, `(t.requires??[]).every`, `Fk.claimed`, `Fk.level`, `Fk.allowed`
+- `Fk.allowed` — method, [185823, 186010); calls: `this.ctx.classId`, `Ns`, `this.ctx.bookOpen`
+- `Fk.skips` — method, [186010, 186054); calls: `Ns`
+- `Fk.npcLine` — method, [186054, 186215); calls: `Fk.claimed`, `Ns`
+- `Fk.text` — method, [186215, 186345); calls: `Object.entries`, `Ns`
+- `Fk.choose` — method, [186345, 186670); calls: `Fk.active`, `s.choice.options.some`, `s.goals.findIndex`, `this.records.get`
+- `Fk.pin` — method, [186670, 186800); calls: `this.records.has`, `Fk.claimed`, `[t,...this.pins.filter(n=>n!==t)].slice`, `this.pins.filter`
+- `Fk.unpin` — method, [186800, 186846); calls: `this.pins.filter`
+- `Fk.active` — method, [186846, 186949); calls: `[...this.records.values()].filter(t=>!t.claimed).map(t=>this.def(t.id)).filter`, `[...this.records.values()].filter(t=>!t.claimed).map`, `[...this.records.values()].filter`, `this.records.values`, `Fk.def`
+- `Fk.lock` — method, [186949, 187060); calls: `this.data.unlocks.find`, `Fk.claimed`, `Fk.def`
+- `Fk.accept` — method, [187060, 187254); calls: `Fk.def`, `Fk.available`, `this.records.set`, `n.goals.map`, `Fk.refreshState`
+- `Fk.progress` — method, [187254, 187462); calls: `Fk.def`, `this.records.get`, `n.goals.map`, `Fk.skips`, `s[0].startsWith`, `Math.min`, `this.inventory().get`, `Fk.inventory`, `s[0].slice`
+- `Fk.goalsLeft` — method, [187462, 187588); calls: `Fk.def`, `Fk.progress`, `n.goals.filter((s,i)=>e[i]<s[2]&&!this.skips(s)).map`, `n.goals.filter`, `Fk.skips`
+- `Fk.complete` — method, [187588, 187694); calls: `Fk.def`, `Fk.rec`, `this.progress(t).every`, `Fk.progress`
+- `Fk.claim` — method, [187694, 188323); calls: `Fk.def`, `this.records.get`, `Fk.complete`, `Oe`, `r[0].startsWith`, `Fk.skips`, `r[0].slice`, `Fk.inventory`, `Fk.consume`, `c.set`
+- `Fk.record` — method, [188323, 188775); calls: `this.records.values`, `Fk.def`, `i.goals.forEach`, `Uk.test`, `Fk.skips`, `o[0].startsWith`, `h.endsWith`, `t.startsWith`, `h.startsWith`, `h.includes`
+- `Fk.refreshState` — method, [188775, 189028); calls: `this.records.values`, `Fk.def`, `n.goals.forEach`, `o.call`, `Math.min`, `Math.max`
+- `Fk.forNpc` — method, [189028, 189313); calls: `this.active().filter`, `Fk.active`, `Oe`, `Fk.complete`, `this.data.quests.filter`, `Vm`, `Fk.available`, `n.goals.some`, `e[0].startsWith`, `Fk.progress`
+- `Fk.mark` — method, [189313, 189409); calls: `Fk.forNpc`
+- `Fk.save` — method, [189409, 189683); calls: `[...this.records.values()].map`, `this.records.values`, `Fk.def`, `n.goals.map`, `Object.keys`
+- `Fk.load` — method, [189683, 190281); calls: `Object.entries`, `(Array.isArray(t.pins)?t.pins:[]).filter(n=>typeof n=="string"&&this.def(n)).slice`, `(Array.isArray(t.pins)?t.pins:[]).filter`, `Array.isArray`, `Fk.def`, `this.records.clear`, `this.records.set`, `this.def(n.id).goals.map`, `Math.min`, `Math.max`
+
+## Fishing (19 indexed symbols)
+
+- `my.constructor` — constructor, [195371, 195397); calls: —
+- `my.spots` — method, [195397, 195424); calls: —
+- `my.nearest` — method, [195424, 195550); calls: `this.spots(t).forEach`, `my.spots`, `Math.hypot`
+- `my.waterAt` — method, [195550, 195724); calls: `Math.floor`
+- `my.aim` — method, [195724, 195995); calls: `Math.cos`, `Math.sin`, `my.waterAt`
+- `my.rodIndex` — method, [195995, 196127); calls: `n.forEach`, `t.count`
+- `my.rod` — method, [196127, 196250); calls: `my.rodIndex`
+- `my.cancel` — method, [196250, 196329); calls: `t.note`
+- `my.pos` — method, [196329, 196368); calls: `uy`
+- `my.verify` — method, [196368, 196581); calls: `my.pos`, `Math.min`, `Math.max`, `Number.isFinite`, `kh`
+- `my.action` — method, [196581, 198141); calls: `my.cancel`, `my.buyRod`, `Number`, `o`, `my.startReel`, `n.note`, `ka`, `my.release`, `my.aim`, `my.nearest`
+- `my.release` — method, [198141, 198605); calls: `my.verify`, `(o.dist[0]+(o.dist[1]-o.dist[0])*r).toFixed`, `t.note`
+- `my.pick` — method, [198605, 198910); calls: `Math.max`, `s.reduce`, `i`, `Math.random`
+- `my.tier` — method, [198910, 199007); calls: —
+- `my.startReel` — method, [199007, 199500); calls: `my.pick`, `my.cancel`, `Math.pow`, `Math.random`, `(r.kg[0]+(r.kg[1]-r.kg[0])*e.size).toFixed`, `my.tier`, `my.rod`, `cy`, `ka`
+- `my.land` — method, [199500, 200393); calls: `t.give`, `t.note`, `Vn`, `Date.now`, `Math.max`, `Math.round`, `tc`, `t.toast`
+- `my.buyRod` — method, [200393, 201115); calls: `Number.isInteger`, `t.note`, `my.rodIndex`, `t.count`, `o.price.toLocaleString`, `t.give`, `t.toast`, `Math.round`
+- `my.tick` — method, [201115, 202951); calls: `Math.hypot`, `my.cancel`, `my.release`, `Math.max`, `ka`, `n.note`, `Math.random`, `Math.abs`, `Math.min`, `my.land`
+- `my.view` — method, [202951, 203868); calls: `i.toFixed`, `o.toFixed`, `(e.u0+e.sp*(n-e.t0)).toFixed`, `Object.assign`, `Math.max`, `(e.until-n).toFixed`, `e.c.toFixed`, `e.kim.toFixed`, `e.bw.toFixed`, `e.kv.toFixed`
+
+## World spatial helpers (3 indexed symbols)
+
+- `Ys.constructor` — constructor, [183945, 184081); calls: `T`
+- `Ys.rebuild` — method, [184081, 184484); calls: `this.cells.clear`, `Math.floor`, `Ou`, `Number.isFinite`, `this.cells.get`, `o.push`, `this.cells.set`
+- `Ys.query` — method, [184484, 184872); calls: `Math.max`, `Math.floor`, `Math.min`, `this.cells.get`, `Ou`, `Math.abs`, `i.push`
+
+## Game and class definitions (20 indexed symbols)
+
+- `er` — variable, [26208, 27145); calls: —
+- `it` — variable, [27146, 27342); calls: —
+- `wm` — function, [27864, 28034); calls: —
+- `ar` — variable, [28040, 29947); calls: —
+- `Tm` — variable, [29948, 29990); calls: —
+- `ee` — function, [35106, 35652); calls: `a.split`, `Number`, `Number.isInteger`, `Jl`
+- `U1` — function, [35777, 40365); calls: `t`, `a.skills.slice(0,5).map`, `a.skills.slice`
+- `$n` — variable, [40371, 40491); calls: —
+- `Ka` — variable, [40492, 40533); calls: —
+- `Re` — variable, [40534, 40636); calls: —
+- `K1` — variable, [40651, 79713); calls: —
+- `Gn` — variable, [79758, 80162); calls: —
+- `F1` — variable, [80268, 80518); calls: —
+- `q1` — variable, [80828, 81152); calls: —
+- `Cu` — variable, [81153, 81203); calls: —
+- `wt` — arrow_function, [81204, 81464); calls: —
+- `Ia` — arrow_function, [81465, 81832); calls: —
+- `is` — function, [82366, 82476); calls: —
+- `ea` — function, [82476, 82861); calls: `yn`, `[...s.slice(0,5),...s.slice(5).filter(c=>c.free)].map`, `s.slice`, `s.slice(5).filter`, `Array.isArray`, `i.slice`, `s.slice(5).find`, `Array.from`, `o.has`, `s.some`
+- `Nu` — function, [83064, 83258); calls: `/^[1-6]$/.test`, `yn`, `s.find`, `Number`, `s.slice(5).find`, `s.slice`, `s.slice(0,5).find`, `String`
+
+## Elements / roots (16 indexed symbols)
+
+- `Zf` — variable, [15710, 15716); calls: —
+- `a1` — variable, [15881, 19381); calls: —
+- `s1` — variable, [19409, 22483); calls: —
+- `na` — function, [22516, 22814); calls: `Jn`, `[0,1].flatMap`, `t.nodes.slice`, `s1[t.id].slice`, `e.map`, `Math.min`
+- `o1` — function, [22852, 23445); calls: `Array.isArray`, `Jn`, `a.elements.find`, `Number.isFinite`, `Math.max`, `Math.floor`, `e`, `Math.min`, `na`, `i.has`
+- `vm` — function, [23445, 23795); calls: `na(a.active).find`, `na`, `s.includes`, `ui`, `na(a.active).some`, `bm`
+- `h1` — arrow_function, [23894, 23993); calls: `Bt`
+- `vu` — arrow_function, [23994, 24125); calls: `Math.min`, `Math.ceil`, `Bt`
+- `r1` — arrow_function, [24126, 24187); calls: `Bt`
+- `xu` — arrow_function, [24188, 24327); calls: `Bt`, `Number`
+- `Dn` — variable, [24328, 24843); calls: —
+- `ss` — variable, [24862, 24868); calls: —
+- `Gi` — arrow_function, [25056, 25139); calls: `Math.max`, `Math.min`, `Math.floor`
+- `m1` — function, [25182, 25315); calls: `Dn.reduce`
+- `d1` — function, [25315, 25517); calls: `Math.floor`, `Math.min`
+- `Mm` — function, [25539, 25752); calls: `Gi`, `na`, `n.has`
+
+## Other modules / utilities (1084 indexed symbols)
+
+- `wg` — variable, [4, 28); calls: —
+- `Tg` — arrow_function, [33, 118); calls: `wg`
+- `T` — arrow_function, [123, 167); calls: `Tg`
+- `rt` — variable, [2739, 2746); calls: —
+- `fu` — variable, [2747, 2754); calls: —
+- `ko` — variable, [2755, 2761); calls: —
+- `Df` — variable, [2762, 2769); calls: —
+- `on` — variable, [2770, 2774); calls: —
+- `wn` — variable, [2775, 2781); calls: —
+- `Ln` — variable, [2782, 8546); calls: —
+- `ih` — variable, [8565, 8570); calls: —
+- `ku` — variable, [8577, 8583); calls: —
+- `yo` — variable, [8584, 8590); calls: —
+- `Uf` — variable, [8591, 8595); calls: —
+- `Kf` — variable, [8596, 8602); calls: —
+- `If` — variable, [8603, 8608); calls: —
+- `yu` — variable, [8609, 8614); calls: —
+- `di` — variable, [8615, 8621); calls: —
+- `ym` — arrow_function, [8622, 8653); calls: `Math.max`
+- `Ff` — function, [8654, 8811); calls: `Math.max`, `Math.min`, `Math.floor`, `Math.ceil`
+- `qf` — function, [8811, 8954); calls: `Math.max`, `Math.min`, `Number.isFinite`, `Math.round`
+- `ke` — variable, [8960, 8964); calls: —
+- `Of` — variable, [8965, 8971); calls: —
+- `Gf` — variable, [8972, 8977); calls: —
+- `gi` — arrow_function, [8978, 9055); calls: `Math.max`, `Math.min`, `Math.floor`, `Number`
+- `nr` — arrow_function, [9056, 9097); calls: `Math.max`, `Math.min`
+- `Vf` — arrow_function, [9098, 9116); calls: —
+- `Ef` — function, [9117, 9345); calls: `Array.isArray`, `Object.entries(a).slice`, `Object.entries`, `Math.floor`, `Number`, `Math.min`
+- `jf` — variable, [9351, 9356); calls: —
+- `Wf` — arrow_function, [9357, 9413); calls: `Vf`, `Math.min`, `Math.max`
+- `Xf` — variable, [9414, 9420); calls: —
+- `Qf` — variable, [9421, 9477); calls: —
+- `C3` — arrow_function, [9478, 9554); calls: `Qf.has`, `Math.max`
+- `zf` — arrow_function, [9555, 9605); calls: `String(Math.round(a*10)/10).replace`, `String`, `Math.round`
+- `H3` — arrow_function, [9606, 9677); calls: `a.replace`, `zf`
+- `pu` — variable, [9678, 9692); calls: —
+- `bu` — variable, [9693, 9707); calls: —
+- `Yf` — function, [9708, 9740); calls: `pm`
+- `pm` — function, [9740, 10223); calls: `bu.get`, `a.worn.values`, `n.map`, `a.gear.find`, `e.map`, `bu.set`
+- `hn` — function, [10223, 10869); calls: `pm`, `t.raw.filter`, `t.ids.join`, `pu.get`, `Yl(n,a.classId).filter(o=>o.pieces>=5).map`, `Yl(n,a.classId).filter`, `Yl`, `pu.set`
+- `lt` — arrow_function, [10875, 10931); calls: `a.sets.has`, `t.startsWith`
+- `rn` — function, [10932, 11004); calls: `lt`
+- `Jf` — class, [11004, 15668); calls: —
+- `oh` — variable, [15674, 15709); calls: —
+- `t1` — arrow_function, [15717, 15769); calls: `Math.max`, `Math.min`, `Math.floor`
+- `n1` — variable, [15770, 15774); calls: —
+- `Te` — variable, [15775, 15792); calls: —
+- `e1` — arrow_function, [15793, 15880); calls: —
+- `Jn` — arrow_function, [19382, 19408); calls: `a1.find`
+- `i1` — variable, [22484, 22515); calls: —
+- `bm` — arrow_function, [22820, 22851); calls: `i1.filter`
+- `Bt` — arrow_function, [23801, 23893); calls: `n.includes`
+- `Tn` — variable, [24844, 24861); calls: —
+- `xm` — variable, [24869, 24986); calls: —
+- `Hs` — variable, [24987, 24992); calls: —
+- `u1` — variable, [24993, 25003); calls: —
+- `c1` — arrow_function, [25004, 25055); calls: `Math.max`, `Math.min`, `Math.floor`
+- `l1` — arrow_function, [25140, 25161); calls: `Gi`
+- `Ls` — arrow_function, [25162, 25181); calls: `Gi`
+- `g1` — variable, [25523, 25530); calls: —
+- `f1` — variable, [25531, 25538); calls: —
+- `k1` — variable, [25758, 25793); calls: —
+- `Et` — function, [25794, 25917); calls: `e.find`
+- `po` — function, [25917, 26202); calls: `Number.isFinite`, `Math.min`, `(a.debuffs??[]).filter`, `r.findIndex`, `r.push`
+- `Sn` — arrow_function, [27343, 27362); calls: —
+- `y1` — variable, [27409, 27536); calls: —
+- `p1` — variable, [27537, 27715); calls: —
+- `b1` — variable, [27716, 27830); calls: —
+- `v1` — variable, [27831, 27857); calls: —
+- `x1` — variable, [27858, 27863); calls: —
+- `fi` — arrow_function, [29991, 30035); calls: `ar.filter`
+- `$m` — arrow_function, [30036, 30064); calls: —
+- `L3` — variable, [30065, 30098); calls: —
+- `ki` — arrow_function, [30099, 30154); calls: `Math.max`, `Math.min`
+- `Vi` — function, [30155, 30274); calls: `/^([a-z]+)([0-3])$/.exec`, `Number`
+- `bo` — arrow_function, [30280, 30343); calls: `Vi`
+- `hh` — variable, [30344, 30354); calls: —
+- `Mu` — variable, [30355, 30380); calls: —
+- `M1` — variable, [30381, 30522); calls: —
+- `w1` — function, [30523, 30746); calls: `Array.isArray`, `[...new Set(t.f.filter(e=>typeof e=="string"&&Vi(e)))].slice`, `t.f.filter`, `Vi`, `n.includes`
+- `Sm` — arrow_function, [30752, 30808); calls: `Vi`, `sr`
+- `sr` — function, [30809, 31083); calls: `vn`, `Vi`, `fi`, `n.bag.find`, `ki`, `Math.min`, `$m`
+- `T1` — variable, [31818, 31846); calls: —
+- `$1` — arrow_function, [31847, 31940); calls: `ki`, `fi`, `$m`
+- `yi` — variable, [31941, 31946); calls: —
+- `S1` — variable, [31947, 31953); calls: —
+- `wu` — arrow_function, [31954, 31989); calls: `Math.max`, `Math.min`
+- `C1` — variable, [31990, 31994); calls: —
+- `H1` — variable, [31995, 32625); calls: —
+- `L1` — variable, [32626, 32662); calls: —
+- `Cm` — function, [32663, 32852); calls: `a.startsWith`
+- `Hm` — function, [32852, 33010); calls: `Math.max`, `Math.min`, `wu`
+- `Tu` — function, [33010, 33198); calls: `Math.max`, `Hm`
+- `P1` — function, [33198, 33388); calls: `Cm`, `Math.min`, `Math.max`
+- `$u` — arrow_function, [33394, 33493); calls: —
+- `vo` — variable, [33494, 33526); calls: —
+- `xo` — variable, [33527, 33562); calls: —
+- `A1` — variable, [33563, 34538); calls: —
+- `Su` — variable, [34539, 34549); calls: —
+- `R1` — function, [34550, 34691); calls: `Su.get`, `A1.find`, `n.prefix.some`, `a.startsWith`, `Su.set`
+- `N1` — variable, [34697, 35105); calls: —
+- `P3` — arrow_function, [35658, 35756); calls: `ee`, `Jl`
+- `B1` — variable, [35757, 35763); calls: —
+- `_1` — variable, [35764, 35770); calls: —
+- `D1` — variable, [35771, 35776); calls: —
+- `bt` — variable, [40637, 40643); calls: —
+- `Ps` — variable, [40644, 40650); calls: —
+- `I1` — variable, [79714, 79757); calls: —
+- `X` — arrow_function, [81833, 81851); calls: —
+- `Hu` — variable, [81852, 81925); calls: —
+- `O1` — variable, [81926, 81947); calls: —
+- `F` — arrow_function, [81948, 81969); calls: `a.pas.get`
+- `fa` — arrow_function, [81970, 81993); calls: —
+- `Lu` — variable, [81994, 82008); calls: —
+- `un` — function, [82009, 82191); calls: `Lu.get`, `Lu.set`
+- `et` — arrow_function, [82197, 82254); calls: `un`
+- `Pu` — arrow_function, [82255, 82297); calls: —
+- `ir` — arrow_function, [82298, 82339); calls: `Math.log`
+- `yn` — arrow_function, [82340, 82365); calls: —
+- `G1` — variable, [82867, 82873); calls: —
+- `rh` — variable, [82874, 82903); calls: —
+- `Gt` — variable, [82904, 82937); calls: —
+- `uh` — variable, [82938, 82943); calls: —
+- `or` — arrow_function, [82944, 82991); calls: `Gg`
+- `Au` — arrow_function, [82992, 83027); calls: `or`
+- `Ru` — arrow_function, [83028, 83063); calls: `or`
+- `V1` — variable, [83264, 83268); calls: —
+- `E1` — arrow_function, [83269, 83310); calls: `yn`
+- `j1` — class, [83311, 148242); calls: —
+- `Ca` — function, [148242, 148375); calls: `Math.atan2`, `Math.abs`, `Lm`
+- `Lm` — function, [148375, 148485); calls: `Math.atan2`, `Math.round`
+- `W1` — variable, [148491, 148497); calls: —
+- `X1` — variable, [148498, 148506); calls: —
+- `Bu` — variable, [148507, 148516); calls: —
+- `ys` — function, [148517, 148648); calls: `Date.UTC`, `t.getUTCFullYear`, `t.getUTCMonth`, `t.getUTCDate`, `t.getUTCDay`
+- `Q1` — function, [148648, 149057); calls: `Object.create`, `Array.isArray`, `Object.entries`, `Number.isFinite`, `Number.isSafeInteger`, `Math.max`
+- `z1` — variable, [149063, 149072); calls: —
+- `Y1` — function, [149073, 149531); calls: `Number.isFinite`, `ys`, `Object.assign`, `Object.create`, `Number.isSafeInteger`, `Math.max`, `Object.entries`, `Object.hasOwn`
+- `J1` — function, [149531, 149684); calls: `ys`, `Date.now`, `Number.isSafeInteger`, `Math.max`
+- `Z1` — function, [149684, 149842); calls: `Number.isFinite`, `Math.round`, `tk`
+- `tk` — function, [149842, 150443); calls: `Ua`, `kn`, `Object.values`, `ge`, `(t.gear??[]).filter`, `e.has`, `Math.round`, `is`, `zh`, `Math.min`
+- `A3` — function, [150443, 151697); calls: `ys`, `Date.now`, `a.filter(o=>o.name).map`, `a.filter`, `Ua`, `Z1`, `J1`, `[...n].sort((r,h)=>(o==="level"?h.lv-r.lv\|\|h.xp-r.xp:h[o]-r[o]\|\|h.lv-r.lv)\|\|r.name.localeCompare(h.name,"vi")).slice(0,100).map`, `[...n].sort((r,h)=>(o==="level"?h.lv-r.lv\|\|h.xp-r.xp:h[o]-r[o]\|\|h.lv-r.lv)\|\|r.name.localeCompare(h.name,"vi")).slice`, `[...n].sort`
+- `nk` — function, [151697, 151956); calls: `t.map`, `Array.isArray`, `Ra`, `n.has`, `e.has`, `n.add`, `e.add`, `s.push`
+- `ek` — function, [151956, 152298); calls: `[...a.gear,...a.pendingGear].filter`, `s.some`, `Aa`, `a.gearFits`, `a.pendingGear.push`, `a.gear.push`, `a.note`
+- `ak` — variable, [152304, 154810); calls: —
+- `R3` — variable, [154811, 155289); calls: —
+- `ch` — variable, [155290, 155300); calls: —
+- `os` — arrow_function, [155301, 155431); calls: `a.startsWith`
+- `N3` — arrow_function, [155432, 155461); calls: —
+- `Pm` — arrow_function, [155462, 155488); calls: `ak.find`
+- `Ei` — arrow_function, [155489, 155594); calls: `Date.now`, `os`, `Number.isFinite`
+- `hr` — function, [155595, 155709); calls: `Date.now`, `a.owned.some`, `Ei`
+- `Am` — function, [155709, 156387); calls: `Date.now`, `Array.isArray`, `Pm`, `n.some`, `os`, `Number.isFinite`, `n.push`, `Math.max`, `Number`, `Math.floor`
+- `In` — function, [156387, 156698); calls: `a.owned.find`, `os`, `a.owned.push`
+- `sk` — function, [156698, 156907); calls: `Date.now`, `Am`, `In`, `e.claimed.includes`
+- `lh` — function, [156907, 157020); calls: `Date.now`, `a.owned.some`, `Ei`
+- `As` — function, [157020, 157095); calls: `Date.now`, `Pm`, `lh`
+- `ik` — function, [157095, 157443); calls: `Date.now`, `t.startsWith`, `hr`, `a.titles.owned.some`, `Ei`, `a.note`
+- `ok` — variable, [157449, 157453); calls: —
+- `hk` — arrow_function, [157454, 157496); calls: `Math.max`, `Number`
+- `zs` — arrow_function, [157497, 157549); calls: `Math.hypot`, `hk`
+- `Rm` — variable, [157550, 157643); calls: —
+- `rk` — arrow_function, [157644, 157687); calls: —
+- `Nm` — arrow_function, [157688, 157738); calls: `rk`, `zs`
+- `uk` — variable, [157739, 157765); calls: —
+- `ck` — arrow_function, [157766, 157905); calls: `Math.imul`, `n.charCodeAt`
+- `Mo` — function, [157906, 158319); calls: `structuredClone`, `Ra`, `Math.min`, `Math.max`, `Math.trunc`, `jg`, `nm`, `ck`, `_n`
+- `lk` — function, [158319, 159617); calls: `new Date().toISOString`, `structuredClone`, `Math.min`, `Math.max`, `s.filter(g=>g.slot==="weapon").map`, `s.filter`, `Object.entries`, `o`, `Eg.filter`, `s.filter(f=>f.slot===g.id).map`
+- `_u` — function, [159617, 162176); calls: `t.startsWith`, `a.note`, `s`, `Wg.find`, `String`, `e.claimed.includes`, `(r.gear??[]).reduce`, `Ki`, `e.looks.includes`, `ot`
+- `mk` — variable, [162182, 162347); calls: —
+- `dk` — function, [162348, 162505); calls: `Math.max`, `Math.min`, `Math.floor`, `mk[n].map`, `Fa`
+- `Du` — function, [162505, 162744); calls: `Math.max`, `Math.min`, `Math.floor`
+- `Uu` — variable, [162750, 162769); calls: —
+- `Bm` — variable, [162770, 162774); calls: —
+- `_m` — variable, [162775, 162779); calls: —
+- `Vn` — arrow_function, [162780, 162820); calls: `Math.floor`
+- `rr` — arrow_function, [162821, 162846); calls: `Math.floor`
+- `B3` — arrow_function, [162847, 162881); calls: `Vn`
+- `Fa` — arrow_function, [162882, 162930); calls: `Math.round`
+- `gk` — arrow_function, [162931, 162945); calls: `Ii`
+- `fk` — arrow_function, [162946, 163015); calls: `Math.round`, `Math.max`, `Math.min`
+- `Dm` — function, [163016, 163172); calls: `Math.imul`
+- `Um` — arrow_function, [163178, 163219); calls: —
+- `kk` — function, [163220, 163640); calls: `Dm`, `a.dailies.filter`, `Um`, `h.filter`, `s.includes`, `i.filter`, `s.push`, `Math.floor`, `e`, `o`
+- `yk` — function, [163640, 163814); calls: `Dm`, `a.weeklies.filter(o=>Um(o,n)).slice`, `a.weeklies.filter`, `Um`, `i.push`, `s.splice`, `Math.floor`, `e`
+- `Ku` — arrow_function, [163820, 163907); calls: `a.keys.some`, `n.endsWith`, `t.startsWith`
+- `mh` — function, [163908, 164106); calls: —
+- `Iu` — function, [164106, 164538); calls: `Vn`, `rr`, `t.goals.some`, `a.dailies.some`, `kk`, `t.goals.map`, `t.wgoals.some`, `a.weeklies.some`, `yk`, `t.wgoals.map`
+- `pk` — arrow_function, [164544, 164849); calls: `a.startsWith`
+- `bk` — function, [164850, 165550); calls: `t.goals.forEach`, `a.dailies.find`, `Ku`, `Math.min`, `s.push`, `t.wgoals.forEach`, `a.weeklies.find`, `n.startsWith`, `n.slice`, `pk`
+- `vk` — arrow_function, [165556, 165711); calls: `a.collection.filter`, `Number.isSafeInteger`, `t.collected.includes`
+- `xk` — arrow_function, [165712, 165735); calls: `String`, `rr`, `Vn`
+- `Fu` — variable, [165736, 166561); calls: —
+- `Mk` — function, [166562, 167215); calls: `mt`, `Number.isInteger`
+- `Km` — function, [167215, 175043); calls: `["forge-buy","forge-transfer","forge-merge","forge-craft","forge-protect","forge-accept","forge-reject","forge-reroll","forge-salvage","forge-salvage-batch","forge-refine","forge-upgrade","upgrade","dismantle"].includes`, `a.note`, `i`, `["forge-transfer","forge-merge","forge-craft","forge-reroll","forge-refine","forge-upgrade","upgrade"].includes`, `Nm`, `ts`, `Math.max`, `Zg.find`, `Number`, `Number.isSafeInteger`
+- `dh` — function, [175043, 175525); calls: `(a.worn instanceof Map?[...a.worn.values()]:Object.values(a.worn)).includes`, `a.worn.values`, `Object.values`, `Ba`, `r0`, `Qe`, `sm`, `mt`
+- `Im` — function, [175525, 175837); calls: `Qe`, `a.forgeLedger.reduce`, `Array.from({length:Math.min(16,a.upgrade??0)},(i,o)=>js(o,a.grade).required).reduce`, `Array.from`, `Math.min`, `js`, `sm`, `Math.floor`
+- `gh` — function, [175837, 176159); calls: `li`, `Ba`, `e.some`, `s.some`, `dh`, `Im`
+- `qu` — function, [176159, 176348); calls: `Im`, `a.give`, `Bn`, `n`, `a.gear.filter`
+- `wk` — variable, [176354, 176360); calls: —
+- `Tk` — variable, [176361, 176366); calls: —
+- `fh` — variable, [176367, 177427); calls: —
+- `$k` — arrow_function, [177428, 177482); calls: —
+- `tn` — variable, [177483, 177790); calls: —
+- `Fm` — function, [177791, 178038); calls: `Math.min`, `Math.max`, `Math.round`
+- `Sk` — arrow_function, [178044, 178085); calls: `Ht.slice(1).includes`, `Ht.slice`
+- `qm` — function, [178086, 179287); calls: `hm`, `ge`, `Object.entries`, `Number.isFinite`, `ym`, `V`, `Sk`, `k`, `Math.min`, `Math.max`
+- `Ck` — arrow_function, [179293, 179408); calls: `a.skillSlots.filter`, `t.reduce`, `nr`, `gi`
+- `wo` — arrow_function, [179409, 179572); calls: —
+- `pi` — function, [179573, 180877); calls: `kn`, `Fm`, `qm`, `g.map`, `Gm`, `e`, `n.push`, `o`, `Object.fromEntries`, `Object.entries(h.worn).map`
+- `Hk` — arrow_function, [180883, 181066); calls: `[...a.worn.values()].map(t=>a.gear.find(n=>n.uid===t)).filter(t=>!!t).map`, `[...a.worn.values()].map(t=>a.gear.find(n=>n.uid===t)).filter`, `[...a.worn.values()].map`, `a.worn.values`, `a.gear.find`
+- `Lk` — arrow_function, [181067, 181198); calls: `xt.map(t=>{var n;return[t.id,(n=t.bonus)==null?void 0:n.call(t,a,a.kt[t.id])]}).filter`, `xt.map`, `n.call`, `Object.keys`
+- `Pk` — function, [181199, 181498); calls: `V`, `s.find`
+- `Ak` — arrow_function, [181504, 181544); calls: `Pk`, `Hk`
+- `Om` — arrow_function, [181545, 181676); calls: `zh`, `Ak`, `kn`, `Ck`, `Lk`
+- `Rk` — function, [181677, 181869); calls: `Om`, `Math.round`, `Fm`, `qm`, `t.kt.map`, `Gm`
+- `ur` — function, [181869, 182647); calls: `es.includes`, `Qn.filter(l=>!l.wheel&&l.classId===n&&l.level<=t).at`, `Qn.filter`, `Ye.filter(l=>(!l.classId\|\|l.classId===a)&&de[l.rarity]<=t).at`, `Ye.filter`, `Vt`, `tn.upgrade`, `nn.slice`, `tn.gems`, `tn.gemLevel`
+- `Nk` — function, [182647, 182905); calls: `V`, `tn.ktGemLevel`, `l0[i].slice(0,tn.ktAffixes).map`, `l0[i].slice`, `c0`, `tn.ktEnh`
+- `Bk` — function, [182905, 183275); calls: `pi`, `Om`, `ur`, `t.lines.map`, `Math.round`, `e.reduce`, `e.map`, `$k`, `n.get`
+- `_k` — arrow_function, [183281, 183308); calls: `pi`, `ur`
+- `$e` — variable, [183309, 183353); calls: —
+- `Rs` — variable, [183354, 183463); calls: —
+- `To` — variable, [183468, 183475); calls: —
+- `$o` — variable, [183476, 183481); calls: —
+- `Gm` — function, [183482, 183894); calls: `Object.fromEntries`, `Rs.map`, `$e.map`, `pi`, `ur`, `Rs.reduce`, `Math.max`, `Math.min`
+- `Ou` — arrow_function, [183900, 183935); calls: —
+- `Ys` — class, [183936, 184873); calls: —
+- `Gu` — variable, [184879, 184883); calls: —
+- `Ns` — arrow_function, [184884, 184955); calls: `t.split`
+- `Dk` — variable, [184956, 184971); calls: —
+- `Uk` — variable, [184972, 184997); calls: —
+- `Vm` — arrow_function, [184998, 185015); calls: —
+- `Oe` — arrow_function, [185016, 185037); calls: `Vm`
+- `cr` — arrow_function, [185038, 185087); calls: `Math.round`
+- `Kk` — arrow_function, [185088, 185139); calls: `Math.round`, `Ii`
+- `Ik` — arrow_function, [185140, 185208); calls: `Math.max`, `Math.round`, `cr`
+- `Fk` — class, [185209, 190282); calls: —
+- `qk` — variable, [190288, 190374); calls: —
+- `Ok` — variable, [190375, 190448); calls: —
+- `Vu` — variable, [190449, 190507); calls: —
+- `Gk` — variable, [190508, 190585); calls: —
+- `Vk` — variable, [190586, 190901); calls: —
+- `Eu` — variable, [190902, 191251); calls: —
+- `Em` — function, [191252, 191336); calls: `Gk.has`, `Ok.test`
+- `Ek` — function, [191336, 191482); calls: `a.startsWith`, `Em`
+- `jk` — variable, [191488, 191493); calls: —
+- `jm` — arrow_function, [191494, 191520); calls: `jk.find`
+- `Wk` — variable, [191521, 191883); calls: —
+- `ju` — variable, [191884, 191890); calls: —
+- `Wu` — variable, [191891, 191898); calls: —
+- `Xk` — function, [191899, 192232); calls: `jm`, `Math.max`, `Math.min`, `Math.floor`
+- `Xu` — variable, [192238, 192256); calls: —
+- `Qu` — variable, [192257, 192274); calls: —
+- `qa` — variable, [192279, 192299); calls: —
+- `Js` — variable, [192306, 192316); calls: —
+- `zu` — arrow_function, [192317, 192415); calls: `Number`, `Number.isFinite`, `Math.round`
+- `Qk` — function, [192416, 192761); calls: `Gn.flatMap`, `s.skills.map`, `Object.entries`, `zu`, `t.has`
+- `zk` — function, [192761, 192900); calls: `Qk`, `Js.has`, `Js.set`, `Js.get`
+- `Yk` — arrow_function, [192906, 192915); calls: —
+- `_3` — arrow_function, [192916, 192940); calls: —
+- `D3` — arrow_function, [192941, 192965); calls: `Js.get`
+- `Wm` — variable, [192966, 193495); calls: —
+- `So` — variable, [193496, 193505); calls: —
+- `Jk` — variable, [193506, 193516); calls: —
+- `Yu` — variable, [193517, 193525); calls: —
+- `Xm` — function, [193526, 193735); calls: `Math.ceil`, `Math.floor`
+- `Zk` — arrow_function, [193741, 193780); calls: `Xm`
+- `ty` — variable, [193781, 193873); calls: —
+- `ny` — arrow_function, [193874, 194050); calls: —
+- `ey` — arrow_function, [194051, 194092); calls: `Math.log`
+- `ay` — arrow_function, [194093, 194168); calls: `Math.max`, `Math.min`, `ny`, `ey`
+- `sy` — arrow_function, [194169, 194266); calls: `Math.round`, `xn`, `ay`
+- `iy` — arrow_function, [194267, 194279); calls: —
+- `oy` — arrow_function, [194280, 194318); calls: `Math.round`, `Je`
+- `Co` — variable, [194319, 194326); calls: —
+- `Ju` — variable, [194327, 194334); calls: —
+- `bi` — function, [194335, 194628); calls: `Number.isFinite`, `t.set`, `t.get`, `[...t.values()].reduce`, `t.values`, `[...t].map(([e,s])=>({name:e,damage:s,percent:Math.round(s/n*1e4)/100})).sort`, `[...t].map`, `Math.round`, `e.name.localeCompare`
+- `vi` — arrow_function, [194634, 194710); calls: `a.slice(0,3).map((t,n)=>`${n+1}. ${t.name} ${t.percent}%`).join`, `a.slice(0,3).map`, `a.slice`
+- `hy` — arrow_function, [194711, 194935); calls: `Math.max`, `Math.floor`, `String(Math.floor(a/60)%60).padStart`, `String`, `String(a%60).padStart`, `String(Math.floor(a/60)).padStart`
+- `ry` — arrow_function, [194936, 195040); calls: `Math.atan2`, `Math.round`
+- `ka` — arrow_function, [195041, 195072); calls: `Math.random`
+- `kh` — arrow_function, [195073, 195110); calls: `Math.max`, `Math.min`
+- `uy` — arrow_function, [195111, 195154); calls: —
+- `Zu` — variable, [195155, 195162); calls: —
+- `cy` — arrow_function, [195163, 195199); calls: `kh`
+- `ly` — variable, [195200, 195298); calls: —
+- `tc` — arrow_function, [195299, 195361); calls: `(a<10?a.toFixed(2):a.toFixed(1)).replace`, `a.toFixed`
+- `my` — class, [195362, 203869); calls: —
+- `yh` — variable, [203875, 203880); calls: —
+- `ps` — function, [203881, 203984); calls: `yh.some`, `yh.push`
+- `Qm` — arrow_function, [203990, 204016); calls: `yh.find`
+- `Ho` — variable, [204017, 204023); calls: —
+- `aa` — variable, [205533, 205538); calls: —
+- `zt` — function, [205539, 205599); calls: `aa.some`, `aa.push`
+- `zm` — variable, [206520, 206718); calls: —
+- `dy` — arrow_function, [206719, 206740); calls: `Date.now`
+- `Zs` — function, [206741, 206803); calls: `Vn`, `dy`
+- `ph` — function, [206803, 206927); calls: `Math.min`, `Math.floor`
+- `$t` — function, [206927, 207346); calls: `vn`, `aa.find`, `Zs`, `ph`, `Math.min`, `a.note`, `zm.findIndex`, `a.toast`
+- `gy` — function, [207346, 207470); calls: `e.some`, `i.endsWith`, `t.startsWith`, `$t`
+- `pn` — variable, [208431, 208436); calls: —
+- `fy` — variable, [208437, 208513); calls: —
+- `Ym` — variable, [208514, 208595); calls: —
+- `ky` — variable, [208596, 208602); calls: —
+- `yy` — variable, [208603, 208682); calls: —
+- `py` — variable, [208683, 208689); calls: —
+- `nc` — variable, [208690, 208694); calls: —
+- `by` — variable, [208695, 208700); calls: —
+- `vy` — variable, [208701, 208706); calls: —
+- `ec` — variable, [208707, 208713); calls: —
+- `xy` — variable, [208714, 208720); calls: —
+- `My` — variable, [208721, 208726); calls: —
+- `wy` — variable, [208727, 208733); calls: —
+- `Ty` — variable, [208734, 208738); calls: —
+- `Jm` — variable, [208739, 208743); calls: —
+- `$y` — variable, [208744, 208749); calls: —
+- `ac` — variable, [208750, 208756); calls: —
+- `sc` — variable, [208757, 208761); calls: —
+- `Sy` — variable, [208762, 208766); calls: —
+- `Cy` — variable, [208767, 208774); calls: —
+- `Hy` — variable, [208775, 208781); calls: —
+- `Ly` — variable, [208782, 208788); calls: —
+- `Py` — variable, [208789, 208795); calls: —
+- `Ay` — variable, [208796, 208800); calls: —
+- `Ry` — variable, [208801, 208805); calls: —
+- `Ny` — variable, [208806, 208812); calls: —
+- `ic` — variable, [208813, 208819); calls: —
+- `By` — variable, [208820, 208824); calls: —
+- `_y` — variable, [208825, 208846); calls: —
+- `Dy` — variable, [208847, 208871); calls: —
+- `Uy` — variable, [208872, 208880); calls: —
+- `Ky` — variable, [208881, 208889); calls: —
+- `oc` — variable, [208890, 208904); calls: —
+- `bs` — arrow_function, [208905, 208960); calls: `oc.get`, `oc.set`
+- `Zn` — function, [208961, 209913); calls: `Math.max`, `Math.round`, `xn`, `t.collision.nearestOpen`, `a.newId`, `Wt`, `Je`, `wt`, `t.monsters.push`
+- `ae` — function, [209913, 209989); calls: `a.monsters.indexOf`, `a.monsters.splice`
+- `lr` — function, [209989, 210233); calls: `e[0].moves.map`, `Math.max`, `bs(a).add`, `bs`
+- `U3` — arrow_function, [210239, 210276); calls: `[...bs(a)].find`, `bs`
+- `bh` — function, [210277, 210364); calls: `[...a.room.players].filter`, `Math.hypot`
+- `hs` — function, [210364, 210469); calls: `a.room.events.push`
+- `mr` — variable, [210473, 210477); calls: —
+- `cn` — function, [210478, 210695); calls: `a.newId`, `Math.max`, `t.strikes.push`, `t.room.slams.push`
+- `Lo` — arrow_function, [210701, 210775); calls: `Math.hypot`
+- `hc` — function, [210776, 210986); calls: `a.collision.move`, `Math.hypot`, `o.push`
+- `Iy` — function, [210986, 213975); calls: `a.newId`, `[...s.players].filter(r=>!r.dead&&Math.hypot(r.x-e.x,r.y-e.y)<vy).sort`, `[...s.players].filter`, `Math.hypot`, `hs`, `cn`, `Math.random`, `Math.cos`, `Math.sin`, `i.slice`
+- `Fy` — function, [213975, 214366); calls: `Et`, `Math.max`, `Math.min`, `Math.round`, `a.combat.absorb`, `a.combat.incomingScale`, `i.events.push`, `a.die`
+- `qy` — function, [214366, 215424); calls: `e.slams.filter`, `e.events.push`, `t.castHits.get`, `t.castHits.set`, `Math.hypot`, `i.has`, `i.add`, `Fy`, `a.combat.mobStatuses`, `o.note`
+- `Oy` — function, [215424, 215678); calls: `ae`, `t.strikes.map`, `t.room.slams.filter`, `n.has`, `bs(a).delete`, `bs`
+- `Gy` — function, [215678, 217151); calls: `bs`, `Math.hypot`, `Math.min`, `i.collision.move`, `n.strikes.filter`, `qy`, `n.castHits.keys`, `n.strikes.some`, `n.castHits.delete`, `i.monsters.includes`
+- `Vy` — arrow_function, [217157, 217173); calls: `bs`
+- `rc` — variable, [217174, 217188); calls: —
+- `Ey` — function, [217189, 217587); calls: `rc.get`, `rc.set`, `(((e=a.data.quests.kt)==null?void 0:e.campBosses)??[]).map`, `Vy(a).map`, `Vy`, `a.rooms.values`, `n.has`, `t.get`, `lr`
+- `E` — variable, [217593, 217958); calls: —
+- `Zm` — arrow_function, [217959, 218055); calls: `Object.create`
+- `jn` — arrow_function, [218056, 218118); calls: `Math.max`, `Math.min`, `Math.floor`, `Number`
+- `jy` — function, [218119, 218600); calls: `Zm`, `jn`, `Math.min`, `t.day.slice`, `Object.entries`
+- `Rt` — arrow_function, [218606, 218631); calls: —
+- `td` — arrow_function, [218632, 218685); calls: `Math.min`
+- `Wy` — arrow_function, [218686, 218749); calls: `Date.now`, `new Date(a+7*36e5).toISOString().slice`, `new Date(a+7*36e5).toISOString`
+- `Xy` — function, [218750, 218962); calls: `Date.now`, `Wy`, `Math.max`, `Math.min`
+- `xi` — function, [218962, 219041); calls: `Math.max`, `Math.min`
+- `Qy` — function, [219041, 219254); calls: `Math.abs`, `xi`
+- `zy` — function, [219254, 219452); calls: `Math.max`, `xi`
+- `Yy` — function, [219452, 219659); calls: `a.dsRetaliate.get`, `Rt`
+- `Jy` — function, [219659, 220364); calls: `Date.now`, `r`, `Rt`, `ui`, `Math.abs`, `Object.hasOwn`, `Math.ceil`, `Object.keys`
+- `Zy` — variable, [220370, 220387); calls: —
+- `Oa` — variable, [220388, 220402); calls: —
+- `ji` — variable, [220403, 220417); calls: —
+- `Wi` — function, [220418, 220539); calls: `a.data.maps.get`, `a.createRealmRoom`, `ji.set`
+- `dr` — function, [220539, 220628); calls: `a.rooms.get`, `ji.has`, `a.rooms.delete`
+- `Kt` — arrow_function, [220634, 220658); calls: `ji.get`
+- `gr` — arrow_function, [220659, 220681); calls: `Kt`
+- `fr` — function, [220682, 221092); calls: `Oa.has`, `a.data.maps.get`, `Oa.set`, `ji.has`, `Oa.get`, `a.placeInRoom`, `t.events.push`
+- `uc` — function, [221092, 221230); calls: `e.collision.nearestOpen`
+- `tp` — function, [221230, 221332); calls: `wt`, `t.applyLevel`
+- `rs` — function, [221332, 221538); calls: `Oa.get`, `Oa.delete`, `wt`, `t.applyLevel`, `a.players.get`, `a.travel`
+- `np` — variable, [221650, 221656); calls: —
+- `Po` — variable, [221657, 221671); calls: —
+- `nd` — function, [222137, 222446); calls: `Jt.has`, `Kt`, `Math.min`, `Math.ceil`, `vt`, `a.note`, `e.toLocaleString`
+- `ep` — variable, [222452, 222457); calls: —
+- `cc` — variable, [222458, 222462); calls: —
+- `us` — variable, [222463, 222477); calls: —
+- `K3` — variable, [222478, 222482); calls: —
+- `I3` — variable, [222483, 222488); calls: —
+- `F3` — variable, [222489, 222494); calls: —
+- `ap` — arrow_function, [222495, 222503); calls: —
+- `sp` — arrow_function, [222504, 222550); calls: `ap`
+- `ip` — arrow_function, [222551, 222576); calls: —
+- `q3` — function, [222577, 222721); calls: `Math.max`, `Math.ceil`, `Math.floor`
+- `ed` — variable, [222727, 223016); calls: —
+- `O3` — arrow_function, [223017, 223038); calls: `ip`
+- `G3` — variable, [223039, 223043); calls: —
+- `op` — variable, [223044, 223101); calls: —
+- `hp` — function, [223102, 223294); calls: `op.has`, `t.startsWith`
+- `rp` — function, [223294, 223333); calls: `hp`
+- `lc` — arrow_function, [223339, 223360); calls: `nd`
+- `Bs` — arrow_function, [223361, 223425); calls: `Number.isFinite`, `Math.max`, `Math.min`, `Number`
+- `up` — function, [223426, 223456); calls: —
+- `cp` — function, [223456, 223482); calls: —
+- `mc` — function, [223482, 223513); calls: —
+- `kr` — variable, [223852, 223860); calls: —
+- `ad` — variable, [223861, 223866); calls: —
+- `zl` — variable, [223871, 223873); calls: —
+- `Ao` — variable, [223880, 223926); calls: —
+- `lp` — arrow_function, [223927, 224011); calls: `Number`, `Number.isFinite`, `Date.parse`
+- `mp` — variable, [224016, 224148); calls: —
+- `sd` — arrow_function, [224155, 224164); calls: —
+- `id` — arrow_function, [224165, 224221); calls: `Date.now`, `Math.max`, `Math.floor`, `sd`
+- `dp` — arrow_function, [224226, 224305); calls: `id`, `Math.min`, `Math.floor`
+- `vs` — arrow_function, [224312, 224336); calls: `Date.now`, `dp`
+- `od` — arrow_function, [224337, 224378); calls: `Math.min`, `Math.max`
+- `sa` — arrow_function, [224379, 224412); calls: `Date.now`, `vs`, `od`
+- `gp` — arrow_function, [224413, 224433); calls: `od`
+- `fp` — function, [224434, 224499); calls: `sa`
+- `kp` — arrow_function, [224505, 224624); calls: `e.npcs.find`, `Math.hypot`
+- `dc` — variable, [224625, 224639); calls: —
+- `gc` — variable, [224640, 224654); calls: —
+- `yp` — arrow_function, [224655, 224710); calls: `dc.get`, `dc.set`
+- `pp` — function, [224711, 224979); calls: `a.book.active().some`, `a.book.active`, `i.goals.some`, `a.book.progress`, `s.some`
+- `bp` — function, [224979, 225219); calls: `Zn`, `lr`, `a.announce`
+- `fc` — function, [225219, 225285); calls: `a.get`, `ae`, `a.delete`
+- `vp` — function, [225285, 225985); calls: `gc.get`, `gc.set`, `Ey`, `yp`, `t.get`, `fc`, `[...i.room.players].some`, `Math.hypot`, `a.rooms.get`, `a.data.quests.landmarks.find`
+- `xs` — arrow_function, [227100, 227147); calls: `Date.now`, `Math.floor`
+- `kc` — arrow_function, [227148, 227190); calls: `Date.now`, `Math.floor`, `xs`
+- `Ne` — variable, [227191, 229004); calls: —
+- `xp` — function, [229005, 229127); calls: `Math.min`, `V`, `a.book.lock`
+- `yr` — arrow_function, [229133, 229193); calls: `Ne.filter`, `V`, `a.book.lock`
+- `Mi` — arrow_function, [229194, 229237); calls: `Math.floor`, `Math.random`
+- `Ge` — arrow_function, [229238, 229273); calls: `Math.round`, `cm`
+- `se` — function, [229274, 229328); calls: `a.gainExp`
+- `bn` — variable, [229334, 229411); calls: —
+- `ie` — variable, [229412, 229432); calls: —
+- `vh` — variable, [229433, 229437); calls: —
+- `Mp` — variable, [229438, 229444); calls: —
+- `Ve` — variable, [229445, 229509); calls: —
+- `wp` — variable, [229510, 229999); calls: —
+- `Tp` — arrow_function, [230000, 230036); calls: —
+- `yc` — variable, [230041, 230045); calls: —
+- `$p` — arrow_function, [230052, 230083); calls: `bn.every`, `a.count`
+- `Fn` — function, [230084, 230603); calls: `sa`, `xs`, `bn.filter`, `t.count`, `Math.random`, `Math.floor`, `t.give`, `t.toast`, `a.record`, `bn.indexOf`
+- `pc` — arrow_function, [230609, 230630); calls: `Math.random`
+- `bc` — variable, [230631, 230645); calls: —
+- `vc` — variable, [230646, 230660); calls: —
+- `Sp` — function, [230661, 230854); calls: `vc.get`, `sa`, `vc.set`, `a.players.values`, `t.count`, `t.give`, `Fn`
+- `wi` — variable, [233123, 233247); calls: —
+- `ia` — variable, [233248, 233260); calls: —
+- `Un` — variable, [233261, 233266); calls: —
+- `pr` — variable, [233267, 233870); calls: —
+- `Ti` — arrow_function, [233871, 233897); calls: `pr.find`
+- `Cp` — function, [233898, 233977); calls: `Math.min`
+- `Hp` — function, [233977, 234282); calls: `Math.round`, `Math.pow`, `Math.min`, `Math.max`, `Math.ceil`, `br.find`, `i.push`
+- `Lp` — variable, [234288, 234293); calls: —
+- `Pp` — arrow_function, [234294, 234330); calls: `Math.max`, `Math.ceil`
+- `Ap` — variable, [234331, 235031); calls: —
+- `br` — variable, [235032, 235139); calls: —
+- `Ms` — arrow_function, [235140, 235166); calls: `br.find`
+- `vr` — arrow_function, [235167, 235201); calls: `Math.min`, `Math.max`
+- `Rp` — arrow_function, [235202, 235223); calls: `Math.floor`
+- `Np` — arrow_function, [235224, 235257); calls: `Math.max`, `Math.floor`
+- `xh` — variable, [235258, 235263); calls: —
+- `Bp` — variable, [235264, 235268); calls: —
+- `xc` — variable, [235269, 235274); calls: —
+- `Mc` — variable, [235275, 235279); calls: —
+- `_p` — arrow_function, [235280, 235293); calls: —
+- `Mh` — variable, [235294, 235299); calls: —
+- `Dp` — arrow_function, [235300, 235364); calls: `Math.round`, `Math.max`, `Math.min`
+- `hd` — arrow_function, [235365, 235376); calls: —
+- `rd` — arrow_function, [235377, 235388); calls: —
+- `wc` — arrow_function, [235389, 235433); calls: —
+- `Up` — arrow_function, [235434, 235450); calls: —
+- `Kp` — arrow_function, [235451, 235474); calls: `Math.floor`
+- `Tc` — arrow_function, [235475, 235484); calls: —
+- `$c` — variable, [235485, 235490); calls: —
+- `Ip` — arrow_function, [235491, 235513); calls: —
+- `Fp` — arrow_function, [235514, 235525); calls: —
+- `wh` — variable, [235526, 235874); calls: —
+- `qp` — arrow_function, [235875, 235951); calls: `Math.round`, `Math.pow`
+- `te` — variable, [235952, 236448); calls: —
+- `Sc` — arrow_function, [236449, 236472); calls: `Math.floor`
+- `Op` — arrow_function, [236473, 236482); calls: —
+- `Gp` — arrow_function, [236483, 236498); calls: —
+- `Cc` — variable, [236499, 236503); calls: —
+- `Hc` — arrow_function, [236504, 236514); calls: —
+- `Vp` — arrow_function, [236515, 236591); calls: `br.find`
+- `xr` — variable, [236592, 237073); calls: —
+- `ud` — arrow_function, [237074, 237100); calls: `xr.find`
+- `Ep` — arrow_function, [237101, 237114); calls: —
+- `Be` — variable, [237268, 237281); calls: —
+- `cd` — variable, [237282, 237300); calls: —
+- `st` — arrow_function, [237536, 237590); calls: `Number.isFinite`
+- `jp` — function, [237591, 237827); calls: `Array(vr(1)).fill`, `Array`, `vr`
+- `Wp` — function, [237827, 239258); calls: `jp`, `Math.max`, `Math.min`, `Math.floor`, `st`, `Ti`, `vr`, `Array.from`, `Ms`, `Object.fromEntries`
+- `$i` — arrow_function, [239264, 239292); calls: —
+- `Xp` — class, [239293, 241088); calls: —
+- `Lc` — variable, [241094, 241108); calls: —
+- `qn` — function, [241109, 241175); calls: `Lc.get`, `Lc.set`
+- `ws` — arrow_function, [241181, 241195); calls: —
+- `ld` — arrow_function, [241196, 241212); calls: `V`
+- `ti` — arrow_function, [241213, 241256); calls: `Math.floor(a).toLocaleString`, `Math.floor`
+- `_e` — arrow_function, [241257, 241405); calls: `Math.max`, `Math.ceil`, `Math.floor`
+- `Pc` — arrow_function, [241406, 241475); calls: `a.count`, `t.every`
+- `Ac` — arrow_function, [241476, 241548); calls: `a.give`
+- `Rc` — arrow_function, [241549, 241645); calls: `[t?`${ti(t)} linh thạch`:"",...a.map(([n,e])=>`${e} ${n}`)].filter(Boolean).join`, `[t?`${ti(t)} linh thạch`:"",...a.map(([n,e])=>`${e} ${n}`)].filter`, `ti`, `a.map`
+- `Mr` — function, [241646, 241925); calls: `ws`, `qn`, `Math.max`, `Math.min`, `i.call`, `e.pub.set`, `ld`, `pr.map`, `n.pl.map`, `a.epoch`
+- `Ro` — function, [241925, 242644); calls: `ws`, `a.epoch`, `Ti`, `Math.max`, `t.note`, `a.record`, `vr`, `n.pl.push`, `Vn`, `t.count`
+- `Qp` — function, [242644, 243257); calls: `Th(a).find`, `Th`, `Math.min`, `Math.floor`, `t.give`, `$t`, `rd`, `i.inputs.map`, `t.count`, `t.note`
+- `zp` — function, [243257, 243558); calls: `ws`, `qn`, `o.readyAt`, `$i`, `o.crops.get`, `Math.max`, `Ms`, `o.crops.delete`, `t.give`
+- `Nc` — variable, [243564, 243578); calls: —
+- `No` — arrow_function, [243579, 243646); calls: `a.dropPet`
+- `Yp` — arrow_function, [243647, 243751); calls: `Math.atan2`, `Math.round`
+- `Jp` — function, [243752, 244695); calls: `Nc.get`, `Nc.set`, `a.players.values`, `n.set.has`, `n.set.set`, `te.find`, `a.players.has`, `No`, `n.set.delete`, `a.spawnPet`
+- `Zp` — function, [251914, 253635); calls: `ws`, `qn`, `a.epoch`, `o.pub.get`, `Number.isInteger`, `t.note`, `Ms`, `$i`, `o.mark`, `o.readyAt`
+- `Bc` — variable, [253641, 253655); calls: —
+- `Th` — function, [253656, 253917); calls: `Bc.get`, `(n.items??[]).filter(s=>s.category==="Đan dược").map`, `(n.items??[]).filter`, `(n.recipes??[]).filter`, `e.has`, `s.inputs.some`, `Bc.set`
+- `ya` — function, [253917, 254107); calls: `[t,n,e,s,i].every`, `a.blocked`, `Math.hypot`, `a.cast`
+- `tb` — function, [254107, 256514); calls: `ya`, `Math.max`, `Math.min`, `Math.ceil`, `Math.floor`, `new Int8Array(u*m).fill`, `a.blocked`, `g`, `d`, `p`
+- `_c` — arrow_function, [256520, 256611); calls: `$1`
+- `St` — variable, [256612, 256907); calls: —
+- `nb` — variable, [256908, 256912); calls: —
+- `md` — variable, [256913, 256917); calls: —
+- `ni` — variable, [256918, 256922); calls: —
+- `ye` — variable, [256923, 256927); calls: —
+- `dd` — variable, [256928, 256932); calls: —
+- `jt` — variable, [256933, 261747); calls: —
+- `Ha` — variable, [261748, 261766); calls: —
+- `pa` — variable, [261767, 261816); calls: —
+- `wr` — variable, [261817, 261966); calls: —
+- `J` — variable, [261967, 262449); calls: —
+- `Ga` — variable, [262450, 262598); calls: —
+- `gd` — arrow_function, [262599, 262627); calls: —
+- `oa` — arrow_function, [262628, 262654); calls: —
+- `fd` — variable, [262655, 262666); calls: —
+- `eb` — variable, [262667, 262671); calls: —
+- `kd` — variable, [262672, 262677); calls: —
+- `ab` — function, [262710, 262849); calls: `V`, `Math.max`, `Math.floor`, `e`, `Math.min`
+- `cs` — arrow_function, [262855, 262868); calls: `ab`
+- `Tr` — variable, [262869, 262874); calls: —
+- `ls` — arrow_function, [262875, 262897); calls: —
+- `sb` — arrow_function, [262898, 262924); calls: —
+- `pe` — arrow_function, [262925, 262967); calls: `Math.floor`, `sb`
+- `oe` — arrow_function, [262968, 263003); calls: `Math.round`, `vt`, `pe`
+- `ib` — function, [263004, 263113); calls: `oa`
+- `Dc` — variable, [263119, 263133); calls: —
+- `Va` — function, [263134, 263889); calls: `ib`, `JSON.stringify`, `kt.map(d=>{const f=t[d];return f?`${f.u}${f.q}${f.g}${f.m.join("")}${f.a.map(l=>l.k+l.t).join("")}${f.c??""}`:""}).join`, `kt.map`, `f.m.join`, `f.a.map(l=>l.k+l.t).join`, `f.a.map`, `Dc.get`, `hm`, `ge`
+- `Si` — arrow_function, [263895, 263909); calls: `Va`
+- `_s` — variable, [263914, 263921); calls: —
+- `ob` — function, [263922, 264486); calls: `Object.fromEntries`, `Ha.map`, `Array.from`, `oa`, `Va`, `o.reduce`, `Ha.forEach`, `Math.max`, `Math.min`
+- `$h` — function, [264486, 264567); calls: `a.list.find`, `Si`
+- `hb` — arrow_function, [264573, 264620); calls: `$h`
+- `rb` — variable, [264621, 264637); calls: —
+- `ub` — variable, [264638, 264650); calls: —
+- `cb` — function, [264651, 264767); calls: `ls`, `Math.min`
+- `De` — arrow_function, [264773, 264825); calls: `Math.min`, `Math.floor`
+- `Uc` — variable, [264826, 264836); calls: —
+- `yd` — function, [264837, 265122); calls: `Uc.get`, `De`, `oa`, `Si`, `Uc.set`
+- `Sh` — arrow_function, [265128, 265177); calls: `Math.min`, `V`
+- `Kc` — variable, [265178, 265188); calls: —
+- `lb` — function, [265189, 265350); calls: `Kc.get`, `De`, `Math.round`, `_k`, `pe`, `yd`, `Kc.set`
+- `mb` — arrow_function, [265356, 265392); calls: `Math.round`, `hb`
+- `V3` — arrow_function, [265393, 265443); calls: `ys`, `Date.now`
+- `pd` — arrow_function, [265444, 265505); calls: `a.list.find`
+- `bd` — function, [265506, 265637); calls: `pd`, `Ga.guard.chance`, `ls`, `Ga.dan.speed`
+- `ba` — arrow_function, [265696, 265729); calls: `Mr`
+- `Ch` — arrow_function, [265730, 265838); calls: `t`, `a.reduce`
+- `db` — variable, [265839, 265844); calls: —
+- `gb` — arrow_function, [265845, 265888); calls: `Math.max`, `Math.ceil`, `vt`
+- `fb` — arrow_function, [265889, 265944); calls: —
+- `Ic` — arrow_function, [265945, 265962); calls: —
+- `kb` — variable, [265963, 265985); calls: —
+- `yb` — variable, [265986, 266007); calls: —
+- `vd` — variable, [266008, 266013); calls: —
+- `Fc` — variable, [266014, 266032); calls: —
+- `xd` — arrow_function, [266033, 266132); calls: `Math.floor`
+- `pb` — function, [266133, 266318); calls: `xd`, `n`, `e.some`, `e.push`
+- `bb` — variable, [266324, 266542); calls: —
+- `vb` — arrow_function, [266543, 266575); calls: —
+- `xb` — variable, [266576, 266582); calls: —
+- `Mb` — function, [266583, 267270); calls: `e.set`, `e.get`, `s`, `Math.round`, `vb`, `Math.floor`, `n`, `h.push`, `Ch`, `oe`
+- `wb` — variable, [267276, 267365); calls: —
+- `Tb` — variable, [267366, 267508); calls: —
+- `Ds` — arrow_function, [267509, 267555); calls: `Math.floor`, `t`
+- `Md` — arrow_function, [267556, 267694); calls: —
+- `ct` — arrow_function, [267695, 267796); calls: `Math.floor`, `Number`, `Number.isFinite`, `Math.max`, `Math.min`
+- `$b` — function, [267797, 269750); calls: `Md`, `Array.isArray`, `n.list.slice`, `e.has`, `ct`, `Math.min`, `Sb`, `oa`, `s.has`, `s.add`
+- `Sb` — function, [269750, 269825); calls: `x0`
+- `Ci` — arrow_function, [269831, 269872); calls: —
+- `wd` — arrow_function, [269873, 270060); calls: `Ci`
+- `Xi` — arrow_function, [270061, 270145); calls: `Md`, `wd`
+- `Hi` — arrow_function, [270146, 270196); calls: `new Date(a+7*36e5).toISOString().slice`, `new Date(a+7*36e5).toISOString`
+- `Cb` — function, [270197, 270398); calls: `Ds`, `Date.now`
+- `he` — function, [270398, 270897); calls: `Xi`, `ct`, `cs`, `Cb`, `i.list.push`, `a.applyLevel`, `h.record`, `a.note`, `i.wait.push`
+- `Q` — arrow_function, [270903, 270927); calls: `a.toast`
+- `Hb` — function, [270928, 270986); calls: `Xi(a).save.list.find`, `Xi`
+- `Us` — function, [270986, 271076); calls: —
+- `qc` — function, [271076, 271260); calls: `oe`, `pe`, `Math.min`
+- `Td` — variable, [271266, 271302); calls: —
+- `Lb` — function, [271501, 272432); calls: `Xi`, `Date.now`, `Math.max`, `cs`, `Q`, `Hi`, `xd`, `e`, `t.count`, `t.give`
+- `Pb` — arrow_function, [272438, 272463); calls: `w0`, `T0`
+- `Bo` — function, [272464, 272901); calls: `Nn`, `mm`, `Math.min`, `p0`, `V`, `Pb`, `Zh`, `a.give`, `a.note`, `as`
+- `Oc` — function, [272901, 273511); calls: `Zo`, `Q`, `v0`, `a.count`, `o.silver.toLocaleString`, `a.give`, `Math.random`, `Math.min`, `lm`, `Math.max`
+- `Ab` — function, [273511, 281599); calls: `Xi`, `Date.now`, `Hb`, `Us`, `Q`, `ba`, `t.toast`, `Number`, `fd.includes`, `Math.ceil`
+- `Li` — variable, [281605, 281619); calls: —
+- `Gc` — variable, [281620, 281626); calls: —
+- `Vc` — variable, [281627, 281633); calls: —
+- `Ec` — variable, [281634, 281639); calls: —
+- `Ks` — variable, [281640, 281644); calls: —
+- `Is` — arrow_function, [281645, 281749); calls: `Math.atan2`, `Math.round`
+- `jc` — arrow_function, [281750, 281824); calls: `Math.min`, `Math.max`
+- `ei` — function, [281825, 281975); calls: `a.collision.blocked`, `a.collision.nearestOpen`
+- `Rb` — variable, [281981, 281986); calls: —
+- `Nb` — variable, [281987, 281992); calls: —
+- `Wc` — variable, [281997, 282002); calls: —
+- `Fs` — function, [282003, 282909); calls: `u.blocked`, `ei`, `Math.hypot`, `Math.min`, `u.move`, `tb`, `e.pts.shift`
+- `Le` — function, [282909, 283153); calls: `a.dropPet`, `Ci`
+- `Bb` — function, [283153, 288258); calls: `a.players.has`, `Le`, `i.list.find`, `Jt.has`, `a.spawnPet`, `_c`, `pe`, `ei`, `Va`, `Math.max`
+- `Xc` — function, [288258, 288521); calls: `h`, `Math.abs`, `Math.hypot`, `o`, `a.dealMonster`, `$d`
+- `$d` — function, [288521, 289120); calls: `t.st.dots.find`, `Math.max`, `t.st.dots.push`, `At`, `Math.min`
+- `Qc` — function, [289120, 289367); calls: `Math.round`, `Math.max`, `Math.min`
+- `_b` — function, [289367, 289704); calls: `Li.get`, `Li.set`, `a.players.values`, `n.set.add`, `Date.now`, `Bb`, `Le`, `n.set.delete`
+- `Hh` — variable, [289710, 289720); calls: —
+- `Lh` — variable, [289721, 289735); calls: —
+- `Db` — variable, [289969, 290724); calls: —
+- `Qt` — variable, [290738, 290746); calls: —
+- `Ub` — variable, [290747, 290754); calls: —
+- `Kb` — variable, [290755, 290824); calls: —
+- `Ib` — variable, [290825, 290888); calls: —
+- `Fb` — arrow_function, [290889, 290920); calls: `Kb.filter`
+- `$r` — function, [290921, 291283); calls: `Math.max`, `Math.min`, `Math.floor`, `n.push`
+- `ms` — arrow_function, [291289, 291315); calls: `Fb`
+- `Sr` — arrow_function, [291316, 291331); calls: `$r`, `ms`
+- `Ea` — variable, [291332, 291488); calls: —
+- `Sd` — variable, [291489, 291495); calls: —
+- `zc` — variable, [291496, 291502); calls: —
+- `Cd` — variable, [291503, 291562); calls: —
+- `qb` — variable, [291563, 291568); calls: —
+- `Ob` — variable, [291569, 291574); calls: —
+- `Hd` — variable, [291575, 291580); calls: —
+- `Yc` — variable, [291581, 291586); calls: —
+- `_o` — variable, [291587, 291619); calls: —
+- `Jc` — variable, [291620, 291644); calls: —
+- `Zc` — variable, [291645, 291659); calls: —
+- `tl` — function, [291660, 292117); calls: —
+- `Gb` — arrow_function, [292123, 292161); calls: `Math.max`, `Math.floor`
+- `Ld` — variable, [292162, 292167); calls: —
+- `ai` — variable, [292168, 292222); calls: —
+- `Vb` — arrow_function, [292223, 292237); calls: —
+- `Eb` — function, [292238, 292463); calls: `Math.floor`
+- `nl` — variable, [292469, 292487); calls: —
+- `jb` — variable, [292488, 292493); calls: —
+- `Ue` — variable, [292494, 293100); calls: —
+- `Wb` — function, [293101, 293271); calls: `Math.floor`, `Math.max`, `Math.min`
+- `E3` — arrow_function, [293277, 293324); calls: `Ue.map`
+- `Xb` — variable, [293325, 293346); calls: —
+- `Qb` — variable, [293347, 293375); calls: —
+- `zb` — function, [293376, 293949); calls: `V`, `he`, `Xt`, `ze`, `a.give`
+- `j3` — variable, [293955, 294771); calls: —
+- `Ee` — variable, [295144, 295437); calls: —
+- `Pd` — function, [295438, 295713); calls: —
+- `va` — arrow_function, [295719, 295781); calls: `Array.isArray`, `a.filter`, `Number.isSafeInteger`
+- `Dt` — arrow_function, [295782, 295824); calls: `Number.isFinite`, `Number`
+- `Yb` — function, [295825, 297655); calls: `Pd`, `Object.keys`, `Dt`, `va`, `Math.max`, `Object.entries`, `Number.isFinite`, `Array.isArray`, `n.awards.filter(f=>f&&typeof f.id=="string").slice`, `n.awards.filter`
+- `Ad` — variable, [297661, 297666); calls: —
+- `Cr` — arrow_function, [297667, 297713); calls: `Pd`
+- `Jb` — arrow_function, [297714, 297775); calls: `Math.min`, `a.count`, `Math.max`
+- `Zb` — arrow_function, [297776, 297796); calls: `a.freeCount`
+- `Xt` — function, [297797, 297891); calls: `a.give`
+- `ln` — function, [297891, 298015); calls: `Number.isSafeInteger`, `a.takeFree`, `a.count`, `a.give`
+- `Qi` — arrow_function, [298021, 298040); calls: `Vn`, `a.epoch`
+- `Cn` — arrow_function, [298041, 298079); calls: —
+- `Rd` — function, [298080, 298153); calls: —
+- `tv` — variable, [298159, 298165); calls: —
+- `nv` — function, [298166, 298272); calls: `Date.now`
+- `Do` — function, [298272, 298424); calls: `Qi`, `Object.keys(Ea).some`, `Object.keys`, `Rd`
+- `ev` — function, [298424, 298830); calls: `a.give`, `Xt`, `In`, `Date.now`, `Cr`, `n.cos.includes`, `n.cos.push`, `tr`, `a.applyLevel`
+- `Nd` — function, [298830, 299962); calls: `V`, `Nn`, `t.applyLevel`, `t.note`, `Qi`, `Gb`, `i.claimed.filter`, `i.wclaimed.filter`, `Math.min`, `Date.now`
+- `av` — function, [299962, 300618); calls: `Nn`, `a.note`, `V`, `Ki`, `ln`, `ze`, `Cn`
+- `sv` — function, [300618, 301078); calls: `ns.includes`, `a.note`, `V`, `ln`, `Yh`, `Jh`, `a.give`, `Cn`
+- `iv` — function, [301078, 305715); calls: `Cr`, `Qi`, `t.note`, `r`, `Nd`, `ms`, `$r`, `t.give`, `Xt`, `$t`
+- `ov` — function, [305715, 306414); calls: `t.note`, `V`, `i`, `Qi`, `rr`, `Math.max`, `ln`, `t.give`
+- `Uo` — variable, [306418, 306422); calls: —
+- `el` — variable, [307038, 307224); calls: —
+- `Ph` — variable, [307225, 307236); calls: —
+- `al` — variable, [307237, 307241); calls: —
+- `Ah` — variable, [307242, 307246); calls: —
+- `hv` — variable, [307247, 307251); calls: —
+- `rv` — variable, [307252, 307269); calls: —
+- `an` — variable, [307270, 307287); calls: —
+- `uv` — variable, [307288, 307293); calls: —
+- `cv` — variable, [307294, 307326); calls: —
+- `Bd` — variable, [307327, 307336); calls: —
+- `si` — variable, [307337, 307345); calls: —
+- `lv` — arrow_function, [307346, 307373); calls: `Math.floor`
+- `mv` — variable, [307374, 307424); calls: —
+- `dv` — arrow_function, [307425, 307485); calls: `Math.round`
+- `sl` — arrow_function, [307486, 307529); calls: —
+- `Ko` — arrow_function, [307530, 307609); calls: `Number.isSafeInteger`, `Math.min`
+- `zi` — function, [307610, 307722); calls: `vn`, `sl`, `lv`, `Object.assign`
+- `Hr` — function, [307722, 307942); calls: `zi`, `Math.max`, `Math.floor`, `cv.vipExtra`
+- `_d` — function, [307942, 308109); calls: `zi`, `a.count`, `a.give`
+- `gv` — function, [308109, 308408); calls: `zi`, `Hr`, `e.runs.includes`, `a.count`
+- `fv` — function, [308408, 308506); calls: `zi`, `Hr`, `_d`, `e.runs.push`
+- `Ke` — variable, [308997, 309001); calls: —
+- `kv` — variable, [309002, 309006); calls: —
+- `Dd` — arrow_function, [309007, 309090); calls: `Zh`
+- `yv` — function, [309091, 309404); calls: `V`, `Math.min`, `L0`, `Dd`, `a.give`, `a.note`, `s.map(([i,o])=>`${o} ${i}`).join`, `s.map`
+- `pv` — function, [309404, 309768); calls: `C0`, `V`, `Dd`, `Math.min`, `mm`, `Math.floor`, `Math.random`, `H0`, `e.bag.push`, `Zh`
+- `bv` — variable, [309989, 310005); calls: —
+- `Pi` — variable, [310006, 310013); calls: —
+- `vv` — variable, [310014, 310020); calls: —
+- `xv` — variable, [310021, 310027); calls: —
+- `Se` — variable, [310028, 310033); calls: —
+- `xa` — variable, [310034, 310039); calls: —
+- `Rh` — variable, [310040, 310049); calls: —
+- `Kn` — variable, [310050, 310058); calls: —
+- `re` — arrow_function, [310059, 310092); calls: `Math.floor`
+- `Lr` — function, [310093, 310135); calls: `bv.map`
+- `La` — function, [310135, 310251); calls: `re`, `Lr(t).filter`, `Lr`, `n.at`
+- `Io` — arrow_function, [310257, 310273); calls: `La`
+- `Fo` — function, [310274, 310387); calls: `re`, `Lr(t).find`, `Lr`
+- `W3` — arrow_function, [310393, 310495); calls: `Lr(re(a)).map`, `Lr`, `re`, `Math.round`
+- `il` — arrow_function, [310496, 310642); calls: `Math.floor`, `String(Math.floor(t/3600)).padStart`, `String`, `String(Math.floor(t/60)%60).padStart`
+- `Yn` — variable, [310643, 310919); calls: —
+- `ol` — variable, [310920, 311133); calls: —
+- `Mv` — variable, [311134, 311139); calls: —
+- `Y` — variable, [311140, 311355); calls: —
+- `Ma` — arrow_function, [311356, 311422); calls: `Math.max`, `Y.findIndex`, `t.hosts.includes`
+- `wv` — arrow_function, [311423, 311475); calls: `Math.max`, `Y.findIndex`
+- `Ud` — variable, [311476, 311520); calls: —
+- `Tv` — variable, [311521, 311526); calls: —
+- `hl` — arrow_function, [311527, 311575); calls: `Math.random`
+- `ja` — arrow_function, [311576, 311616); calls: `Math.max`, `Math.min`, `Ud.level`
+- `$v` — variable, [311617, 311655); calls: —
+- `Wa` — variable, [311656, 311660); calls: —
+- `Ai` — variable, [311661, 311665); calls: —
+- `qo` — variable, [311666, 312125); calls: —
+- `Lt` — arrow_function, [312126, 312152); calls: —
+- `rl` — variable, [312153, 312165); calls: —
+- `Sv` — arrow_function, [312166, 312195); calls: —
+- `Cv` — variable, [312196, 312216); calls: —
+- `Hv` — variable, [312217, 312237); calls: —
+- `Lv` — variable, [312238, 312258); calls: —
+- `ul` — arrow_function, [312259, 312311); calls: `Math.round`, `xn`
+- `cl` — arrow_function, [312312, 312379); calls: `Math.round`, `xn`, `Math.max`, `Math.min`
+- `ll` — arrow_function, [312380, 312415); calls: `Math.round`, `xn`
+- `Pv` — variable, [312416, 312438); calls: —
+- `Oo` — variable, [312439, 312453); calls: —
+- `_t` — variable, [312454, 312459); calls: —
+- `Pr` — variable, [312460, 312483); calls: —
+- `ml` — variable, [312484, 312496); calls: —
+- `dl` — variable, [312497, 312521); calls: —
+- `Av` — variable, [312522, 312527); calls: —
+- `qs` — variable, [312528, 312533); calls: —
+- `Rv` — variable, [312534, 312539); calls: —
+- `Nv` — variable, [312540, 312546); calls: —
+- `Bv` — arrow_function, [312547, 312589); calls: `Math.max`, `eh`, `Je`
+- `_v` — variable, [312590, 312594); calls: —
+- `Dv` — variable, [312595, 312605); calls: —
+- `Uv` — variable, [312606, 312610); calls: —
+- `Kv` — variable, [312611, 312616); calls: —
+- `Iv` — arrow_function, [312617, 312666); calls: `Math.max`, `Math.min`, `Math.floor`
+- `Fv` — arrow_function, [312667, 312708); calls: —
+- `qv` — variable, [312709, 312714); calls: —
+- `Ov` — variable, [312715, 312720); calls: —
+- `Gv` — variable, [312721, 312726); calls: —
+- `Vv` — variable, [312727, 312754); calls: —
+- `Ev` — variable, [312755, 312768); calls: —
+- `Nh` — variable, [312769, 312775); calls: —
+- `gl` — variable, [312776, 312780); calls: —
+- `jv` — variable, [312781, 312785); calls: —
+- `fl` — arrow_function, [312786, 312936); calls: `Math.round`, `Math.max`, `Math.min`
+- `kl` — arrow_function, [312937, 313029); calls: `n`
+- `Wv` — arrow_function, [313030, 313088); calls: `a`
+- `je` — variable, [313089, 313095); calls: —
+- `Xv` — function, [313096, 313276); calls: `bi`, `e.reduce`, `Number.isFinite`, `e.filter`, `t.has`
+- `Go` — function, [313276, 313655); calls: `t.map`, `e.map`, `Math.max`, `Math.floor`, `t.reduce`, `s.reduce`, `t.map((r,h)=>h).sort`, `t[r].name.localeCompare`
+- `yl` — function, [313655, 313801); calls: `Number.isSafeInteger`, `n`, `Math.floor`
+- `pl` — arrow_function, [313807, 313883); calls: `Math.floor`, `Math.min`, `n`
+- `Qv` — function, [313884, 314146); calls: `pl`, `e.push`, `[...a.gear].sort((i,o)=>ds(o.id)-ds(i.id)).slice`, `[...a.gear].sort`, `ds`, `Math.floor`
+- `ds` — arrow_function, [314152, 314250); calls: —
+- `mn` — function, [314251, 315420); calls: `ja`, `Math.max`, `Math.min`, `Vt`, `Math.floor`, `s`, `d.get`, `v.push`, `d.set`, `c`
+- `zv` — arrow_function, [315426, 315485); calls: —
+- `Vo` — arrow_function, [315486, 315656); calls: `mn`, `console.error`, `zv`
+- `bl` — function, [315657, 315824); calls: `Math.max`, `Math.min`, `Math.floor`, `dn`, `e`
+- `Yv` — arrow_function, [315830, 315987); calls: `Math.floor`, `a`
+- `Jv` — arrow_function, [315988, 316121); calls: `dn`, `Math.min`, `Math.floor`
+- `Zv` — arrow_function, [316122, 316302); calls: `Math.floor`, `e`, `mn`
+- `tx` — variable, [316303, 316307); calls: —
+- `nx` — variable, [316308, 316314); calls: —
+- `vl` — variable, [316315, 316398); calls: —
+- `ex` — variable, [316399, 316625); calls: —
+- `dn` — function, [316626, 316981); calls: `Math.max`, `Math.min`, `vl.slice`, `Math.abs`, `[...a.id].reduce`, `s.charCodeAt`, `t.map`, `Math.ceil`
+- `at` — variable, [316987, 317670); calls: —
+- `Ot` — arrow_function, [317671, 317732); calls: `/^(TtkCave\|TtkHauSon)/.test`, `at.some`
+- `ax` — arrow_function, [317733, 317755); calls: —
+- `xl` — arrow_function, [317756, 317786); calls: —
+- `Ml` — variable, [317787, 317909); calls: —
+- `wl` — function, [317910, 318075); calls: `a.flatMap`, `ee`, `Math.min`
+- `X3` — variable, [318081, 318162); calls: —
+- `sx` — variable, [318163, 318223); calls: —
+- `Xa` — class, [318224, 356220); calls: —
+- `Qa` — arrow_function, [356226, 356298); calls: `a.normalize("NFC").toUpperCase().replace(/[\s-]+/g,"").slice`, `a.normalize("NFC").toUpperCase().replace`, `a.normalize("NFC").toUpperCase`, `a.normalize`
+- `ix` — variable, [356299, 356320); calls: —
+- `ox` — variable, [356321, 356326); calls: —
+- `hx` — class, [356327, 357967); calls: —
+- `rx` — function, [357967, 358131); calls: `t`, `a.amount.toLocaleString`
+- `O` — variable, [358137, 358589); calls: —
+- `ue` — variable, [358590, 358872); calls: —
+- `Ar` — arrow_function, [358873, 358946); calls: `ue.slice(0,5).reduce`, `ue.slice`
+- `Ri` — variable, [358947, 358954); calls: —
+- `gn` — variable, [358955, 358963); calls: —
+- `ha` — variable, [358964, 358971); calls: —
+- `Kd` — arrow_function, [358972, 358995); calls: —
+- `Id` — arrow_function, [358996, 359052); calls: `Math.max`, `Math.floor`, `Kd`
+- `ux` — arrow_function, [359053, 359085); calls: `Kd`
+- `Fd` — arrow_function, [359086, 359132); calls: `new Date(a+ha).toISOString().slice`, `new Date(a+ha).toISOString`
+- `qd` — arrow_function, [359133, 359169); calls: `Math.floor`
+- `Ni` — arrow_function, [359170, 359208); calls: `new Date(a+ha).getUTCDay`
+- `Bh` — arrow_function, [359209, 359243); calls: `new Date(a+ha).getUTCHours`
+- `Od` — arrow_function, [359244, 359302); calls: `Ni`, `Bh`
+- `cx` — arrow_function, [359303, 359360); calls: `Ni`, `Bh`
+- `lx` — function, [359361, 359537); calls: `Math.floor`, `Ni`
+- `ut` — arrow_function, [359543, 359644); calls: `Math.floor`, `Number`, `Number.isFinite`, `Math.max`, `Math.min`
+- `mx` — arrow_function, [359645, 359766); calls: —
+- `dx` — function, [359767, 360759); calls: `mx`, `ut`, `Math.max`, `t.hd.slice`, `Object.entries(t.opp&&typeof t.opp=="object"?t.opp:{}).slice`, `Object.entries`, `(Array.isArray(t.h)?t.h:[]).slice(0,O.histN).filter(i=>i&&typeof i.o=="string").map`, `(Array.isArray(t.h)?t.h:[]).slice(0,O.histN).filter`, `(Array.isArray(t.h)?t.h:[]).slice`, `Array.isArray`
+- `Mt` — arrow_function, [360765, 360785); calls: `vn`
+- `Tl` — variable, [360786, 360800); calls: —
+- `gx` — arrow_function, [360801, 360896); calls: —
+- `ft` — function, [360897, 361088); calls: `Tl.get`, `gx`, `Id`, `a.epoch`, `Tl.set`
+- `fx` — arrow_function, [361094, 361160); calls: `ft`, `n.queue.has`, `n.byPlayer.has`
+- `Rr` — function, [361161, 361358); calls: `ft`, `Object.entries(t.ladder.board).sort((n,e)=>e[1].r-n[1].r\|\|(n[0]<e[0]?-1:1)).slice(0,O.topN).map`, `Object.entries(t.ladder.board).sort((n,e)=>e[1].r-n[1].r\|\|(n[0]<e[0]?-1:1)).slice`, `Object.entries(t.ladder.board).sort`, `Object.entries`
+- `kx` — arrow_function, [361364, 361454); calls: `Rr`, `n.findIndex`
+- `Nr` — function, [361455, 361635); calls: `ft`, `((r=i.ladder.titles)[t]??(r[t]=[])).push`, `[...a.players.values()].find`, `a.players.values`, `Gd`
+- `Gd` — function, [361635, 362036); calls: `ft`, `In`, `t.titles.owned.find`, `t.toast`
+- `_h` — function, [362036, 362239); calls: `Mt`, `Fd`, `Math.max`, `Math.min`
+- `ce` — variable, [362245, 362452); calls: —
+- `yx` — function, [362453, 362803); calls: `Mt`, `a.applyLevel`, `a.toast`, `Math.round`
+- `$l` — variable, [362809, 362819); calls: —
+- `Vd` — function, [362820, 362966); calls: `V`, `$l.get`, `ge`, `kn`, `$l.set`
+- `Br` — variable, [362972, 362986); calls: —
+- `Ed` — function, [362987, 363641); calls: `Vd`, `V`, `Math.round`, `n.passives.map`, `is`, `kn`, `ir`, `Math.min`
+- `px` — arrow_function, [363647, 363789); calls: `Vd`
+- `jd` — function, [363790, 364096); calls: `V`, `Od`, `a.epoch`, `gr`
+- `bx` — arrow_function, [364102, 364184); calls: `Math.max`, `Math.min`
+- `vx` — function, [364185, 364420); calls: `Math.min`, `Math.max`, `Math.floor`
+- `xx` — function, [364420, 365136); calls: `ft`, `[...t.queue].filter`, `a.players.get`, `jd`, `e.some`, `t.queue.delete`, `e.sort`, `s.has`, `vx`, `Math.min`
+- `Mx` — function, [365136, 365645); calls: `ft`, `Wi`, `s.matches.push`, `s.byPlayer.set`, `s.byRoom.set`, `fr`, `Br.add`, `m.applyLevel`, `m.toast`
+- `wx` — function, [365645, 366282); calls: `a.epoch`, `Fd`, `Mt`, `Math.max`, `Wd`, `o.toast`
+- `Wd` — arrow_function, [366288, 366392); calls: `Math.round`
+- `za` — function, [366393, 368025); calls: `ft`, `a.epoch`, `d.toast`, `Mt`, `Wd`, `Math.max`, `qd`, `_h`, `a.record`, `Ar`
+- `Xd` — function, [368025, 368253); calls: `ft`, `n.byPlayer.delete`, `Br.delete`, `a.players.get`, `rs`, `e.applyLevel`, `n.byRoom.delete`, `n.matches.filter`, `dr`
+- `Sl` — function, [368253, 368320); calls: `a.players.get`
+- `Tx` — function, [368320, 368954); calls: `a.rooms.get`, `a.rooms.set`, `Sl`, `za`, `px`, `Ed`, `wx`, `Math.max`, `Math.abs`, `Xd`
+- `$x` — function, [368954, 369123); calls: `ft`, `n.queue.delete`, `n.watch.delete`, `n.byPlayer.get`, `za`, `Xd`
+- `Sx` — function, [369123, 369913); calls: `ft`, `a.epoch`, `Id`, `Rr(a).filter(o=>o[1]>=ue[5].min).map`, `Rr(a).filter`, `Rr`, `a.global.push`, `qd`, `cx`, `Object.entries(s.rows).filter(([,o])=>o.w>=O.fairChampMin).sort`
+- `Cl` — function, [369913, 370455); calls: `ft`, `Mt`, `Gd`, `n.ladder.prevTop.includes`, `Ar`, `a.epoch`, `Nr`, `a.record`, `t.note`, `Math.round`
+- `q` — variable, [372481, 373055); calls: —
+- `be` — variable, [373056, 373062); calls: —
+- `Ie` — variable, [373063, 373071); calls: —
+- `gs` — variable, [373072, 373081); calls: —
+- `Qd` — arrow_function, [373082, 373120); calls: `new Date(a+gs).getUTCDay`
+- `Cx` — function, [373121, 373280); calls: `Math.floor`, `q.days.includes`, `Qd`
+- `Hx` — function, [373280, 373448); calls: `Math.floor`, `q.days.includes`, `Qd`
+- `Lx` — arrow_function, [373454, 373523); calls: `q.brackets.findIndex`, `V`
+- `zd` — variable, [373524, 373575); calls: —
+- `Hl` — variable, [373576, 373590); calls: —
+- `Zt` — arrow_function, [373591, 373693); calls: `Hl.get`, `Hl.set`
+- `xe` — arrow_function, [373694, 373713); calls: `a.epoch`
+- `Px` — arrow_function, [373714, 373811); calls: `[...Zt(a).battles.values()].some`, `Zt(a).battles.values`, `Zt`, `n.mem.get`
+- `Yd` — arrow_function, [373812, 373920); calls: `Zt`, `xe`, `Cx`
+- `Ax` — function, [373921, 374306); calls: `Zt`, `e.battles.get`, `Wi`, `q.flags.map`, `e.battles.set`, `e.byRoom.set`
+- `Bi` — arrow_function, [374312, 374421); calls: `a.mem.values`
+- `Rx` — function, [374422, 374598); calls: `a.mem.values`, `Bi`
+- `ve` — arrow_function, [374604, 374620); calls: —
+- `Ll` — arrow_function, [374621, 374675); calls: `Math.hypot`, `ve`
+- `le` — function, [374676, 374744); calls: `a.mem.values`, `n.p.toast`
+- `Nx` — function, [374744, 375768); calls: `Yd`, `xe`, `V`, `gr`, `Lx`, `Ax`, `i.byName.get`, `Rx`, `i.byName.set`, `i.mem.delete`
+- `fs` — function, [375768, 375884); calls: `a.players.get`, `rs`, `n.p.note`
+- `We` — function, [375884, 375910); calls: —
+- `Bx` — function, [375910, 376352); calls: `We`, `Math.max`, `a.record`, `le`
+- `_x` — function, [376352, 377005); calls: `[...t.mem.values()].filter`, `t.mem.values`, `t.flags.forEach`, `Math.hypot`, `Math.min`, `Math.max`, `Math.abs`, `We`, `a.record`, `le`
+- `Dx` — function, [377005, 378090); calls: `xe`, `t.carts.some`, `t.carts.push`, `ve`, `le`, `[...t.mem.values()].filter`, `t.mem.values`, `n.filter`, `Math.hypot`, `Math.sign`
+- `Ux` — function, [378090, 378679); calls: `t.mem.values`, `a.players.get`, `fs`, `tp`, `ve`, `uc`, `Math.hypot`
+- `Kx` — function, [378679, 379702); calls: `xe`, `[...t.mem.values()].filter(r=>r.here).sort`, `[...t.mem.values()].filter`, `t.mem.values`, `e.forEach`, `r.p.note`, `_h`, `Math.min`, `Math.floor`, `a.record`
+- `Ix` — function, [379702, 380228); calls: `xe`, `a.rooms.get`, `a.rooms.set`, `le`, `t.mem.values`, `Ux`, `_x`, `Dx`, `Kx`, `fs`
+- `Fx` — function, [380228, 380710); calls: `xe`, `[...a.mem.values()].filter(i=>i.here).sort((i,o)=>o.pts-i.pts).slice(0,5).map`, `[...a.mem.values()].filter(i=>i.here).sort((i,o)=>o.pts-i.pts).slice`, `[...a.mem.values()].filter(i=>i.here).sort`, `[...a.mem.values()].filter`, `a.mem.values`, `Math.max`, `Math.ceil`, `a.flags.map`, `Math.round`
+- `Pa` — variable, [381987, 381997); calls: —
+- `_i` — variable, [381998, 382060); calls: —
+- `qx` — variable, [382061, 382096); calls: —
+- `Dh` — arrow_function, [382097, 382117); calls: `_i.includes`
+- `Ox` — variable, [382118, 382169); calls: —
+- `Gx` — variable, [382170, 382545); calls: —
+- `Vx` — arrow_function, [382546, 382606); calls: `Gx.find`
+- `Ex` — variable, [382607, 382613); calls: —
+- `Ya` — variable, [382614, 382624); calls: —
+- `ra` — variable, [382625, 382639); calls: —
+- `Xe` — variable, [382640, 382654); calls: —
+- `Pl` — variable, [382659, 382663); calls: —
+- `Uh` — arrow_function, [382670, 382734); calls: `ra.get`
+- `Al` — function, [382735, 382829); calls: `qn(a).pub.get`, `qn`, `ne`
+- `ne` — arrow_function, [382835, 382905); calls: —
+- `jx` — function, [382906, 383298); calls: `t.toLowerCase`, `Ya.get`, `a.rooms.get`, `a.data.maps.get`, `a.newId`, `a.rooms.set`, `a.epoch`, `Ya.set`, `ra.set`
+- `ii` — function, [383298, 383942); calls: `t.note`, `jx`, `Xe.has`, `a.data.maps.get`, `Xe.set`, `ra.has`, `Dh`, `Xe.get`, `a.placeInRoom`, `t.events.push`
+- `Jd` — function, [383942, 384219); calls: `Xe.get`, `a.data.maps.get`, `Xe.delete`, `a.travel`
+- `Wx` — function, [384219, 384318); calls: `ra.has`, `Dh`, `Jd`, `ii`, `ne`
+- `Xx` — variable, [386464, 386469); calls: —
+- `Qx` — variable, [386470, 386475); calls: —
+- `zx` — variable, [386476, 386481); calls: —
+- `Kh` — variable, [386482, 386495); calls: —
+- `Rl` — variable, [386496, 386510); calls: —
+- `Yi` — arrow_function, [386511, 386566); calls: `Rl.get`, `Rl.set`
+- `Nl` — variable, [386571, 386575); calls: —
+- `Yx` — arrow_function, [386582, 386652); calls: —
+- `oi` — arrow_function, [386653, 386725); calls: `[...Yi(a).values()].find`, `Yi(a).values`, `Yi`, `n.members.has`
+- `Jx` — arrow_function, [386726, 386832); calls: `a.book.active().find`, `a.book.active`, `n.goals.some`, `a.book.progress`
+- `Zx` — arrow_function, [386833, 386952); calls: `e.npcs.find`, `Math.hypot`
+- `t5` — function, [386953, 387386); calls: `(((r=a.data.camps[t.scene])==null?void 0:r.camps)??[]).map(h=>[h.x,h.y]).filter(([h,c])=>!t.collision.blocked(h,c,.5)).map(h=>({c:h,d:Math.hypot(h[0]-e[0],h[1]-e[1])})).filter(h=>h.d>7).sort((h,c)=>h.d-c.d).map`, `(((r=a.data.camps[t.scene])==null?void 0:r.camps)??[]).map(h=>[h.x,h.y]).filter(([h,c])=>!t.collision.blocked(h,c,.5)).map(h=>({c:h,d:Math.hypot(h[0]-e[0],h[1]-e[1])})).filter(h=>h.d>7).sort`, `(((r=a.data.camps[t.scene])==null?void 0:r.camps)??[]).map(h=>[h.x,h.y]).filter(([h,c])=>!t.collision.blocked(h,c,.5)).map(h=>({c:h,d:Math.hypot(h[0]-e[0],h[1]-e[1])})).filter`, `(((r=a.data.camps[t.scene])==null?void 0:r.camps)??[]).map(h=>[h.x,h.y]).filter(([h,c])=>!t.collision.blocked(h,c,.5)).map`, `(((r=a.data.camps[t.scene])==null?void 0:r.camps)??[]).map(h=>[h.x,h.y]).filter`, `(((r=a.data.camps[t.scene])==null?void 0:r.camps)??[]).map`, `t.collision.blocked`, `Math.hypot`, `Math.min`, `o.push`
+- `Zd` — function, [387386, 387990); calls: `t.mobs.push`, `Zn`, `Math.cos`, `Math.sin`, `Math.max`, `lr`
+- `Bl` — function, [387990, 388138); calls: `ae`, `rs`, `Yi(a).delete`, `Yi`, `dr`
+- `n5` — function, [388138, 389170); calls: `Yx(a).find`, `Yx`, `oi`, `Kt`, `t.note`, `Jx`, `Zx`, `a.data.maps.get`, `Wi`, `(((g=t.party)==null?void 0:g.members)??[]).filter`
+- `e5` — function, [389170, 389986); calls: `Yi(a).values`, `Yi`, `t.members.delete`, `a.players.get`, `e.note`, `Bl`, `t.mobs.filter`, `ae`, `s.note`, `s.toast`
+- `Ih` — variable, [390619, 390635); calls: —
+- `a5` — variable, [390636, 390652); calls: —
+- `s5` — variable, [390653, 390663); calls: —
+- `i5` — arrow_function, [390741, 390780); calls: `Date.now`, `Math.max`
+- `o5` — arrow_function, [390781, 390805); calls: `Math.ceil`
+- `Eo` — variable, [391794, 391821); calls: —
+- `h5` — variable, [391822, 391828); calls: —
+- `r5` — variable, [391829, 391833); calls: —
+- `u5` — variable, [391834, 391840); calls: —
+- `c5` — variable, [391841, 391845); calls: —
+- `Fh` — variable, [391846, 391850); calls: —
+- `l5` — variable, [391851, 391894); calls: —
+- `tg` — variable, [391895, 392711); calls: —
+- `m5` — arrow_function, [392712, 392811); calls: `Ot`
+- `d5` — function, [392812, 392987); calls: `tg.map(s=>[s,s.weight(a)]).filter`, `tg.map`, `s.weight`, `t.reduce`, `Math.random`
+- `g5` — function, [392987, 393592); calls: `m5`, `xs`, `Math.random`, `d5`, `vs`, `h.collision.nearestOpen`, `Math.cos`, `Math.sin`, `Math.round`, `Date.now`
+- `f5` — function, [393592, 394376); calls: `tg.find`, `vs`, `[s.id,...n.log].slice`, `se`, `Ge`, `t.give`, `V`, `Fn`, `Math.random`, `o.call`
+- `_l` — arrow_function, [396435, 396520); calls: `Number.isFinite`, `Math.max`
+- `Dl` — arrow_function, [396521, 396552); calls: `a.toLocaleString`
+- `k5` — function, [398313, 398652); calls: `e.call`, `s.self`, `Number.isFinite`, `n.push`, `Math.round`
+- `y5` — variable, [399249, 399257); calls: —
+- `Q3` — variable, [399258, 399278); calls: —
+- `z3` — variable, [399279, 399285); calls: —
+- `Y3` — variable, [399286, 399292); calls: —
+- `J3` — variable, [399293, 399339); calls: —
+- `Ja` — variable, [399453, 399465); calls: —
+- `ng` — variable, [399466, 399470); calls: —
+- `Di` — variable, [399471, 399490); calls: —
+- `eg` — variable, [399491, 399499); calls: —
+- `ag` — arrow_function, [399500, 399523); calls: `Math.floor`
+- `p5` — function, [399524, 399625); calls: `ag`, `Math.floor`, `Di.map`
+- `b5` — variable, [399631, 399637); calls: —
+- `qt` — arrow_function, [399638, 399797); calls: `Qm`
+- `v5` — variable, [399798, 401138); calls: —
+- `sg` — arrow_function, [401139, 401206); calls: `Di.map`
+- `Wn` — arrow_function, [401207, 401245); calls: `Number.isSafeInteger`
+- `x5` — function, [401246, 401555); calls: `sg`, `Wn`, `Math.min`, `Array.isArray`, `t.nhan.map`, `Object.entries`
+- `M5` — arrow_function, [401561, 401607); calls: `sg`
+- `ig` — arrow_function, [401608, 401659); calls: `Date.now`
+- `og` — function, [401660, 401874); calls: `Date.now`, `ig`, `a.donation.payments.reduce`, `Math.max`, `Math.min`, `Zb`
+- `hg` — arrow_function, [401880, 401901); calls: —
+- `Z3` — arrow_function, [401902, 401931); calls: `hg`
+- `w5` — function, [401932, 404358); calls: `M5`, `Date.now`, `t.note`, `r`, `Number`, `Number.isSafeInteger`, `ig`, `og`, `c.toLocaleString`, `t.takeFree`
+- `T5` — variable, [404591, 405006); calls: —
+- `$5` — variable, [405007, 491852); calls: —
+- `S5` — variable, [491853, 507823); calls: —
+- `C5` — variable, [507824, 508497); calls: —
+- `Os` — variable, [508498, 508607); calls: —
+- `rg` — variable, [508608, 508613); calls: —
+- `Ut` — arrow_function, [508614, 508694); calls: `Number.isFinite`, `Math.max`, `Math.min`
+- `jo` — variable, [508695, 508700); calls: —
+- `H5` — function, [508701, 510179); calls: `Object.keys`, `Object.keys(t).map(Number).filter(u=>Number.isInteger(u)&&u>=1).sort`, `Object.keys(t).map(Number).filter`, `Object.keys(t).map`, `Number.isInteger`, `Ut`, `Object.keys(n).map(Number).filter(u=>Number.isInteger(u)&&u>=1).sort`, `Object.keys(n).map(Number).filter`, `Object.keys(n).map`
+- `L5` — arrow_function, [510185, 510217); calls: `ug`, `or`
+- `ug` — arrow_function, [510218, 510277); calls: —
+- `Ct` — variable, [510426, 510525); calls: —
+- `Ji` — variable, [510526, 510660); calls: —
+- `P5` — variable, [510661, 511003); calls: —
+- `ua` — variable, [511004, 511018); calls: —
+- `Ul` — variable, [511019, 511033); calls: —
+- `sn` — arrow_function, [511034, 511056); calls: `vn`
+- `qh` — arrow_function, [511057, 511084); calls: `Kt`
+- `A5` — arrow_function, [511085, 511111); calls: —
+- `Oh` — variable, [511112, 511122); calls: —
+- `cg` — function, [511123, 511319); calls: `A5`, `a.rooms.get`, `Kt`, `Wi`, `R5`, `Math.max`, `Oh.add`
+- `lg` — function, [511319, 511646); calls: `sn`, `mg`, `a.placeInRoom`, `ua.has`, `Math.max`, `Math.round`, `xn`, `ua.get`, `Wt`
+- `mg` — function, [511646, 511689); calls: —
+- `R5` — function, [511689, 512558); calls: `mg`, `t.collision.nearestOpen`, `Math.round`, `xn`, `a.newId`, `Math.max`, `Wt`, `wt`, `ua.set`, `t.monsters.push`
+- `N5` — arrow_function, [512564, 512579); calls: `ua.has`
+- `dg` — function, [512580, 513189); calls: `Ul.has`, `Ul.add`, `a.join.bind`, `t`, `sn`, `cg`, `lg`, `_r`, `a.dealMonster.bind`, `N5`
+- `B5` — function, [513189, 513386); calls: `Math.min`, `Math.max`
+- `gg` — function, [513386, 513482); calls: `a.ring.fill`, `a.ringDmg.fill`
+- `_r` — function, [513482, 513708); calls: `sn`, `a.learnedSkills.includes`, `a.learnedSkills.push`
+- `Dr` — function, [513708, 513902); calls: `sn`, `a.learnedSkills.filter`, `ea`
+- `_5` — function, [513902, 514528); calls: `sn`, `qh`, `t.note`, `dg`, `cg`, `_r`, `gg`, `lg`, `t.events.push`, `t.def.skills.find`
+- `D5` — function, [514528, 514694); calls: `sn`, `Dr`, `Kt`, `a.travel`
+- `U5` — function, [514694, 515372); calls: `t.note`, `sn`, `Dr`, `yn`, `Ia`, `ea`, `t.grantGmSkills`, `mt`, `t.gear.find`, `_a`
+- `K5` — variable, [516731, 516781); calls: —
+- `me` — variable, [517057, 517062); calls: —
+- `fg` — variable, [517063, 517067); calls: —
+- `hi` — variable, [517068, 517074); calls: —
+- `I5` — variable, [517075, 517082); calls: —
+- `F5` — variable, [517083, 517089); calls: —
+- `q5` — variable, [517090, 517096); calls: —
+- `Fe` — variable, [517097, 517118); calls: —
+- `Wo` — variable, [517119, 517135); calls: —
+- `Xo` — variable, [517136, 517140); calls: —
+- `O5` — variable, [517141, 517145); calls: —
+- `Kl` — variable, [517146, 517387); calls: —
+- `Il` — variable, [517388, 517402); calls: —
+- `G5` — variable, [517403, 517497); calls: —
+- `Fl` — arrow_function, [517498, 517617); calls: `e.npcs.find`, `Math.hypot`
+- `Gh` — arrow_function, [517618, 517705); calls: `a.data.npcs.npcs.find`
+- `Ui` — arrow_function, [517706, 517778); calls: `a.data.maps.get`
+- `ri` — function, [517779, 518780); calls: `xp`, `Ui`, `Math.floor`, `Math.random`, `yr`, `Mi`, `Gh`, `a.data.quests.landmarks.find`
+- `V5` — function, [518780, 518865); calls: —
+- `E5` — function, [518865, 519753); calls: `yr`, `n.push`, `Ui`, `U0`, `t.book.lock`, `t.book.claimed`, `j5`, `e.push`, `n.splice`, `Math.floor`
+- `j5` — arrow_function, [519759, 519879); calls: `a.data.quests.quests.find`, `s.goals.some`
+- `W5` — function, [519880, 520362); calls: `Ge`, `Math.max`, `Math.round`, `cr`, `se`, `t.give`, `Math.floor`, `Math.random`, `Fn`, `a.record`
+- `X5` — function, [520362, 520606); calls: `W5`, `ri`, `Date.now`, `t.note`
+- `ql` — variable, [520612, 520626); calls: —
+- `fn` — variable, [524635, 524640); calls: —
+- `G` — arrow_function, [524641, 524656); calls: `fn.push`
+- `Ol` — variable, [524657, 524685); calls: —
+- `Q5` — variable, [524686, 525439); calls: —
+- `z5` — variable, [525688, 526322); calls: —
+- `Y5` — variable, [527450, 528099); calls: —
+- `J5` — variable, [528671, 529286); calls: —
+- `kg` — variable, [530388, 530770); calls: —
+- `Gl` — variable, [530771, 530844); calls: —
+- `yg` — variable, [531015, 532289); calls: —
+- `Tt` — arrow_function, [539426, 539604); calls: `n.forEach`, `G`, `t.replace`, `Math.min`
+- `Pt` — arrow_function, [539605, 539636); calls: `a.toLocaleString`
+- `Vl` — variable, [541307, 542165); calls: —
+- `t2` — variable, [542237, 542242); calls: —
+- `Vh` — variable, [542243, 542253); calls: —
+- `Z5` — variable, [542331, 542409); calls: —
+- `t3` — variable, [542410, 542455); calls: —
+- `n3` — variable, [542456, 542463); calls: —
+- `e3` — variable, [542464, 542470); calls: —
+- `a3` — arrow_function, [542471, 542494); calls: `Math.min`
+- `Gs` — function, [542495, 542917); calls: `Vh.get`, `Math.min`, `t3.has`, `Math.max`, `n.done.includes`, `n.done.push`, `t.applyLevel`, `t.toast`, `a.announce`
+- `Hn` — variable, [543992, 544047); calls: —
+- `pg` — variable, [544048, 544053); calls: —
+- `s3` — function, [544054, 545386); calls: `t.nearestOpen`, `s`, `e.push`, `Ce`, `pg`, `Math.hypot`, `e.some`, `n`, `Math.floor`, `t.blocked`
+- `Ce` — arrow_function, [545392, 545417); calls: `Math.round`
+- `i3` — function, [545418, 545584); calls: `[s,e].filter(Boolean).join`, `[s,e].filter`
+- `Eh` — variable, [545590, 545600); calls: —
+- `n2` — function, [545601, 545630); calls: `Eh.set`
+- `bg` — function, [545630, 545826); calls: `Eh.get`, `a.room`, `s3`, `Eh.set`
+- `o3` — function, [545826, 545914); calls: `t.slice`, `t.lastIndexOf`, `bg(a,n).find`, `bg`
+- `vg` — arrow_function, [545920, 545963); calls: `t.endsWith`, `a.u.includes`
+- `h3` — function, [546966, 547657); calls: `e.slice`, `e.lastIndexOf`, `pg`, `vg`, `a.data.exported.has`, `t.book.lock`, `a.data.maps.get`, `Nt`
+- `r3` — variable, [547663, 548289); calls: —
+- `u3` — variable, [548290, 548408); calls: —
+- `c3` — variable, [548409, 548413); calls: —
+- `l3` — variable, [548414, 548422); calls: —
+- `m3` — arrow_function, [548423, 548460); calls: `l3.filter`, `V`
+- `d3` — function, [548461, 548599); calls: `t`, `Math.floor`
+- `g3` — function, [548599, 548938); calls: `a.count`, `a.give`, `m3`, `d3`, `s.set`, `s.get`, `[...s].map(([o,r])=>`${r} ${o}`).join`, `[...s].map`, `a.toast`, `a.note`
+- `f3` — variable, [548944, 548979); calls: —
+- `xg` — variable, [548980, 548986); calls: —
+- `k3` — arrow_function, [548987, 549005); calls: —
+- `y3` — variable, [549006, 549011); calls: —
+- `Vs` — arrow_function, [549012, 549108); calls: `um`, `Jt.has`
+- `El` — arrow_function, [549109, 549137); calls: `Math.random`
+- `jl` — arrow_function, [549138, 549173); calls: `Math.random`
+- `Qo` — arrow_function, [549174, 549214); calls: `a.taken.has`
+- `p3` — class, [549215, 549330); calls: —
+- `p3.constructor` — constructor, [549224, 549329); calls: `T`, `this.members.push`
+- `Es` — variable, [549336, 549340); calls: —
+- `Wl` — variable, [549341, 549346); calls: —
+- `b3` — variable, [549347, 549352); calls: —
+- `jh` — variable, [549353, 549362); calls: —
+- `Xl` — variable, [549363, 549368); calls: —
+- `v3` — variable, [549369, 549374); calls: —
+- `x3` — variable, [549375, 549379); calls: —
+- `M3` — variable, [549380, 549399); calls: —
+- `Pe` — arrow_function, [549400, 549431); calls: `Ht.slice(1).includes`, `Ht.slice`
+- `w3` — function, [549432, 549462); calls: `vt`
+- `Ql` — class, [549462, 567377); calls: —
+- `Wh` — variable, [567383, 567537); calls: —
+- `Xh` — class, [567538, 571358); calls: —
+- `e2` — class, [571358, 679209); calls: —
+- `zo` — function, [679209, 679319); calls: `Math.atan2`, `Math.round`
+
+## Room views (5 indexed symbols)
+
+- `Xh.constructor` — constructor, [567547, 570195); calls: `T`, `(((u=s.camps[i])==null?void 0:u.camps)??[]).flatMap`, `l.members.map`, `(n.monsters??[]).filter`, `Em`, `Ek`, `Math.max`, `Math.round`, `xn`, `Math.min`
+- `Xh.bossClearing` — method, [570195, 570628); calls: `this.collision.nearestOpen`, `this.collision.blocked`, `Math.round`, `i.has`, `i.add`, `s.push`
+- `Xh.arena` — method, [570628, 571265); calls: `Math.floor`, `this.collision.blocked`, `r`, `o.push`, `Math.hypot`, `Math.min`
+- `Xh.scene` — getter, [571265, 571299); calls: —
+- `Xh.near` — method, [571299, 571357); calls: `Math.abs`
+
+## Persistence (10 indexed symbols)
+
+- `hx.constructor` — constructor, [356336, 356395); calls: `T`
+- `hx.list` — method, [356395, 356470); calls: `[...this.codes.values()].sort`, `this.codes.values`
+- `hx.get` — method, [356470, 356506); calls: `this.codes.get`, `Qa`
+- `hx.save` — method, [356506, 356532); calls: `hx.list`
+- `hx.restore` — method, [356532, 356700); calls: `Array.isArray`, `this.codes.set`
+- `hx.put` — method, [356700, 357506); calls: `Qa`, `ix.test`, `(Array.isArray(t.rewards)?t.rewards:[]).slice(0,ox).map(c=>({...c.item?{item:String(c.item)}:{},...c.gear?{gear:String(c.gear),upgrade:Math.max(0,Math.min(10,(c.upgrade??0)\|0))}:{},amount:Math.max(1,Math.min(1e7,Math.floor(Number(c.amount)\|\|1)))})).filter`, `(Array.isArray(t.rewards)?t.rewards:[]).slice(0,ox).map`, `(Array.isArray(t.rewards)?t.rewards:[]).slice`, `Array.isArray`, `String`, `Math.max`, `Math.min`, `Math.floor`
+- `hx.setDisabled` — method, [357506, 357588); calls: `hx.get`
+- `hx.remove` — method, [357588, 357661); calls: `this.codes.delete`, `Qa`
+- `hx.check` — method, [357661, 357901); calls: `hx.get`, `n.includes`
+- `hx.consume` — method, [357901, 357966); calls: `hx.get`
+
+## Progress tracking (8 indexed symbols)
+
+- `Xp.constructor` — constructor, [239302, 239424); calls: `T`
+- `Xp.mark` — method, [239424, 239505); calls: `this.crops.get`, `this.crops.set`
+- `Xp.addLog` — method, [239505, 239626); calls: `this.log.get`, `e.push`, `e.splice`, `this.log.set`
+- `Xp.save` — method, [239626, 239708); calls: `this.pub.values`
+- `Xp.restore` — method, [239708, 240033); calls: `((t==null?void 0:t.pub)??[]).filter(n=>n&&typeof n.n=="string").map`, `((t==null?void 0:t.pub)??[]).filter`, `((t==null?void 0:t.crops)??[]).filter`, `Array.isArray`, `((t==null?void 0:t.log)??[]).filter`
+- `Xp.readyAt` — method, [240033, 240153); calls: `this.crops.get`, `$i`
+- `Xp.neighbours` — method, [240153, 240721); calls: `[...this.log.get(t)??[]].reverse().map`, `[...this.log.get(t)??[]].reverse`, `this.log.get`, `c.pl.reduce`, `Xp.readyAt`, `[...new Set([...n,...i])].filter`, `this.pub.has`, `[...this.pub.values()].filter(u=>u.n!==t&&!h.includes(u.n)).sort`, `[...this.pub.values()].filter`, `this.pub.values`
+- `Xp.view` — method, [240721, 241087); calls: `this.pub.get`, `(this.log.get(t)??[]).slice`, `this.log.get`, `e.pl.map`, `this.crops.get`, `$i`, `Ms`, `Xp.readyAt`
+

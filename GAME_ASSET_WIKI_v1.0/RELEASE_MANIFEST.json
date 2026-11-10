@@ -1,0 +1,120 @@
+{
+  "wiki_version": "1.0-RESTORED",
+  "release_timestamp": "2026-11-10T04:38:07+00:00",
+  "status": "PASS_WITH_LIMITATIONS",
+  "source_assets": [
+    {
+      "filename": "Character-DhQJ_Q0g(1).js",
+      "bytes": 69360,
+      "sha256": "854dbfbd6105f551b6c110ef4895a5beedb0ddfd4afbbcc4f59c69809e7b67d1",
+      "utf16_code_units": 68304,
+      "lines": 2
+    },
+    {
+      "filename": "ChieuMau-CEtRLp-4.js",
+      "bytes": 206820,
+      "sha256": "25f88bcc7f67f5ce1dab6426b995c3f7b1a82196690c62fde656fe9216407c4f",
+      "utf16_code_units": 206820,
+      "lines": 2
+    },
+    {
+      "filename": "WorldScene-b_2tpaKT.js",
+      "bytes": 1037432,
+      "sha256": "5d5ede1b50cdcebed76efae6fea1836f067fc61f153cab5b02eb3f8a7cb29d18",
+      "utf16_code_units": 1010165,
+      "lines": 1144
+    },
+    {
+      "filename": "index-BIkbGDKp.js",
+      "bytes": 115984,
+      "sha256": "501ae57d733b2dd15554e606eb96352b4e6f1994e125890f32871dd411a78550",
+      "utf16_code_units": 113882,
+      "lines": 469
+    },
+    {
+      "filename": "items-nDkzNEls.js",
+      "bytes": 18028,
+      "sha256": "5f77311ae9d6e9fab8eff378a809fcacf3f16af2304aa3f577bee1aab1d0b343",
+      "utf16_code_units": 16097,
+      "lines": 14
+    },
+    {
+      "filename": "phaser-DRI6y8R5.js",
+      "bytes": 1205225,
+      "sha256": "5920a4fd5e79aa7f0f3f87a914b4591ba68a8a87a0f6a5c3d49005a870a5d7b1",
+      "utf16_code_units": 1205212,
+      "lines": 69
+    },
+    {
+      "filename": "sim-CvoxXTtu.js",
+      "bytes": 705393,
+      "sha256": "8ddd24caae7b39e86a6525117ef6619bba015d4698e3d09b2177af465fab9dc7",
+      "utf16_code_units": 681637,
+      "lines": 2
+    },
+    {
+      "filename": "tm-direct.js",
+      "bytes": 5362,
+      "sha256": "ac013042e8be620365ae650b48d4da80c40f0efa3ac9a2d061d74372f01a3965",
+      "utf16_code_units": 5333,
+      "lines": 72
+    },
+    {
+      "filename": "tm-guard.js",
+      "bytes": 5286,
+      "sha256": "4a9ef0f8ae1a11556ba4f3ef386de7bc0c76cf0fa32b97d5309db4dff9dada47",
+      "utf16_code_units": 5201,
+      "lines": 67
+    },
+    {
+      "filename": "trangbi-iyUH-plT.js",
+      "bytes": 254736,
+      "sha256": "c591d321899db406ed7387c54c21e303582505396e6d815fe0441dcdc4f11cec",
+      "utf16_code_units": 237277,
+      "lines": 4
+    }
+  ],
+  "symbol_statistics": {
+    "total_symbols": 16037,
+    "location_verified": 15263,
+    "location_unresolved": 774,
+    "location_not_applicable": 0,
+    "symbol_confidence_confirmed": 16037,
+    "semantic_confidence_confirmed": 31,
+    "semantic_confidence_unknown": 16006,
+    "relationship_confidence_confirmed": 1401,
+    "relationship_confidence_unknown": 14636
+  },
+  "technical_claims": {
+    "total_inspected": 18,
+    "confirmed": 12,
+    "corrected": 6,
+    "unsupported_eliminated": 2
+  },
+  "known_limitations": [
+    "Phaser sub-symbol positions are verified source-name anchors only, not complete declaration ranges.",
+    "Original source-code comments, symbolic associations, and minified method interpretations are not all semantically verified.",
+    "Older release reports were intentionally preserved as historical; their 8,526 entry counts are not current.",
+    "Server-side calculations, network authority, and original 9 analysis packs may contain unresolved semantic assumptions."
+  ],
+  "prior_release_symbol_statistics": {
+    "total_symbols": 8526,
+    "location_verified": 5024,
+    "location_unresolved": 3502,
+    "location_not_applicable": 0,
+    "symbol_confidence_confirmed": 8526,
+    "semantic_confidence_confirmed": 31,
+    "semantic_confidence_unknown": 8495,
+    "relationship_confidence_confirmed": 1401,
+    "relationship_confidence_unknown": 7125
+  },
+  "restoration": {
+    "original_packages": 9,
+    "source_files_preserved": 10,
+    "specialist_markdown_preserved": 163,
+    "original_indexes": "original_indexes/INDEX_REGISTRY.json",
+    "preservation_hashes": "references/PRESERVATION_BASELINE.json",
+    "lookup_file": "references/ORIGINAL_SYMBOL_LOOKUP.json",
+    "total_restored_index_entries": 16037
+  }
+}

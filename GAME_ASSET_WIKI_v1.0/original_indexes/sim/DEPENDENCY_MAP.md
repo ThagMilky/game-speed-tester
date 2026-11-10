@@ -1,0 +1,842 @@
+# DEPENDENCY_MAP — sim-CvoxXTtu.js
+
+## Confirmed ES module imports
+
+### `./trangbi-iyUH-plT.js`
+
+Offset 168–2625; 274 imported aliases.
+
+- `c` → `Yo`
+- `dk` → `Pn`
+- `dl` → `la`
+- `dm` → `$g`
+- `dn` → `Mn`
+- `br` → `Z`
+- `b_` → `Za`
+- `cS` → `de`
+- `bW` → `Yl`
+- `l` → `ui`
+- `dp` → `vn`
+- `dj` → `tt`
+- `B` → `Jl`
+- `dq` → `Zl`
+- `bn` → `Ht`
+- `T` → `Ir`
+- `e` → `Sg`
+- `i` → `Cg`
+- `dr` → `Hg`
+- `g` → `Lg`
+- `ds` → `Pg`
+- `dt` → `gt`
+- `du` → `ma`
+- `dv` → `Ag`
+- `dw` → `Rg`
+- `E` → `no`
+- `I` → `Fr`
+- `dg` → `At`
+- `dx` → `En`
+- `t` → `Qh`
+- `d2` → `tm`
+- `R` → `V`
+- `dy` → `Ng`
+- `dz` → `Bg`
+- `cO` → `_g`
+- `dA` → `qr`
+- `dB` → `Dg`
+- `u` → `Or`
+- `dC` → `wa`
+- `dD` → `Yt`
+- `df` → `Ug`
+- `dE` → `Kg`
+- `dF` → `Ta`
+- `dG` → `Ig`
+- `dH` → `Fg`
+- `dI` → `Gr`
+- `dJ` → `qg`
+- `dK` → `Og`
+- `dL` → `Vr`
+- `dM` → `Er`
+- `dN` → `Gg`
+- `dO` → `Vg`
+- `n` → `kn`
+- `f` → `ge`
+- `m` → `zh`
+- `dP` → `Aa`
+- `dQ` → `Ra`
+- `bU` → `Eg`
+- `c8` → `Qe`
+- `dR` → `ts`
+- `bY` → `jg`
+- `dS` → `nm`
+- `dT` → `_n`
+- `Z` → `Wg`
+- `dU` → `Ki`
+- `cM` → `ot`
+- `dV` → `Xg`
+- `bA` → `Na`
+- `dW` → `Qg`
+- `bJ` → `em`
+- `a0` → `fe`
+- `dX` → `ze`
+- `al` → `ci`
+- `b8` → `zg`
+- `dY` → `Nn`
+- `b7` → `Yg`
+- `aa` → `Yh`
+- `dZ` → `Jg`
+- `bK` → `am`
+- `k` → `z`
+- `a9` → `Jh`
+- `_` → `ns`
+- `dh` → `On`
+- `bm` → `Ii`
+- `d_` → `li`
+- `cv` → `Ba`
+- `c9` → `Zg`
+- `d$` → `Jo`
+- `d` → `Nt`
+- `bo` → `t0`
+- `bs` → `mt`
+- `bt` → `_a`
+- `ca` → `js`
+- `e0` → `n0`
+- `cg` → `e0`
+- `ce` → `a0`
+- `c1` → `Bn`
+- `bT` → `jr`
+- `ci` → `s0`
+- `c6` → `Wr`
+- `c7` → `eo`
+- `c5` → `ao`
+- `cd` → `i0`
+- `cb` → `o0`
+- `cc` → `h0`
+- `by` → `r0`
+- `e1` → `sm`
+- `e2` → `im`
+- `cK` → `om`
+- `as` → `u0`
+- `e3` → `c0`
+- `e4` → `l0`
+- `aR` → `hm`
+- `e5` → `xt`
+- `ad` → `Qn`
+- `cX` → `Ye`
+- `cw` → `nn`
+- `L` → `kt`
+- `e6` → `m0`
+- `W` → `es`
+- `co` → `Vt`
+- `e7` → `d0`
+- `aw` → `g0`
+- `ao` → `f0`
+- `cE` → `rm`
+- `cW` → `Ae`
+- `e8` → `k0`
+- `a7` → `Fi`
+- `a8` → `y0`
+- `ck` → `so`
+- `de` → `Wt`
+- `dd` → `xn`
+- `e9` → `Je`
+- `ak` → `Ws`
+- `bp` → `Xn`
+- `ea` → `Ze`
+- `eb` → `Jt`
+- `bj` → `vt`
+- `ec` → `um`
+- `Q` → `An`
+- `J` → `nt`
+- `d4` → `qi`
+- `ed` → `cm`
+- `ee` → `Xs`
+- `am` → `Da`
+- `ag` → `en`
+- `ef` → `Xr`
+- `bk` → `Zo`
+- `M` → `io`
+- `bf` → `lm`
+- `ap` → `as`
+- `eg` → `mm`
+- `eh` → `p0`
+- `ar` → `Zh`
+- `aj` → `mi`
+- `ei` → `b0`
+- `U` → `ks`
+- `bl` → `v0`
+- `ej` → `x0`
+- `aS` → `M0`
+- `be` → `w0`
+- `b2` → `T0`
+- `ek` → `$0`
+- `el` → `tr`
+- `O` → `dm`
+- `a2` → `gm`
+- `a1` → `S0`
+- `$` → `fm`
+- `em` → `C0`
+- `en` → `Qr`
+- `eo` → `H0`
+- `ep` → `L0`
+- `eq` → `Qs`
+- `er` → `P0`
+- `es` → `th`
+- `et` → `zr`
+- `eu` → `A0`
+- `y` → `R0`
+- `N` → `ta`
+- `ev` → `N0`
+- `ew` → `B0`
+- `bZ` → `nh`
+- `ex` → `eh`
+- `cy` → `qe`
+- `ey` → `_0`
+- `ez` → `D0`
+- `eA` → `Ts`
+- `eB` → `Yr`
+- `eC` → `oo`
+- `bH` → `ah`
+- `eD` → `U0`
+- `bD` → `Jr`
+- `bR` → `K0`
+- `eE` → `I0`
+- `c_` → `F0`
+- `eF` → `Zr`
+- `bz` → `ho`
+- `eG` → `tu`
+- `eH` → `da`
+- `eI` → `q0`
+- `eJ` → `O0`
+- `eK` → `G0`
+- `eL` → `V0`
+- `bN` → `nu`
+- `cl` → `E0`
+- `bO` → `eu`
+- `bM` → `ro`
+- `bP` → `uo`
+- `d5` → `zn`
+- `eM` → `au`
+- `eN` → `j0`
+- `eO` → `su`
+- `eP` → `iu`
+- `eQ` → `co`
+- `eR` → `W0`
+- `c3` → `lo`
+- `r` → `ga`
+- `eS` → `X0`
+- `eT` → `Q0`
+- `v` → `we`
+- `eU` → `z0`
+- `eV` → `Y0`
+- `bL` → `J0`
+- `bI` → `ou`
+- `eW` → `Z0`
+- `cr` → `tf`
+- `cs` → `nf`
+- `ct` → `ef`
+- `eX` → `af`
+- `bG` → `$s`
+- `eY` → `sf`
+- `cJ` → `mo`
+- `eZ` → `He`
+- `a5` → `hu`
+- `a4` → `ru`
+- `cm` → `of`
+- `e_` → `hf`
+- `cz` → `Ss`
+- `cF` → `uu`
+- `cB` → `cu`
+- `cA` → `rf`
+- `cC` → `uf`
+- `cD` → `cf`
+- `cV` → `lf`
+- `cQ` → `Cs`
+- `cL` → `mf`
+- `b` → `go`
+- `z` → `df`
+- `cn` → `gf`
+- `d0` → `ff`
+- `K` → `kf`
+- `A` → `lu`
+- `w` → `yf`
+- `x` → `pf`
+- `o` → `bf`
+- `e$` → `mu`
+- `f0` → `$a`
+- `f1` → `Sa`
+- `f2` → `vf`
+- `cu` → `xf`
+- `cP` → `Mf`
+- `f3` → `wf`
+- `H` → `Tf`
+- `f4` → `$f`
+- `f5` → `du`
+- `da` → `fo`
+- `f6` → `Sf`
+- `f7` → `Cf`
+- `f8` → `Hf`
+- `f9` → `gu`
+- `d1` → `Lf`
+- `P` → `Pf`
+- `fa` → `Af`
+- `V` → `Rf`
+
+### `./index-BIkbGDKp.js`
+
+Offset 2625–2733; 9 imported aliases.
+
+- `m` → `Rn`
+- `b` → `Nf`
+- `U` → `sh`
+- `ab` → `Ua`
+- `D` → `dt`
+- `ac` → `Oi`
+- `H` → `km`
+- `l` → `Bf`
+- `ad` → `_f`
+
+## Confirmed exports
+
+- `rv` → `$` at 679326
+- `xm` → `A` at 679334
+- `$n` → `B` at 679342
+- `Dn` → `C` at 679350
+- `Tn` → `D` at 679358
+- `Hs` → `E` at 679366
+- `c1` → `F` at 679374
+- `g1` → `G` at 679382
+- `f1` → `H` at 679390
+- `is` → `I` at 679398
+- `Yn` → `J` at 679406
+- `hy` → `K` at 679414
+- `ee` → `L` at 679422
+- `il` → `M` at 679430
+- `Ml` → `N` at 679438
+- `Y` → `O` at 679446
+- `Pi` → `P` at 679453
+- `dv` → `Q` at 679461
+- `a1` → `R` at 679469
+- `bt` → `S` at 679477
+- `ak` → `T` at 679485
+- `Wa` → `U` at 679493
+- `Ai` → `V` at 679501
+- `e2` → `W` at 679509
+- `$v` → `X` at 679517
+- `qo` → `Y` at 679525
+- `an` → `Z` at 679533
+- `uv` → `_` at 679541
+- `Pm` → `a` at 679549
+- `fi` → `a$` at 679557
+- `Gv` → `a0` at 679566
+- `P3` → `a1` at 679575
+- `Tv` → `a2` at 679584
+- `W3` → `a3` at 679593
+- `X3` → `a4` at 679602
+- `xa` → `a5` at 679611
+- `Oo` → `a6` at 679620
+- `xv` → `a7` at 679629
+- `Nh` → `a8` at 679638
+- `_t` → `a9` at 679647
+- `Gp` → `aA` at 679656
+- `Vp` → `aB` at 679665
+- `Hc` → `aC` at 679674
+- `Op` → `aD` at 679683
+- `xc` → `aE` at 679692
+- `Mc` → `aF` at 679701
+- `_p` → `aG` at 679710
+- `Np` → `aH` at 679719
+- `Bp` → `aI` at 679728
+- `Pa` → `aJ` at 679737
+- `ud` → `aK` at 679746
+- `qx` → `aL` at 679755
+- `xh` → `aM` at 679764
+- `hd` → `aN` at 679773
+- `wc` → `aO` at 679782
+- `qp` → `aP` at 679791
+- `ue` → `aQ` at 679800
+- `O` → `aR` at 679809
+- `ce` → `aS` at 679817
+- `q` → `aT` at 679826
+- `zd` → `aU` at 679834
+- `Gx` → `aV` at 679843
+- `y5` → `aW` at 679852
+- `J3` → `aX` at 679861
+- `Y3` → `aY` at 679870
+- `z3` → `aZ` at 679879
+- `Q3` → `a_` at 679888
+- `dl` → `aa` at 679897
+- `rl` → `ab` at 679906
+- `ia` → `ac` at 679915
+- `pr` → `ad` at 679924
+- `Ti` → `ae` at 679933
+- `Pp` → `af` at 679942
+- `Kp` → `ag` at 679951
+- `Up` → `ah` at 679960
+- `Tc` → `ai` at 679969
+- `$c` → `aj` at 679978
+- `Ip` → `ak` at 679987
+- `Fp` → `al` at 679996
+- `Cp` → `am` at 680005
+- `Hp` → `an` at 680014
+- `xr` → `ao` at 680023
+- `Ep` → `ap` at 680032
+- `br` → `aq` at 680041
+- `Ms` → `ar` at 680050
+- `Rp` → `as` at 680059
+- `Fb` → `at` at 680068
+- `$r` → `au` at 680077
+- `rd` → `av` at 680086
+- `wh` → `aw` at 680095
+- `te` → `ax` at 680104
+- `Sc` → `ay` at 680113
+- `Cc` → `az` at 680122
+- `A3` → `b` at 680131
+- `ub` → `b$` at 680139
+- `$m` → `b0` at 680148
+- `Kb` → `b1` at 680157
+- `Di` → `b2` at 680166
+- `ag` → `b3` at 680175
+- `p5` → `b4` at 680184
+- `ng` → `b5` at 680193
+- `x5` → `b6` at 680202
+- `Ja` → `b7` at 680211
+- `v5` → `b8` at 680220
+- `Z3` → `b9` at 680229
+- `$b` → `bA` at 680238
+- `jt` → `bB` at 680247
+- `oe` → `bC` at 680256
+- `Si` → `bD` at 680265
+- `Va` → `bE` at 680274
+- `rb` → `bF` at 680283
+- `ls` → `bG` at 680292
+- `fd` → `bH` at 680301
+- `Ga` → `bI` at 680310
+- `db` → `bJ` at 680319
+- `fb` → `bK` at 680328
+- `Ic` → `bL` at 680337
+- `pd` → `bM` at 680346
+- `wr` → `bN` at 680355
+- `oa` → `bO` at 680364
+- `J` → `bP` at 680373
+- `yd` → `bQ` at 680381
+- `De` → `bR` at 680390
+- `kb` → `bS` at 680399
+- `yb` → `bT` at 680408
+- `vd` → `bU` at 680417
+- `Fc` → `bV` at 680426
+- `Tr` → `bW` at 680435
+- `wi` → `bX` at 680444
+- `lb` → `bY` at 680453
+- `V3` → `bZ` at 680462
+- `Td` → `b_` at 680471
+- `Yb` → `ba` at 680480
+- `Ea` → `bb` at 680489
+- `Rd` → `bc` at 680498
+- `Cd` → `bd` at 680507
+- `Hd` → `be` at 680516
+- `Ee` → `bf` at 680525
+- `Vn` → `bg` at 680534
+- `Sd` → `bh` at 680543
+- `zc` → `bi` at 680552
+- `Ob` → `bj` at 680561
+- `_o` → `bk` at 680570
+- `Yc` → `bl` at 680579
+- `ai` → `bm` at 680588
+- `Ld` → `bn` at 680597
+- `Eb` → `bo` at 680606
+- `Vb` → `bp` at 680615
+- `jb` → `bq` at 680624
+- `nl` → `br` at 680633
+- `E3` → `bs` at 680642
+- `j3` → `bt` at 680651
+- `yh` → `bu` at 680660
+- `Ho` → `bv` at 680669
+- `tl` → `bw` at 680678
+- `St` → `bx` at 680687
+- `Hm` → `by` at 680696
+- `yi` → `bz` at 680705
+- `R3` → `c` at 680714
+- `Vu` → `c$` at 680722
+- `fh` → `c0` at 680731
+- `zm` → `c1` at 680740
+- `aa` → `c2` at 680749
+- `Fa` → `c3` at 680758
+- `O3` → `c4` at 680767
+- `B3` → `c5` at 680776
+- `od` → `c6` at 680785
+- `gp` → `c7` at 680794
+- `Kl` → `c8` at 680803
+- `me` → `c9` at 680812
+- `Xm` → `cA` at 680821
+- `Ih` → `cB` at 680830
+- `u3` → `cC` at 680839
+- `Im` → `cD` at 680848
+- `dh` → `cE` at 680857
+- `Fu` → `cF` at 680866
+- `Mk` → `cG` at 680875
+- `xk` → `cH` at 680884
+- `jm` → `cI` at 680893
+- `Wk` → `cJ` at 680902
+- `jk` → `cK` at 680911
+- `Z1` → `cL` at 680920
+- `rx` → `cM` at 680929
+- `Gn` → `cN` at 680938
+- `Xu` → `cO` at 680947
+- `D3` → `cP` at 680956
+- `at` → `cQ` at 680965
+- `Yk` → `cR` at 680974
+- `ih` → `cS` at 680983
+- `Ot` → `cT` at 680992
+- `Ka` → `cU` at 681001
+- `tb` → `cV` at 681010
+- `qk` → `cW` at 681019
+- `rt` → `cX` at 681028
+- `zk` → `cY` at 681037
+- `vg` → `cZ` at 681046
+- `Hn` → `c_` at 681055
+- `G5` → `ca` at 681064
+- `Fe` → `cb` at 681073
+- `Wo` → `cc` at 681082
+- `tg` → `cd` at 681091
+- `ed` → `ce` at 681100
+- `bn` → `cf` at 681109
+- `wp` → `cg` at 681118
+- `t2` → `ch` at 681127
+- `a3` → `ci` at 681136
+- `Fk` → `cj` at 681145
+- `Xo` → `ck` at 681154
+- `Ji` → `cl` at 681163
+- `ip` → `cm` at 681172
+- `q3` → `cn` at 681181
+- `I3` → `co` at 681190
+- `K3` → `cp` at 681199
+- `F3` → `cq` at 681208
+- `G3` → `cr` at 681217
+- `ya` → `cs` at 681226
+- `n2` → `ct` at 681235
+- `Du` → `cu` at 681244
+- `gk` → `cv` at 681253
+- `vk` → `cw` at 681262
+- `mk` → `cx` at 681271
+- `dk` → `cy` at 681280
+- `Wm` → `cz` at 681289
+- `N3` → `d` at 681298
+- `E1` → `d0` at 681306
+- `h1` → `d1` at 681315
+- `Kk` → `d2` at 681324
+- `Ik` → `d3` at 681333
+- `lh` → `d4` at 681342
+- `La` → `d5` at 681351
+- `Nk` → `d6` at 681360
+- `wt` → `d7` at 681369
+- `Zn` → `d8` at 681378
+- `lr` → `d9` at 681387
+- `ae` → `da` at 681396
+- `U3` → `db` at 681405
+- `H1` → `dc` at 681414
+- `hh` → `dd` at 681423
+- `ar` → `de` at 681432
+- `ki` → `df` at 681441
+- `L3` → `dg` at 681450
+- `yn` → `e` at 681459
+- `Wf` → `f` at 681467
+- `C3` → `g` at 681475
+- `_3` → `h` at 681483
+- `os` → `i` at 681491
+- `Vi` → `j` at 681499
+- `wm` → `k` at 681507
+- `na` → `l` at 681515
+- `bm` → `m` at 681523
+- `vm` → `n` at 681531
+- `Gi` → `o` at 681539
+- `sk` → `p` at 681547
+- `Te` → `q` at 681555
+- `Jn` → `r` at 681563
+- `Nu` → `s` at 681571
+- `Ei` → `t` at 681579
+- `e1` → `u` at 681587
+- `t1` → `v` at 681595
+- `H3` → `w` at 681603
+- `i1` → `x` at 681611
+- `Zf` → `y` at 681619
+- `ss` → `z` at 681627
+
+## Internal class relationships (static AST call evidence)
+
+### `Jf` (11004)
+
+- `landed` → `Jf.heal`, `Jf.hit`, `this.foes(t,n).filter(l=>l!==e&&!l.dead&&Math.hypot(l.x-e.x,l.y-e.y)<=la.radius).slice`, `this.foes(t,n).filter`, `Jf.foes`, `this.foes(t,n).filter(g=>Math.hypot(g.x-e.x,g.y-e.y)<=2).slice`
+- `tick` → `Jf.heal`, `this.foes(t,n).filter(r=>Math.hypot(r.x-i.x,r.y-i.y)<=2.5).slice`, `this.foes(t,n).filter`, `Jf.foes`, `Jf.mark`, `Jf.hit`
+### `j1` (83311)
+
+- `constructor` → `j1.heal`, `j1.damage`, `j1.enemies`, `j1.guMark`
+- `basic` → `j1.speedFactor`, `j1.later`, `j1.enemies`, `j1.radius`, `j1.damage`, `this.w.realms.hitSeals`, `j1.slash`
+- `slash` → `this.enemies(t,n).filter`, `j1.enemies`, `j1.radius`, `j1.damage`, `j1.heal`, `j1.dot`, `j1.hardControl`
+- `dodge` → `this.w.record`
+- `cast` → `j1.sealed`, `this.enemies(t,n).some`, `j1.enemies`, `j1.guStacks`, `j1.nearest`, `j1.cdrOf`, `j1.speedFactor`, `this.w.record`, `j1.maxStacks`, `j1.beat`, `this.equipment.cast`, `j1.roarEffects`, `j1.rootCast`, `j1.makhiAfter`, `j1.run`, `j1.bodyCast`, `j1.cultivationCast`
+- `run` → `j1.releaseGuard`, `j1.selfEffects`, `j1.later`, `j1.area`, `j1.bonusRaw`, `j1.detonate`, `j1.makhiAfter`, `j1.brew`, `j1.cone`, `j1.line`, `j1.tame`, `j1.classAfter`, `this.w.addField`, `j1.nearest`, `j1.radius`, `j1.damage`, `j1.gainSat`, `this.w.addShot`
+- `area` → `this.enemies(t,n).filter(f=>Math.hypot(f.x-s,f.y-i)-this.radius(f)<o).sort`, `this.enemies(t,n).filter`, `j1.enemies`, `j1.radius`, `j1.damage`, `j1.statuses`
+- `cone` → `j1.enemies`, `j1.radius`, `j1.damage`, `j1.statuses`
+- `line` → `j1.enemies`, `j1.radius`, `j1.damage`, `j1.statuses`
+- `nearest` → `this.enemies(t,n).filter(r=>Math.hypot(r.x-n.x,r.y-n.y)<=i+this.radius(r)).sort((r,h)=>Math.hypot(r.x-e,r.y-s)-Math.hypot(h.x-e,h.y-s)).slice`, `this.enemies(t,n).filter(r=>Math.hypot(r.x-n.x,r.y-n.y)<=i+this.radius(r)).sort`, `this.enemies(t,n).filter`, `j1.enemies`, `j1.radius`
+- `enemies` → `this.w.pkOk`
+- `damage` → `this.w.realms.protected`, `this.w.pkOk`, `this.equipment.multiplier`, `this.castFirst.get`, `this.castFirst.set`, `this.w.realms.inRoom`, `j1.statusDamage`, `this.w.allyNear`, `j1.rootHit`, `j1.behind`, `j1.gainSat`, `j1.hitType`, `j1.typeK`, `j1.guStacks`, `this.equipment.detonate`, `this.w.dealMonster`, `this.w.hurtByPlayer`, `j1.blood`
+- `proc` → `j1.heal`, `j1.dot`, `this.enemies(t,n).filter`, `j1.enemies`, `j1.radius`, `j1.damage`, `j1.hardControl`, `j1.controlDuration`, `j1.blood`
+- `onKill` → `j1.heal`, `j1.setSkillCd`
+- `statuses` → `this.w.realms.protected`, `this.w.pkOk`, `j1.dot`, `j1.hardControl`, `j1.controlDuration`, `j1.wake`, `j1.heal`
+- `statusDamage` → `j1.inZone`
+- `afterHit` → `j1.heal`, `j1.dot`
+- `wake` → `this.hot.get`, `this.hot.set`
+- `hardControl` → `j1.controlDuration`
+- `dot` → `j1.wake`
+- `healingMultiplier` → `j1.poisonCut`
+- `poisonCut` → `this.w.players.get`
+- `pvpBurst` → `j1.pvpTime`, `this.pvpLog.get`, `this.pvpLog.set`
+- `pvpMana` → `j1.inPvp`
+- `pvpTouch` → `j1.inPvp`, `this.pvpStart.set`, `this.pvpAt.set`
+- `pvpTime` → `j1.inPvp`, `this.pvpStart.get`
+- `inPvp` → `this.pvpAt.get`
+- `heal` → `j1.inPvp`, `j1.pvpTime`, `j1.healingMultiplier`
+- `selfEffects` → `j1.friends`, `j1.heal`, `j1.hpScale`
+- `friends` → `this.w.pkOk`
+- `beat` → `j1.maxStacks`, `j1.hpScale`, `j1.heal`
+- `makhiAfter` → `j1.makhiGain`
+- `classAfter` → `j1.makhiAfter`, `j1.jarMax`, `this.enemies(t,n).filter`, `j1.enemies`, `j1.statuses`, `this.w.newId`, `j1.detonate`, `j1.petSwapCombo`, `this.w.dropPet`
+- `detonate` → `j1.sealed`, `j1.damage`, `j1.dot`, `j1.shiftKeyCd`
+- `brew` → `j1.dot`
+- `tame` → `j1.damage`, `this.w.dealMonster`, `j1.jarMax`, `j1.soulMax`
+- `tick` → `this.hot.get`, `this.hot.set`, `j1.statusTick`, `this.equipment.tick`, `j1.passiveTick`, `j1.array`, `j1.petTick`, `j1.avatarTick`
+- `passiveTick` → `this.cleanseAt.get`, `this.cleanseAt.set`, `this.w.pkOk`
+- `statusTick` → `this.w.players.get`, `this.w.pkOk`, `j1.mobDotTick`, `this.castFirst.get`, `j1.typeK`, `this.w.dealMonster`, `this.w.hurtByPlayer`, `j1.heal`
+- `array` → `this.w.pkOk`, `j1.damage`, `j1.statuses`, `this.w.dealMonster`
+- `avatarTick` → `j1.area`, `j1.nearest`
+- `petTick` → `this.w.spawnPet`, `this.lastFoe.get`, `this.w.pkOk`, `this.enemies(t,n).filter($=>m($,4.5)).sort`, `this.enemies(t,n).filter`, `j1.enemies`, `j1.radius`, `j1.petSkill`, `this.w.dealMonster`, `j1.typeK`, `j1.damage`, `j1.dot`
+- `petSkill` → `this.lastFoe.get`, `this.w.dealMonster`, `j1.typeK`, `j1.damage`, `j1.dot`, `j1.enemies`, `j1.statuses`, `j1.friends`
+- `quyShell` → `this.w.dropPet`
+- `petSwapCombo` → `j1.heal`
+- `guTop` → `j1.guStacks`, `this.w.pkOk`
+- `guMark` → `this.w.realms.protected`, `this.w.pkOk`
+- `bodyCast` → `j1.later`, `this.enemies(t,n).filter`, `j1.enemies`, `j1.radius`, `j1.damage`, `j1.statuses`, `j1.blood`, `j1.heal`
+- `cultivationCast` → `j1.releaseGuard`, `j1.later`, `this.enemies(t,n).filter(g=>Math.hypot(g.x-s,g.y-i)-this.radius(g)<=u).sort((g,d)=>Math.hypot(g.x-s,g.y-i)-Math.hypot(d.x-s,d.y-i)).slice`, `this.enemies(t,n).filter(g=>Math.hypot(g.x-s,g.y-i)-this.radius(g)<=u).sort`, `this.enemies(t,n).filter`, `j1.enemies`, `j1.radius`, `j1.selfEffects`, `j1.makhiAfter`, `j1.area`, `j1.damage`, `j1.guMark`, `j1.heal`, `j1.guStacks`, `j1.statuses`, `this.equipment.detonate`, `j1.makhiGain`
+- `rootHit` → `this.rootCasts.get`, `j1.heal`, `j1.rootDot`, `j1.rootDebuff`, `j1.rootCleanse`, `j1.rootNote`, `this.rootCasts.set`, `j1.rootResource`, `this.enemies(t,n).filter(N=>N!==e&&Math.hypot(N.x-e.x,N.y-e.y)<=2).sort((N,D)=>Math.hypot(N.x-e.x,N.y-e.y)-Math.hypot(D.x-e.x,D.y-e.y)).slice`, `this.enemies(t,n).filter(N=>N!==e&&Math.hypot(N.x-e.x,N.y-e.y)<=2).sort`, `this.enemies(t,n).filter`, `j1.enemies`, `j1.statuses`
+- `rootResource` → `j1.blood`
+- `rootDebuff` → `this.w.realms.protected`, `this.w.pkOk`
+- `rootCleanse` → `j1.rootNote`
+- `rootCast` → `j1.rootResource`, `j1.rootCleanse`, `j1.heal`, `j1.enemies`, `j1.statuses`, `j1.rootNote`
+- `mobStatuses` → `this.w.realms.protected`, `j1.mobDot`, `j1.controlDuration`
+- `mobDotTick` → `j1.absorb`, `this.w.die`
+- `mobProc` → `this.mobCd.get`, `this.mobCd.set`, `j1.mobStatuses`
+- `incomingScale` → `j1.mobTaken`
+- `onHurt` → `this.w.dealMonster`
+- `absorb` → `j1.quyShell`, `j1.blood`, `this.equipment.absorb`, `j1.damage`, `j1.guMark`, `this.enemies(i,t).filter`, `j1.enemies`, `j1.rootDebuff`, `j1.rootResource`, `j1.pvpTime`
+- `gauge` → `j1.maxStacks`, `j1.guTop`, `this.sealed(t.room,t).reduce`, `j1.sealed`
+- `fieldPulse` → `j1.area`, `j1.enemies`, `j1.radius`, `j1.statuses`, `j1.heal`, `j1.hpScale`, `j1.controlDuration`
+### `Ys` (183936)
+
+- `rebuild` → `this.cells.clear`, `this.cells.get`, `this.cells.set`
+- `query` → `this.cells.get`
+### `Fk` (185209)
+
+- `def` → `this.data.quests.map`, `this.index.get`
+- `rec` → `this.records.get`
+- `claimed` → `this.records.get`
+- `available` → `this.records.has`, `Fk.claimed`, `Fk.level`, `Fk.allowed`
+- `allowed` → `this.ctx.classId`, `this.ctx.bookOpen`
+- `npcLine` → `Fk.claimed`
+- `choose` → `Fk.active`, `this.records.get`
+- `pin` → `this.records.has`, `Fk.claimed`, `this.pins.filter`
+- `unpin` → `this.pins.filter`
+- `active` → `this.records.values`, `Fk.def`
+- `lock` → `this.data.unlocks.find`, `Fk.claimed`, `Fk.def`
+- `accept` → `Fk.def`, `Fk.available`, `this.records.set`, `Fk.refreshState`
+- `progress` → `Fk.def`, `this.records.get`, `Fk.skips`, `this.inventory().get`, `Fk.inventory`
+- `goalsLeft` → `Fk.def`, `Fk.progress`, `Fk.skips`
+- `complete` → `Fk.def`, `Fk.rec`, `this.progress(t).every`, `Fk.progress`
+- `claim` → `Fk.def`, `this.records.get`, `Fk.complete`, `Fk.skips`, `Fk.inventory`, `Fk.consume`, `Fk.level`, `this.records.delete`, `Fk.unpin`, `Fk.active`
+- `record` → `this.records.values`, `Fk.def`, `Fk.skips`
+- `refreshState` → `this.records.values`, `Fk.def`
+- `forNpc` → `this.active().filter`, `Fk.active`, `Fk.complete`, `this.data.quests.filter`, `Fk.available`, `Fk.progress`
+- `mark` → `Fk.forNpc`
+- `save` → `this.records.values`, `Fk.def`
+- `load` → `Fk.def`, `this.records.clear`, `this.records.set`, `this.def(n.id).goals.map`
+### `my` (195362)
+
+- `nearest` → `this.spots(t).forEach`, `my.spots`
+- `aim` → `my.waterAt`
+- `rod` → `my.rodIndex`
+- `verify` → `my.pos`
+- `action` → `my.cancel`, `my.buyRod`, `my.startReel`, `my.release`, `my.aim`, `my.nearest`, `my.spots`
+- `release` → `my.verify`
+- `startReel` → `my.pick`, `my.cancel`, `my.tier`, `my.rod`
+- `buyRod` → `my.rodIndex`
+- `tick` → `my.cancel`, `my.release`, `my.land`
+- `view` → `my.rod`
+### `Xp` (239293)
+
+- `mark` → `this.crops.get`, `this.crops.set`
+- `addLog` → `this.log.get`, `this.log.set`
+- `save` → `this.pub.values`
+- `readyAt` → `this.crops.get`
+- `neighbours` → `this.log.get`, `Xp.readyAt`, `this.pub.has`, `this.pub.values`, `this.pub.get`
+- `view` → `this.pub.get`, `this.log.get`, `this.crops.get`, `Xp.readyAt`
+### `Xa` (318224)
+
+- `now` → `this.w.epoch`
+- `event` → `this.events.find`
+- `inBossRoom` → `Xa.event`
+- `inRoom` → `this.rooms.values`
+- `live` → `this.rooms.get`
+- `portalOf` → `this.portals.find`
+- `announce` → `this.rooms.get`, `this.w.announce`, `this.w.global.push`
+- `reachable` → `this.points.get`, `this.points.set`
+- `openAt` → `this.openCache.get`, `this.reachable(t).filter`, `Xa.reachable`, `this.openCache.set`
+- `openBands` → `this.w.epoch`, `this.w.data.maps.has`
+- `pickHost` → `this.w.data.maps.has`
+- `spawnAll` → `Xa.openBands`, `Xa.spawn`
+- `portalSpot` → `this.openAt(n,1.5).filter`, `Xa.openAt`
+- `layout` → `this.w.room`, `Xa.openAt`, `Xa.pointFar`, `this.openAt(n,.6).slice`
+- `defs` → `this.w.data.maps.has`
+- `spawn` → `this.portals.some`, `Xa.pickHost`, `this.w.data.maps.has`, `Xa.defs`, `this.w.room`, `Xa.portalSpot`, `Xa.layout`, `this.w.newId`, `Xa.pointFar`, `Xa.guardianPool`, `this.portals.push`, `this.events.push`, `Xa.makeRoom`, `this.w.global.push`
+- `instance` → `Xa.defs`, `Xa.layout`, `this.w.newId`, `Xa.pointFar`, `this.guardianPool(r,d).filter`, `Xa.guardianPool`, `this.events.push`, `Xa.makeRoom`
+- `bossMonster` → `this.w.newId`
+- `guardian` → `this.w.newId`
+- `makeRoom` → `this.w.room`, `this.openAt(e,.6).slice`, `Xa.openAt`, `this.w.createRealmRoom`, `this.rooms.set`, `Xa.spawnFloor`, `Xa.bossMonster`, `Xa.guardianPool`, `Xa.guardian`
+- `spawnFloor` → `this.w.room`, `Xa.guardian`, `Xa.bossMonster`
+- `save` → `this.rooms.get`, `this.portals.map`, `this.events.map`, `this.w.players.values`, `this.disconnected.has`
+- `restore` → `Xa.makeRoom`, `Xa.tick`
+- `resume` → `this.disconnected.keys`, `this.disconnected.delete`
+- `join` → `Xa.event`, `this.w.placeInRoom`, `Xa.live`, `Xa.extract`
+- `disconnect` → `Xa.cancel`, `this.disconnected.set`
+- `bagToProfile` → `Xa.payItems`, `Xa.offlineChau`
+- `extract` → `Xa.payItems`, `this.w.global.push`, `Xa.event`, `Xa.cancel`, `this.hinted.delete`, `this.w.travel`, `Xa.closeIfEmpty`
+- `closeIfEmpty` → `this.w.players.values`, `Xa.close`
+- `close` → `this.events.includes`, `this.events.filter`, `this.w.players.values`, `Xa.extract`, `Xa.bagToProfile`, `Xa.announce`, `this.w.rooms.delete`, `this.rooms.delete`
+- `onDeath` → `Xa.event`, `this.w.record`, `Xa.bag`, `Xa.cancel`
+- `cancel` → `this.channels.get`, `this.channels.delete`, `this.opening.get`, `this.opening.delete`
+- `unprotect` → `Xa.event`
+- `enter` → `this.portals.find`, `this.events.find`, `Xa.instance`, `this.w.record`, `Xa.live`, `this.w.placeInRoom`
+- `action` → `Xa.unprotect`, `Xa.extract`, `Xa.enter`, `Xa.event`, `Xa.nextFloor`, `Xa.protected`, `this.channels.has`, `this.opening.get`, `this.channels.get`, `this.opening.set`, `this.channels.set`
+- `nextFloor` → `Xa.live`, `Xa.spawnFloor`, `this.w.placeInRoom`
+- `damage` → `this.events.find`, `this.rooms.get`, `Xa.protected`, `Xa.announce`
+- `hitSeals` → `Xa.event`, `Xa.protected`, `Xa.announce`
+- `killed` → `this.events.find`, `Xa.live`, `this.disconnected.has`, `this.w.record`, `Xa.pointFar`, `Xa.announce`, `Xa.bag`
+- `eliteLoot` → `this.events.find`, `this.rooms.get`
+- `guardianSlain` → `this.events.find`, `this.rooms.get`, `this.live(s).room.monsters.some`, `Xa.live`, `Xa.announce`
+- `bag` → `Xa.event`
+- `realmGear` → `this.w.newId`
+- `claim` → `this.opening.delete`, `Xa.bag`, `Xa.announce`
+- `bossTick` → `Xa.live`, `Xa.protected`, `this.w.newId`, `this.w.combat.incomingScale`, `this.w.combat.absorb`, `this.w.combat.equipment.hurt`, `Xa.cancel`, `this.w.die`
+- `heraldNext` → `Xa.openBands`, `Xa.pickHost`, `this.w.global.push`
+- `gmOpen` → `this.portals.filter(s=>s.ends>this.now).map`, `this.portals.filter`, `Xa.openBands`, `Xa.spawn`
+- `gmList` → `this.events.filter(t=>!t.closeAt||t.closeAt>this.now).map`, `this.events.filter`, `this.rooms.get`, `this.w.data.maps.get`
+- `tick` → `this.w.epoch`, `Xa.close`, `Xa.announce`, `Xa.bossTick`, `this.portals.some`, `this.portals.filter`, `Xa.event`, `Xa.protected`, `Xa.cancel`, `Xa.extract`, `Xa.claim`, `this.rooms.get`, `this.hinted.get`, `this.hinted.set`, `Xa.onDeath`, `this.disconnected.delete`, `this.w.removePlayer`, `Xa.heraldNext`
+- `state` → `Xa.event`, `this.rooms.get`, `this.channels.get`, `Xa.portalOf`, `this.portals.filter(l=>l.band===o||l.host===r||l===h).map`, `this.portals.filter`, `this.events.find`, `this.opening.get`
+### `hx` (356327)
+
+- `list` → `this.codes.values`
+- `get` → `this.codes.get`
+- `save` → `hx.list`
+- `restore` → `this.codes.set`
+- `put` → `this.codes.get`, `this.codes.set`
+- `setDisabled` → `hx.get`
+- `remove` → `this.codes.delete`
+- `check` → `hx.get`
+- `consume` → `hx.get`
+### `p3` (549215)
+
+- `constructor` → `this.members.push`
+### `Ql` (549462)
+
+- `constructor` → `this.realmBooks.map`, `this.learnedRealms.map`, `this.learnedSkills.includes`, `this.learnedSkills.push`, `this.realmRewards.push`, `this.worn.has`, `Ql.give`, `this.realmRewards.filter`, `this.inv.set`, `this.inv.get`, `Ql.note`, `this.book.load`, `this.inv.delete`, `this.realm.gear.map(u=>Ra(u,this.classId)).filter`, `this.realm.gear.map`, `this.gear.push`, `this.gear.some`, `this.worn.set`
+- `applyLevel` → `this.worn.values`, `this.gear.find`, `this.pas.has`, `this.pas.get`
+- `give` → `this.gear.push`, `this.inv.set`, `this.inv.get`
+- `count` → `this.inv.get`
+- `freeCount` → `Ql.count`
+- `takeFree` → `Ql.freeCount`, `this.inv.set`, `Ql.count`
+- `grantRewardGear` → `this.gear.some`, `this.pendingGear.some`, `Ql.gearFits`, `this.gear.push`, `this.pendingGear.push`, `Ql.note`
+- `grantGmSkills` → `Ql.grantAllSkills`
+- `grantAllSkills` → `this.def.skills.slice`, `this.learnedSkills.includes`, `this.learnedSkills.push`, `this.def.skills.slice(5).find`, `this.skillSlots.includes`
+- `gearFits` → `this.worn.values`
+- `giveGear` → `this.gear.push`
+- `profile` → `Ql.statSheet`, `Ql.savePills`, `this.pendingGear.map`, `this.book.save`
+- `note` → `this.events.push`
+- `toast` → `this.events.push`
+- `weeklyGlow` → `this.titles.owned.some`
+- `outfitCheck` → `this.gear.some`, `this.pendingGear.some`, `this.worn.delete`, `this.gear.filter`, `this.pendingGear.filter`, `Ql.applyLevel`, `Ql.note`
+### `Xh` (567538)
+
+- `constructor` → `Xh.bossClearing`, `this.collision.nearestOpen`, `this.monsters.push`, `this.nodes.push`, `this.npcs.push`, `this.collision.blocked`, `Xh.arena`, `this.monsters.map`
+- `bossClearing` → `this.collision.nearestOpen`, `this.collision.blocked`
+- `arena` → `this.collision.blocked`
+### `e2` (571358)
+
+- `bossRanking` → `this.realms.events.find`, `e2.bossState`
+- `bossContribution` → `this.bossCache.get`, `this.bossCache.set`, `this.damageCache.get`, `e2.bossRanking`, `this.damageCache.set`
+- `saveRoaming` → `this.bossRanking(t.room,n).map`, `e2.bossRanking`
+- `restoreRoaming` → `e2.room`, `e2.epoch`, `e2.worldBossTick`
+- `spawnRoamingBoss` → `this.rooms.values`, `this.realms.inRoom`, `this.realms.reachable`, `this.realms.events.filter`, `e2.startRoaming`
+- `startRoaming` → `e2.epoch`, `e2.worldBossTick`
+- `endRoaming` → `e2.announce`
+- `roamingTick` → `e2.epoch`, `e2.endRoaming`, `e2.worldBossTick`, `e2.spawnRoamingBoss`
+- `createRealmRoom` → `e2.newId`, `this.rooms.set`
+- `room` → `this.rooms.get`, `this.data.maps.get`, `this.rooms.set`
+- `join` → `this.realms.resume`, `this.players.set`, `this.data.maps.has`, `this.data.maps.get`, `e2.place`, `this.realms.join`, `e2.resumeParty`, `e2.epoch`, `e2.gainExp`
+- `leave` → `e2.failTribulation`, `this.realms.disconnect`, `e2.removePlayer`
+- `holdParty` → `this.partyHold.set`
+- `resumeParty` → `this.partyHold.get`, `this.partyHold.delete`
+- `expirePartyHolds` → `this.partyHold.delete`, `e2.sys`, `this.partyHold.values`
+- `removePlayer` → `e2.holdParty`, `e2.dropPet`, `this.players.delete`
+- `place` → `e2.placeInRoom`, `e2.room`
+- `placeInRoom` → `e2.failTribulation`, `e2.dropPet`, `e2.record`
+- `handle` → `e2.move`, `e2.skill`, `e2.action`, `e2.command`, `e2.partySay`, `e2.ktChat`, `e2.epoch`, `this.global.push`
+- `announce` → `this.global.push`
+- `announceLoot` → `e2.announce`
+- `partySay` → `e2.sys`, `e2.epoch`
+- `command` → `this.players.values`, `e2.partySay`, `e2.sys`, `e2.leaveParty`, `this.global.push`, `e2.epoch`
+- `leaveParty` → `e2.sys`
+- `tick` → `e2.expirePartyHolds`, `this.realms.tick`, `e2.roamingTick`, `e2.worldBossTick`, `this.realms.inRoom`, `this.rooms.delete`, `e2.epoch`, `e2.updatePlayer`, `e2.pickup`, `e2.tribTick`, `e2.meditate`, `this.fishing.tick`, `e2.updateMonsters`, `e2.updateShots`, `e2.failTribulation`, `this.combat.incomingScale`, `this.combat.absorb`, `e2.die`
+- `updatePlayer` → `e2.epoch`, `this.combat.healingMultiplier`, `this.combat.pvpMana`, `e2.allyNear`, `this.combat.equipment.speed`, `e2.record`
+- `move` → `this.realms.cancel`, `this.fishing.cancel`, `e2.record`
+- `updateMonsters` → `this.realms.inRoom`, `this.realms.protected`, `this.paths.delete`, `this.players.get`, `e2.lineOpen`, `e2.requestPath`, `e2.hurt`, `this.paths.has`
+- `requestPath` → `this.paths.set`
+- `processPaths` → `this.paths.delete`, `e2.pathFor`
+- `updateShots` → `this.combat.enemies`, `this.combat.radius`, `this.combat.damage`
+- `skill` → `this.fishing.cancel`, `this.realms.protected`, `this.realms.unprotect`, `this.realms.cancel`, `this.combat.basic`, `this.combat.dodge`, `this.combat.cast`
+- `pkOk` → `this.realms.protected`, `this.realms.inBossRoom`, `this.realms.inRoom`, `e2.dosatZone`
+- `dosatZone` → `this.realms.inRoom`
+- `dosatKill` → `this.realms.inRoom`, `e2.announce`
+- `hurtByPlayer` → `e2.pkOk`, `this.combat.incomingScale`, `this.combat.pvpBurst`, `this.combat.absorb`, `this.combat.pvpTouch`, `this.realms.cancel`, `this.combat.equipment.hurt`, `e2.die`, `e2.record`, `e2.epoch`, `e2.dosatKill`
+- `dealMonster` → `this.realms.protected`, `this.realms.damage`, `e2.bossState`, `e2.kill`
+- `worldBossKill` → `e2.bossState`, `e2.bossRanking`, `e2.record`, `e2.gainExp`, `e2.announce`, `e2.epoch`, `e2.later`
+- `fishShop` → `e2.npcNear`, `e2.sellable`, `e2.recordSale`, `e2.epoch`
+- `usePill` → `this.combat.healingMultiplier`, `e2.record`
+- `redeemCode` → `this.codes.check`, `this.codes.get`, `this.codes.consume`
+- `cttCommand` → `e2.gmAction`
+- `cttBoss` → `this.realms.inRoom`, `e2.startRoaming`
+- `gmAction` → `this.codes.put`, `e2.codeRewardOk`, `this.codes.get`, `this.codes.setDisabled`, `this.codes.remove`, `this.codes.list`, `this.data.maps.get`, `this.data.exported.has`, `e2.travel`, `this.realms.inRoom`, `e2.endRoaming`, `e2.startRoaming`, `e2.dealMonster`, `e2.gainExp`, `e2.record`
+- `kill` → `this.paths.delete`, `this.realms.killed`, `e2.worldBossKill`, `this.realms.inRoom`, `e2.bossRanking`, `e2.announce`, `e2.sharers`, `e2.epoch`, `e2.gainExp`, `e2.record`, `e2.drops`
+- `drops` → `e2.announce`, `this.realms.inRoom`, `this.realms.eliteLoot`, `this.realms.bag`, `this.realms.guardianSlain`
+- `pickup` → `e2.announceLoot`
+- `worldBossTick` → `e2.epoch`, `e2.announce`, `this.global.at`, `this.combat.absorb`, `this.combat.mobTaken`, `this.combat.incomingScale`, `this.combat.equipment.hurt`, `e2.die`
+- `meditate` → `e2.record`, `e2.gainExp`
+- `dailyClaim` → `e2.gainExp`, `e2.record`
+- `startTribulation` → `this.fishing.cancel`
+- `failTribulation` → `this.rooms.values`
+- `tribTick` → `e2.failTribulation`, `e2.gainExp`
+- `hurt` → `this.combat.onHurt`, `this.combat.absorb`, `this.combat.incomingScale`, `this.realms.inRoom`, `this.realms.cancel`, `this.combat.equipment.hurt`, `this.combat.mobProc`, `this.fishing.cancel`, `e2.die`
+- `die` → `e2.failTribulation`, `this.realms.onDeath`
+- `recordSale` → `e2.record`
+- `action` → `e2.skill`, `this.realms.action`, `e2.epoch`, `e2.dosatToggle`, `this.realms.spawn`, `this.global.push`, `e2.gmAction`, `e2.gainExp`, `e2.record`, `e2.redeemCode`, `this.fishing.cancel`, `e2.pickup`, `this.market.handle`, `e2.startTribulation`, `e2.fishShop`, `this.fishing.action`, `e2.npcNear`, `e2.dailyClaim`
+- `travel` → `this.data.maps.has`, `e2.place`
+- `snapshotPlayers` → `this.rooms.values`, `this.players.values`, `e2.playerSnapshot`
+- `dosatSelf` → `this.players.values`, `this.realms.inRoom`
+- `playerSnapshot` → `e2.epoch`, `this.combat.flags`, `this.combat.sx`
+- `monsterSnapshot` → `this.combat.flags`, `this.combat.sx`, `this.monsterSnaps.get`, `e2.monsterSnapshotBuild`, `this.monsterSnaps.set`
+- `snapshot` → `e2.playerSnapshot`, `e2.monsterSnapshot`, `this.realms.state`, `this.rooms.values`, `e2.epoch`, `e2.bossContribution`, `this.realms.inBossRoom`, `this.realms.protected`, `this.realms.inRoom`, `e2.dosatSelf`, `this.combat.flags`, `this.combat.sx`, `this.combat.cdrOf`, `this.combat.cdrOf(t).toFixed`, `this.combat.speedFactor`, `this.combat.equipment.shield`, `this.combat.gauge`, `this.combat.equipment.speed`
+- `endTick` → `this.rooms.values`, `this.players.values`
+
+## Unresolved boundaries
+
+- All imported modules are external to this isolated asset; exported names and return contracts cannot be fully validated from this file alone.
+- Imports and exports show module linkage, not proof that this module is the authoritative runtime server.
+- Network/protocol/event consumers outside this module require cross-asset merge.

@@ -1,0 +1,23 @@
+{
+  "schema": "documentary-source-aliases-v1",
+  "source_files": [
+    "Character-DhQJ_Q0g(1).js",
+    "ChieuMau-CEtRLp-4.js",
+    "WorldScene-b_2tpaKT.js",
+    "index-BIkbGDKp.js",
+    "items-nDkzNEls.js",
+    "phaser-DRI6y8R5.js",
+    "sim-CvoxXTtu.js",
+    "tm-direct.js",
+    "tm-guard.js",
+    "trangbi-iyUH-plT.js"
+  ],
+  "aliases": [
+    {
+      "import_path_basename": "Character-DhQJ_Q0g.js",
+      "wiki_source_file": "Character-DhQJ_Q0g(1).js",
+      "status": "DOCUMENTATION_ALIAS_ONLY",
+      "warning": "Do not rename source or claim this map resolves runtime module loading."
+    }
+  ]
+}

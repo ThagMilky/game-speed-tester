@@ -1,0 +1,190 @@
+{
+  "schema": "restored-raw-original-indexes-v1",
+  "generated_date": "2026-11-10",
+  "source_manifest_sha256": "58050b5fe6b3f40728b60bd4be6e7e1dca033283c08dee32875c6adfd9f5034d",
+  "modules": [
+    {
+      "slug": "WorldScene",
+      "zip_source": "GAME_ASSET_WIKI_v1.0_WorldScene.zip",
+      "index_path": "original_indexes/WorldScene/ASSET_INDEX.json",
+      "index_sha256": "6a57e37568b4b8022dc73679a95d7cf8ef87f846ac2589267f8bc87e4c8c15a5",
+      "source_files": [
+        "WorldScene-b_2tpaKT.js"
+      ],
+      "source_sha256": {
+        "WorldScene-b_2tpaKT.js": "5d5ede1b50cdcebed76efae6fea1836f067fc61f153cab5b02eb3f8a7cb29d18"
+      },
+      "preserved_files": [
+        "ANALYSIS_PROGRESS.json",
+        "ASSET_INDEX.json",
+        "DEPENDENCY_MAP.md",
+        "FUNCTION_MAP.md"
+      ],
+      "matched_module_markdown": 56
+    },
+    {
+      "slug": "phaser",
+      "zip_source": "GAME_ASSET_WIKI_v1.0_phaser.zip",
+      "index_path": "original_indexes/phaser/ASSET_INDEX.json",
+      "index_sha256": "9cd23ab0cf88aabfc9e5bcaf5154708f2cdd4563ff1a827275ecc6d1f6cfd59d",
+      "source_files": [
+        "phaser-DRI6y8R5.js"
+      ],
+      "source_sha256": {
+        "phaser-DRI6y8R5.js": "5920a4fd5e79aa7f0f3f87a914b4591ba68a8a87a0f6a5c3d49005a870a5d7b1"
+      },
+      "preserved_files": [
+        "ANALYSIS_PROGRESS.json",
+        "ASSET_INDEX.json",
+        "DEPENDENCY_MAP.md",
+        "FUNCTION_MAP.md",
+        "README.md"
+      ],
+      "matched_module_markdown": 49
+    },
+    {
+      "slug": "sim",
+      "zip_source": "GAME_ASSET_WIKI_v1.0_sim-CvoxXTtu.zip",
+      "index_path": "original_indexes/sim/ASSET_INDEX.json",
+      "index_sha256": "888885136f7af06650955cde21f586f4aa7dcf04cacef8d4f32c7b1024b28788",
+      "source_files": [
+        "sim-CvoxXTtu.js"
+      ],
+      "source_sha256": {
+        "sim-CvoxXTtu.js": "8ddd24caae7b39e86a6525117ef6619bba015d4698e3d09b2177af465fab9dc7"
+      },
+      "preserved_files": [
+        "ANALYSIS_PROGRESS.json",
+        "ASSET_INDEX.json",
+        "DEPENDENCY_MAP.json",
+        "DEPENDENCY_MAP.md",
+        "FUNCTION_MAP.md",
+        "README.md"
+      ],
+      "matched_module_markdown": 15
+    },
+    {
+      "slug": "trangbi",
+      "zip_source": "GAME_ASSET_WIKI_v1.0_trangbi.zip",
+      "index_path": "original_indexes/trangbi/ASSET_INDEX.json",
+      "index_sha256": "f7148a0a3b09ecbb603ae87d5e1771f96e6c60cef266dea675f18499eeb5bb2d",
+      "source_files": [
+        "trangbi-iyUH-plT.js"
+      ],
+      "source_sha256": {
+        "trangbi-iyUH-plT.js": "c591d321899db406ed7387c54c21e303582505396e6d815fe0441dcdc4f11cec"
+      },
+      "preserved_files": [
+        "ANALYSIS_PROGRESS.json",
+        "ASSET_INDEX.json",
+        "DEPENDENCY_MAP.md",
+        "FUNCTION_MAP.md",
+        "README.md"
+      ],
+      "matched_module_markdown": 16
+    },
+    {
+      "slug": "ChieuMau",
+      "zip_source": "GAME_ASSET_WIKI_v1.0_ChieuMau.zip",
+      "index_path": "original_indexes/ChieuMau/ASSET_INDEX.json",
+      "index_sha256": "6e738de54227b4996c82c0d94fcb029c491d87dcd14c0fa3701ee6efcf88d38c",
+      "source_files": [
+        "ChieuMau-CEtRLp-4.js"
+      ],
+      "source_sha256": {
+        "ChieuMau-CEtRLp-4.js": "25f88bcc7f67f5ce1dab6426b995c3f7b1a82196690c62fde656fe9216407c4f"
+      },
+      "preserved_files": [
+        "ANALYSIS_PROGRESS.json",
+        "ASSET_INDEX.json",
+        "DEPENDENCY_MAP.md",
+        "FUNCTION_MAP.md"
+      ],
+      "matched_module_markdown": 8
+    },
+    {
+      "slug": "index",
+      "zip_source": "GAME_ASSET_WIKI_v1.0_index-BIkbGDKp.zip",
+      "index_path": "original_indexes/index/ASSET_INDEX.json",
+      "index_sha256": "220fda13b805d9ec974d9312ef11e5defa2f508941ec047e53f9e089aafc924c",
+      "source_files": [
+        "index-BIkbGDKp.js"
+      ],
+      "source_sha256": {
+        "index-BIkbGDKp.js": "501ae57d733b2dd15554e606eb96352b4e6f1994e125890f32871dd411a78550"
+      },
+      "preserved_files": [
+        "ANALYSIS_PROGRESS.json",
+        "ASSET_INDEX.json",
+        "DEPENDENCY_MAP.md",
+        "FUNCTION_MAP.md",
+        "README.md"
+      ],
+      "matched_module_markdown": 9
+    },
+    {
+      "slug": "Character",
+      "zip_source": "GAME_ASSET_WIKI_v1.0_Character-DhQJ_Q0g.zip",
+      "index_path": "original_indexes/Character/ASSET_INDEX.json",
+      "index_sha256": "c148a79e37514601c17dd4b93e7f0dab8e13285fcfd1ada1ce1d91b5307e1b49",
+      "source_files": [
+        "Character-DhQJ_Q0g(1).js"
+      ],
+      "source_sha256": {
+        "Character-DhQJ_Q0g(1).js": "854dbfbd6105f551b6c110ef4895a5beedb0ddfd4afbbcc4f59c69809e7b67d1"
+      },
+      "preserved_files": [
+        "ANALYSIS_PROGRESS.json",
+        "ASSET_INDEX.json",
+        "CHANGELOG.md",
+        "DEPENDENCY_MAP.md",
+        "FUNCTION_MAP.md",
+        "GAME_ASSET_WIKI_v1.0.md"
+      ],
+      "matched_module_markdown": 1
+    },
+    {
+      "slug": "items",
+      "zip_source": "GAME_ASSET_WIKI_v1.0_items-nDkzNEls.zip",
+      "index_path": "original_indexes/items/ASSET_INDEX.json",
+      "index_sha256": "c10b817838ae273d4762f60cd0c74a0c3eb55cd0c24dfd1c2d6a749fd3a37deb",
+      "source_files": [
+        "items-nDkzNEls.js"
+      ],
+      "source_sha256": {
+        "items-nDkzNEls.js": "5f77311ae9d6e9fab8eff378a809fcacf3f16af2304aa3f577bee1aab1d0b343"
+      },
+      "preserved_files": [
+        "ANALYSIS_PROGRESS.json",
+        "ASSET_INDEX.json",
+        "DEPENDENCY_MAP.md",
+        "FUNCTION_MAP.md"
+      ],
+      "matched_module_markdown": 7
+    },
+    {
+      "slug": "tm_direct_guard",
+      "zip_source": "GAME_ASSET_WIKI_v1.0_tm_direct_guard.zip",
+      "index_path": "original_indexes/tm_direct_guard/ASSET_INDEX.json",
+      "index_sha256": "83d2139458b065546cc6547408449b4231cef808777b5ffd78bece45b1dfe7dc",
+      "source_files": [
+        "tm-direct.js",
+        "tm-guard.js"
+      ],
+      "source_sha256": {
+        "tm-direct.js": "ac013042e8be620365ae650b48d4da80c40f0efa3ac9a2d061d74372f01a3965",
+        "tm-guard.js": "4a9ef0f8ae1a11556ba4f3ef386de7bc0c76cf0fa32b97d5309db4dff9dada47"
+      },
+      "preserved_files": [
+        "ANALYSIS_PROGRESS.json",
+        "ASSET_INDEX.json",
+        "DEPENDENCY_MAP.md",
+        "FUNCTION_MAP.md",
+        "README.md"
+      ],
+      "matched_module_markdown": 2
+    }
+  ],
+  "total_preserved_original_module_docs": 163,
+  "note": "Original index / progress / Function Map / Dependency Map / README are byte-for-byte preserved. Original JS and specialist Markdown remain only in source/ and modules/. Historical source interpretations have not been revalidated."
+}

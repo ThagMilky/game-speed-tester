@@ -1,0 +1,133 @@
+{
+  "schema": "GAME_ASSET_WIKI_v1.0/ANALYSIS_PROGRESS",
+  "asset_id": "WorldScene-b_2tpaKT.js",
+  "source_sha256": "5d5ede1b50cdcebed76efae6fea1836f067fc61f153cab5b02eb3f8a7cb29d18",
+  "analysis_type": "independent_source_only",
+  "source_modified": false,
+  "previous_versions_compared": false,
+  "runtime_testing_performed": false,
+  "status": "COMPLETED_STATIC_ANALYSIS",
+  "completion": {
+    "full_original_source_read_and_ast_parsed": "CONFIRMED",
+    "sha256_and_copy_integrity": "CONFIRMED",
+    "all_top_level_declarations_indexed": "CONFIRMED",
+    "all_classes_and_methods_indexed": "CONFIRMED",
+    "all_nested_callables_indexed": "CONFIRMED",
+    "imports_exports_indexed": "CONFIRMED",
+    "conditional_literal_call_evidence_extracted": "CONFIRMED",
+    "major_game_systems_documented": "CONFIRMED",
+    "server_logic": "UNKNOWN",
+    "runtime_behavior": "UNKNOWN"
+  },
+  "counts": {
+    "imports": 7,
+    "imported_bindings": 593,
+    "exports": 1,
+    "top_level_declarations": 922,
+    "classes": 39,
+    "methods": 554,
+    "top_level_functions": 448,
+    "nested_functions": 2627,
+    "ast_parse": "success (Acorn, latest ECMAScript module)"
+  },
+  "status_notes": [
+    "Comprehensive symbol/offset inventory plus selected important static formulas and protocol paths; not a line-by-line natural-language annotation for every anonymous callback.",
+    "All original source lines available untouched under source/.",
+    "No external modules examined, no previous asset or game versions compared.",
+    "No tests, lint, typecheck, browser/runtime game start or network calls were performed."
+  ],
+  "unresolved_findings": [
+    {
+      "id": "EXT_IMPORT_1",
+      "kind": "module_implementation",
+      "dependency": "./index-BIkbGDKp.js",
+      "status": "UNKNOWN",
+      "reason": "Only imported aliases and uses are present; module implementation not in this asset."
+    },
+    {
+      "id": "EXT_IMPORT_2",
+      "kind": "module_implementation",
+      "dependency": "./items-nDkzNEls.js",
+      "status": "UNKNOWN",
+      "reason": "Only imported aliases and uses are present; module implementation not in this asset."
+    },
+    {
+      "id": "EXT_IMPORT_3",
+      "kind": "module_implementation",
+      "dependency": "./phaser-DRI6y8R5.js",
+      "status": "UNKNOWN",
+      "reason": "Only imported aliases and uses are present; module implementation not in this asset."
+    },
+    {
+      "id": "EXT_IMPORT_4",
+      "kind": "module_implementation",
+      "dependency": "./trangbi-iyUH-plT.js",
+      "status": "UNKNOWN",
+      "reason": "Only imported aliases and uses are present; module implementation not in this asset."
+    },
+    {
+      "id": "EXT_IMPORT_5",
+      "kind": "module_implementation",
+      "dependency": "./sim-CvoxXTtu.js",
+      "status": "UNKNOWN",
+      "reason": "Only imported aliases and uses are present; module implementation not in this asset."
+    },
+    {
+      "id": "EXT_IMPORT_6",
+      "kind": "module_implementation",
+      "dependency": "./Character-DhQJ_Q0g.js",
+      "status": "UNKNOWN",
+      "reason": "Only imported aliases and uses are present; module implementation not in this asset."
+    },
+    {
+      "id": "EXT_IMPORT_7",
+      "kind": "module_implementation",
+      "dependency": "./ChieuMau-CEtRLp-4.js",
+      "status": "UNKNOWN",
+      "reason": "Only imported aliases and uses are present; module implementation not in this asset."
+    },
+    {
+      "id": "AUTH_SERVER",
+      "kind": "server_authority",
+      "status": "UNKNOWN",
+      "reason": "No server source/validation for movement, skill damage, death/respawn, quests, economy, fishing or PvP in this asset."
+    },
+    {
+      "id": "ASSET_DATA",
+      "kind": "data_and_assets",
+      "status": "UNKNOWN",
+      "reason": "Maps, fishing.json, item values, atlases and manifests not bundled in JS source."
+    },
+    {
+      "id": "RUNTIME",
+      "kind": "runtime_execution",
+      "status": "UNKNOWN",
+      "reason": "Game/client/network not run; no behavioral or integration verification."
+    },
+    {
+      "id": "PATHFINDING",
+      "kind": "external_algorithm",
+      "status": "UNKNOWN",
+      "reason": "Collision/path helpers and world topology cannot be fully resolved from this source."
+    },
+    {
+      "id": "SIMULATOR_BOUNDARY",
+      "kind": "authority_scope",
+      "status": "CONFIRMED",
+      "reason": "ik and ok contain explicitly local/presentation-only state models; their calculations are not server-authoritative proof."
+    },
+    {
+      "id": "CALL_SCOPE",
+      "kind": "static_analysis_limitation",
+      "status": "INFERRED",
+      "reason": "Import identifier-name matches are not scope-resolved, and syntactic calls can occur in callbacks conditional on runtime state."
+    }
+  ],
+  "merge_guidance": {
+    "source_namespace": "WorldScene-b_2tpaKT.js",
+    "symbol_key": "original_symbol_name+owner+UTF16_start",
+    "offset_unit": "JavaScript UTF-16 code units (zero based; end exclusive)",
+    "cross_module_links": "Match imports[].specifiers[].imported to exports of dependency asset; never match aliases by coincidence only.",
+    "authority_flag": "Keep all client predictions and presentation-only simulations separate from server mechanics."
+  }
+}

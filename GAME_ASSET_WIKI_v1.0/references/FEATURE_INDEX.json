@@ -1,0 +1,220 @@
+{
+  "schema": "game-asset-feature-index-v1",
+  "description": "Comprehensive feature-to-asset routing index for developers and AI agents",
+  "total_features": 11,
+  "features": [
+    {
+      "category": "Character Systems",
+      "feature": "Directional Movement & Animation",
+      "primary_module": "modules/01_Character-DhQJ_Q0g.md",
+      "source_file": "source/Character-DhQJ_Q0g(1).js",
+      "key_symbols": [
+        "at",
+        "G",
+        "wt",
+        "ri",
+        "li",
+        "ui",
+        "vi"
+      ],
+      "dependencies": [
+        "phaser-DRI6y8R5.js"
+      ],
+      "nature": "Client-side rendering & sprite animation",
+      "authoritative_boundary": "Client visual interpolation; server authoritative for true player coordinate",
+      "limitations": "Does not validate movement legality on server."
+    },
+    {
+      "category": "Character Systems",
+      "feature": "Weapon FX Presentation",
+      "primary_module": "modules/01_Character-DhQJ_Q0g.md",
+      "source_file": "source/Character-DhQJ_Q0g(1).js",
+      "key_symbols": [
+        "H",
+        "weapon_fx_definitions"
+      ],
+      "dependencies": [
+        "phaser-DRI6y8R5.js",
+        "trangbi-iyUH-plT.js"
+      ],
+      "nature": "Client visual FX & sprite attachment",
+      "authoritative_boundary": "Client-only cosmetic effect",
+      "limitations": "Weapon tiers and motifs rendered based on client equipment data."
+    },
+    {
+      "category": "Combat & Skills",
+      "feature": "Visual Skill Effect Engine",
+      "primary_module": "modules/02_ChieuMau-CEtRLp-4.md",
+      "source_file": "source/ChieuMau-CEtRLp-4.js",
+      "key_symbols": [
+        "ke",
+        "io",
+        "Po",
+        "ye",
+        "_e",
+        "sprite_assets"
+      ],
+      "dependencies": [
+        "phaser-DRI6y8R5.js",
+        "Character-DhQJ_Q0g(1).js"
+      ],
+      "nature": "Client particle animation & frame sequence player",
+      "authoritative_boundary": "Visual manifestation only; actual hit verification is server-authoritative",
+      "limitations": "Visual duration may differ from server cooldown."
+    },
+    {
+      "category": "Combat & Skills",
+      "feature": "Combat Simulation & Damage Calculations",
+      "primary_module": "modules/07_sim-CvoxXTtu.md",
+      "source_file": "source/sim-CvoxXTtu.js",
+      "key_symbols": [
+        "combat",
+        "skills",
+        "damage_calculator",
+        "critical_evaluator"
+      ],
+      "dependencies": [
+        "trangbi-iyUH-plT.js",
+        "index-BIkbGDKp.js"
+      ],
+      "nature": "Client-side prediction / local damage simulation",
+      "authoritative_boundary": "Local simulation for HUD numbers and responsiveness; server has final authority",
+      "limitations": "Server may reject or correct predicted damage."
+    },
+    {
+      "category": "Combat & Skills",
+      "feature": "Equipment Scaling & Combat Formulas",
+      "primary_module": "modules/10_trangbi-iyUH-plT.md",
+      "source_file": "source/trangbi-iyUH-plT.js",
+      "key_symbols": [
+        "ji",
+        "scaling_levels",
+        "hp_modifiers",
+        "hit_modifiers"
+      ],
+      "dependencies": [],
+      "nature": "Shared formula database & attribute lookup tables",
+      "authoritative_boundary": "Mathematical tables shared between client prediction and server balance",
+      "limitations": "Stat caps enforced by server."
+    },
+    {
+      "category": "Automation",
+      "feature": "Auto-Farm Controller",
+      "primary_module": "modules/03_WorldScene-b_2tpaKT.md",
+      "source_file": "source/WorldScene-b_2tpaKT.js",
+      "key_symbols": [
+        "A3.autoFarm",
+        "rk",
+        "sk",
+        "A3.castAutoSkill",
+        "A3.checkAutoPotion"
+      ],
+      "dependencies": [
+        "sim-CvoxXTtu.js",
+        "trangbi-iyUH-plT.js",
+        "index-BIkbGDKp.js"
+      ],
+      "nature": "Client automated decision loop (Target Selection -> Navigation -> Skill Cast -> Potion -> Loot)",
+      "authoritative_boundary": "Client automated actions submit standard user action commands over WebSocket",
+      "limitations": "Subject to server action rate limits and anti-cheat checks."
+    },
+    {
+      "category": "World & Entities",
+      "feature": "World Scene Orchestration & Lifecycle",
+      "primary_module": "modules/03_WorldScene-b_2tpaKT.md",
+      "source_file": "source/WorldScene-b_2tpaKT.js",
+      "key_symbols": [
+        "A3",
+        "WorldScene",
+        "create",
+        "update",
+        "Mv",
+        "ok",
+        "zu"
+      ],
+      "dependencies": [
+        "phaser-DRI6y8R5.js",
+        "sim-CvoxXTtu.js",
+        "ChieuMau-CEtRLp-4.js",
+        "Character-DhQJ_Q0g(1).js",
+        "trangbi-iyUH-plT.js",
+        "items-nDkzNEls.js",
+        "index-BIkbGDKp.js"
+      ],
+      "nature": "Primary Phaser scene coordinating entities, rendering layers, networking, and input",
+      "authoritative_boundary": "Scene coordinates client state based on incoming server snapshots",
+      "limitations": "Requires active WebSocket connection."
+    },
+    {
+      "category": "Equipment & Items",
+      "feature": "Inventory UI & Item Controls",
+      "primary_module": "modules/05_items-nDkzNEls.md",
+      "source_file": "source/items-nDkzNEls.js",
+      "key_symbols": [
+        "M",
+        "Cn",
+        "inventory_controls",
+        "icon_pipeline"
+      ],
+      "dependencies": [
+        "trangbi-iyUH-plT.js",
+        "index-BIkbGDKp.js"
+      ],
+      "nature": "UI display, item slot drag/drop, tooltip rendering, equipment hotkeys",
+      "authoritative_boundary": "Client UI only; inventory modifications must be validated by server",
+      "limitations": "Inventory capacity and item ownership validated on server."
+    },
+    {
+      "category": "Networking",
+      "feature": "WebSocket Protocol & Snapshot Synchronization",
+      "primary_module": "modules/04_index-BIkbGDKp.md",
+      "source_file": "source/index-BIkbGDKp.js",
+      "key_symbols": [
+        "network_protocol",
+        "snapshot_state",
+        "command_dispatcher"
+      ],
+      "dependencies": [],
+      "nature": "Low-level binary/JSON WebSocket framing, reconnection, heartbeat, snapshot decompression",
+      "authoritative_boundary": "Transport layer connecting client to server authority",
+      "limitations": "Binary packet schemas inferred from serialization routines."
+    },
+    {
+      "category": "Security & Anti-Tamper",
+      "feature": "Anti-Macro Guard UI and Mobile Tribulation",
+      "primary_module": "modules/08_tm-direct.md",
+      "source_file": "source/tm-direct.js, source/tm-guard.js",
+      "key_symbols": [
+        "Wrapped",
+        "out",
+        "show",
+        "close",
+        "tribButton",
+        "feed",
+        "window.__tmGuard"
+      ],
+      "dependencies": [],
+      "nature": "WebSocket message interception and DOM prompt rendering",
+      "authoritative_boundary": "Client-side UI trigger; server decides when challenges occur",
+      "limitations": "Runs purely in browser client context."
+    },
+    {
+      "category": "Auxiliary Activities",
+      "feature": "Fishing System & Minigames",
+      "primary_module": "modules/07_sim-CvoxXTtu.md",
+      "source_file": "source/sim-CvoxXTtu.js",
+      "key_symbols": [
+        "FISHING",
+        "fish_simulation",
+        "WorldScene_fishing"
+      ],
+      "dependencies": [
+        "WorldScene-b_2tpaKT.js",
+        "trangbi-iyUH-plT.js"
+      ],
+      "nature": "Local minigame timing & bite state evaluation",
+      "authoritative_boundary": "Client handles UI timing bar; server awards catch loot",
+      "limitations": "Catch confirmation requires server ack."
+    }
+  ]
+}

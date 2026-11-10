@@ -1,0 +1,26 @@
+{
+  "wiki_version": "1.0",
+  "planned_files": 10,
+  "processed_files": 1,
+  "processed": [
+    {
+      "file": "Character-DhQJ_Q0g(1).js",
+      "sha256": "854dbfbd6105f551b6c110ef4895a5beedb0ddfd4afbbcc4f59c69809e7b67d1",
+      "bytes": 69360,
+      "module_document": "modules/01_Character.md",
+      "verified": "static"
+    }
+  ],
+  "next_dependencies": [
+    "./phaser-DRI6y8R5.js",
+    "./trangbi-iyUH-plT.js",
+    "./sim-CvoxXTtu.js",
+    "./index-BIkbGDKp.js"
+  ],
+  "checkpoint": "01",
+  "unresolved": [
+    "Analyze imported symbols in trangbi, sim, index, phaser",
+    "Confirm callers and runtime usage in WorldScene or index",
+    "Check whether skill simulator is used for UI only or referenced in gameplay"
+  ]
+}

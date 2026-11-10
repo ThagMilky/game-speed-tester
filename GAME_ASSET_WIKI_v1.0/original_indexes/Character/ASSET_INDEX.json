@@ -1,0 +1,1338 @@
+{
+  "schema": "game-asset-index-v1",
+  "asset": "Character-DhQJ_Q0g(1).js",
+  "file_bytes": 69360,
+  "sha256": "854dbfbd6105f551b6c110ef4895a5beedb0ddfd4afbbcc4f59c69809e7b67d1",
+  "encoding": "UTF-8",
+  "line_count": 2,
+  "status": "CONFIRMED (static source only)",
+  "imports": [
+    {
+      "path": "./phaser-DRI6y8R5.js",
+      "bindings": [
+        {
+          "imported": "P",
+          "local": "dt"
+        }
+      ],
+      "offset": 168
+    },
+    {
+      "path": "./trangbi-iyUH-plT.js",
+      "bindings": [
+        {
+          "imported": "ae",
+          "local": "ce"
+        },
+        {
+          "imported": "ad",
+          "local": "re"
+        },
+        {
+          "imported": "F",
+          "local": "le"
+        },
+        {
+          "imported": "N",
+          "local": "vt"
+        }
+      ],
+      "offset": 210
+    },
+    {
+      "path": "./sim-CvoxXTtu.js",
+      "bindings": [
+        {
+          "imported": "cN",
+          "local": "ue"
+        },
+        {
+          "imported": "j",
+          "local": "Zt"
+        },
+        {
+          "imported": "cW",
+          "local": "ft"
+        }
+      ],
+      "offset": 279
+    },
+    {
+      "path": "./index-BIkbGDKp.js",
+      "bindings": [
+        {
+          "imported": "aa",
+          "local": "zt"
+        }
+      ],
+      "offset": 336
+    }
+  ],
+  "exports": [
+    {
+      "local": "H",
+      "exported": "A"
+    },
+    {
+      "local": "Yt",
+      "exported": "C"
+    },
+    {
+      "local": "G",
+      "exported": "D"
+    },
+    {
+      "local": "yi",
+      "exported": "T"
+    },
+    {
+      "local": "ti",
+      "exported": "V"
+    },
+    {
+      "local": "ki",
+      "exported": "W"
+    },
+    {
+      "local": "xi",
+      "exported": "a"
+    },
+    {
+      "local": "ii",
+      "exported": "b"
+    },
+    {
+      "local": "ye",
+      "exported": "c"
+    },
+    {
+      "local": "mt",
+      "exported": "d"
+    },
+    {
+      "local": "ze",
+      "exported": "e"
+    },
+    {
+      "local": "vi",
+      "exported": "f"
+    },
+    {
+      "local": "ui",
+      "exported": "g"
+    },
+    {
+      "local": "de",
+      "exported": "h"
+    },
+    {
+      "local": "Bt",
+      "exported": "i"
+    },
+    {
+      "local": "bi",
+      "exported": "j"
+    },
+    {
+      "local": "wi",
+      "exported": "k"
+    },
+    {
+      "local": "$t",
+      "exported": "m"
+    },
+    {
+      "local": "xe",
+      "exported": "p"
+    },
+    {
+      "local": "ri",
+      "exported": "r"
+    },
+    {
+      "local": "ut",
+      "exported": "s"
+    },
+    {
+      "local": "K",
+      "exported": "w"
+    }
+  ],
+  "classes": [
+    {
+      "name": "ki",
+      "start": 5417,
+      "end": 7716,
+      "methods": [
+        {
+          "name": "constructor(",
+          "offset": 5426
+        },
+        {
+          "name": "static preload(",
+          "offset": 5668
+        },
+        {
+          "name": "image(",
+          "offset": 5899
+        },
+        {
+          "name": "glint(",
+          "offset": 6161
+        },
+        {
+          "name": "render(",
+          "offset": 6312
+        },
+        {
+          "name": "inspect(",
+          "offset": 7528
+        }
+      ]
+    },
+    {
+      "name": "Mt",
+      "start": 8531,
+      "end": 10821,
+      "methods": [
+        {
+          "name": "constructor(",
+          "offset": 8540
+        },
+        {
+          "name": "static bladeTip(",
+          "offset": 8741
+        },
+        {
+          "name": "clear(",
+          "offset": 9391
+        },
+        {
+          "name": "render(",
+          "offset": 9452
+        },
+        {
+          "name": "inspect(",
+          "offset": 10666
+        },
+        {
+          "name": "destroy(",
+          "offset": 10769
+        }
+      ]
+    },
+    {
+      "name": "nt",
+      "start": 11086,
+      "end": 15124,
+      "methods": [
+        {
+          "name": "constructor(",
+          "offset": 11095
+        },
+        {
+          "name": "get facing(",
+          "offset": 11525
+        },
+        {
+          "name": "weaponLength(",
+          "offset": 11568
+        },
+        {
+          "name": "static preload(",
+          "offset": 12123
+        },
+        {
+          "name": "attack(",
+          "offset": 12264
+        },
+        {
+          "name": "ensure(",
+          "offset": 12371
+        },
+        {
+          "name": "render(",
+          "offset": 12888
+        },
+        {
+          "name": "layers(",
+          "offset": 14884
+        },
+        {
+          "name": "hide(",
+          "offset": 14944
+        },
+        {
+          "name": "destroy(",
+          "offset": 15050
+        }
+      ]
+    },
+    {
+      "name": "yi",
+      "start": 18314,
+      "end": 25428,
+      "methods": [
+        {
+          "name": "constructor(",
+          "offset": 18323
+        },
+        {
+          "name": "script(",
+          "offset": 19061
+        },
+        {
+          "name": "reset(",
+          "offset": 19431
+        },
+        {
+          "name": "reason(",
+          "offset": 19842
+        },
+        {
+          "name": "input(",
+          "offset": 20186
+        },
+        {
+          "name": "cast(",
+          "offset": 20414
+        },
+        {
+          "name": "heroAt(",
+          "offset": 21395
+        },
+        {
+          "name": "resolve(",
+          "offset": 21581
+        },
+        {
+          "name": "advanceTo(",
+          "offset": 23933
+        },
+        {
+          "name": "snapshot(",
+          "offset": 25118
+        }
+      ]
+    },
+    {
+      "name": "Ge",
+      "start": 28128,
+      "end": 43045,
+      "methods": [
+        {
+          "name": "constructor(",
+          "offset": 28137
+        },
+        {
+          "name": "get listener(",
+          "offset": 29450
+        },
+        {
+          "name": "extend(",
+          "offset": 29489
+        },
+        {
+          "name": "extendPacks(",
+          "offset": 29800
+        },
+        {
+          "name": "want(",
+          "offset": 30421
+        },
+        {
+          "name": "ready(",
+          "offset": 30555
+        },
+        {
+          "name": "cues(",
+          "offset": 30654
+        },
+        {
+          "name": "init(",
+          "offset": 30758
+        },
+        {
+          "name": "get muted(",
+          "offset": 31293
+        },
+        {
+          "name": "get volumes(",
+          "offset": 31346
+        },
+        {
+          "name": "setListener(",
+          "offset": 31381
+        },
+        {
+          "name": "setVolume(",
+          "offset": 31418
+        },
+        {
+          "name": "mute(",
+          "offset": 31480
+        },
+        {
+          "name": "music(",
+          "offset": 31552
+        },
+        {
+          "name": "play(",
+          "offset": 31595
+        },
+        {
+          "name": "duck(",
+          "offset": 34201
+        },
+        {
+          "name": "fadeGroup(",
+          "offset": 34946
+        },
+        {
+          "name": "cast(",
+          "offset": 35277
+        },
+        {
+          "name": "effect(",
+          "offset": 35328
+        },
+        {
+          "name": "swing(",
+          "offset": 35436
+        },
+        {
+          "name": "footstep(",
+          "offset": 35496
+        },
+        {
+          "name": "hit(",
+          "offset": 35646
+        },
+        {
+          "name": "pickup(",
+          "offset": 36449
+        },
+        {
+          "name": "pickupGrade(",
+          "offset": 36699
+        },
+        {
+          "name": "flushLoot(",
+          "offset": 36826
+        },
+        {
+          "name": "unlock(",
+          "offset": 37184
+        },
+        {
+          "name": "visibility(",
+          "offset": 38329
+        },
+        {
+          "name": "save(",
+          "offset": 38516
+        },
+        {
+          "name": "apply(",
+          "offset": 38590
+        },
+        {
+          "name": "busLevel(",
+          "offset": 38886
+        },
+        {
+          "name": "applyMusic(",
+          "offset": 38949
+        },
+        {
+          "name": "stopVoice(",
+          "offset": 39326
+        },
+        {
+          "name": "preload(",
+          "offset": 39421
+        },
+        {
+          "name": "packClip(",
+          "offset": 39620
+        },
+        {
+          "name": "loadPack(",
+          "offset": 39890
+        },
+        {
+          "name": "load(",
+          "offset": 40486
+        },
+        {
+          "name": "syncMusic(",
+          "offset": 40896
+        },
+        {
+          "name": "makeDeck(",
+          "offset": 41448
+        },
+        {
+          "name": "musicTick(",
+          "offset": 41878
+        },
+        {
+          "name": "nextTrack(",
+          "offset": 42024
+        },
+        {
+          "name": "startTrack(",
+          "offset": 42185
+        }
+      ]
+    },
+    {
+      "name": "ci",
+      "start": 52440,
+      "end": 57998,
+      "methods": [
+        {
+          "name": "constructor(",
+          "offset": 52449
+        },
+        {
+          "name": "get reach(",
+          "offset": 53204
+        },
+        {
+          "name": "get kindId(",
+          "offset": 53277
+        },
+        {
+          "name": "get look(",
+          "offset": 53340
+        },
+        {
+          "name": "setLook(",
+          "offset": 53368
+        },
+        {
+          "name": "hide(",
+          "offset": 53726
+        },
+        {
+          "name": "sync(",
+          "offset": 53982
+        },
+        {
+          "name": "layers(",
+          "offset": 57751
+        },
+        {
+          "name": "destroy(",
+          "offset": 57808
+        }
+      ]
+    },
+    {
+      "name": "at",
+      "start": 59120,
+      "end": 68085,
+      "methods": [
+        {
+          "name": "constructor(",
+          "offset": 59129
+        },
+        {
+          "name": "get sourceScale(",
+          "offset": 60927
+        },
+        {
+          "name": "get facing(",
+          "offset": 60963
+        },
+        {
+          "name": "ghostLayers(",
+          "offset": 61078
+        },
+        {
+          "name": "setWeaponLook(",
+          "offset": 61234
+        },
+        {
+          "name": "syncHeld(",
+          "offset": 61452
+        },
+        {
+          "name": "get weaponPoints(",
+          "offset": 61674
+        },
+        {
+          "name": "get weaponLook(",
+          "offset": 61741
+        },
+        {
+          "name": "get weaponSwing(",
+          "offset": 61810
+        },
+        {
+          "name": "get weaponReach(",
+          "offset": 61883
+        },
+        {
+          "name": "set showAnchors(",
+          "offset": 61953
+        },
+        {
+          "name": "set holdDrawn(",
+          "offset": 62009
+        },
+        {
+          "name": "fight(",
+          "offset": 62069
+        },
+        {
+          "name": "armedAttack(",
+          "offset": 62138
+        },
+        {
+          "name": "present(",
+          "offset": 62310
+        },
+        {
+          "name": "get isRef(",
+          "offset": 63052
+        },
+        {
+          "name": "unarmedSkill(",
+          "offset": 63104
+        },
+        {
+          "name": "showUnarmed(",
+          "offset": 63202
+        },
+        {
+          "name": "groundAnchor(",
+          "offset": 64392
+        },
+        {
+          "name": "portraitFrame(",
+          "offset": 65186
+        },
+        {
+          "name": "has(",
+          "offset": 65401
+        },
+        {
+          "name": "hasDir(",
+          "offset": 65489
+        },
+        {
+          "name": "clipTime(",
+          "offset": 65575
+        },
+        {
+          "name": "get finished(",
+          "offset": 65695
+        },
+        {
+          "name": "resolve(",
+          "offset": 65790
+        },
+        {
+          "name": "stand(",
+          "offset": 66116
+        },
+        {
+          "name": "play(",
+          "offset": 66176
+        },
+        {
+          "name": "update(",
+          "offset": 66464
+        },
+        {
+          "name": "standOn(",
+          "offset": 66724
+        },
+        {
+          "name": "feet(",
+          "offset": 67076
+        },
+        {
+          "name": "apply(",
+          "offset": 67809
+        }
+      ]
+    }
+  ],
+  "named_functions": [
+    {
+      "name": "fe",
+      "offset": 8092
+    },
+    {
+      "name": "xi",
+      "offset": 15350
+    },
+    {
+      "name": "Xe",
+      "offset": 43045
+    },
+    {
+      "name": "Ot",
+      "offset": 48511
+    },
+    {
+      "name": "ie",
+      "offset": 51393
+    },
+    {
+      "name": "si",
+      "offset": 51875
+    },
+    {
+      "name": "ri",
+      "offset": 57998
+    },
+    {
+      "name": "li",
+      "offset": 58193
+    },
+    {
+      "name": "ui",
+      "offset": 58837
+    },
+    {
+      "name": "vi",
+      "offset": 59001
+    }
+  ],
+  "important_markers": [
+    {
+      "name": "de",
+      "offset": 378
+    },
+    {
+      "name": "R",
+      "offset": 7716
+    },
+    {
+      "name": "Ht",
+      "offset": 10846
+    },
+    {
+      "name": "be",
+      "offset": 15488
+    },
+    {
+      "name": "H",
+      "offset": 43291
+    },
+    {
+      "name": "ze",
+      "offset": 48781
+    },
+    {
+      "name": "wi",
+      "offset": 52182
+    },
+    {
+      "name": "G",
+      "offset": 58888
+    },
+    {
+      "name": "Yt",
+      "offset": 68112
+    },
+    {
+      "name": "ki",
+      "offset": 5417
+    },
+    {
+      "name": "Mt",
+      "offset": 8531
+    },
+    {
+      "name": "mt",
+      "offset": 15153
+    },
+    {
+      "name": "yi",
+      "offset": 18314
+    },
+    {
+      "name": "Ge",
+      "offset": 28128
+    },
+    {
+      "name": "ci",
+      "offset": 52440
+    },
+    {
+      "name": "at",
+      "offset": 59111
+    },
+    {
+      "name": "vi",
+      "offset": 59001
+    },
+    {
+      "name": "ui",
+      "offset": 58837
+    },
+    {
+      "name": "ri",
+      "offset": 57998
+    },
+    {
+      "name": "li",
+      "offset": 58193
+    },
+    {
+      "name": "Xe",
+      "offset": 43045
+    },
+    {
+      "name": "Ot",
+      "offset": 48511
+    },
+    {
+      "name": "ie",
+      "offset": 51393
+    },
+    {
+      "name": "si",
+      "offset": 51875
+    }
+  ],
+  "weapon_fx_definitions": [
+    {
+      "id": "bang-phach-kiem",
+      "class": "kiem-tu",
+      "name": "Băng Phách Kiếm",
+      "title": "Băng tinh phá nhận",
+      "description": "Vệt chém mảnh mở thành ba lưỡi băng, vỡ ra tinh thể sáu cánh khi trúng.",
+      "motif": "ice",
+      "tier": 1,
+      "colors": [
+        1791868,
+        6937083,
+        15007743
+      ],
+      "grip": [
+        0.19,
+        0.79
+      ],
+      "size": 0.85
+    },
+    {
+      "id": "cuu-tieu-kiem",
+      "class": "kiem-tu",
+      "name": "Cửu Tiêu Kiếm",
+      "title": "Cửu tiêu lôi kích",
+      "description": "Lôi quang chạy dọc lưỡi kiếm, đánh xuống điểm trúng rồi tách nhánh sét.",
+      "motif": "thunder",
+      "tier": 1,
+      "colors": [
+        3748718,
+        10134783,
+        16053759
+      ],
+      "grip": [
+        0.19,
+        0.79
+      ],
+      "size": 0.85
+    },
+    {
+      "id": "tinh-ha-kiem",
+      "class": "kiem-tu",
+      "name": "Tinh Hà Kiếm",
+      "title": "Tinh hà lưu quang",
+      "description": "Một đuôi sao uốn cong qua mục tiêu, để lại chòm tinh tú chớp sáng lần lượt.",
+      "motif": "stars",
+      "tier": 1,
+      "colors": [
+        3417679,
+        9811455,
+        16773052
+      ],
+      "grip": [
+        0.26,
+        0.74
+      ],
+      "size": 0.88
+    },
+    {
+      "id": "do-than-kiem",
+      "class": "kiem-tu",
+      "name": "Đồ Thần Kiếm",
+      "title": "Hắc kim đoạn mệnh",
+      "description": "Hai nhát cắt đen viền vàng giao nhau; vết trúng co lại rồi bật tia sắc.",
+      "motif": "cross",
+      "tier": 2,
+      "colors": [
+        1511970,
+        15051847,
+        16772529
+      ],
+      "grip": [
+        0.28,
+        0.72
+      ],
+      "size": 0.95
+    },
+    {
+      "id": "khai-thien-kiem",
+      "class": "kiem-tu",
+      "name": "Khai Thiên Kiếm",
+      "title": "Khai thiên nhất tuyến",
+      "description": "Một đường bổ sáng thẳng đứng xé mặt đất, ánh vàng chạy dọc khe nứt.",
+      "motif": "cleave",
+      "tier": 2,
+      "colors": [
+        8869155,
+        16764521,
+        16775910
+      ],
+      "grip": [
+        0.2,
+        0.8
+      ],
+      "size": 0.98
+    },
+    {
+      "id": "thai-at-tien-kiem",
+      "class": "kiem-tu",
+      "name": "Thái Ất Tiên Kiếm",
+      "title": "Tam thanh kiếm vận",
+      "description": "Ba kiếm ảnh xoay quanh mũi kiếm, xuyên hội tụ thành ấn tam giác lam kim.",
+      "motif": "trinity",
+      "tier": 3,
+      "colors": [
+        2386068,
+        7464191,
+        16770976
+      ],
+      "grip": [
+        0.29,
+        0.75
+      ],
+      "size": 1.0
+    },
+    {
+      "id": "u-diep-truong",
+      "class": "co-su",
+      "name": "U Điệp Địch",
+      "title": "U điệp lưu hương",
+      "description": "Năm điệp ảnh lượn so le, chụm vào quái rồi tản thành phấn sáng tím ngọc.",
+      "motif": "butterfly",
+      "tier": 1,
+      "colors": [
+        4797802,
+        12950522,
+        14286809
+      ],
+      "grip": [
+        0.4,
+        0.6
+      ],
+      "size": 1.05
+    },
+    {
+      "id": "thuc-tam-truong",
+      "class": "co-su",
+      "name": "Thực Tâm Địch",
+      "title": "Thực tâm khai hoa",
+      "description": "Hạt cổ bay theo đường cong; dây gai ôm mục tiêu và khép thành hoa ăn mòn.",
+      "motif": "bloom",
+      "tier": 1,
+      "colors": [
+        3364141,
+        10803057,
+        16760257
+      ],
+      "grip": [
+        0.39,
+        0.61
+      ],
+      "size": 1.02
+    },
+    {
+      "id": "van-doc-truong",
+      "class": "co-su",
+      "name": "Vạn Độc Địch",
+      "title": "Tam xà độc tức",
+      "description": "Ba dòng độc xoắn vào nhau, bung thành ba xoáy độc nhỏ dưới chân quái.",
+      "motif": "venom",
+      "tier": 1,
+      "colors": [
+        2377803,
+        7526811,
+        15072655
+      ],
+      "grip": [
+        0.41,
+        0.59
+      ],
+      "size": 1.03
+    },
+    {
+      "id": "thien-tam-truong",
+      "class": "co-su",
+      "name": "Thiên Tằm Địch",
+      "title": "Kim tàm kết kén",
+      "description": "Tơ vàng đan chéo bao quái thành kén, đứt tung thành mưa kim tơ.",
+      "motif": "silk",
+      "tier": 2,
+      "colors": [
+        7758134,
+        15322233,
+        16777180
+      ],
+      "grip": [
+        0.4,
+        0.62
+      ],
+      "size": 1.08
+    },
+    {
+      "id": "cuu-u-co-truong",
+      "class": "co-su",
+      "name": "Cửu U Cổ Địch",
+      "title": "Cửu u phệ ảnh",
+      "description": "Cổ ảnh lao sát đất từ hai bên, cặp nanh tối khép lại rồi phóng lân quang.",
+      "motif": "beetles",
+      "tier": 2,
+      "colors": [
+        2044223,
+        6801074,
+        12253655
+      ],
+      "grip": [
+        0.41,
+        0.6
+      ],
+      "size": 1.06
+    },
+    {
+      "id": "van-co-vuong-truong",
+      "class": "co-su",
+      "name": "Vạn Cổ Vương Địch",
+      "title": "Vương cổ triển dực",
+      "description": "Vương cổ lao theo vòng cung, mở đôi cánh kim ngọc và ấn miện độc dưới chân.",
+      "motif": "royal",
+      "tier": 3,
+      "colors": [
+        2646855,
+        10413676,
+        16770720
+      ],
+      "grip": [
+        0.42,
+        0.61
+      ],
+      "size": 1.12
+    },
+    {
+      "id": "huyet-nguyet-liem",
+      "class": "ma-tu",
+      "name": "Huyết Nguyệt Liêm",
+      "title": "Huyết nguyệt hồi liêm",
+      "description": "Lưỡi trăng máu quét rộng rồi cuộn ngược; điểm trúng rạn theo vệt trăng.",
+      "motif": "moon",
+      "tier": 1,
+      "colors": [
+        5578040,
+        15293560,
+        16765632
+      ],
+      "grip": [
+        0.38,
+        0.63
+      ],
+      "size": 1.05
+    },
+    {
+      "id": "minh-ha-liem",
+      "class": "ma-tu",
+      "name": "Minh Hà Liêm",
+      "title": "Minh hà dẫn hồn",
+      "description": "Sóng hồn xanh bạc lướt qua quái, tách thành ba dòng nhỏ chảy ngược về liềm.",
+      "motif": "river",
+      "tier": 1,
+      "colors": [
+        2440531,
+        7456201,
+        14219496
+      ],
+      "grip": [
+        0.37,
+        0.64
+      ],
+      "size": 1.07
+    },
+    {
+      "id": "pha-phach-liem",
+      "class": "ma-tu",
+      "name": "Phá Phách Liêm",
+      "title": "Toái nhận phá phách",
+      "description": "Ba mảnh nhận đỏ tách ra rồi giao cắt, điểm trúng vỡ thành chín mảnh sáng.",
+      "motif": "shatter",
+      "tier": 1,
+      "colors": [
+        3744576,
+        15696270,
+        16770784
+      ],
+      "grip": [
+        0.37,
+        0.64
+      ],
+      "size": 1.04
+    },
+    {
+      "id": "cuu-u-tram-hon-liem",
+      "class": "ma-tu",
+      "name": "Cửu U Trảm Hồn Liêm",
+      "title": "U liên câu hồn",
+      "description": "Xích hồn quăng móc về mục tiêu, siết một vòng rồi giật thành vết cắt chéo.",
+      "motif": "chain",
+      "tier": 2,
+      "colors": [
+        2695484,
+        12297435,
+        15332863
+      ],
+      "grip": [
+        0.38,
+        0.64
+      ],
+      "size": 1.12
+    },
+    {
+      "id": "diet-the-ma-liem",
+      "class": "ma-tu",
+      "name": "Diệt Thế Ma Liêm",
+      "title": "Diệt thế ma diễm",
+      "description": "Nhát quét cắm xuống đất, ba đợt ma hỏa đỏ vàng bật lên theo đường nứt.",
+      "motif": "inferno",
+      "tier": 2,
+      "colors": [
+        5052203,
+        16144984,
+        16767127
+      ],
+      "grip": [
+        0.39,
+        0.64
+      ],
+      "size": 1.12
+    },
+    {
+      "id": "thien-ma-doat-hon-liem",
+      "class": "ma-tu",
+      "name": "Thiên Ma Đoạt Hồn Liêm",
+      "title": "Thiên ma song dực",
+      "description": "Hai cánh liêm hắc kim xòe từ điểm trúng, khép lại thành vương ấn đoạt hồn.",
+      "motif": "eclipse",
+      "tier": 3,
+      "colors": [
+        2955325,
+        15299498,
+        16766072
+      ],
+      "grip": [
+        0.39,
+        0.64
+      ],
+      "size": 1.16
+    }
+  ],
+  "unarmed_skills": [
+    {
+      "id": "ba-quyen",
+      "name": "Bá Quyền",
+      "role": "LIÊN KÍCH",
+      "description": "Ba quyền nối tiếp trong quạt phía trước. Trúng đủ ba nhịp tích 24 Thánh Huyết; cú cuối phá giáp 4 giây.",
+      "cost": 0.0,
+      "gain": 24.0,
+      "cooldown": 3.0,
+      "contact": 0.38,
+      "lock": 1.3,
+      "duration": 3.2,
+      "action": "attack",
+      "base_damage": 110.0
+    },
+    {
+      "id": "hanh-tu-bi",
+      "name": "Hành Tự Bí",
+      "role": "ÁP SÁT",
+      "description": "Lướt tới trước mục tiêu, giữ vị trí rồi tung quyền. Tích 14 Thánh Huyết khi trúng; không xuyên qua quái.",
+      "cost": 0.0,
+      "gain": 14.0,
+      "cooldown": 7.0,
+      "contact": 0.45,
+      "lock": 0.95,
+      "duration": 3.0,
+      "action": "attack",
+      "base_damage": 140.0
+    },
+    {
+      "id": "thanh-the",
+      "name": "Hoàng Kim Huyết Khí",
+      "role": "HỘ THỂ",
+      "description": "Tiêu 20 Thánh Huyết, dựng giáp 400 điểm trong 5 giây và giảm 40% sát thương nhận. Quái đánh vào giúp tích thêm Thánh Huyết.",
+      "cost": 20.0,
+      "gain": 0.0,
+      "cooldown": 12.0,
+      "contact": 0.5,
+      "lock": 1.0,
+      "duration": 7.0,
+      "action": "gong",
+      "base_damage": 0.0
+    },
+    {
+      "id": "bao-son-an",
+      "name": "Bão Sơn Ấn",
+      "role": "TRẤN ÁP",
+      "description": "Tụ cổ sơn trên mục tiêu rồi giáng xuống. Tiêu 25 Thánh Huyết, gây sát thương vùng và làm choáng 1,5 giây.",
+      "cost": 25.0,
+      "gain": 0.0,
+      "cooldown": 9.0,
+      "contact": 1.15,
+      "lock": 1.7,
+      "duration": 4.0,
+      "action": "cast",
+      "base_damage": 360.0
+    },
+    {
+      "id": "luc-dao",
+      "name": "Lục Đạo Luân Hồi Quyền",
+      "role": "TUYỆT KỸ",
+      "description": "Tiêu 60 Thánh Huyết, mở sáu đạo ấn sau lưng rồi phóng sáu quyền liên tiếp. Quyền cuối nổ trong vùng nhỏ quanh mục tiêu.",
+      "cost": 60.0,
+      "gain": 0.0,
+      "cooldown": 15.0,
+      "contact": 0.65,
+      "lock": 2.4,
+      "duration": 4.8,
+      "action": "attack",
+      "base_damage": 110.0
+    },
+    {
+      "id": "dau-tu-bi",
+      "name": "Đấu Tự Bí",
+      "role": "HỌC THÊM · QUYỀN ẢNH",
+      "description": "Tiêu 20 Thánh Huyết. Ba chiêu gây sát thương kế tiếp trong 8 giây có quyền ảnh đánh bồi 45%; không nhân thêm Thánh Huyết.",
+      "cost": 20.0,
+      "gain": 0.0,
+      "cooldown": 18.0,
+      "contact": 0.45,
+      "lock": 0.9,
+      "duration": 9.5,
+      "action": "cast",
+      "base_damage": 0.0
+    },
+    {
+      "id": "giai-tu-bi",
+      "name": "Giai Tự Bí",
+      "role": "HỌC THÊM · BÙNG NỔ",
+      "description": "Tiêu 30 Thánh Huyết, tăng 60% sát thương trong 6 giây. Bản game dùng hệ số cố định để kiểm soát cân bằng.",
+      "cost": 30.0,
+      "gain": 0.0,
+      "cooldown": 22.0,
+      "contact": 0.55,
+      "lock": 1.0,
+      "duration": 8.0,
+      "action": "gong",
+      "base_damage": 0.0
+    },
+    {
+      "id": "gia-tu-bi",
+      "name": "Giả Tự Bí",
+      "role": "HỌC THÊM · HỒI PHỤC",
+      "description": "Tiêu 25 Thánh Huyết, hồi 80 HP qua mỗi nhịp trong 5 nhịp. Không vượt máu tối đa.",
+      "cost": 25.0,
+      "gain": 0.0,
+      "cooldown": 18.0,
+      "contact": 0.55,
+      "lock": 1.0,
+      "duration": 6.5,
+      "action": "absorb",
+      "base_damage": 0.0
+    },
+    {
+      "id": "thanh-lien",
+      "name": "Hỗn Độn Chủng Thanh Liên",
+      "role": "HỌC THÊM · DỊ TƯỢNG",
+      "description": "Tiêu 35 Thánh Huyết, mở biển vàng và Thanh Liên tại chỗ trong 5 giây. Sáu nhịp gây sát thương, hồi 40 HP và giảm 25% sát thương nhận khi đứng trong vùng.",
+      "cost": 35.0,
+      "gain": 0.0,
+      "cooldown": 20.0,
+      "contact": 0.75,
+      "lock": 1.2,
+      "duration": 7.5,
+      "action": "gong",
+      "base_damage": 55.0
+    },
+    {
+      "id": "thien-de-quyen",
+      "name": "Thiên Đế Quyền",
+      "role": "HỌC THÊM · KẾT LIỄU",
+      "description": "Tiêu 80 Thánh Huyết, dựng pháp tướng sau lưng, nén quyền rồi đánh xuyên vùng phía trước. Một cú nặng với dư chấn đất đá.",
+      "cost": 80.0,
+      "gain": 0.0,
+      "cooldown": 28.0,
+      "contact": 1.8,
+      "lock": 2.6,
+      "duration": 5.0,
+      "action": "attack",
+      "base_damage": 950.0
+    }
+  ],
+  "resource_strings": [
+    {
+      "path": "/data/equipment-expansion-v2/weapon-fx/${e.id}.png",
+      "offset": 5763
+    },
+    {
+      "path": "/data/fx/weapon-attacks-v1/sprites/${e.id}.png",
+      "offset": 5816
+    },
+    {
+      "path": "/data/armed-skins-v1/catalog.json",
+      "offset": 12169
+    },
+    {
+      "path": "/data/armed-skins-v1/${this.skin}-${t}-${s}.png",
+      "offset": 12658
+    },
+    {
+      "path": "data/audio/",
+      "offset": 30765
+    },
+    {
+      "path": "fx-chieu/am/",
+      "offset": 48824
+    },
+    {
+      "path": "kt-vukhi/${t}.json",
+      "offset": 51445
+    },
+    {
+      "path": "kt-vukhi/${t}.png",
+      "offset": 51804
+    },
+    {
+      "path": "kt-vukhi/anchors/${a}.json",
+      "offset": 51972
+    },
+    {
+      "path": "kt-skins/${a}/anchors.json",
+      "offset": 52001
+    }
+  ],
+  "limitations": [
+    "No linked modules uploaded yet; import binding implementations unknown",
+    "No live/runtime verification",
+    "Byte offsets refer to UTF-8 character positions only when ASCII preceding text; use Python Unicode codepoint offsets for listed positions",
+    "The file is minified; identifier meanings are build-local"
+  ]
+}

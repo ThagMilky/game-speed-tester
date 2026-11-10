@@ -1,0 +1,350 @@
+{
+  "schema": "game-asset-function-graph-v1.1",
+  "description": "Targeted-repaired graph: verified source declarations and one statically verified direct call; remaining edges are conceptual/inferred or unknown, not a complete call graph.",
+  "nodes": [
+    {
+      "id": "index::bootstrap_flow",
+      "module": "index-BIkbGDKp.js",
+      "type": "entry_point",
+      "description": "Client bootstrap and asset/scene loading stages",
+      "node_type": "conceptual_subsystem",
+      "source_symbol": null,
+      "evidence": {
+        "status": "INFERRED",
+        "source_file": "index-BIkbGDKp.js",
+        "note": "Conceptual label: not a declared JavaScript identifier; no direct call is implied."
+      }
+    },
+    {
+      "id": "index::io",
+      "module": "index-BIkbGDKp.js",
+      "type": "network",
+      "description": "Network client class handling WebSocket/RTC transport",
+      "node_type": "source_symbol",
+      "source_symbol": "io",
+      "evidence": {
+        "status": "CONFIRMED",
+        "source_file": "index-BIkbGDKp.js",
+        "source_anchor": "class io{",
+        "utf16_offset": 7274,
+        "scope": "top level",
+        "note": "Exact source spelling located statically; interpretation is limited to visible client implementation."
+      }
+    },
+    {
+      "id": "index::io.receive",
+      "module": "index-BIkbGDKp.js",
+      "type": "network",
+      "description": "Message parsing and snapshot queue handling",
+      "node_type": "source_symbol",
+      "source_symbol": "io.receive",
+      "evidence": {
+        "status": "CONFIRMED",
+        "source_file": "index-BIkbGDKp.js",
+        "source_anchor": "receive(e,o){",
+        "utf16_offset": 8271,
+        "scope": "class io",
+        "note": "Exact source spelling located statically; interpretation is limited to visible client implementation."
+      }
+    },
+    {
+      "id": "WorldScene::A3.create",
+      "module": "WorldScene-b_2tpaKT.js",
+      "type": "lifecycle",
+      "description": "Phaser scene setup and driver callbacks",
+      "node_type": "source_symbol",
+      "source_symbol": "A3.create",
+      "evidence": {
+        "status": "CONFIRMED",
+        "source_file": "WorldScene-b_2tpaKT.js",
+        "source_anchor": "async create(){",
+        "utf16_offset": 837210,
+        "scope": "class A3",
+        "note": "Exact source spelling located statically; interpretation is limited to visible client implementation."
+      }
+    },
+    {
+      "id": "WorldScene::A3.update",
+      "module": "WorldScene-b_2tpaKT.js",
+      "type": "lifecycle",
+      "description": "Scene per-frame update loop",
+      "node_type": "source_symbol",
+      "source_symbol": "A3.update",
+      "evidence": {
+        "status": "CONFIRMED",
+        "source_file": "WorldScene-b_2tpaKT.js",
+        "source_anchor": "update(t,i){",
+        "utf16_offset": 1005385,
+        "scope": "class A3",
+        "note": "Exact source spelling located statically; interpretation is limited to visible client implementation."
+      }
+    },
+    {
+      "id": "WorldScene::A3.onSnap",
+      "module": "WorldScene-b_2tpaKT.js",
+      "type": "state_sync",
+      "description": "Applies incoming snap state and entity changes",
+      "node_type": "source_symbol",
+      "source_symbol": "A3.onSnap",
+      "evidence": {
+        "status": "CONFIRMED",
+        "source_file": "WorldScene-b_2tpaKT.js",
+        "source_anchor": "onSnap(t){",
+        "utf16_offset": 897472,
+        "scope": "class A3",
+        "note": "Exact source spelling located statically; interpretation is limited to visible client implementation."
+      }
+    },
+    {
+      "id": "WorldScene::Q4.update",
+      "module": "WorldScene-b_2tpaKT.js",
+      "type": "automation",
+      "description": "Tick of the actual Q4 auto-farm controller",
+      "node_type": "source_symbol",
+      "source_symbol": "Q4.update",
+      "evidence": {
+        "status": "CONFIRMED",
+        "source_file": "WorldScene-b_2tpaKT.js",
+        "source_anchor": "update(e,t,i){",
+        "utf16_offset": 683805,
+        "scope": "class Q4",
+        "note": "Exact source spelling located statically; interpretation is limited to visible client implementation."
+      }
+    },
+    {
+      "id": "WorldScene::A3.useSkill",
+      "module": "WorldScene-b_2tpaKT.js",
+      "type": "combat",
+      "description": "Client-side skill input/send handling",
+      "node_type": "source_symbol",
+      "source_symbol": "A3.useSkill",
+      "evidence": {
+        "status": "CONFIRMED",
+        "source_file": "WorldScene-b_2tpaKT.js",
+        "source_anchor": "useSkill(t,i=!1,n=!0){",
+        "utf16_offset": 920349,
+        "scope": "class A3",
+        "note": "Exact source spelling located statically; interpretation is limited to visible client implementation."
+      }
+    },
+    {
+      "id": "sim::combat_subsystem",
+      "module": "sim-CvoxXTtu.js",
+      "type": "simulation",
+      "description": "Combat-related simulation module; not a function named simulateCombat",
+      "node_type": "conceptual_subsystem",
+      "source_symbol": null,
+      "evidence": {
+        "status": "INFERRED",
+        "source_file": "sim-CvoxXTtu.js",
+        "note": "Conceptual label: not a declared JavaScript identifier; no direct call is implied."
+      }
+    },
+    {
+      "id": "trangbi::attribute_tables",
+      "module": "trangbi-iyUH-plT.js",
+      "type": "formulas",
+      "description": "Equipment and attributes data/calculation subsystem; not a calculateAttributes declaration",
+      "node_type": "conceptual_subsystem",
+      "source_symbol": null,
+      "evidence": {
+        "status": "INFERRED",
+        "source_file": "trangbi-iyUH-plT.js",
+        "note": "Conceptual label: not a declared JavaScript identifier; no direct call is implied."
+      }
+    },
+    {
+      "id": "ChieuMau::skill_effect_subsystem",
+      "module": "ChieuMau-CEtRLp-4.js",
+      "type": "rendering",
+      "description": "Client-side skill effect subsystem; not a playSkillFx declaration",
+      "node_type": "conceptual_subsystem",
+      "source_symbol": null,
+      "evidence": {
+        "status": "INFERRED",
+        "source_file": "ChieuMau-CEtRLp-4.js",
+        "note": "Conceptual label: not a declared JavaScript identifier; no direct call is implied."
+      }
+    },
+    {
+      "id": "Character::animation_subsystem",
+      "module": "Character-DhQJ_Q0g(1).js",
+      "type": "rendering",
+      "description": "Character visual animation subsystem; not a playAnimation declaration",
+      "node_type": "conceptual_subsystem",
+      "source_symbol": null,
+      "evidence": {
+        "status": "INFERRED",
+        "source_file": "Character-DhQJ_Q0g(1).js",
+        "note": "Conceptual label: not a declared JavaScript identifier; no direct call is implied."
+      }
+    },
+    {
+      "id": "items::inventory_ui_subsystem",
+      "module": "items-nDkzNEls.js",
+      "type": "ui",
+      "description": "Inventory UI subsystem; not a renderInventory declaration",
+      "node_type": "conceptual_subsystem",
+      "source_symbol": null,
+      "evidence": {
+        "status": "INFERRED",
+        "source_file": "items-nDkzNEls.js",
+        "note": "Conceptual label: not a declared JavaScript identifier; no direct call is implied."
+      }
+    },
+    {
+      "id": "tm-direct::WebSocketShim",
+      "module": "tm-direct.js",
+      "type": "security",
+      "description": "Function wrapping WebSocket construction",
+      "node_type": "source_symbol",
+      "source_symbol": "WebSocketShim",
+      "evidence": {
+        "status": "CONFIRMED",
+        "source_file": "tm-direct.js",
+        "source_anchor": "function WebSocketShim(",
+        "utf16_offset": 4751,
+        "scope": "IIFE in tm-direct.js",
+        "note": "Exact source spelling located statically; interpretation is limited to visible client implementation."
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "index::bootstrap_flow",
+      "target": "WorldScene::A3.create",
+      "relation": "scene_lifecycle_flow",
+      "confidence": "INFERRED",
+      "relation_type": "subsystem_pipeline",
+      "evidence": {
+        "status": "INFERRED",
+        "note": "Conceptual module interaction; no verified direct executable call"
+      }
+    },
+    {
+      "source": "index::bootstrap_flow",
+      "target": "index::io",
+      "relation": "network_client_setup",
+      "confidence": "INFERRED",
+      "relation_type": "subsystem_pipeline",
+      "evidence": {
+        "status": "INFERRED",
+        "note": "Conceptual module interaction; no verified direct executable call"
+      }
+    },
+    {
+      "source": "index::io",
+      "target": "index::io.receive",
+      "relation": "incoming_message_path",
+      "confidence": "INFERRED",
+      "relation_type": "subsystem_pipeline",
+      "evidence": {
+        "status": "INFERRED",
+        "note": "Conceptual module interaction; no verified direct executable call"
+      }
+    },
+    {
+      "source": "index::io.receive",
+      "target": "WorldScene::A3.onSnap",
+      "relation": "snapshot_dispatch_via_scene",
+      "confidence": "INFERRED",
+      "relation_type": "subsystem_pipeline",
+      "evidence": {
+        "status": "INFERRED",
+        "note": "Indirect path through driver callbacks and A3.onServer; not a direct io.receive → A3.onSnap call."
+      }
+    },
+    {
+      "source": "WorldScene::A3.update",
+      "target": "WorldScene::Q4.update",
+      "relation": "ticks_auto_farm",
+      "confidence": "CONFIRMED",
+      "relation_type": "direct_call",
+      "evidence": {
+        "status": "CONFIRMED",
+        "note": "A3.update directly invokes this.auto.update; A3 constructs auto as a Q4 controller.",
+        "source_file": "WorldScene-b_2tpaKT.js",
+        "source_anchor": "this.auto.update(this.autoHost(),this.now(),n)",
+        "utf16_offset": 1007759
+      }
+    },
+    {
+      "source": "WorldScene::Q4.update",
+      "target": "WorldScene::A3.useSkill",
+      "relation": "auto_skill_callback",
+      "confidence": "INFERRED",
+      "relation_type": "subsystem_pipeline",
+      "evidence": {
+        "status": "INFERRED",
+        "note": "Q4 calls e.cast; A3.autoHost provides a callback to local scene skill handling. This is not a direct call."
+      }
+    },
+    {
+      "source": "WorldScene::A3.useSkill",
+      "target": "sim::combat_subsystem",
+      "relation": "potential_prediction_relationship",
+      "confidence": "UNKNOWN",
+      "relation_type": "subsystem_pipeline",
+      "evidence": {
+        "status": "UNKNOWN",
+        "note": "A3.useSkill does not establish a direct simulateCombat call; original requested-prediction edge unsupported."
+      }
+    },
+    {
+      "source": "sim::combat_subsystem",
+      "target": "trangbi::attribute_tables",
+      "relation": "module_imports_game_data",
+      "confidence": "INFERRED",
+      "relation_type": "subsystem_pipeline",
+      "evidence": {
+        "status": "INFERRED",
+        "note": "sim imports equipment bindings; this does not establish a specific function-to-function call."
+      }
+    },
+    {
+      "source": "WorldScene::A3.useSkill",
+      "target": "ChieuMau::skill_effect_subsystem",
+      "relation": "skill_fx_pipeline",
+      "confidence": "INFERRED",
+      "relation_type": "subsystem_pipeline",
+      "evidence": {
+        "status": "INFERRED",
+        "note": "Conceptual module interaction; no verified direct executable call"
+      }
+    },
+    {
+      "source": "WorldScene::A3.useSkill",
+      "target": "Character::animation_subsystem",
+      "relation": "cast_visual_pipeline",
+      "confidence": "INFERRED",
+      "relation_type": "subsystem_pipeline",
+      "evidence": {
+        "status": "INFERRED",
+        "note": "Conceptual module interaction; no verified direct executable call"
+      }
+    },
+    {
+      "source": "WorldScene::A3.create",
+      "target": "items::inventory_ui_subsystem",
+      "relation": "ui_setup_pipeline",
+      "confidence": "INFERRED",
+      "relation_type": "subsystem_pipeline",
+      "evidence": {
+        "status": "INFERRED",
+        "note": "Conceptual module interaction; no verified direct executable call"
+      }
+    },
+    {
+      "source": "tm-direct::WebSocketShim",
+      "target": "index::io",
+      "relation": "wraps_global_transport",
+      "confidence": "INFERRED",
+      "relation_type": "subsystem_pipeline",
+      "evidence": {
+        "status": "INFERRED",
+        "note": "tm-direct exposes a browser-global wrapper; index uses WebSocket. Import/call from tm-direct to io is not direct."
+      }
+    }
+  ],
+  "verification_scope": "14 nodes and 12 relationships reviewed against supplied source for identity and direct-call status; source_symbol labels verified by source anchors, conceptual labels are not declarations."
+}

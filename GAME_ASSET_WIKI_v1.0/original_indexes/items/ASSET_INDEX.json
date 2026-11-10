@@ -1,0 +1,3438 @@
+{
+  "schema_version": "1.0",
+  "asset_file": "items-nDkzNEls.js",
+  "encoding": "UTF-8",
+  "location_convention": {
+    "utf16_offset": "0-based UTF-16 code units (JavaScript string offsets)",
+    "codepoint_offset": "0-based Unicode code points (Python str offsets)",
+    "utf8_byte_offset": "0-based bytes in untouched source",
+    "end_exclusive": "End offset excluded. Declaration location normally marks the declaration token; not necessarily the full body.",
+    "line": "1-based",
+    "column_codepoint": "1-based"
+  },
+  "source": {
+    "size_bytes": 18028,
+    "codepoints": 16097,
+    "utf16_units": 16097,
+    "line_count": 14,
+    "sha256": "5f77311ae9d6e9fab8eff378a809fcacf3f16af2304aa3f577bee1aab1d0b343"
+  },
+  "imports": [
+    {
+      "module": "./trangbi-iyUH-plT.js",
+      "bindings": [
+        {
+          "original_export": "d5",
+          "local_alias": "O",
+          "location": {
+            "start": {
+              "codepoint_offset": 7,
+              "utf16_offset": 7,
+              "utf8_byte_offset": 7,
+              "line": 1,
+              "column_codepoint": 8
+            },
+            "end_exclusive": {
+              "codepoint_offset": 14,
+              "utf16_offset": 14,
+              "utf8_byte_offset": 14,
+              "line": 1,
+              "column_codepoint": 15
+            }
+          }
+        },
+        {
+          "original_export": "d6",
+          "local_alias": "F",
+          "location": {
+            "start": {
+              "codepoint_offset": 15,
+              "utf16_offset": 15,
+              "utf8_byte_offset": 15,
+              "line": 1,
+              "column_codepoint": 16
+            },
+            "end_exclusive": {
+              "codepoint_offset": 22,
+              "utf16_offset": 22,
+              "utf8_byte_offset": 22,
+              "line": 1,
+              "column_codepoint": 23
+            }
+          }
+        },
+        {
+          "original_export": "b_",
+          "local_alias": "R",
+          "location": {
+            "start": {
+              "codepoint_offset": 23,
+              "utf16_offset": 23,
+              "utf8_byte_offset": 23,
+              "line": 1,
+              "column_codepoint": 24
+            },
+            "end_exclusive": {
+              "codepoint_offset": 30,
+              "utf16_offset": 30,
+              "utf8_byte_offset": 30,
+              "line": 1,
+              "column_codepoint": 31
+            }
+          }
+        },
+        {
+          "original_export": "F",
+          "local_alias": "V",
+          "location": {
+            "start": {
+              "codepoint_offset": 31,
+              "utf16_offset": 31,
+              "utf8_byte_offset": 31,
+              "line": 1,
+              "column_codepoint": 32
+            },
+            "end_exclusive": {
+              "codepoint_offset": 37,
+              "utf16_offset": 37,
+              "utf8_byte_offset": 37,
+              "line": 1,
+              "column_codepoint": 38
+            }
+          }
+        },
+        {
+          "original_export": "d7",
+          "local_alias": "E",
+          "location": {
+            "start": {
+              "codepoint_offset": 38,
+              "utf16_offset": 38,
+              "utf8_byte_offset": 38,
+              "line": 1,
+              "column_codepoint": 39
+            },
+            "end_exclusive": {
+              "codepoint_offset": 45,
+              "utf16_offset": 45,
+              "utf8_byte_offset": 45,
+              "line": 1,
+              "column_codepoint": 46
+            }
+          }
+        },
+        {
+          "original_export": "d8",
+          "local_alias": "_",
+          "location": {
+            "start": {
+              "codepoint_offset": 46,
+              "utf16_offset": 46,
+              "utf8_byte_offset": 46,
+              "line": 1,
+              "column_codepoint": 47
+            },
+            "end_exclusive": {
+              "codepoint_offset": 53,
+              "utf16_offset": 53,
+              "utf8_byte_offset": 53,
+              "line": 1,
+              "column_codepoint": 54
+            }
+          }
+        },
+        {
+          "original_export": "d9",
+          "local_alias": "P",
+          "location": {
+            "start": {
+              "codepoint_offset": 54,
+              "utf16_offset": 54,
+              "utf8_byte_offset": 54,
+              "line": 1,
+              "column_codepoint": 55
+            },
+            "end_exclusive": {
+              "codepoint_offset": 61,
+              "utf16_offset": 61,
+              "utf8_byte_offset": 61,
+              "line": 1,
+              "column_codepoint": 62
+            }
+          }
+        },
+        {
+          "original_export": "da",
+          "local_alias": "X",
+          "location": {
+            "start": {
+              "codepoint_offset": 62,
+              "utf16_offset": 62,
+              "utf8_byte_offset": 62,
+              "line": 1,
+              "column_codepoint": 63
+            },
+            "end_exclusive": {
+              "codepoint_offset": 69,
+              "utf16_offset": 69,
+              "utf8_byte_offset": 69,
+              "line": 1,
+              "column_codepoint": 70
+            }
+          }
+        },
+        {
+          "original_export": "bA",
+          "local_alias": "J",
+          "location": {
+            "start": {
+              "codepoint_offset": 70,
+              "utf16_offset": 70,
+              "utf8_byte_offset": 70,
+              "line": 1,
+              "column_codepoint": 71
+            },
+            "end_exclusive": {
+              "codepoint_offset": 77,
+              "utf16_offset": 77,
+              "utf8_byte_offset": 77,
+              "line": 1,
+              "column_codepoint": 78
+            }
+          }
+        },
+        {
+          "original_export": "bJ",
+          "local_alias": "I",
+          "location": {
+            "start": {
+              "codepoint_offset": 78,
+              "utf16_offset": 78,
+              "utf8_byte_offset": 78,
+              "line": 1,
+              "column_codepoint": 79
+            },
+            "end_exclusive": {
+              "codepoint_offset": 85,
+              "utf16_offset": 85,
+              "utf8_byte_offset": 85,
+              "line": 1,
+              "column_codepoint": 86
+            }
+          }
+        },
+        {
+          "original_export": "bK",
+          "local_alias": "U",
+          "location": {
+            "start": {
+              "codepoint_offset": 86,
+              "utf16_offset": 86,
+              "utf8_byte_offset": 86,
+              "line": 1,
+              "column_codepoint": 87
+            },
+            "end_exclusive": {
+              "codepoint_offset": 93,
+              "utf16_offset": 93,
+              "utf8_byte_offset": 93,
+              "line": 1,
+              "column_codepoint": 94
+            }
+          }
+        },
+        {
+          "original_export": "O",
+          "local_alias": "x",
+          "location": {
+            "start": {
+              "codepoint_offset": 94,
+              "utf16_offset": 94,
+              "utf8_byte_offset": 94,
+              "line": 1,
+              "column_codepoint": 95
+            },
+            "end_exclusive": {
+              "codepoint_offset": 100,
+              "utf16_offset": 100,
+              "utf8_byte_offset": 100,
+              "line": 1,
+              "column_codepoint": 101
+            }
+          }
+        },
+        {
+          "original_export": "bL",
+          "local_alias": "Q",
+          "location": {
+            "start": {
+              "codepoint_offset": 101,
+              "utf16_offset": 101,
+              "utf8_byte_offset": 101,
+              "line": 1,
+              "column_codepoint": 102
+            },
+            "end_exclusive": {
+              "codepoint_offset": 108,
+              "utf16_offset": 108,
+              "utf8_byte_offset": 108,
+              "line": 1,
+              "column_codepoint": 109
+            }
+          }
+        },
+        {
+          "original_export": "bP",
+          "local_alias": "Z",
+          "location": {
+            "start": {
+              "codepoint_offset": 109,
+              "utf16_offset": 109,
+              "utf8_byte_offset": 109,
+              "line": 1,
+              "column_codepoint": 110
+            },
+            "end_exclusive": {
+              "codepoint_offset": 116,
+              "utf16_offset": 116,
+              "utf8_byte_offset": 116,
+              "line": 1,
+              "column_codepoint": 117
+            }
+          }
+        },
+        {
+          "original_export": "cw",
+          "local_alias": "Y",
+          "location": {
+            "start": {
+              "codepoint_offset": 117,
+              "utf16_offset": 117,
+              "utf8_byte_offset": 117,
+              "line": 1,
+              "column_codepoint": 118
+            },
+            "end_exclusive": {
+              "codepoint_offset": 124,
+              "utf16_offset": 124,
+              "utf8_byte_offset": 124,
+              "line": 1,
+              "column_codepoint": 125
+            }
+          }
+        },
+        {
+          "original_export": "cy",
+          "local_alias": "y",
+          "location": {
+            "start": {
+              "codepoint_offset": 125,
+              "utf16_offset": 125,
+              "utf8_byte_offset": 125,
+              "line": 1,
+              "column_codepoint": 126
+            },
+            "end_exclusive": {
+              "codepoint_offset": 132,
+              "utf16_offset": 132,
+              "utf8_byte_offset": 132,
+              "line": 1,
+              "column_codepoint": 133
+            }
+          }
+        },
+        {
+          "original_export": "cC",
+          "local_alias": "z",
+          "location": {
+            "start": {
+              "codepoint_offset": 133,
+              "utf16_offset": 133,
+              "utf8_byte_offset": 133,
+              "line": 1,
+              "column_codepoint": 134
+            },
+            "end_exclusive": {
+              "codepoint_offset": 140,
+              "utf16_offset": 140,
+              "utf8_byte_offset": 140,
+              "line": 1,
+              "column_codepoint": 141
+            }
+          }
+        },
+        {
+          "original_export": "cD",
+          "local_alias": "nn",
+          "location": {
+            "start": {
+              "codepoint_offset": 141,
+              "utf16_offset": 141,
+              "utf8_byte_offset": 141,
+              "line": 1,
+              "column_codepoint": 142
+            },
+            "end_exclusive": {
+              "codepoint_offset": 149,
+              "utf16_offset": 149,
+              "utf8_byte_offset": 149,
+              "line": 1,
+              "column_codepoint": 150
+            }
+          }
+        },
+        {
+          "original_export": "cN",
+          "local_alias": "tn",
+          "location": {
+            "start": {
+              "codepoint_offset": 150,
+              "utf16_offset": 150,
+              "utf8_byte_offset": 150,
+              "line": 1,
+              "column_codepoint": 151
+            },
+            "end_exclusive": {
+              "codepoint_offset": 158,
+              "utf16_offset": 158,
+              "utf8_byte_offset": 158,
+              "line": 1,
+              "column_codepoint": 159
+            }
+          }
+        },
+        {
+          "original_export": "cO",
+          "local_alias": "hn",
+          "location": {
+            "start": {
+              "codepoint_offset": 159,
+              "utf16_offset": 159,
+              "utf8_byte_offset": 159,
+              "line": 1,
+              "column_codepoint": 160
+            },
+            "end_exclusive": {
+              "codepoint_offset": 167,
+              "utf16_offset": 167,
+              "utf8_byte_offset": 167,
+              "line": 1,
+              "column_codepoint": 168
+            }
+          }
+        },
+        {
+          "original_export": "cx",
+          "local_alias": "an",
+          "location": {
+            "start": {
+              "codepoint_offset": 168,
+              "utf16_offset": 168,
+              "utf8_byte_offset": 168,
+              "line": 1,
+              "column_codepoint": 169
+            },
+            "end_exclusive": {
+              "codepoint_offset": 176,
+              "utf16_offset": 176,
+              "utf8_byte_offset": 176,
+              "line": 1,
+              "column_codepoint": 177
+            }
+          }
+        },
+        {
+          "original_export": "db",
+          "local_alias": "cn",
+          "location": {
+            "start": {
+              "codepoint_offset": 177,
+              "utf16_offset": 177,
+              "utf8_byte_offset": 177,
+              "line": 1,
+              "column_codepoint": 178
+            },
+            "end_exclusive": {
+              "codepoint_offset": 185,
+              "utf16_offset": 185,
+              "utf8_byte_offset": 185,
+              "line": 1,
+              "column_codepoint": 186
+            }
+          }
+        },
+        {
+          "original_export": "aB",
+          "local_alias": "en",
+          "location": {
+            "start": {
+              "codepoint_offset": 186,
+              "utf16_offset": 186,
+              "utf8_byte_offset": 186,
+              "line": 1,
+              "column_codepoint": 187
+            },
+            "end_exclusive": {
+              "codepoint_offset": 194,
+              "utf16_offset": 194,
+              "utf8_byte_offset": 194,
+              "line": 1,
+              "column_codepoint": 195
+            }
+          }
+        },
+        {
+          "original_export": "aI",
+          "local_alias": "gn",
+          "location": {
+            "start": {
+              "codepoint_offset": 195,
+              "utf16_offset": 195,
+              "utf8_byte_offset": 195,
+              "line": 1,
+              "column_codepoint": 196
+            },
+            "end_exclusive": {
+              "codepoint_offset": 203,
+              "utf16_offset": 203,
+              "utf8_byte_offset": 203,
+              "line": 1,
+              "column_codepoint": 204
+            }
+          }
+        },
+        {
+          "original_export": "a3",
+          "local_alias": "on",
+          "location": {
+            "start": {
+              "codepoint_offset": 204,
+              "utf16_offset": 204,
+              "utf8_byte_offset": 204,
+              "line": 1,
+              "column_codepoint": 205
+            },
+            "end_exclusive": {
+              "codepoint_offset": 212,
+              "utf16_offset": 212,
+              "utf8_byte_offset": 212,
+              "line": 1,
+              "column_codepoint": 213
+            }
+          }
+        },
+        {
+          "original_export": "ax",
+          "local_alias": "sn",
+          "location": {
+            "start": {
+              "codepoint_offset": 213,
+              "utf16_offset": 213,
+              "utf8_byte_offset": 213,
+              "line": 1,
+              "column_codepoint": 214
+            },
+            "end_exclusive": {
+              "codepoint_offset": 221,
+              "utf16_offset": 221,
+              "utf8_byte_offset": 221,
+              "line": 1,
+              "column_codepoint": 222
+            }
+          }
+        },
+        {
+          "original_export": "cl",
+          "local_alias": "rn",
+          "location": {
+            "start": {
+              "codepoint_offset": 222,
+              "utf16_offset": 222,
+              "utf8_byte_offset": 222,
+              "line": 1,
+              "column_codepoint": 223
+            },
+            "end_exclusive": {
+              "codepoint_offset": 230,
+              "utf16_offset": 230,
+              "utf8_byte_offset": 230,
+              "line": 1,
+              "column_codepoint": 231
+            }
+          }
+        },
+        {
+          "original_export": "c1",
+          "local_alias": "un",
+          "location": {
+            "start": {
+              "codepoint_offset": 231,
+              "utf16_offset": 231,
+              "utf8_byte_offset": 231,
+              "line": 1,
+              "column_codepoint": 232
+            },
+            "end_exclusive": {
+              "codepoint_offset": 239,
+              "utf16_offset": 239,
+              "utf8_byte_offset": 239,
+              "line": 1,
+              "column_codepoint": 240
+            }
+          }
+        },
+        {
+          "original_export": "c2",
+          "local_alias": "ln",
+          "location": {
+            "start": {
+              "codepoint_offset": 240,
+              "utf16_offset": 240,
+              "utf8_byte_offset": 240,
+              "line": 1,
+              "column_codepoint": 241
+            },
+            "end_exclusive": {
+              "codepoint_offset": 248,
+              "utf16_offset": 248,
+              "utf8_byte_offset": 248,
+              "line": 1,
+              "column_codepoint": 249
+            }
+          }
+        },
+        {
+          "original_export": "bN",
+          "local_alias": "dn",
+          "location": {
+            "start": {
+              "codepoint_offset": 249,
+              "utf16_offset": 249,
+              "utf8_byte_offset": 249,
+              "line": 1,
+              "column_codepoint": 250
+            },
+            "end_exclusive": {
+              "codepoint_offset": 257,
+              "utf16_offset": 257,
+              "utf8_byte_offset": 257,
+              "line": 1,
+              "column_codepoint": 258
+            }
+          }
+        },
+        {
+          "original_export": "bO",
+          "local_alias": "pn",
+          "location": {
+            "start": {
+              "codepoint_offset": 258,
+              "utf16_offset": 258,
+              "utf8_byte_offset": 258,
+              "line": 1,
+              "column_codepoint": 259
+            },
+            "end_exclusive": {
+              "codepoint_offset": 266,
+              "utf16_offset": 266,
+              "utf8_byte_offset": 266,
+              "line": 1,
+              "column_codepoint": 267
+            }
+          }
+        },
+        {
+          "original_export": "br",
+          "local_alias": "mn",
+          "location": {
+            "start": {
+              "codepoint_offset": 267,
+              "utf16_offset": 267,
+              "utf8_byte_offset": 267,
+              "line": 1,
+              "column_codepoint": 268
+            },
+            "end_exclusive": {
+              "codepoint_offset": 275,
+              "utf16_offset": 275,
+              "utf8_byte_offset": 275,
+              "line": 1,
+              "column_codepoint": 276
+            }
+          }
+        },
+        {
+          "original_export": "aH",
+          "local_alias": "fn",
+          "location": {
+            "start": {
+              "codepoint_offset": 276,
+              "utf16_offset": 276,
+              "utf8_byte_offset": 276,
+              "line": 1,
+              "column_codepoint": 277
+            },
+            "end_exclusive": {
+              "codepoint_offset": 284,
+              "utf16_offset": 284,
+              "utf8_byte_offset": 284,
+              "line": 1,
+              "column_codepoint": 285
+            }
+          }
+        },
+        {
+          "original_export": "al",
+          "local_alias": "yn",
+          "location": {
+            "start": {
+              "codepoint_offset": 285,
+              "utf16_offset": 285,
+              "utf8_byte_offset": 285,
+              "line": 1,
+              "column_codepoint": 286
+            },
+            "end_exclusive": {
+              "codepoint_offset": 293,
+              "utf16_offset": 293,
+              "utf8_byte_offset": 293,
+              "line": 1,
+              "column_codepoint": 294
+            }
+          }
+        },
+        {
+          "original_export": "ak",
+          "local_alias": "$n",
+          "location": {
+            "start": {
+              "codepoint_offset": 294,
+              "utf16_offset": 294,
+              "utf8_byte_offset": 294,
+              "line": 1,
+              "column_codepoint": 295
+            },
+            "end_exclusive": {
+              "codepoint_offset": 302,
+              "utf16_offset": 302,
+              "utf8_byte_offset": 302,
+              "line": 1,
+              "column_codepoint": 303
+            }
+          }
+        },
+        {
+          "original_export": "aj",
+          "local_alias": "kn",
+          "location": {
+            "start": {
+              "codepoint_offset": 303,
+              "utf16_offset": 303,
+              "utf8_byte_offset": 303,
+              "line": 1,
+              "column_codepoint": 304
+            },
+            "end_exclusive": {
+              "codepoint_offset": 311,
+              "utf16_offset": 311,
+              "utf8_byte_offset": 311,
+              "line": 1,
+              "column_codepoint": 312
+            }
+          }
+        },
+        {
+          "original_export": "ai",
+          "local_alias": "Tn",
+          "location": {
+            "start": {
+              "codepoint_offset": 312,
+              "utf16_offset": 312,
+              "utf8_byte_offset": 312,
+              "line": 1,
+              "column_codepoint": 313
+            },
+            "end_exclusive": {
+              "codepoint_offset": 320,
+              "utf16_offset": 320,
+              "utf8_byte_offset": 320,
+              "line": 1,
+              "column_codepoint": 321
+            }
+          }
+        },
+        {
+          "original_export": "ah",
+          "local_alias": "bn",
+          "location": {
+            "start": {
+              "codepoint_offset": 321,
+              "utf16_offset": 321,
+              "utf8_byte_offset": 321,
+              "line": 1,
+              "column_codepoint": 322
+            },
+            "end_exclusive": {
+              "codepoint_offset": 329,
+              "utf16_offset": 329,
+              "utf8_byte_offset": 329,
+              "line": 1,
+              "column_codepoint": 330
+            }
+          }
+        },
+        {
+          "original_export": "ag",
+          "local_alias": "vn",
+          "location": {
+            "start": {
+              "codepoint_offset": 330,
+              "utf16_offset": 330,
+              "utf8_byte_offset": 330,
+              "line": 1,
+              "column_codepoint": 331
+            },
+            "end_exclusive": {
+              "codepoint_offset": 338,
+              "utf16_offset": 338,
+              "utf8_byte_offset": 338,
+              "line": 1,
+              "column_codepoint": 339
+            }
+          }
+        },
+        {
+          "original_export": "dc",
+          "local_alias": "xn",
+          "location": {
+            "start": {
+              "codepoint_offset": 339,
+              "utf16_offset": 339,
+              "utf8_byte_offset": 339,
+              "line": 1,
+              "column_codepoint": 340
+            },
+            "end_exclusive": {
+              "codepoint_offset": 347,
+              "utf16_offset": 347,
+              "utf8_byte_offset": 347,
+              "line": 1,
+              "column_codepoint": 348
+            }
+          }
+        }
+      ],
+      "location": {
+        "start": {
+          "codepoint_offset": 0,
+          "utf16_offset": 0,
+          "utf8_byte_offset": 0,
+          "line": 1,
+          "column_codepoint": 1
+        },
+        "end_exclusive": {
+          "codepoint_offset": 376,
+          "utf16_offset": 376,
+          "utf8_byte_offset": 376,
+          "line": 1,
+          "column_codepoint": 377
+        }
+      }
+    },
+    {
+      "module": "./index-BIkbGDKp.js",
+      "bindings": [
+        {
+          "original_export": "d",
+          "local_alias": "p",
+          "location": {
+            "start": {
+              "codepoint_offset": 383,
+              "utf16_offset": 383,
+              "utf8_byte_offset": 383,
+              "line": 1,
+              "column_codepoint": 384
+            },
+            "end_exclusive": {
+              "codepoint_offset": 389,
+              "utf16_offset": 389,
+              "utf8_byte_offset": 389,
+              "line": 1,
+              "column_codepoint": 390
+            }
+          }
+        }
+      ],
+      "location": {
+        "start": {
+          "codepoint_offset": 376,
+          "utf16_offset": 376,
+          "utf8_byte_offset": 376,
+          "line": 1,
+          "column_codepoint": 377
+        },
+        "end_exclusive": {
+          "codepoint_offset": 416,
+          "utf16_offset": 416,
+          "utf8_byte_offset": 416,
+          "line": 1,
+          "column_codepoint": 417
+        }
+      }
+    }
+  ],
+  "symbols": [
+    {
+      "name": "M",
+      "kind": "variable_or_constant",
+      "declaration": "const M=",
+      "location": {
+        "start": {
+          "codepoint_offset": 416,
+          "utf16_offset": 416,
+          "utf8_byte_offset": 416,
+          "line": 1,
+          "column_codepoint": 417
+        },
+        "end_exclusive": {
+          "codepoint_offset": 424,
+          "utf16_offset": 424,
+          "utf8_byte_offset": 424,
+          "line": 1,
+          "column_codepoint": 425
+        }
+      }
+    },
+    {
+      "name": "D",
+      "kind": "variable_or_constant",
+      "declaration": "D=\"tm-controls-v1\"",
+      "location": {
+        "start": {
+          "codepoint_offset": 1104,
+          "utf16_offset": 1104,
+          "utf8_byte_offset": 1202,
+          "line": 1,
+          "column_codepoint": 1105
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1122,
+          "utf16_offset": 1122,
+          "utf8_byte_offset": 1220,
+          "line": 1,
+          "column_codepoint": 1123
+        }
+      }
+    },
+    {
+      "name": "Cn",
+      "kind": "function",
+      "declaration": "Cn=()=>",
+      "location": {
+        "start": {
+          "codepoint_offset": 1123,
+          "utf16_offset": 1123,
+          "utf8_byte_offset": 1221,
+          "line": 1,
+          "column_codepoint": 1124
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1130,
+          "utf16_offset": 1130,
+          "utf8_byte_offset": 1228,
+          "line": 1,
+          "column_codepoint": 1131
+        }
+      }
+    },
+    {
+      "name": "Hn",
+      "kind": "function",
+      "declaration": "Hn=n=>",
+      "location": {
+        "start": {
+          "codepoint_offset": 1230,
+          "utf16_offset": 1230,
+          "utf8_byte_offset": 1328,
+          "line": 1,
+          "column_codepoint": 1231
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1236,
+          "utf16_offset": 1236,
+          "utf8_byte_offset": 1334,
+          "line": 1,
+          "column_codepoint": 1237
+        }
+      }
+    },
+    {
+      "name": "Mn",
+      "kind": "function",
+      "declaration": "function Mn()",
+      "location": {
+        "start": {
+          "codepoint_offset": 1312,
+          "utf16_offset": 1312,
+          "utf8_byte_offset": 1410,
+          "line": 1,
+          "column_codepoint": 1313
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1325,
+          "utf16_offset": 1325,
+          "utf8_byte_offset": 1423,
+          "line": 1,
+          "column_codepoint": 1326
+        }
+      }
+    },
+    {
+      "name": "Xn",
+      "kind": "function",
+      "declaration": "function Xn(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 1787,
+          "utf16_offset": 1787,
+          "utf8_byte_offset": 1885,
+          "line": 1,
+          "column_codepoint": 1788
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1801,
+          "utf16_offset": 1801,
+          "utf8_byte_offset": 1899,
+          "line": 1,
+          "column_codepoint": 1802
+        }
+      }
+    },
+    {
+      "name": "Nn",
+      "kind": "function",
+      "declaration": "function Nn(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 1856,
+          "utf16_offset": 1856,
+          "utf8_byte_offset": 1954,
+          "line": 1,
+          "column_codepoint": 1857
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1870,
+          "utf16_offset": 1870,
+          "utf8_byte_offset": 1968,
+          "line": 1,
+          "column_codepoint": 1871
+        }
+      }
+    },
+    {
+      "name": "Ln",
+      "kind": "function",
+      "declaration": "function Ln(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 1947,
+          "utf16_offset": 1947,
+          "utf8_byte_offset": 2045,
+          "line": 1,
+          "column_codepoint": 1948
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1961,
+          "utf16_offset": 1961,
+          "utf8_byte_offset": 2059,
+          "line": 1,
+          "column_codepoint": 1962
+        }
+      }
+    },
+    {
+      "name": "H",
+      "kind": "function",
+      "declaration": "function H(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 2056,
+          "utf16_offset": 2056,
+          "utf8_byte_offset": 2154,
+          "line": 1,
+          "column_codepoint": 2057
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2069,
+          "utf16_offset": 2069,
+          "utf8_byte_offset": 2167,
+          "line": 1,
+          "column_codepoint": 2070
+        }
+      }
+    },
+    {
+      "name": "k",
+      "kind": "variable_or_constant",
+      "declaration": "let k=null",
+      "location": {
+        "start": {
+          "codepoint_offset": 2105,
+          "utf16_offset": 2105,
+          "utf8_byte_offset": 2203,
+          "line": 1,
+          "column_codepoint": 2106
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2115,
+          "utf16_offset": 2115,
+          "utf8_byte_offset": 2213,
+          "line": 1,
+          "column_codepoint": 2116
+        }
+      }
+    },
+    {
+      "name": "Kn",
+      "kind": "function",
+      "declaration": "async function Kn()",
+      "location": {
+        "start": {
+          "codepoint_offset": 2116,
+          "utf16_offset": 2116,
+          "utf8_byte_offset": 2214,
+          "line": 1,
+          "column_codepoint": 2117
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2135,
+          "utf16_offset": 2135,
+          "utf8_byte_offset": 2233,
+          "line": 1,
+          "column_codepoint": 2136
+        }
+      }
+    },
+    {
+      "name": "Pn",
+      "kind": "function",
+      "declaration": "Pn=n=>",
+      "location": {
+        "start": {
+          "codepoint_offset": 2223,
+          "utf16_offset": 2223,
+          "utf8_byte_offset": 2321,
+          "line": 1,
+          "column_codepoint": 2224
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2229,
+          "utf16_offset": 2229,
+          "utf8_byte_offset": 2327,
+          "line": 1,
+          "column_codepoint": 2230
+        }
+      }
+    },
+    {
+      "name": "N",
+      "kind": "function",
+      "declaration": "function N(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 2262,
+          "utf16_offset": 2262,
+          "utf8_byte_offset": 2365,
+          "line": 1,
+          "column_codepoint": 2263
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2275,
+          "utf16_offset": 2275,
+          "utf8_byte_offset": 2378,
+          "line": 1,
+          "column_codepoint": 2276
+        }
+      }
+    },
+    {
+      "name": "m",
+      "kind": "variable_or_constant",
+      "declaration": "let m={}",
+      "location": {
+        "start": {
+          "codepoint_offset": 2755,
+          "utf16_offset": 2755,
+          "utf8_byte_offset": 2858,
+          "line": 1,
+          "column_codepoint": 2756
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2763,
+          "utf16_offset": 2763,
+          "utf8_byte_offset": 2866,
+          "line": 1,
+          "column_codepoint": 2764
+        }
+      }
+    },
+    {
+      "name": "W",
+      "kind": "variable_or_constant",
+      "declaration": "W=40",
+      "location": {
+        "start": {
+          "codepoint_offset": 2764,
+          "utf16_offset": 2764,
+          "utf8_byte_offset": 2867,
+          "line": 1,
+          "column_codepoint": 2765
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2768,
+          "utf16_offset": 2768,
+          "utf8_byte_offset": 2871,
+          "line": 1,
+          "column_codepoint": 2769
+        }
+      }
+    },
+    {
+      "name": "A",
+      "kind": "variable_or_constant",
+      "declaration": "A=\"items-v3.png\"",
+      "location": {
+        "start": {
+          "codepoint_offset": 2769,
+          "utf16_offset": 2769,
+          "utf8_byte_offset": 2872,
+          "line": 1,
+          "column_codepoint": 2770
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2785,
+          "utf16_offset": 2785,
+          "utf8_byte_offset": 2888,
+          "line": 1,
+          "column_codepoint": 2786
+        }
+      }
+    },
+    {
+      "name": "B",
+      "kind": "variable_or_constant",
+      "declaration": "B=null",
+      "location": {
+        "start": {
+          "codepoint_offset": 2786,
+          "utf16_offset": 2786,
+          "utf8_byte_offset": 2889,
+          "line": 1,
+          "column_codepoint": 2787
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2792,
+          "utf16_offset": 2792,
+          "utf8_byte_offset": 2895,
+          "line": 1,
+          "column_codepoint": 2793
+        }
+      }
+    },
+    {
+      "name": "L",
+      "kind": "variable_or_constant",
+      "declaration": "L=[]",
+      "location": {
+        "start": {
+          "codepoint_offset": 2793,
+          "utf16_offset": 2793,
+          "utf8_byte_offset": 2896,
+          "line": 1,
+          "column_codepoint": 2794
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2797,
+          "utf16_offset": 2797,
+          "utf8_byte_offset": 2900,
+          "line": 1,
+          "column_codepoint": 2798
+        }
+      }
+    },
+    {
+      "name": "In",
+      "kind": "function",
+      "declaration": "function In()",
+      "location": {
+        "start": {
+          "codepoint_offset": 2798,
+          "utf16_offset": 2798,
+          "utf8_byte_offset": 2901,
+          "line": 1,
+          "column_codepoint": 2799
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2811,
+          "utf16_offset": 2811,
+          "utf8_byte_offset": 2914,
+          "line": 1,
+          "column_codepoint": 2812
+        }
+      }
+    },
+    {
+      "name": "Bn",
+      "kind": "variable_or_constant",
+      "declaration": "const Bn=",
+      "location": {
+        "start": {
+          "codepoint_offset": 3048,
+          "utf16_offset": 3048,
+          "utf8_byte_offset": 3151,
+          "line": 1,
+          "column_codepoint": 3049
+        },
+        "end_exclusive": {
+          "codepoint_offset": 3057,
+          "utf16_offset": 3057,
+          "utf8_byte_offset": 3160,
+          "line": 1,
+          "column_codepoint": 3058
+        }
+      }
+    },
+    {
+      "name": "S",
+      "kind": "variable_or_constant",
+      "declaration": "S={heal:",
+      "location": {
+        "start": {
+          "codepoint_offset": 3706,
+          "utf16_offset": 3706,
+          "utf8_byte_offset": 4000,
+          "line": 1,
+          "column_codepoint": 3707
+        },
+        "end_exclusive": {
+          "codepoint_offset": 3714,
+          "utf16_offset": 3714,
+          "utf8_byte_offset": 4008,
+          "line": 1,
+          "column_codepoint": 3715
+        }
+      }
+    },
+    {
+      "name": "C",
+      "kind": "function",
+      "declaration": "C=n=>",
+      "location": {
+        "start": {
+          "codepoint_offset": 4553,
+          "utf16_offset": 4553,
+          "utf8_byte_offset": 5071,
+          "line": 1,
+          "column_codepoint": 4554
+        },
+        "end_exclusive": {
+          "codepoint_offset": 4558,
+          "utf16_offset": 4558,
+          "utf8_byte_offset": 5076,
+          "line": 1,
+          "column_codepoint": 4559
+        }
+      }
+    },
+    {
+      "name": "G",
+      "kind": "function",
+      "declaration": "function G(n,i,c,t)",
+      "location": {
+        "start": {
+          "codepoint_offset": 4602,
+          "utf16_offset": 4602,
+          "utf8_byte_offset": 5122,
+          "line": 1,
+          "column_codepoint": 4603
+        },
+        "end_exclusive": {
+          "codepoint_offset": 4621,
+          "utf16_offset": 4621,
+          "utf8_byte_offset": 5141,
+          "line": 1,
+          "column_codepoint": 4622
+        }
+      }
+    },
+    {
+      "name": "K",
+      "kind": "function",
+      "declaration": "function K(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 5023,
+          "utf16_offset": 5023,
+          "utf8_byte_offset": 5586,
+          "line": 3,
+          "column_codepoint": 27
+        },
+        "end_exclusive": {
+          "codepoint_offset": 5036,
+          "utf16_offset": 5036,
+          "utf8_byte_offset": 5599,
+          "line": 3,
+          "column_codepoint": 40
+        }
+      }
+    },
+    {
+      "name": "Sn",
+      "kind": "variable_or_constant",
+      "declaration": "const Sn=",
+      "location": {
+        "start": {
+          "codepoint_offset": 12610,
+          "utf16_offset": 12610,
+          "utf8_byte_offset": 14439,
+          "line": 13,
+          "column_codepoint": 5374
+        },
+        "end_exclusive": {
+          "codepoint_offset": 12619,
+          "utf16_offset": 12619,
+          "utf8_byte_offset": 14448,
+          "line": 13,
+          "column_codepoint": 5383
+        }
+      }
+    },
+    {
+      "name": "q",
+      "kind": "variable_or_constant",
+      "declaration": "q=new Set",
+      "location": {
+        "start": {
+          "codepoint_offset": 12850,
+          "utf16_offset": 12850,
+          "utf8_byte_offset": 14723,
+          "line": 13,
+          "column_codepoint": 5614
+        },
+        "end_exclusive": {
+          "codepoint_offset": 12859,
+          "utf16_offset": 12859,
+          "utf8_byte_offset": 14732,
+          "line": 13,
+          "column_codepoint": 5623
+        }
+      }
+    },
+    {
+      "name": "Gn",
+      "kind": "variable_or_constant",
+      "declaration": "Gn={",
+      "location": {
+        "start": {
+          "codepoint_offset": 12860,
+          "utf16_offset": 12860,
+          "utf8_byte_offset": 14733,
+          "line": 13,
+          "column_codepoint": 5624
+        },
+        "end_exclusive": {
+          "codepoint_offset": 12864,
+          "utf16_offset": 12864,
+          "utf8_byte_offset": 14737,
+          "line": 13,
+          "column_codepoint": 5628
+        }
+      }
+    },
+    {
+      "name": "j",
+      "kind": "function",
+      "declaration": "function j(n,i=40,c)",
+      "location": {
+        "start": {
+          "codepoint_offset": 13131,
+          "utf16_offset": 13131,
+          "utf8_byte_offset": 15060,
+          "line": 13,
+          "column_codepoint": 5895
+        },
+        "end_exclusive": {
+          "codepoint_offset": 13151,
+          "utf16_offset": 13151,
+          "utf8_byte_offset": 15080,
+          "line": 13,
+          "column_codepoint": 5915
+        }
+      }
+    },
+    {
+      "name": "w",
+      "kind": "function",
+      "declaration": "function w(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 15311,
+          "utf16_offset": 15311,
+          "utf8_byte_offset": 17242,
+          "line": 13,
+          "column_codepoint": 8075
+        },
+        "end_exclusive": {
+          "codepoint_offset": 15324,
+          "utf16_offset": 15324,
+          "utf8_byte_offset": 17255,
+          "line": 13,
+          "column_codepoint": 8088
+        }
+      }
+    },
+    {
+      "name": "qn",
+      "kind": "function",
+      "declaration": "function qn(n,i=16)",
+      "location": {
+        "start": {
+          "codepoint_offset": 15532,
+          "utf16_offset": 15532,
+          "utf8_byte_offset": 17463,
+          "line": 13,
+          "column_codepoint": 8296
+        },
+        "end_exclusive": {
+          "codepoint_offset": 15551,
+          "utf16_offset": 15551,
+          "utf8_byte_offset": 17482,
+          "line": 13,
+          "column_codepoint": 8315
+        }
+      }
+    },
+    {
+      "name": "Dn",
+      "kind": "variable_or_constant",
+      "declaration": "const Dn=",
+      "location": {
+        "start": {
+          "codepoint_offset": 15777,
+          "utf16_offset": 15777,
+          "utf8_byte_offset": 17708,
+          "line": 13,
+          "column_codepoint": 8541
+        },
+        "end_exclusive": {
+          "codepoint_offset": 15786,
+          "utf16_offset": 15786,
+          "utf8_byte_offset": 17717,
+          "line": 13,
+          "column_codepoint": 8550
+        }
+      }
+    }
+  ],
+  "exports": [
+    {
+      "local": "M",
+      "exported": "C",
+      "location": {
+        "start": {
+          "codepoint_offset": 15980,
+          "utf16_offset": 15980,
+          "utf8_byte_offset": 17911,
+          "line": 13,
+          "column_codepoint": 8744
+        },
+        "end_exclusive": {
+          "codepoint_offset": 15986,
+          "utf16_offset": 15986,
+          "utf8_byte_offset": 17917,
+          "line": 13,
+          "column_codepoint": 8750
+        }
+      }
+    },
+    {
+      "local": "qn",
+      "exported": "a",
+      "location": {
+        "start": {
+          "codepoint_offset": 15987,
+          "utf16_offset": 15987,
+          "utf8_byte_offset": 17918,
+          "line": 13,
+          "column_codepoint": 8751
+        },
+        "end_exclusive": {
+          "codepoint_offset": 15994,
+          "utf16_offset": 15994,
+          "utf8_byte_offset": 17925,
+          "line": 13,
+          "column_codepoint": 8758
+        }
+      }
+    },
+    {
+      "local": "K",
+      "exported": "b",
+      "location": {
+        "start": {
+          "codepoint_offset": 15995,
+          "utf16_offset": 15995,
+          "utf8_byte_offset": 17926,
+          "line": 13,
+          "column_codepoint": 8759
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16001,
+          "utf16_offset": 16001,
+          "utf8_byte_offset": 17932,
+          "line": 13,
+          "column_codepoint": 8765
+        }
+      }
+    },
+    {
+      "local": "Nn",
+      "exported": "c",
+      "location": {
+        "start": {
+          "codepoint_offset": 16002,
+          "utf16_offset": 16002,
+          "utf8_byte_offset": 17933,
+          "line": 13,
+          "column_codepoint": 8766
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16009,
+          "utf16_offset": 16009,
+          "utf8_byte_offset": 17940,
+          "line": 13,
+          "column_codepoint": 8773
+        }
+      }
+    },
+    {
+      "local": "Ln",
+      "exported": "d",
+      "location": {
+        "start": {
+          "codepoint_offset": 16010,
+          "utf16_offset": 16010,
+          "utf8_byte_offset": 17941,
+          "line": 13,
+          "column_codepoint": 8774
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16017,
+          "utf16_offset": 16017,
+          "utf8_byte_offset": 17948,
+          "line": 13,
+          "column_codepoint": 8781
+        }
+      }
+    },
+    {
+      "local": "Cn",
+      "exported": "e",
+      "location": {
+        "start": {
+          "codepoint_offset": 16018,
+          "utf16_offset": 16018,
+          "utf8_byte_offset": 17949,
+          "line": 13,
+          "column_codepoint": 8782
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16025,
+          "utf16_offset": 16025,
+          "utf8_byte_offset": 17956,
+          "line": 13,
+          "column_codepoint": 8789
+        }
+      }
+    },
+    {
+      "local": "In",
+      "exported": "f",
+      "location": {
+        "start": {
+          "codepoint_offset": 16026,
+          "utf16_offset": 16026,
+          "utf8_byte_offset": 17957,
+          "line": 13,
+          "column_codepoint": 8790
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16033,
+          "utf16_offset": 16033,
+          "utf8_byte_offset": 17964,
+          "line": 13,
+          "column_codepoint": 8797
+        }
+      }
+    },
+    {
+      "local": "N",
+      "exported": "g",
+      "location": {
+        "start": {
+          "codepoint_offset": 16034,
+          "utf16_offset": 16034,
+          "utf8_byte_offset": 17965,
+          "line": 13,
+          "column_codepoint": 8798
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16040,
+          "utf16_offset": 16040,
+          "utf8_byte_offset": 17971,
+          "line": 13,
+          "column_codepoint": 8804
+        }
+      }
+    },
+    {
+      "local": "H",
+      "exported": "h",
+      "location": {
+        "start": {
+          "codepoint_offset": 16041,
+          "utf16_offset": 16041,
+          "utf8_byte_offset": 17972,
+          "line": 13,
+          "column_codepoint": 8805
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16047,
+          "utf16_offset": 16047,
+          "utf8_byte_offset": 17978,
+          "line": 13,
+          "column_codepoint": 8811
+        }
+      }
+    },
+    {
+      "local": "j",
+      "exported": "i",
+      "location": {
+        "start": {
+          "codepoint_offset": 16048,
+          "utf16_offset": 16048,
+          "utf8_byte_offset": 17979,
+          "line": 13,
+          "column_codepoint": 8812
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16054,
+          "utf16_offset": 16054,
+          "utf8_byte_offset": 17985,
+          "line": 13,
+          "column_codepoint": 8818
+        }
+      }
+    },
+    {
+      "local": "Hn",
+      "exported": "j",
+      "location": {
+        "start": {
+          "codepoint_offset": 16055,
+          "utf16_offset": 16055,
+          "utf8_byte_offset": 17986,
+          "line": 13,
+          "column_codepoint": 8819
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16062,
+          "utf16_offset": 16062,
+          "utf8_byte_offset": 17993,
+          "line": 13,
+          "column_codepoint": 8826
+        }
+      }
+    },
+    {
+      "local": "Dn",
+      "exported": "k",
+      "location": {
+        "start": {
+          "codepoint_offset": 16063,
+          "utf16_offset": 16063,
+          "utf8_byte_offset": 17994,
+          "line": 13,
+          "column_codepoint": 8827
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16070,
+          "utf16_offset": 16070,
+          "utf8_byte_offset": 18001,
+          "line": 13,
+          "column_codepoint": 8834
+        }
+      }
+    },
+    {
+      "local": "Mn",
+      "exported": "l",
+      "location": {
+        "start": {
+          "codepoint_offset": 16071,
+          "utf16_offset": 16071,
+          "utf8_byte_offset": 18002,
+          "line": 13,
+          "column_codepoint": 8835
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16078,
+          "utf16_offset": 16078,
+          "utf8_byte_offset": 18009,
+          "line": 13,
+          "column_codepoint": 8842
+        }
+      }
+    },
+    {
+      "local": "Pn",
+      "exported": "r",
+      "location": {
+        "start": {
+          "codepoint_offset": 16079,
+          "utf16_offset": 16079,
+          "utf8_byte_offset": 18010,
+          "line": 13,
+          "column_codepoint": 8843
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16086,
+          "utf16_offset": 16086,
+          "utf8_byte_offset": 18017,
+          "line": 13,
+          "column_codepoint": 8850
+        }
+      }
+    },
+    {
+      "local": "Xn",
+      "exported": "s",
+      "location": {
+        "start": {
+          "codepoint_offset": 16087,
+          "utf16_offset": 16087,
+          "utf8_byte_offset": 18018,
+          "line": 13,
+          "column_codepoint": 8851
+        },
+        "end_exclusive": {
+          "codepoint_offset": 16094,
+          "utf16_offset": 16094,
+          "utf8_byte_offset": 18025,
+          "line": 13,
+          "column_codepoint": 8858
+        }
+      }
+    }
+  ],
+  "import_usage": {
+    "O": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "d5",
+      "occurrences": 3,
+      "sample_positions": [
+        {
+          "codepoint_offset": 13,
+          "utf16_offset": 13,
+          "utf8_byte_offset": 13,
+          "line": 1,
+          "column_codepoint": 14
+        },
+        {
+          "codepoint_offset": 94,
+          "utf16_offset": 94,
+          "utf8_byte_offset": 94,
+          "line": 1,
+          "column_codepoint": 95
+        },
+        {
+          "codepoint_offset": 2287,
+          "utf16_offset": 2287,
+          "utf8_byte_offset": 2390,
+          "line": 1,
+          "column_codepoint": 2288
+        }
+      ]
+    },
+    "F": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "d6",
+      "occurrences": 4,
+      "sample_positions": [
+        {
+          "codepoint_offset": 21,
+          "utf16_offset": 21,
+          "utf8_byte_offset": 21,
+          "line": 1,
+          "column_codepoint": 22
+        },
+        {
+          "codepoint_offset": 31,
+          "utf16_offset": 31,
+          "utf8_byte_offset": 31,
+          "line": 1,
+          "column_codepoint": 32
+        },
+        {
+          "codepoint_offset": 748,
+          "utf16_offset": 748,
+          "utf8_byte_offset": 783,
+          "line": 1,
+          "column_codepoint": 749
+        },
+        {
+          "codepoint_offset": 2310,
+          "utf16_offset": 2310,
+          "utf8_byte_offset": 2413,
+          "line": 1,
+          "column_codepoint": 2311
+        }
+      ]
+    },
+    "R": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "b_",
+      "occurrences": 3,
+      "sample_positions": [
+        {
+          "codepoint_offset": 29,
+          "utf16_offset": 29,
+          "utf8_byte_offset": 29,
+          "line": 1,
+          "column_codepoint": 30
+        },
+        {
+          "codepoint_offset": 852,
+          "utf16_offset": 852,
+          "utf8_byte_offset": 904,
+          "line": 1,
+          "column_codepoint": 853
+        },
+        {
+          "codepoint_offset": 2596,
+          "utf16_offset": 2596,
+          "utf8_byte_offset": 2699,
+          "line": 1,
+          "column_codepoint": 2597
+        }
+      ]
+    },
+    "V": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "F",
+      "occurrences": 3,
+      "sample_positions": [
+        {
+          "codepoint_offset": 36,
+          "utf16_offset": 36,
+          "utf8_byte_offset": 36,
+          "line": 1,
+          "column_codepoint": 37
+        },
+        {
+          "codepoint_offset": 872,
+          "utf16_offset": 872,
+          "utf8_byte_offset": 928,
+          "line": 1,
+          "column_codepoint": 873
+        },
+        {
+          "codepoint_offset": 2659,
+          "utf16_offset": 2659,
+          "utf8_byte_offset": 2762,
+          "line": 1,
+          "column_codepoint": 2660
+        }
+      ]
+    },
+    "E": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "d7",
+      "occurrences": 4,
+      "sample_positions": [
+        {
+          "codepoint_offset": 44,
+          "utf16_offset": 44,
+          "utf8_byte_offset": 44,
+          "line": 1,
+          "column_codepoint": 45
+        },
+        {
+          "codepoint_offset": 769,
+          "utf16_offset": 769,
+          "utf8_byte_offset": 807,
+          "line": 1,
+          "column_codepoint": 770
+        },
+        {
+          "codepoint_offset": 10995,
+          "utf16_offset": 10995,
+          "utf8_byte_offset": 12589,
+          "line": 13,
+          "column_codepoint": 3759
+        },
+        {
+          "codepoint_offset": 13160,
+          "utf16_offset": 13160,
+          "utf8_byte_offset": 15089,
+          "line": 13,
+          "column_codepoint": 5924
+        }
+      ]
+    },
+    "_": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "d8",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 52,
+          "utf16_offset": 52,
+          "utf8_byte_offset": 52,
+          "line": 1,
+          "column_codepoint": 53
+        },
+        {
+          "codepoint_offset": 13167,
+          "utf16_offset": 13167,
+          "utf8_byte_offset": 15096,
+          "line": 13,
+          "column_codepoint": 5931
+        }
+      ]
+    },
+    "P": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "d9",
+      "occurrences": 4,
+      "sample_positions": [
+        {
+          "codepoint_offset": 60,
+          "utf16_offset": 60,
+          "utf8_byte_offset": 60,
+          "line": 1,
+          "column_codepoint": 61
+        },
+        {
+          "codepoint_offset": 985,
+          "utf16_offset": 985,
+          "utf8_byte_offset": 1060,
+          "line": 1,
+          "column_codepoint": 986
+        },
+        {
+          "codepoint_offset": 13413,
+          "utf16_offset": 13413,
+          "utf8_byte_offset": 15342,
+          "line": 13,
+          "column_codepoint": 6177
+        },
+        {
+          "codepoint_offset": 13446,
+          "utf16_offset": 13446,
+          "utf8_byte_offset": 15375,
+          "line": 13,
+          "column_codepoint": 6210
+        }
+      ]
+    },
+    "X": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "da",
+      "occurrences": 4,
+      "sample_positions": [
+        {
+          "codepoint_offset": 68,
+          "utf16_offset": 68,
+          "utf8_byte_offset": 68,
+          "line": 1,
+          "column_codepoint": 69
+        },
+        {
+          "codepoint_offset": 811,
+          "utf16_offset": 811,
+          "utf8_byte_offset": 858,
+          "line": 1,
+          "column_codepoint": 812
+        },
+        {
+          "codepoint_offset": 2236,
+          "utf16_offset": 2236,
+          "utf8_byte_offset": 2334,
+          "line": 1,
+          "column_codepoint": 2237
+        },
+        {
+          "codepoint_offset": 13474,
+          "utf16_offset": 13474,
+          "utf8_byte_offset": 15403,
+          "line": 13,
+          "column_codepoint": 6238
+        }
+      ]
+    },
+    "J": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "bA",
+      "occurrences": 3,
+      "sample_positions": [
+        {
+          "codepoint_offset": 76,
+          "utf16_offset": 76,
+          "utf8_byte_offset": 76,
+          "line": 1,
+          "column_codepoint": 77
+        },
+        {
+          "codepoint_offset": 1021,
+          "utf16_offset": 1021,
+          "utf8_byte_offset": 1106,
+          "line": 1,
+          "column_codepoint": 1022
+        },
+        {
+          "codepoint_offset": 5050,
+          "utf16_offset": 5050,
+          "utf8_byte_offset": 5613,
+          "line": 3,
+          "column_codepoint": 54
+        }
+      ]
+    },
+    "I": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "bJ",
+      "occurrences": 3,
+      "sample_positions": [
+        {
+          "codepoint_offset": 84,
+          "utf16_offset": 84,
+          "utf8_byte_offset": 84,
+          "line": 1,
+          "column_codepoint": 85
+        },
+        {
+          "codepoint_offset": 5381,
+          "utf16_offset": 5381,
+          "utf8_byte_offset": 6002,
+          "line": 3,
+          "column_codepoint": 385
+        },
+        {
+          "codepoint_offset": 5395,
+          "utf16_offset": 5395,
+          "utf8_byte_offset": 6016,
+          "line": 3,
+          "column_codepoint": 399
+        }
+      ]
+    },
+    "U": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "bK",
+      "occurrences": 6,
+      "sample_positions": [
+        {
+          "codepoint_offset": 92,
+          "utf16_offset": 92,
+          "utf8_byte_offset": 92,
+          "line": 1,
+          "column_codepoint": 93
+        },
+        {
+          "codepoint_offset": 1062,
+          "utf16_offset": 1062,
+          "utf8_byte_offset": 1154,
+          "line": 1,
+          "column_codepoint": 1063
+        },
+        {
+          "codepoint_offset": 4681,
+          "utf16_offset": 4681,
+          "utf8_byte_offset": 5208,
+          "line": 1,
+          "column_codepoint": 4682
+        },
+        {
+          "codepoint_offset": 5696,
+          "utf16_offset": 5696,
+          "utf8_byte_offset": 6381,
+          "line": 3,
+          "column_codepoint": 700
+        },
+        {
+          "codepoint_offset": 7330,
+          "utf16_offset": 7330,
+          "utf8_byte_offset": 8429,
+          "line": 13,
+          "column_codepoint": 94
+        },
+        {
+          "codepoint_offset": 12184,
+          "utf16_offset": 12184,
+          "utf8_byte_offset": 13922,
+          "line": 13,
+          "column_codepoint": 4948
+        }
+      ]
+    },
+    "x": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "O",
+      "occurrences": 5,
+      "sample_positions": [
+        {
+          "codepoint_offset": 99,
+          "utf16_offset": 99,
+          "utf8_byte_offset": 99,
+          "line": 1,
+          "column_codepoint": 100
+        },
+        {
+          "codepoint_offset": 5935,
+          "utf16_offset": 5935,
+          "utf8_byte_offset": 6678,
+          "line": 3,
+          "column_codepoint": 939
+        },
+        {
+          "codepoint_offset": 5962,
+          "utf16_offset": 5962,
+          "utf8_byte_offset": 6705,
+          "line": 3,
+          "column_codepoint": 966
+        },
+        {
+          "codepoint_offset": 6203,
+          "utf16_offset": 6203,
+          "utf8_byte_offset": 7004,
+          "line": 3,
+          "column_codepoint": 1207
+        },
+        {
+          "codepoint_offset": 6230,
+          "utf16_offset": 6230,
+          "utf8_byte_offset": 7031,
+          "line": 3,
+          "column_codepoint": 1234
+        }
+      ]
+    },
+    "Q": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "bL",
+      "occurrences": 3,
+      "sample_positions": [
+        {
+          "codepoint_offset": 107,
+          "utf16_offset": 107,
+          "utf8_byte_offset": 107,
+          "line": 1,
+          "column_codepoint": 108
+        },
+        {
+          "codepoint_offset": 550,
+          "utf16_offset": 550,
+          "utf8_byte_offset": 567,
+          "line": 1,
+          "column_codepoint": 551
+        },
+        {
+          "codepoint_offset": 5996,
+          "utf16_offset": 5996,
+          "utf8_byte_offset": 6739,
+          "line": 3,
+          "column_codepoint": 1000
+        }
+      ]
+    },
+    "Z": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "bP",
+      "occurrences": 3,
+      "sample_positions": [
+        {
+          "codepoint_offset": 115,
+          "utf16_offset": 115,
+          "utf8_byte_offset": 115,
+          "line": 1,
+          "column_codepoint": 116
+        },
+        {
+          "codepoint_offset": 788,
+          "utf16_offset": 788,
+          "utf8_byte_offset": 831,
+          "line": 1,
+          "column_codepoint": 789
+        },
+        {
+          "codepoint_offset": 7677,
+          "utf16_offset": 7677,
+          "utf8_byte_offset": 8809,
+          "line": 13,
+          "column_codepoint": 441
+        }
+      ]
+    },
+    "Y": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "cw",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 123,
+          "utf16_offset": 123,
+          "utf8_byte_offset": 123,
+          "line": 1,
+          "column_codepoint": 124
+        },
+        {
+          "codepoint_offset": 8885,
+          "utf16_offset": 8885,
+          "utf8_byte_offset": 10151,
+          "line": 13,
+          "column_codepoint": 1649
+        }
+      ]
+    },
+    "y": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "cy",
+      "occurrences": 9,
+      "sample_positions": [
+        {
+          "codepoint_offset": 131,
+          "utf16_offset": 131,
+          "utf8_byte_offset": 131,
+          "line": 1,
+          "column_codepoint": 132
+        },
+        {
+          "codepoint_offset": 8895,
+          "utf16_offset": 8895,
+          "utf8_byte_offset": 10161,
+          "line": 13,
+          "column_codepoint": 1659
+        },
+        {
+          "codepoint_offset": 9244,
+          "utf16_offset": 9244,
+          "utf8_byte_offset": 10548,
+          "line": 13,
+          "column_codepoint": 2008
+        },
+        {
+          "codepoint_offset": 9323,
+          "utf16_offset": 9323,
+          "utf8_byte_offset": 10636,
+          "line": 13,
+          "column_codepoint": 2087
+        },
+        {
+          "codepoint_offset": 9348,
+          "utf16_offset": 9348,
+          "utf8_byte_offset": 10665,
+          "line": 13,
+          "column_codepoint": 2112
+        },
+        {
+          "codepoint_offset": 9439,
+          "utf16_offset": 9439,
+          "utf8_byte_offset": 10774,
+          "line": 13,
+          "column_codepoint": 2203
+        },
+        {
+          "codepoint_offset": 9453,
+          "utf16_offset": 9453,
+          "utf8_byte_offset": 10788,
+          "line": 13,
+          "column_codepoint": 2217
+        },
+        {
+          "codepoint_offset": 9598,
+          "utf16_offset": 9598,
+          "utf8_byte_offset": 10952,
+          "line": 13,
+          "column_codepoint": 2362
+        },
+        {
+          "codepoint_offset": 9672,
+          "utf16_offset": 9672,
+          "utf8_byte_offset": 11044,
+          "line": 13,
+          "column_codepoint": 2436
+        }
+      ]
+    },
+    "z": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "cC",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 139,
+          "utf16_offset": 139,
+          "utf8_byte_offset": 139,
+          "line": 1,
+          "column_codepoint": 140
+        },
+        {
+          "codepoint_offset": 9593,
+          "utf16_offset": 9593,
+          "utf8_byte_offset": 10947,
+          "line": 13,
+          "column_codepoint": 2357
+        }
+      ]
+    },
+    "nn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "cD",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 147,
+          "utf16_offset": 147,
+          "utf8_byte_offset": 147,
+          "line": 1,
+          "column_codepoint": 148
+        },
+        {
+          "codepoint_offset": 9613,
+          "utf16_offset": 9613,
+          "utf8_byte_offset": 10967,
+          "line": 13,
+          "column_codepoint": 2377
+        }
+      ]
+    },
+    "tn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "cN",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 156,
+          "utf16_offset": 156,
+          "utf8_byte_offset": 156,
+          "line": 1,
+          "column_codepoint": 157
+        },
+        {
+          "codepoint_offset": 9407,
+          "utf16_offset": 9407,
+          "utf8_byte_offset": 10736,
+          "line": 13,
+          "column_codepoint": 2171
+        }
+      ]
+    },
+    "hn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "cO",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 165,
+          "utf16_offset": 165,
+          "utf8_byte_offset": 165,
+          "line": 1,
+          "column_codepoint": 166
+        },
+        {
+          "codepoint_offset": 9506,
+          "utf16_offset": 9506,
+          "utf8_byte_offset": 10846,
+          "line": 13,
+          "column_codepoint": 2270
+        }
+      ]
+    },
+    "an": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "cx",
+      "occurrences": 6,
+      "sample_positions": [
+        {
+          "codepoint_offset": 174,
+          "utf16_offset": 174,
+          "utf8_byte_offset": 174,
+          "line": 1,
+          "column_codepoint": 175
+        },
+        {
+          "codepoint_offset": 6911,
+          "utf16_offset": 6911,
+          "utf8_byte_offset": 7876,
+          "line": 9,
+          "column_codepoint": 16
+        },
+        {
+          "codepoint_offset": 7252,
+          "utf16_offset": 7252,
+          "utf8_byte_offset": 8334,
+          "line": 13,
+          "column_codepoint": 16
+        },
+        {
+          "codepoint_offset": 9558,
+          "utf16_offset": 9558,
+          "utf8_byte_offset": 10907,
+          "line": 13,
+          "column_codepoint": 2322
+        },
+        {
+          "codepoint_offset": 12287,
+          "utf16_offset": 12287,
+          "utf8_byte_offset": 14040,
+          "line": 13,
+          "column_codepoint": 5051
+        },
+        {
+          "codepoint_offset": 12516,
+          "utf16_offset": 12516,
+          "utf8_byte_offset": 14320,
+          "line": 13,
+          "column_codepoint": 5280
+        }
+      ]
+    },
+    "cn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "db",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 183,
+          "utf16_offset": 183,
+          "utf8_byte_offset": 183,
+          "line": 1,
+          "column_codepoint": 184
+        },
+        {
+          "codepoint_offset": 10609,
+          "utf16_offset": 10609,
+          "utf8_byte_offset": 12159,
+          "line": 13,
+          "column_codepoint": 3373
+        }
+      ]
+    },
+    "en": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "aB",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 192,
+          "utf16_offset": 192,
+          "utf8_byte_offset": 192,
+          "line": 1,
+          "column_codepoint": 193
+        },
+        {
+          "codepoint_offset": 10629,
+          "utf16_offset": 10629,
+          "utf8_byte_offset": 12179,
+          "line": 13,
+          "column_codepoint": 3393
+        }
+      ]
+    },
+    "gn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "aI",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 201,
+          "utf16_offset": 201,
+          "utf8_byte_offset": 201,
+          "line": 1,
+          "column_codepoint": 202
+        },
+        {
+          "codepoint_offset": 10814,
+          "utf16_offset": 10814,
+          "utf8_byte_offset": 12368,
+          "line": 13,
+          "column_codepoint": 3578
+        }
+      ]
+    },
+    "on": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "a3",
+      "occurrences": 3,
+      "sample_positions": [
+        {
+          "codepoint_offset": 210,
+          "utf16_offset": 210,
+          "utf8_byte_offset": 210,
+          "line": 1,
+          "column_codepoint": 211
+        },
+        {
+          "codepoint_offset": 2232,
+          "utf16_offset": 2232,
+          "utf8_byte_offset": 2330,
+          "line": 1,
+          "column_codepoint": 2233
+        },
+        {
+          "codepoint_offset": 11220,
+          "utf16_offset": 11220,
+          "utf8_byte_offset": 12820,
+          "line": 13,
+          "column_codepoint": 3984
+        }
+      ]
+    },
+    "sn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "ax",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 219,
+          "utf16_offset": 219,
+          "utf8_byte_offset": 219,
+          "line": 1,
+          "column_codepoint": 220
+        },
+        {
+          "codepoint_offset": 11238,
+          "utf16_offset": 11238,
+          "utf8_byte_offset": 12838,
+          "line": 13,
+          "column_codepoint": 4002
+        }
+      ]
+    },
+    "rn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "cl",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 228,
+          "utf16_offset": 228,
+          "utf8_byte_offset": 228,
+          "line": 1,
+          "column_codepoint": 229
+        },
+        {
+          "codepoint_offset": 11948,
+          "utf16_offset": 11948,
+          "utf8_byte_offset": 13652,
+          "line": 13,
+          "column_codepoint": 4712
+        }
+      ]
+    },
+    "un": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "c1",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 237,
+          "utf16_offset": 237,
+          "utf8_byte_offset": 237,
+          "line": 1,
+          "column_codepoint": 238
+        },
+        {
+          "codepoint_offset": 11959,
+          "utf16_offset": 11959,
+          "utf8_byte_offset": 13663,
+          "line": 13,
+          "column_codepoint": 4723
+        }
+      ]
+    },
+    "ln": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "c2",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 246,
+          "utf16_offset": 246,
+          "utf8_byte_offset": 246,
+          "line": 1,
+          "column_codepoint": 247
+        },
+        {
+          "codepoint_offset": 11978,
+          "utf16_offset": 11978,
+          "utf8_byte_offset": 13682,
+          "line": 13,
+          "column_codepoint": 4742
+        }
+      ]
+    },
+    "dn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "bN",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 255,
+          "utf16_offset": 255,
+          "utf8_byte_offset": 255,
+          "line": 1,
+          "column_codepoint": 256
+        },
+        {
+          "codepoint_offset": 12224,
+          "utf16_offset": 12224,
+          "utf8_byte_offset": 13973,
+          "line": 13,
+          "column_codepoint": 4988
+        }
+      ]
+    },
+    "pn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "bO",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 264,
+          "utf16_offset": 264,
+          "utf8_byte_offset": 264,
+          "line": 1,
+          "column_codepoint": 265
+        },
+        {
+          "codepoint_offset": 12430,
+          "utf16_offset": 12430,
+          "utf8_byte_offset": 14230,
+          "line": 13,
+          "column_codepoint": 5194
+        }
+      ]
+    },
+    "mn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "br",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 273,
+          "utf16_offset": 273,
+          "utf8_byte_offset": 273,
+          "line": 1,
+          "column_codepoint": 274
+        },
+        {
+          "codepoint_offset": 2229,
+          "utf16_offset": 2229,
+          "utf8_byte_offset": 2327,
+          "line": 1,
+          "column_codepoint": 2230
+        }
+      ]
+    },
+    "fn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "aH",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 282,
+          "utf16_offset": 282,
+          "utf8_byte_offset": 282,
+          "line": 1,
+          "column_codepoint": 283
+        },
+        {
+          "codepoint_offset": 10397,
+          "utf16_offset": 10397,
+          "utf8_byte_offset": 11925,
+          "line": 13,
+          "column_codepoint": 3161
+        }
+      ]
+    },
+    "yn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "al",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 291,
+          "utf16_offset": 291,
+          "utf8_byte_offset": 291,
+          "line": 1,
+          "column_codepoint": 292
+        },
+        {
+          "codepoint_offset": 10231,
+          "utf16_offset": 10231,
+          "utf8_byte_offset": 11713,
+          "line": 13,
+          "column_codepoint": 2995
+        }
+      ]
+    },
+    "$n": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "ak",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 300,
+          "utf16_offset": 300,
+          "utf8_byte_offset": 300,
+          "line": 1,
+          "column_codepoint": 301
+        },
+        {
+          "codepoint_offset": 10102,
+          "utf16_offset": 10102,
+          "utf8_byte_offset": 11550,
+          "line": 13,
+          "column_codepoint": 2866
+        }
+      ]
+    },
+    "kn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "aj",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 309,
+          "utf16_offset": 309,
+          "utf8_byte_offset": 309,
+          "line": 1,
+          "column_codepoint": 310
+        },
+        {
+          "codepoint_offset": 10005,
+          "utf16_offset": 10005,
+          "utf8_byte_offset": 11433,
+          "line": 13,
+          "column_codepoint": 2769
+        }
+      ]
+    },
+    "Tn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "ai",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 318,
+          "utf16_offset": 318,
+          "utf8_byte_offset": 318,
+          "line": 1,
+          "column_codepoint": 319
+        },
+        {
+          "codepoint_offset": 9888,
+          "utf16_offset": 9888,
+          "utf8_byte_offset": 11298,
+          "line": 13,
+          "column_codepoint": 2652
+        }
+      ]
+    },
+    "bn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "ah",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 327,
+          "utf16_offset": 327,
+          "utf8_byte_offset": 327,
+          "line": 1,
+          "column_codepoint": 328
+        },
+        {
+          "codepoint_offset": 9812,
+          "utf16_offset": 9812,
+          "utf8_byte_offset": 11210,
+          "line": 13,
+          "column_codepoint": 2576
+        }
+      ]
+    },
+    "vn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "ag",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 336,
+          "utf16_offset": 336,
+          "utf8_byte_offset": 336,
+          "line": 1,
+          "column_codepoint": 337
+        },
+        {
+          "codepoint_offset": 9695,
+          "utf16_offset": 9695,
+          "utf8_byte_offset": 11067,
+          "line": 13,
+          "column_codepoint": 2459
+        }
+      ]
+    },
+    "xn": {
+      "import_from": "./trangbi-iyUH-plT.js",
+      "original_export": "dc",
+      "occurrences": 2,
+      "sample_positions": [
+        {
+          "codepoint_offset": 345,
+          "utf16_offset": 345,
+          "utf8_byte_offset": 345,
+          "line": 1,
+          "column_codepoint": 346
+        },
+        {
+          "codepoint_offset": 2706,
+          "utf16_offset": 2706,
+          "utf8_byte_offset": 2809,
+          "line": 1,
+          "column_codepoint": 2707
+        }
+      ]
+    },
+    "p": {
+      "import_from": "./index-BIkbGDKp.js",
+      "original_export": "d",
+      "occurrences": 10,
+      "sample_positions": [
+        {
+          "codepoint_offset": 388,
+          "utf16_offset": 388,
+          "utf8_byte_offset": 388,
+          "line": 1,
+          "column_codepoint": 389
+        },
+        {
+          "codepoint_offset": 13231,
+          "utf16_offset": 13231,
+          "utf8_byte_offset": 15160,
+          "line": 13,
+          "column_codepoint": 5995
+        },
+        {
+          "codepoint_offset": 13512,
+          "utf16_offset": 13512,
+          "utf8_byte_offset": 15441,
+          "line": 13,
+          "column_codepoint": 6276
+        },
+        {
+          "codepoint_offset": 13669,
+          "utf16_offset": 13669,
+          "utf8_byte_offset": 15598,
+          "line": 13,
+          "column_codepoint": 6433
+        },
+        {
+          "codepoint_offset": 13889,
+          "utf16_offset": 13889,
+          "utf8_byte_offset": 15818,
+          "line": 13,
+          "column_codepoint": 6653
+        },
+        {
+          "codepoint_offset": 14135,
+          "utf16_offset": 14135,
+          "utf8_byte_offset": 16064,
+          "line": 13,
+          "column_codepoint": 6899
+        },
+        {
+          "codepoint_offset": 14426,
+          "utf16_offset": 14426,
+          "utf8_byte_offset": 16355,
+          "line": 13,
+          "column_codepoint": 7190
+        },
+        {
+          "codepoint_offset": 14795,
+          "utf16_offset": 14795,
+          "utf8_byte_offset": 16724,
+          "line": 13,
+          "column_codepoint": 7559
+        },
+        {
+          "codepoint_offset": 15030,
+          "utf16_offset": 15030,
+          "utf8_byte_offset": 16961,
+          "line": 13,
+          "column_codepoint": 7794
+        },
+        {
+          "codepoint_offset": 15560,
+          "utf16_offset": 15560,
+          "utf8_byte_offset": 17491,
+          "line": 13,
+          "column_codepoint": 8324
+        }
+      ]
+    }
+  },
+  "key_expressions": [
+    {
+      "id": "controls_storage_key",
+      "match": "tm-controls-v1",
+      "location": {
+        "start": {
+          "codepoint_offset": 1107,
+          "utf16_offset": 1107,
+          "utf8_byte_offset": 1205,
+          "line": 1,
+          "column_codepoint": 1108
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1121,
+          "utf16_offset": 1121,
+          "utf8_byte_offset": 1219,
+          "line": 1,
+          "column_codepoint": 1122
+        }
+      }
+    },
+    {
+      "id": "key_layout",
+      "match": "const M=",
+      "location": {
+        "start": {
+          "codepoint_offset": 416,
+          "utf16_offset": 416,
+          "utf8_byte_offset": 416,
+          "line": 1,
+          "column_codepoint": 417
+        },
+        "end_exclusive": {
+          "codepoint_offset": 424,
+          "utf16_offset": 424,
+          "utf8_byte_offset": 424,
+          "line": 1,
+          "column_codepoint": 425
+        }
+      }
+    },
+    {
+      "id": "default_controls",
+      "match": "Cn=()=>",
+      "location": {
+        "start": {
+          "codepoint_offset": 1123,
+          "utf16_offset": 1123,
+          "utf8_byte_offset": 1221,
+          "line": 1,
+          "column_codepoint": 1124
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1130,
+          "utf16_offset": 1130,
+          "utf8_byte_offset": 1228,
+          "line": 1,
+          "column_codepoint": 1131
+        }
+      }
+    },
+    {
+      "id": "key_validation",
+      "match": "Hn=n=>",
+      "location": {
+        "start": {
+          "codepoint_offset": 1230,
+          "utf16_offset": 1230,
+          "utf8_byte_offset": 1328,
+          "line": 1,
+          "column_codepoint": 1231
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1236,
+          "utf16_offset": 1236,
+          "utf8_byte_offset": 1334,
+          "line": 1,
+          "column_codepoint": 1237
+        }
+      }
+    },
+    {
+      "id": "read_controls",
+      "match": "function Mn()",
+      "location": {
+        "start": {
+          "codepoint_offset": 1312,
+          "utf16_offset": 1312,
+          "utf8_byte_offset": 1410,
+          "line": 1,
+          "column_codepoint": 1313
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1325,
+          "utf16_offset": 1325,
+          "utf8_byte_offset": 1423,
+          "line": 1,
+          "column_codepoint": 1326
+        }
+      }
+    },
+    {
+      "id": "persist_controls",
+      "match": "function Xn(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 1787,
+          "utf16_offset": 1787,
+          "utf8_byte_offset": 1885,
+          "line": 1,
+          "column_codepoint": 1788
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1801,
+          "utf16_offset": 1801,
+          "utf8_byte_offset": 1899,
+          "line": 1,
+          "column_codepoint": 1802
+        }
+      }
+    },
+    {
+      "id": "normalize_key",
+      "match": "function Ln(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 1947,
+          "utf16_offset": 1947,
+          "utf8_byte_offset": 2045,
+          "line": 1,
+          "column_codepoint": 1948
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1961,
+          "utf16_offset": 1961,
+          "utf8_byte_offset": 2059,
+          "line": 1,
+          "column_codepoint": 1962
+        }
+      }
+    },
+    {
+      "id": "key_label",
+      "match": "function Nn(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 1856,
+          "utf16_offset": 1856,
+          "utf8_byte_offset": 1954,
+          "line": 1,
+          "column_codepoint": 1857
+        },
+        "end_exclusive": {
+          "codepoint_offset": 1870,
+          "utf16_offset": 1870,
+          "utf8_byte_offset": 1968,
+          "line": 1,
+          "column_codepoint": 1871
+        }
+      }
+    },
+    {
+      "id": "load_gear_icons",
+      "match": "async function Kn()",
+      "location": {
+        "start": {
+          "codepoint_offset": 2116,
+          "utf16_offset": 2116,
+          "utf8_byte_offset": 2214,
+          "line": 1,
+          "column_codepoint": 2117
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2135,
+          "utf16_offset": 2135,
+          "utf8_byte_offset": 2233,
+          "line": 1,
+          "column_codepoint": 2136
+        }
+      }
+    },
+    {
+      "id": "equipment_icon_resolution",
+      "match": "function N(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 2262,
+          "utf16_offset": 2262,
+          "utf8_byte_offset": 2365,
+          "line": 1,
+          "column_codepoint": 2263
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2275,
+          "utf16_offset": 2275,
+          "utf8_byte_offset": 2378,
+          "line": 1,
+          "column_codepoint": 2276
+        }
+      }
+    },
+    {
+      "id": "item_data_fetch_meta",
+      "match": "fetch(\"data/items/items-meta.json\")",
+      "location": {
+        "start": {
+          "codepoint_offset": 2838,
+          "utf16_offset": 2838,
+          "utf8_byte_offset": 2941,
+          "line": 1,
+          "column_codepoint": 2839
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2873,
+          "utf16_offset": 2873,
+          "utf8_byte_offset": 2976,
+          "line": 1,
+          "column_codepoint": 2874
+        }
+      }
+    },
+    {
+      "id": "item_data_fetch_recipes",
+      "match": "fetch(\"data/items.json\")",
+      "location": {
+        "start": {
+          "codepoint_offset": 2946,
+          "utf16_offset": 2946,
+          "utf8_byte_offset": 3049,
+          "line": 1,
+          "column_codepoint": 2947
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2970,
+          "utf16_offset": 2970,
+          "utf8_byte_offset": 3073,
+          "line": 1,
+          "column_codepoint": 2971
+        }
+      }
+    },
+    {
+      "id": "item_metadata_lookup",
+      "match": "function K(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 5023,
+          "utf16_offset": 5023,
+          "utf8_byte_offset": 5586,
+          "line": 3,
+          "column_codepoint": 27
+        },
+        "end_exclusive": {
+          "codepoint_offset": 5036,
+          "utf16_offset": 5036,
+          "utf8_byte_offset": 5599,
+          "line": 3,
+          "column_codepoint": 40
+        }
+      }
+    },
+    {
+      "id": "item_metadata_and_recipe",
+      "match": "function G(n,i,c,t)",
+      "location": {
+        "start": {
+          "codepoint_offset": 4602,
+          "utf16_offset": 4602,
+          "utf8_byte_offset": 5122,
+          "line": 1,
+          "column_codepoint": 4603
+        },
+        "end_exclusive": {
+          "codepoint_offset": 4621,
+          "utf16_offset": 4621,
+          "utf8_byte_offset": 5141,
+          "line": 1,
+          "column_codepoint": 4622
+        }
+      }
+    },
+    {
+      "id": "gem_suffix_regex",
+      "match": "/ cấp ([2-5])$/",
+      "location": {
+        "start": {
+          "codepoint_offset": 8834,
+          "utf16_offset": 8834,
+          "utf8_byte_offset": 10098,
+          "line": 13,
+          "column_codepoint": 1598
+        },
+        "end_exclusive": {
+          "codepoint_offset": 8849,
+          "utf16_offset": 8849,
+          "utf8_byte_offset": 10115,
+          "line": 13,
+          "column_codepoint": 1613
+        }
+      }
+    },
+    {
+      "id": "pill_definitions",
+      "match": "const c={\"Hồi Xuân Đan\"",
+      "location": {
+        "start": {
+          "codepoint_offset": 7369,
+          "utf16_offset": 7369,
+          "utf8_byte_offset": 8476,
+          "line": 13,
+          "column_codepoint": 133
+        },
+        "end_exclusive": {
+          "codepoint_offset": 7392,
+          "utf16_offset": 7392,
+          "utf8_byte_offset": 8503,
+          "line": 13,
+          "column_codepoint": 156
+        }
+      }
+    },
+    {
+      "id": "set_equipment_fragments",
+      "match": "if(n.startsWith(\"Mảnh \"))",
+      "location": {
+        "start": {
+          "codepoint_offset": 11914,
+          "utf16_offset": 11914,
+          "utf8_byte_offset": 13616,
+          "line": 13,
+          "column_codepoint": 4678
+        },
+        "end_exclusive": {
+          "codepoint_offset": 11939,
+          "utf16_offset": 11939,
+          "utf8_byte_offset": 13643,
+          "line": 13,
+          "column_codepoint": 4703
+        }
+      }
+    },
+    {
+      "id": "equipment_identity_check",
+      "match": "X(n)",
+      "location": {
+        "start": {
+          "codepoint_offset": 2236,
+          "utf16_offset": 2236,
+          "utf8_byte_offset": 2334,
+          "line": 1,
+          "column_codepoint": 2237
+        },
+        "end_exclusive": {
+          "codepoint_offset": 2240,
+          "utf16_offset": 2240,
+          "utf8_byte_offset": 2338,
+          "line": 1,
+          "column_codepoint": 2241
+        }
+      }
+    },
+    {
+      "id": "item_icon_fallback",
+      "match": "function j(n,i=40,c)",
+      "location": {
+        "start": {
+          "codepoint_offset": 13131,
+          "utf16_offset": 13131,
+          "utf8_byte_offset": 15060,
+          "line": 13,
+          "column_codepoint": 5895
+        },
+        "end_exclusive": {
+          "codepoint_offset": 13151,
+          "utf16_offset": 13151,
+          "utf8_byte_offset": 15080,
+          "line": 13,
+          "column_codepoint": 5915
+        }
+      }
+    },
+    {
+      "id": "item_icon_error_cache",
+      "match": "h.onerror=()=>",
+      "location": {
+        "start": {
+          "codepoint_offset": 13352,
+          "utf16_offset": 13352,
+          "utf8_byte_offset": 15281,
+          "line": 13,
+          "column_codepoint": 6116
+        },
+        "end_exclusive": {
+          "codepoint_offset": 13366,
+          "utf16_offset": 13366,
+          "utf8_byte_offset": 15295,
+          "line": 13,
+          "column_codepoint": 6130
+        }
+      }
+    },
+    {
+      "id": "currency_icon",
+      "match": "function qn(n,i=16)",
+      "location": {
+        "start": {
+          "codepoint_offset": 15532,
+          "utf16_offset": 15532,
+          "utf8_byte_offset": 17463,
+          "line": 13,
+          "column_codepoint": 8296
+        },
+        "end_exclusive": {
+          "codepoint_offset": 15551,
+          "utf16_offset": 15551,
+          "utf8_byte_offset": 17482,
+          "line": 13,
+          "column_codepoint": 8315
+        }
+      }
+    },
+    {
+      "id": "export_surface",
+      "match": "export{M as C",
+      "location": {
+        "start": {
+          "codepoint_offset": 15973,
+          "utf16_offset": 15973,
+          "utf8_byte_offset": 17904,
+          "line": 13,
+          "column_codepoint": 8737
+        },
+        "end_exclusive": {
+          "codepoint_offset": 15986,
+          "utf16_offset": 15986,
+          "utf8_byte_offset": 17917,
+          "line": 13,
+          "column_codepoint": 8750
+        }
+      }
+    }
+  ]
+}

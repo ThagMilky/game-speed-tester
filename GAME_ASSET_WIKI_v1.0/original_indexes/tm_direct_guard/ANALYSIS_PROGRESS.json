@@ -1,0 +1,73 @@
+{
+  "schema": "GAME_ASSET_WIKI_v1.0.analysis_progress",
+  "status": "SOURCE_REVIEW_COMPLETE_RUNTIME_UNVERIFIED",
+  "source_read_entirely": true,
+  "source_bytes_preserved": true,
+  "runtime_tests_performed": false,
+  "assets": [
+    {
+      "file": "tm-direct.js",
+      "source_review": "complete",
+      "documentation": "complete",
+      "symbol_anchor_index": "selected complete named function set plus important state/conditions; not every lexical token",
+      "minified_code_present": false,
+      "runtime_verified": false
+    },
+    {
+      "file": "tm-guard.js",
+      "source_review": "complete",
+      "documentation": "complete",
+      "symbol_anchor_index": "selected complete named function set plus important state/conditions; not every lexical token",
+      "minified_code_present": false,
+      "runtime_verified": false
+    }
+  ],
+  "confidence_legend": {
+    "CONFIRMED": "direct source evidence",
+    "INFERRED": "derived, not execution-tested",
+    "UNKNOWN": "requires external evidence"
+  },
+  "unresolved": [
+    {
+      "id": 1,
+      "confidence": "UNKNOWN",
+      "finding": "Deployment load order and other wrappers"
+    },
+    {
+      "id": 2,
+      "confidence": "UNKNOWN",
+      "finding": "Game socket URL construction and protocol values"
+    },
+    {
+      "id": 3,
+      "confidence": "UNKNOWN",
+      "finding": "WebRTC bridge __tmSend and __tmGuard.feed"
+    },
+    {
+      "id": 4,
+      "confidence": "UNKNOWN",
+      "finding": "Route telemetry and actual network topology"
+    },
+    {
+      "id": 5,
+      "confidence": "UNKNOWN",
+      "finding": "Server guard detection, timeout and guard-ok validation"
+    },
+    {
+      "id": 6,
+      "confidence": "UNKNOWN",
+      "finding": "Server tg schema and tribulation eligibility"
+    },
+    {
+      "id": 7,
+      "confidence": "UNKNOWN",
+      "finding": "Mobile class/orientation updates and layout"
+    },
+    {
+      "id": 8,
+      "confidence": "UNKNOWN",
+      "finding": "Live endpoint and runtime compatibility"
+    }
+  ],
+  "merge_guidance": "Keep each file/source hash distinct, map exact globals and functions, never infer authoritative server behavior."
+}

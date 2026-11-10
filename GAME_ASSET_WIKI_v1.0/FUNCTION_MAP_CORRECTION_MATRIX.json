@@ -1,0 +1,324 @@
+{
+  "matrix_version": "1.0",
+  "audit_date": "2026-11-10",
+  "total_corrections": 15,
+  "corrections": [
+    {
+      "entry_id": "FM-0002",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "wt",
+      "original_description": "Weapon grip offset calculator",
+      "actual_construct_type": "array",
+      "verified_description": "Weapon directional frame index mapping array [4,3,2,1,0,7,6,5]",
+      "source_evidence": [
+        "Constant array 'wt=[4,3,2,1,0,7,6,5]' in Character module"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0003",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "yi",
+      "original_description": "Character audio sample trigger",
+      "actual_construct_type": "class",
+      "verified_description": "Local combat simulation engine (state, hero, foes, skills, HP/Qi, cooldowns, damage)",
+      "source_evidence": [
+        "Declaration 'class yi' at offset 18314 in Character-DhQJ_Q0g(1).js"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md",
+        "TECHNICAL_CLAIM_AUDIT.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md",
+        "TECHNICAL_CLAIM_AUDIT.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0004",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "xi",
+      "original_description": "Unarmed combat sequence generator",
+      "actual_construct_type": "function",
+      "verified_description": "Direction-based coordinate transformation helper for character showcase",
+      "source_evidence": [
+        "Function declaration 'function xi(a,t)' at offset 15350"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0005",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "ri",
+      "original_description": "Directional frame angle mapper",
+      "actual_construct_type": "function",
+      "verified_description": "Directional sprite texture validator and frame binder",
+      "source_evidence": [
+        "Function declaration 'function ri(a,t,e)' at offset 57998"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0006",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "li",
+      "original_description": "Directional frame angle mapper",
+      "actual_construct_type": "function",
+      "verified_description": "Texture frame cache lookup and dimension provider",
+      "source_evidence": [
+        "Function declaration 'function li(a,t)' at offset 58193"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0007",
+      "source_file": "Character-DhQJ_Q0g(1).js",
+      "symbol": "ui",
+      "original_description": "Directional frame angle mapper",
+      "actual_construct_type": "function",
+      "verified_description": "Frame coordinate scaler based on frame dimensions",
+      "source_evidence": [
+        "Function declaration 'function ui(a,t,e)' at offset 58837"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/01_Character-DhQJ_Q0g.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0009",
+      "source_file": "sim-CvoxXTtu.js",
+      "symbol": "xm",
+      "original_description": "Master combat simulation controller class",
+      "actual_construct_type": "array",
+      "verified_description": "Linh Căn (Spiritual Root) breakthrough configuration table (pills, chance, luck)",
+      "source_evidence": [
+        "Array literal 'xm=[{pills:1,chance:.5,luck:34},...]' in sim-CvoxXTtu.js"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/07_sim-CvoxXTtu.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/07_sim-CvoxXTtu.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0010",
+      "source_file": "sim-CvoxXTtu.js",
+      "symbol": "Hs",
+      "original_description": "Damage and critical strike pipeline function",
+      "actual_construct_type": "constant",
+      "verified_description": "Fixed Dan required constant (Hs = 30) for refining Dịch Căn Đan",
+      "source_evidence": [
+        "Number constant 'Hs=30' in sim-CvoxXTtu.js"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/07_sim-CvoxXTtu.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/07_sim-CvoxXTtu.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0011",
+      "source_file": "sim-CvoxXTtu.js",
+      "symbol": "Dn",
+      "original_description": "Spatial grid proximity search function",
+      "actual_construct_type": "array",
+      "verified_description": "Spiritual root quality definitions table (Phàm căn, Ngũ hệ tạp căn, weight, exp, potency, atk, hp)",
+      "source_evidence": [
+        "Array literal 'Dn=[{name:\"Phàm căn\",...}]' in sim-CvoxXTtu.js"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/07_sim-CvoxXTtu.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/07_sim-CvoxXTtu.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0012",
+      "source_file": "sim-CvoxXTtu.js",
+      "symbol": "c1",
+      "original_description": "Fishing bite and tension evaluator function",
+      "actual_construct_type": "function",
+      "verified_description": "Clamped cost calculator a => Math.max(20000, Math.min(400000, Math.floor(a)*400)) for Linh Thạch root refinement",
+      "source_evidence": [
+        "Arrow function 'c1=a=>Math.max(2e4,Math.min(4e5,Math.floor(a)*400))'"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/07_sim-CvoxXTtu.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/07_sim-CvoxXTtu.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0014",
+      "source_file": "trangbi-iyUH-plT.js",
+      "symbol": "mt",
+      "original_description": "Set bonus definitions (2/4/6 pcs)",
+      "actual_construct_type": "function",
+      "verified_description": "Set bonus color / affix attribute resolver n => ui[yn(n)]",
+      "source_evidence": [
+        "Arrow function 'mt=n=>ui[yn(n)]' in trangbi-iyUH-plT.js"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/10_trangbi-iyUH-plT.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/10_trangbi-iyUH-plT.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0016",
+      "source_file": "items-nDkzNEls.js",
+      "symbol": "Nn",
+      "original_description": "Inventory item icon renderer",
+      "actual_construct_type": "function",
+      "verified_description": "Keyboard key code to human-readable string mapper (e.g. 9: Tab, 13: Enter, 32: Space)",
+      "source_evidence": [
+        "Function declaration 'function Nn(n){return{9:\"Tab\",13:\"Enter\",...}[n]??String(n)}'"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/04_items-nDkzNEls.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/04_items-nDkzNEls.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0017",
+      "source_file": "items-nDkzNEls.js",
+      "symbol": "N",
+      "original_description": "Equipment stat comparison builder",
+      "actual_construct_type": "function",
+      "verified_description": "Item ID normalization and item definition lookup helper",
+      "source_evidence": [
+        "Function declaration 'function N(n){n={...n,id:O(n.id)??n.id};const i=F(n.id);if(i)return i;}'"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/04_items-nDkzNEls.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/04_items-nDkzNEls.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0022",
+      "source_file": "index-BIkbGDKp.js",
+      "symbol": "Pt",
+      "original_description": "Outgoing command framing / Pt.sendPacket",
+      "actual_construct_type": "function",
+      "verified_description": "Loading screen overlay presenter function Pt(t, e, o=\"Đang tiến vào\")",
+      "source_evidence": [
+        "Function declaration 'function Pt(t,e,o=\"Đang tiến vào\")' at char 69212"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/03_index-BIkbGDKp.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/03_index-BIkbGDKp.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    },
+    {
+      "entry_id": "FM-0023",
+      "source_file": "WorldScene-b_2tpaKT.js",
+      "symbol": "onSnap",
+      "original_description": "A3.handleSnapshot snapshot processing",
+      "actual_construct_type": "method",
+      "verified_description": "WorldScene snapshot handler method onSnap(t) updating entities, clocks, and scene state",
+      "source_evidence": [
+        "Method declaration 'onSnap(t)' at char 897468 in WorldScene class A3"
+      ],
+      "affected_documents": [
+        "FUNCTION_MAP.md",
+        "modules/WorldScene/*.md"
+      ],
+      "updated_documents": [
+        "FUNCTION_MAP.md",
+        "modules/WorldScene/*.md"
+      ],
+      "remaining_unresolved_references": [],
+      "final_status": "RESOLVED"
+    }
+  ]
+}
