@@ -70,6 +70,18 @@
       : typeof host?.enemies === "function" ? host.enemies() : null;
     return Array.isArray(list) ? list : null;
   }
+  function excludedBossNearChest(scene, enemies, chest) {
+    if (globalThis.GSTFarmPriority?.excludesBoss?.() !== true) return false;
+    const pos = { x: scene.px, y: scene.py };
+    const near = (point) => finite(point?.x) && finite(point?.y)
+      && (distance(point, pos) < 7 || distance(point, chest) < 7);
+    const isBoss = (enemy) => enemy?.cls === "boss" || enemy?.wb === true
+      || scene.views?.get?.(enemy?.id)?.st?.cls === "boss"
+      || scene.views?.get?.(enemy?.id)?.st?.wb === true;
+    return enemies.some((enemy) => !enemy.dead && isBoss(enemy) && near(enemy))
+      || [...(scene.views?.values?.() ?? [])].some((actor) => actor?.k === "m" && !actor.dead
+        && (actor.st?.cls === "boss" || actor.st?.wb === true) && near(actor));
+  }
   function nearThreat(enemies, scene, chest) {
     const pos = { x: scene.px, y: scene.py };
     return enemies.filter((enemy) => !enemy.dead && enemy.hostile
@@ -181,6 +193,11 @@
       // Only query actors when there is a real chest objective, not every empty update frame.
       const enemies = enemiesForChest(host);
       if (!Array.isArray(enemies)) { release("Game chưa cung cấp danh sách quái hợp lệ."); return false; }
+      if (excludedBossNearChest(scene, enemies, chest)) {
+        skipped.set(job.id, performance.now() + 15000);
+        release("Tránh boss theo bộ lọc; tạm bỏ rương gần boss trong 15 giây.");
+        return false;
+      }
       const threat = nearThreat(enemies, scene, chest);
       if (threat) return clearThreat(scene, host, time, threat, enemies, chest);
       if (job.phase === "clearing") {
@@ -287,7 +304,8 @@
           && chest.x >= 0 && chest.y >= 0 && chest.x < scene.map.w && chest.y < scene.map.h
           && (!chest.owner || chest.owner === scene.profile?.name) && (settings.kind === "all" || chest.kind === settings.kind)
           && !(skipped.get(chest.id) > performance.now()) && Math.hypot(chest.x - scene.px, chest.y - scene.py) <= 6
-          && !nearThreat(enemies, scene, chest));
+          && !nearThreat(enemies, scene, chest)
+          && !excludedBossNearChest(scene, enemies, chest));
       } catch { return false; }
     }
   };

@@ -64,6 +64,7 @@
       || (finite(level) && matchesTarget({ cls: "boss", lv: level }));
   }
   globalThis.GSTFarmPriority = { compare: comparePriority, ranked, switchReason,
+    excludesBoss: () => settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode),
     realmBossEligible,
     bossFocus: (scene) => ["boss", "bossLevel"].includes(settings.targetMode)
       && realmBossEligible(scene) };
@@ -187,6 +188,8 @@
     if (!settings.enabled && settings.searchScope === "map") return "Toàn map chưa áp dụng: cần bật Mở rộng vùng tìm quái và lưu phạm vi.";
     if (scene.keyCapture) return "Đang đặt phím trong game; kết thúc đặt phím để tiếp tục.";
     if (scene.pendingSkill || scene.aiming) return "Đang chờ/ngắm chiêu tay; kết thúc hoặc hủy ngắm để farm tiếp.";
+    if (scene.self.med && globalThis.GSTFarmBehavior?.ownsMeditation?.(scene))
+      return "Auto Farm đang thiền chờ quái trong vùng tìm.";
     if (scene.self.med && !scene.auto.resting) return "Game vẫn ghi nhận đang bế quan; chờ game xác nhận thoát bế quan để farm tiếp.";
     if (scene.auto.resting) return "Auto Farm đang rút lui/hồi máu; chưa tiếp tục tìm quái.";
     if (GSTHarvest.controls(scene)) return "Đang nhường di chuyển cho Tự hái.";
@@ -226,10 +229,21 @@
       && settings.radius >= 1 && distance(home, actor) <= settings.radius;
   }
 
+  function clearExcludedBossTarget(scene) {
+    if (!(settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode)) || !scene?.auto?.on) return;
+    const actor = scene.views?.get?.(scene.auto.target);
+    if (actor?.k !== "m" || !isBoss(actor.st)) return;
+    // Retain the numeric target sentinel required by the native interface.
+    scene.auto.target = 0;
+    if (Array.isArray(scene.auto.path)) scene.auto.path = [];
+    scene.auto.think = 0;
+    if (session?.scene === scene) session.rankTarget = null;
+  }
   function syncFilter(scene) {
     const filteringActive = () => settings.targetMode !== "all" || settings.excludeBoss;
     const boundaryActive = () => settings.enabled && settings.searchScope === "radius";
     if (!filteringActive() && !boundaryActive()) { clearFilter(); return; }
+    clearExcludedBossTarget(scene);
     if (filterBinding?.scene === scene && scene.autoHost === filterBinding.wrapper) return;
     clearFilter();
     const original = scene.autoHost;
@@ -510,6 +524,7 @@
         return;
       }
       globalThis.GSTFarmBehavior?.attach(s.scene);
+      clearExcludedBossTarget(s.scene);
       // Follow native target changes even when the user farms all monsters.
       // Refresh periodically because a boss actor can appear/disappear
       // without the native target ID changing.
@@ -731,6 +746,7 @@
       globalThis.GSTFarmCombat?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
       if (settings.targetMode === "all" && !settings.excludeBoss) clearFilter();
+      clearExcludedBossTarget(sceneNow());
       if (session) {
         if (scopeChanged) { restore(session); session.at = -Infinity; }
         syncFilter(session.scene);

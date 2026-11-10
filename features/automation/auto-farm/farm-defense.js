@@ -4,6 +4,7 @@
   const nearby = 1.3, finite = Number.isFinite;
   let enabled = false, configured = false, suspended = false, binding = null, episode = null, continuation = null;
   let message = "Chờ cài đặt tự vệ.", idleSince = null, idlePoint = null, lastIdleAt = -Infinity;
+  let pendingHit = null;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const boss = (actor) => actor?.st?.cls === "boss" || actor?.st?.wb === true;
@@ -18,6 +19,7 @@
     episode = null;
     if (!retainContinuation) continuation = null;
     lastIdleAt = -Infinity; idleSince = null; idlePoint = null;
+    pendingHit = null;
     if (old && scene) {
       if (old.steer && scene.autoX === old.steer[0] && scene.autoY === old.steer[1]) scene.autoX = scene.autoY = 0;
       if (old.facing && scene.lockId === old.id && scene.faceX === old.facing[0] && scene.faceY === old.facing[1]) {
@@ -133,13 +135,19 @@
     }
     return null;
   }
-  function record(event) {
+  function record(event, awakened = false) {
     const scene = binding?.scene;
     if (!scene || !enabled) return;
     try {
       const host = scene.autoHost();
       if (!validateContext(scene, host)) return;
       if (event?.e !== "dmg" || event.kind !== "p" || event.id !== scene.you || !finite(event.v) || event.v <= 0) return;
+      const woke = !awakened && globalThis.GSTFarmBehavior?.wake?.(scene) === true;
+      if (woke && scene.self.med) {
+        pendingHit = { event, at: performance.now() };
+        message = "Tự vệ · đang thoát thiền để xử lý đòn đánh.";
+        return;
+      }
       const time = scene.now(), pos = { x: scene.px, y: scene.py };
       if (!finite(time)) return;
       if (blocked(scene) || nativeBusy(scene, host)) {
@@ -169,7 +177,8 @@
       }
       const continuing = continuation && time >= continuation.hitAt && time <= continuation.until
         && continuation.ids.some((id) => threatIds.includes(id) && actorFor(scene, id));
-      const stationary = performance.now() - lastIdleAt <= 1200 && idlePoint && distance(pos, idlePoint) <= 0.1;
+      const stationary = awakened || woke
+        || performance.now() - lastIdleAt <= 1200 && idlePoint && distance(pos, idlePoint) <= 0.1;
       if (!continuing && !stationary) {
         message = "Tự vệ nhường: chưa xác nhận trạng thái đứng chờ gần đây."; return;
       }
@@ -193,6 +202,12 @@
     try {
       const host = scene.autoHost();
       if (!validateContext(scene, host)) return;
+      if (pendingHit && performance.now() - pendingHit.at > 3000) pendingHit = null;
+      if (pendingHit && scene.self.med) return;
+      if (pendingHit) {
+        const hit = pendingHit; pendingHit = null;
+        record(hit.event, true);
+      }
       if (blocked(scene) || nativeBusy(scene, host)) { clearEpisode("Tự vệ đang nhường thao tác khác."); return; }
       if (episode) return;
       const time = scene.now(), now = performance.now();
@@ -271,7 +286,7 @@
     } catch { clearEpisode("Tự vệ không khả dụng; đã nhường game."); return false; }
   }
   function detach() {
-    clearEpisode(); const old = binding; binding = null;
+    clearEpisode(); pendingHit = null; const old = binding; binding = null;
     if (!old) return;
     old.scene.events.off("preupdate", guard); old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach);
     old.removeInput(); old.removeEvent(); old.removeUpdate();

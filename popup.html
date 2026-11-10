@@ -101,8 +101,8 @@
           <div class="farm-column farm-middle">
           <details class="advanced" open><summary>Khi hết mục tiêu &amp; nhặt đồ</summary><div class="advanced-body">
             <label for="farmIdleMode">Khi không còn mục tiêu</label>
-            <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi đứng chờ tại chỗ</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option><option value="seek">Nhặt đồ rồi chủ động tìm quái mới</option></select>
-            <p class="hint">Chủ động tìm: dò vị trí mới trong bán kính đã chọn, hoặc dùng cách dò toàn map có sẵn. Vẫn giữ bộ lọc quái, giới hạn vùng tìm và nhường thao tác khác.</p>
+            <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi thiền khi hết quái</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option><option value="seek">Nhặt đồ rồi chủ động tìm quái mới</option></select>
+            <p class="hint">Khi không còn quái trong vùng tìm (kể cả quái ngoài bộ lọc), nhặt đồ xong sẽ tự thiền theo cơ chế game. Quái xuất hiện sẽ kết thúc phiên thiền tự động; thiền thủ công không bị can thiệp. Chế độ tìm quái vẫn nhường thao tác khác.</p>
             <label class="check-row"><input id="farmPreferLoot" type="checkbox" checked><span>Ưu tiên nhặt đồ sau giao tranh, trước khi chuyển bãi quái</span></label>
             <p class="hint">Ưu tiên đồ gần bãi vừa đánh, kể cả khi không bật Mở rộng vùng tìm quái. Chờ ngắn để vật phẩm xuất hiện; dùng cơ chế nhặt và giới hạn thử của game. Đồ không thể nhặt sẽ được bỏ qua tạm thời.</p>
           </div></details>
@@ -116,7 +116,7 @@
           <fieldset id="farmRightControls" disabled aria-label="Tùy chọn Boss và hồi phục">
           <details id="farmBossSafetyOptions" class="advanced separated"><summary id="farmBossSummary">Boss</summary><div class="advanced-body">
           <label class="check-row"><input id="farmExcludeBoss" type="checkbox"><span>Không chọn boss làm mục tiêu</span></label>
-          <p class="hint">Tự lưu. Lọc boss theo dữ liệu game cung cấp; kỹ năng đánh lan vẫn có thể trúng boss gần đó. Không tự tránh đường đi gần boss. Bật tùy chọn này sẽ chuyển bộ lọc boss sang quái thường.</p>
+          <p class="hint">Tự lưu. Không chủ động chọn boss trong Auto Farm, tìm boss bí cảnh hoặc dọn quái sát rương khi có boss gần. Kỹ năng đánh lan vẫn có thể trúng boss gần đó; không bảo đảm tránh toàn bộ đường đi gần boss. Bật sẽ chuyển bộ lọc boss sang quái thường.</p>
             <p class="field-title">Tự bảo vệ khi đánh boss</p>
             <label class="check-row"><input id="farmBossDodge" type="checkbox" checked><span>Né chiêu boss; giữ khoảng cách khi chờ kỹ năng</span></label>
             <label class="check-row"><input id="farmBossRetreat" type="checkbox" checked><span>HP dưới 30%: lùi giữ khoảng cách, chờ dùng đan (đánh lại khi HP ≥ 40%)</span></label>

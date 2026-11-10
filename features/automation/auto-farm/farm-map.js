@@ -220,7 +220,9 @@
   }
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
-  const seekRealmBoss = (scene) => globalThis.GSTRealm?.seekBoss?.(scene) === true;
+  const seekRealmBoss = (scene) => preferences.excludeBoss !== true
+    && !["highLevel", "lowLevel"].includes(preferences.targetMode)
+    && globalThis.GSTRealm?.seekBoss?.(scene) === true;
   const wanted = (scene) => (preferences.enabled && (preferences.searchScope === "map"
     || (preferences.searchScope === "radius" && preferences.idleMode === "seek")))
     || seekRealmBoss(scene);
