@@ -5,6 +5,9 @@
   let enabled = false, configured = false, suspended = false, binding = null, episode = null, continuation = null;
   let message = "Chờ cài đặt tự vệ.", idleSince = null, idlePoint = null, lastIdleAt = -Infinity;
   let pendingHit = null, nearbySteer = null, nearbyAt = -Infinity, nearbyNote = "", nearbyNoteAt = -Infinity;
+  let nearbyOrigin = null, nearbyTarget = null;
+  const nearbyIgnored = new Map();
+  let groupIds = new Set(), groupUntil = -Infinity, groupOrigin = null;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const boss = (actor) => actor?.st?.cls === "boss" || actor?.st?.wb === true;
@@ -14,11 +17,30 @@
     return actor?.id === id && actor?.k === "m" && actor.st && typeof actor.st.cls === "string" && actor.st.cls !== "pet"
       && !actor.dead && finite(actor.x) && finite(actor.y) ? actor : null;
   };
-  function clearNearby() {
+  function clearNearby(keepTarget = false) {
     const scene = binding?.scene;
     if (scene && nearbySteer && scene.autoX === nearbySteer[0] && scene.autoY === nearbySteer[1])
       scene.autoX = scene.autoY = 0;
     nearbySteer = null;
+    if (!keepTarget) { nearbyOrigin = null; nearbyTarget = null; }
+  }
+  function clearGroup() {
+    const scene = binding?.scene;
+    if (scene?.auto && groupIds.has(scene.auto.target)
+        && !scene.pendingSkill && !scene.aiming) {
+      scene.auto.target = 0;
+      scene.auto.think = 0;
+    }
+    groupIds.clear();
+    groupUntil = -Infinity;
+    groupOrigin = null;
+  }
+  function groupActive(scene) {
+    return binding?.scene === scene && settings.nearbyClear === true && scene.auto?.on
+      && groupOrigin && finite(scene.px) && finite(scene.py)
+      && distance({ x: scene.px, y: scene.py }, groupOrigin)
+        <= Math.min(3, settings.nearbyRadius || 2) + 0.25
+      && Number.isFinite(scene.now()) && scene.now() < groupUntil && groupIds.size >= 3;
   }
   function clearEpisode(note, retainContinuation = false) {
     const old = episode, scene = binding?.scene;
@@ -34,12 +56,14 @@
     }
     if (note) message = note;
     clearNearby();
+    clearGroup();
   }
-  function otherOwner(scene) {
+  function otherOwner(scene, allowFarmMap = false) {
     return globalThis.GSTMapTravel?.active?.(scene) || globalThis.GSTQuest?.active?.(scene)
       || globalThis.GSTFarmSeals?.pending?.(scene) || globalThis.GSTFarmBehavior?.pendingLoot?.(scene)
-      || globalThis.GSTFarmMap?.nativeHandling?.(scene)
-      || ["GSTMapTravel", "GSTQuest", "GSTRealm", "GSTChest", "GSTFarmSeals", "GSTHarvest", "GSTFarmMap", "GSTFarmBossSafety"]
+      || (!allowFarmMap && globalThis.GSTFarmMap?.nativeHandling?.(scene))
+      || ["GSTMapTravel", "GSTQuest", "GSTRealm", "GSTChest", "GSTFarmSeals", "GSTHarvest", "GSTFarmBossSafety",
+        ...(allowFarmMap ? [] : ["GSTFarmMap"])]
         .some((name) => globalThis[name]?.controls?.(scene));
   }
   function available(scene, host) {
@@ -66,18 +90,20 @@
     const identity = `${scene.you}:${key}`;
     if (identity !== binding.identity || scene.auto.on !== binding.farmOn) {
       binding.identity = identity; binding.farmOn = scene.auto.on;
+      nearbyIgnored.clear();
       clearEpisode("Tự vệ đang nhường; chờ trạng thái ổn định.");
       return false;
     }
     return true;
   }
-  function blocked(scene) {
+  function blocked(scene, allowFarmMap = false) {
     return GSTFarmInput.movement(scene) || scene.pendingSkill || scene.aiming || scene.heldAttack
       || scene.keyCapture || scene.chat?.typing || scene.inputFieldActive?.() || scene.panels?.open
       || scene.uiBlocked || scene.overlay?.dialogOpen || scene.harvesting || scene.nav || scene.self.med || scene.self.fish
       || scene.auto.resting || scene.dashT > 0 || (scene.self.realm?.inside?.protection ?? 0) > 0
       || (scene.auto.on && (scene.auto.moved || scene.now() < scene.auto.pauseUntil))
-      || globalThis.GSTHarvest?.needsRecovery?.(scene) || GSTFarmRouting.blocked(scene) || otherOwner(scene);
+      || globalThis.GSTHarvest?.needsRecovery?.(scene) || GSTFarmRouting.blocked(scene)
+      || otherOwner(scene, allowFarmMap);
   }
   function nativeBusy(scene, host) {
     if (!scene.auto.on) return false;
@@ -160,7 +186,8 @@
       }
       const time = scene.now(), pos = { x: scene.px, y: scene.py };
       if (!finite(time)) return;
-      if (blocked(scene) || nativeBusy(scene, host)) {
+      const ownNearbyMove = nearbySteer && scene.autoX === nearbySteer[0] && scene.autoY === nearbySteer[1];
+      if (blocked(scene, !!ownNearbyMove) || nativeBusy(scene, host) && !groupActive(scene)) {
         clearEpisode("Tự vệ đang nhường thao tác khác."); return;
       }
       const attributed = Number.isSafeInteger(event.by);
@@ -192,7 +219,9 @@
       if (!continuing && !stationary && !identified) {
         message = "Tự vệ nhường: chưa xác nhận trạng thái đứng chờ hoặc nguồn đòn đánh."; return;
       }
-      if (scene.autoX || scene.autoY || (finite(scene.castAt) && scene.castAt > time && !continuing)) return;
+      if ((scene.autoX || scene.autoY) && !ownNearbyMove
+          || (finite(scene.castAt) && scene.castAt > time && !continuing)) return;
+      clearNearby(); clearGroup();
       lastIdleAt = -Infinity;
       continuation = { ids: threatIds, hitAt: time, until: time + 8 };
       const single = threats.length === 1 ? threats[0] : null;
@@ -206,53 +235,159 @@
         : "Tự vệ · chưa đủ dữ liệu cho đòn đánh thường; đang kiểm tra đường lùi.";
     } catch { clearEpisode("Tự vệ không khả dụng; thiếu dữ liệu game."); }
   }
-  // An opt-in, short-range safety sweep. It never expands the ordinary farm
-  // target filter and never injects special skills or attacks excluded bosses.
+  // A bounded short-range sweep: matching targets go to native combat, one or
+  // two filtered-out enemies use basic attacks, and groups go to native skills.
+  // Every external target is rechecked against the current map, boss filter and
+  // the location where this local sweep originally started.
   function sweepNearby(host, time) {
     const scene = binding?.scene;
-    if (!scene || !settings.nearbyClear || !scene.auto?.on || !finite(time)) { clearNearby(); return false; }
-    if (!validateContext(scene, host)) { clearNearby(); return false; }
-    if (blocked(scene) || nativeBusy(scene, host) || episode) {
-      clearNearby(); return false;
+    if (!scene || !settings.nearbyClear || !scene.auto?.on || !finite(time)) {
+      clearNearby(); clearGroup(); return false;
     }
-    const radius = Number.isSafeInteger(settings.nearbyRadius) ? Math.max(1, Math.min(6, settings.nearbyRadius)) : 2;
-    const pos = { x: scene.px, y: scene.py };
-    const enemies = rawEnemies(host);
-    const excludeBoss = globalThis.GSTFarmPriority?.excludesBoss?.() === true;
-    const targets = enemies.filter((enemy) => enemy && !enemy.dead && Number.isSafeInteger(enemy.id)
-        && (enemy.hostile === true || enemy.aggro === false)
-        && finite(enemy.x) && finite(enemy.y) && distance(pos, enemy) <= radius)
-      .map((enemy) => ({ enemy, actor: actorFor(scene, enemy.id) }))
-      .filter(({ actor }) => actor && !boss(actor))
-      .filter(({ enemy }) => globalThis.GSTFarmPriority?.matches?.(enemy) === false)
-      .sort((a, b) => distance(pos, a.actor) - distance(pos, b.actor));
-    if (!targets.length) { clearNearby(); return false; }
-    if (excludeBoss && nearbyBoss(scene, pos)) { clearNearby(); nearbyNote = "Dừng dọn gần: boss bị loại trừ đang ở sát nhân vật."; return false; }
-    // Native combat continues to own matching monsters and all boss skills.
-    const target = targets[0].actor;
-    const dist = distance(pos, target);
-    if (time - nearbyAt < 0.45) return nearbySteer !== null;
-    if (dist > 1.25) {
-      if (dist > radius || !host.clear(pos.x, pos.y, target.x, target.y)
-          || !boundary(scene, { x: pos.x + (target.x - pos.x) / dist * 0.2,
-            y: pos.y + (target.y - pos.y) / dist * 0.2 })) {
-        clearNearby(); return false;
+    try {
+      if (!validateContext(scene, host)) { clearNearby(); clearGroup(); return false; }
+      // A skill already started by native group combat is allowed to finish;
+      // manual input, map changes and emergency boss dodges still abort it.
+      const urgent = globalThis.GSTFarmBossSafety?.emergency?.(scene, time) === true;
+      if (groupActive(scene) && (scene.pendingSkill || scene.aiming)
+          && !urgent && !GSTFarmInput.movement(scene) && !scene.auto.moved
+          && !scene.leaving && !scene.self?.dead) {
+        groupUntil = time + 1;
+        return false;
       }
-      const dx = (target.x - pos.x) / dist, dy = (target.y - pos.y) / dist;
-      host.steer(dx, dy);
-      nearbySteer = [scene.autoX, scene.autoY];
+      if (blocked(scene, true) || urgent) {
+        clearNearby(); clearGroup(); return false;
+      }
+      for (const [id, until] of nearbyIgnored) if (until <= time) nearbyIgnored.delete(id);
+      const radius = Number.isSafeInteger(settings.nearbyRadius)
+        ? Math.max(1, Math.min(6, settings.nearbyRadius)) : 2;
+      const pos = { x: scene.px, y: scene.py };
+      const excludedBoss = globalThis.GSTFarmPriority?.excludesBoss?.() === true;
+      // Even if the boss is allowed, its actual combat/skills belong to native.
+      if (nearbyBoss(scene, pos)) {
+        clearNearby(); clearGroup();
+        nearbyNote = excludedBoss ? "Dừng dọn gần: boss đang bị loại trừ."
+          : "Nhường game xử lý boss và kỹ năng.";
+        nearbyNoteAt = performance.now();
+        return false;
+      }
+      const nearby = rawEnemies(host)
+        .filter((enemy) => enemy && !enemy.dead && Number.isSafeInteger(enemy.id)
+          && (enemy.hostile === true || enemy.aggro === false)
+          && finite(enemy.x) && finite(enemy.y) && distance(pos, enemy) <= radius)
+        .map((enemy) => ({ enemy, actor: actorFor(scene, enemy.id) }))
+        .filter(({ actor }) => actor && !boss(actor))
+        .sort((a, b) => distance(pos, a.actor) - distance(pos, b.actor));
+      const matching = nearby.filter(({ enemy }) => globalThis.GSTFarmPriority?.matches?.(enemy) !== false);
+      if (groupIds.size && !groupActive(scene)) {
+        for (const id of groupIds) nearbyIgnored.set(id, time + 5);
+        clearGroup();
+      }
+      const outside = nearby.filter(({ enemy }) => globalThis.GSTFarmPriority?.matches?.(enemy) === false
+        && !nearbyIgnored.has(enemy.id) && boundary(scene, enemy));
+      if (matching.length) {
+        clearNearby(); clearGroup();
+        if (nativeBusy(scene, host)) return false;
+        const candidate = matching[0].enemy;
+        // Always prefer the native skill/target selector for regular farm targets.
+        if (scene.auto.target !== candidate.id
+            && !globalThis.GSTFarmMap?.handoffNearby?.(scene, candidate)
+            && typeof scene.auto.pick === "function"
+            && scene.auto.pick(host, time, [candidate], [], pos.x, pos.y)) {
+          scene.auto.target = candidate.id;
+          scene.auto.think = 0;
+        }
+        return false;
+      }
+      if (!outside.length) {
+        if (nearbyTarget !== null) nearbyIgnored.set(nearbyTarget, time + 5);
+        clearNearby(); clearGroup();
+        return false;
+      }
+      if (groupActive(scene) && outside.length >= 3) {
+        // Native update keeps its group target and handles combat skills itself.
+        groupIds = new Set(outside.filter(({ enemy }) => distance(enemy, groupOrigin)
+          <= radius + 0.25).map(({ enemy }) => enemy.id));
+        if (groupIds.size >= 3) {
+          groupUntil = time + 1.5;
+          clearNearby();
+          return false;
+        }
+        clearGroup();
+      }
+      if (groupActive(scene) && outside.length < 3) clearGroup();
+      if (nativeBusy(scene, host)) { clearNearby(); return false; }
+      if (outside.length >= 3) {
+        clearNearby();
+        groupIds = new Set(outside.map(({ enemy }) => enemy.id));
+        groupOrigin = { ...pos };
+        groupUntil = time + 1.5;
+        const candidate = outside[0].enemy;
+        // The filtered host will expose only these short-lived local targets
+        // to native combat. No excluded boss or distant enemy is added.
+        if (!globalThis.GSTFarmMap?.handoffNearby?.(scene, candidate)) {
+          const group = outside.map(({ enemy }) => enemy);
+          const temporaryHost = { ...host, enemies: () => group };
+          if (typeof scene.auto.pick !== "function"
+              || !scene.auto.pick(temporaryHost, time, group, [], pos.x, pos.y)) {
+            clearGroup(); return false;
+          }
+          scene.auto.target = candidate.id;
+          scene.auto.think = 0;
+        }
+        nearbyAt = time; nearbyNoteAt = performance.now();
+        nearbyNote = "Nhường Auto Farm gốc dùng kỹ năng khi có nhóm quái sát người.";
+        return false;
+      }
+      clearGroup();
+      const target = outside[0].actor;
+      if (!nearbyOrigin || nearbyTarget !== target.id) {
+        clearNearby();
+        nearbyOrigin = { ...pos };
+        nearbyTarget = target.id;
+      }
+      const maxTravel = Math.min(3, radius), dist = distance(pos, target);
+      if (distance(pos, nearbyOrigin) > maxTravel + 0.25
+          || distance(target, nearbyOrigin) > radius + 0.25
+          || !boundary(scene, target)) {
+        nearbyIgnored.set(target.id, time + 6);
+        clearNearby();
+        nearbyNote = "Quái đã vượt vùng dọn gần; bỏ truy đuổi.";
+        nearbyNoteAt = performance.now();
+        return false;
+      }
+      if (time - nearbyAt < 0.45) return true;
+      if (dist > 1.25) {
+        const step = { x: pos.x + (target.x - pos.x) / dist * 0.2,
+          y: pos.y + (target.y - pos.y) / dist * 0.2 };
+        if (!host.clear(pos.x, pos.y, target.x, target.y) || !boundary(scene, step)
+            || distance(step, nearbyOrigin) > maxTravel) {
+          nearbyIgnored.set(target.id, time + 6);
+          clearNearby(); return false;
+        }
+        if (globalThis.GSTFarmMap?.controls?.(scene) || globalThis.GSTFarmMap?.nativeHandling?.(scene))
+          globalThis.GSTFarmMap?.pauseForNearby?.(scene);
+        host.steer((target.x - pos.x) / dist, (target.y - pos.y) / dist);
+        nearbySteer = [scene.autoX, scene.autoY];
+        nearbyAt = time; nearbyNoteAt = performance.now();
+        nearbyNote = "Đang áp sát quái ngoài bộ lọc trong vùng dọn gần.";
+        return true;
+      }
+      clearNearby(true);
+      if (!host.clear(pos.x, pos.y, target.x, target.y)) return false;
+      if (globalThis.GSTFarmMap?.controls?.(scene) || globalThis.GSTFarmMap?.nativeHandling?.(scene))
+        globalThis.GSTFarmMap?.pauseForNearby?.(scene);
+      host.face(target.x, target.y, target.id);
+      host.basic();
       nearbyAt = time; nearbyNoteAt = performance.now();
-      nearbyNote = "Đang áp sát quái ngoài bộ lọc trong vùng dọn gần.";
+      nearbyNote = "Đã yêu cầu đánh thường quái sát người ngoài bộ lọc.";
       return true;
+    } catch {
+      clearNearby(); clearGroup();
+      nearbyNote = "Dọn quái gần thiếu dữ liệu hợp lệ; đang nhường game.";
+      nearbyNoteAt = performance.now();
+      return false;
     }
-    clearNearby();
-    if (typeof host.face !== "function" || typeof host.basic !== "function"
-        || !host.clear(pos.x, pos.y, target.x, target.y)) return false;
-    host.face(target.x, target.y, target.id);
-    host.basic();
-    nearbyAt = time; nearbyNoteAt = performance.now();
-    nearbyNote = "Đã yêu cầu đánh thường quái sát người ngoài bộ lọc.";
-    return true;
   }
   function guard() {
     const scene = binding?.scene;
@@ -273,7 +408,8 @@
         const hit = pendingHit; pendingHit = null;
         record(hit.event, true);
       }
-      if (blocked(scene) || nativeBusy(scene, host)) {
+      if (blocked(scene, !!nearbySteer || !!episode)
+          || nativeBusy(scene, host) && !groupActive(scene)) {
         if (episode) clearEpisode("Tự vệ đang nhường thao tác khác.");
         else clearNearby();
         return;
@@ -300,7 +436,7 @@
     const scene = binding?.scene, job = episode;
     if (!scene) return false;
     if (!job) return sweepNearby(host, time);
-    clearNearby();
+    clearNearby(); clearGroup();
     try {
       const pos = { x: scene.px, y: scene.py };
       if (!validateContext(scene, host)) return false;
@@ -359,7 +495,7 @@
     } catch { clearEpisode("Tự vệ không khả dụng; đã nhường game."); return false; }
   }
   function detach() {
-    clearEpisode(); pendingHit = null; const old = binding; binding = null;
+    clearEpisode(); pendingHit = null; nearbyIgnored.clear(); const old = binding; binding = null;
     if (!old) return;
     old.scene.events.off("preupdate", guard); old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach);
     old.removeInput(); old.removeEvent(); old.removeUpdate();
@@ -400,11 +536,21 @@
       const changed = enabled !== nextEnabled;
       settings = value; enabled = nextEnabled; configured = true;
       if (changed) detach();
+      if (!value.nearbyClear) { clearNearby(); clearGroup(); nearbyIgnored.clear(); }
       if (binding) { binding.scope = value.searchScope; binding.expanded = value.enabled; binding.radius = value.radius; }
       attach(scene);
     },
     attach,
-    controls: (scene) => binding?.scene === scene && (episode !== null || nearbySteer !== null),
+    controls: (scene) => binding?.scene === scene && (episode !== null || nearbySteer !== null
+      || groupActive(scene)),
+    allowsNearbyTarget(scene, enemy) {
+      return groupActive(scene) && enemy && !enemy.dead && Number.isSafeInteger(enemy.id)
+        && groupIds.has(enemy.id) && !boss({ st: enemy }) && finite(enemy.x) && finite(enemy.y)
+        && finite(scene.px) && finite(scene.py)
+        && distance(enemy, { x: scene.px, y: scene.py }) <= (settings.nearbyRadius || 2) + 0.5
+        && groupOrigin && distance(enemy, groupOrigin) <= (settings.nearbyRadius || 2) + 0.25
+        && boundary(scene, enemy);
+    },
     status(scene, includeIdle = false) {
       if (!enabled || !scene || sceneNow() !== scene) return "";
       if (!settings.selfDefense && !settings.nearbyClear) return "";
