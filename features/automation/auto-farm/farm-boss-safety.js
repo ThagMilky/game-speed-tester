@@ -65,7 +65,7 @@
       && (d.online === false || d.link?.open?.() === true);
   }
   function blocked(scene, imminent = false) {
-    return suspended || globalThis.GSTFarmDefense?.controls?.(scene) || !scene?.auto?.on || !scene.self || scene.self.dead || scene.leaving
+    return suspended || (!imminent && globalThis.GSTFarmDefense?.controls?.(scene)) || !scene?.auto?.on || !scene.self || scene.self.dead || scene.leaving
       || !scene.sys?.isActive?.() || !connected(scene) || GSTFarmRouting.blocked(scene)
       || GSTFarmInput.movement(scene) || scene.auto.moved || scene.now() < scene.auto.pauseUntil
       // Pending native casts/aim are handled after reading danger zones in
@@ -611,7 +611,8 @@
     detach();
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.update !== "function" || !scene.events?.on
         || !scene.events.off || typeof scene.auto?.walk !== "function") return;
-    const owner = { scene, auto: scene.auto, remove: GSTFarmUpdate.add(scene, 1.5, update) };
+    // Urgent boss avoidance must be evaluated before optional close-range combat.
+    const owner = { scene, auto: scene.auto, remove: GSTFarmUpdate.add(scene, 1, update) };
     binding = owner;
     watchWarnings(owner);
     scene.events.on("preupdate", guard);
