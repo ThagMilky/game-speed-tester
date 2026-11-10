@@ -19,10 +19,10 @@
     const s = binding?.scene;
     if (s && run?.steer && s.autoX === run.steer[0] && s.autoY === run.steer[1]) s.autoX = s.autoY = 0;
   }
-  function stop(reason) {
+  function stop(reason, preserveAutoFarm = false) {
     const s = binding?.scene, old = run;
     zero(); run = null;
-    if (old?.ownedAuto && s?.auto === binding?.auto) {
+    if (old?.ownedAuto && !preserveAutoFarm && s?.auto === binding?.auto) {
       try { if (s.auto.on) s.toggleAutoFarm(); }
       catch { /* Continue cleanup even if the native scene is being destroyed. */ }
       try { globalThis.GSTFarmSession?.forget(s); } catch { /* The old session may already be gone. */ }
@@ -77,6 +77,10 @@
     const s = binding?.scene;
     if (!run || !s) return false;
     try {
+      if (run.phase === "farm" && globalThis.GSTFarmPolicy?.isNative?.()) {
+        stop("Auto Quest đã dừng: chế độ Native không dùng hỗ trợ farm của extension. Auto Farm đang bật được giữ nguyên.", true);
+        return false;
+      }
       // The map's higher-priority owner may return false while native Auto Farm heals.
       // Keep the quest timer paused even on those native-recovery frames.
       if (globalThis.GSTMapTravel?.active(s)) {
@@ -130,7 +134,12 @@
       }
       if (!q) return true;
       if (!complete(s, q)) {
-        if (!GSTFarmQuest.ready()) { stop("Bộ lọc farm đã đổi; dừng Auto Quest để không đánh sai mục tiêu."); return false; }
+        if (!GSTFarmQuest.ready()) {
+          const nativeMode = globalThis.GSTFarmPolicy?.isNative?.() === true;
+          stop(nativeMode ? "Auto Quest đã dừng: chế độ Native không dùng hỗ trợ farm của extension."
+            : "Bộ lọc farm đã đổi; dừng Auto Quest để không đánh sai mục tiêu.", nativeMode);
+          return false;
+        }
         if (!localKill(s, q)) { stop("Mục tiêu còn lại chưa được bản cơ bản hỗ trợ."); return false; }
         if (run.phase !== "farm") {
           if (s.auto.on) { stop("Auto Farm bị bật ngoài lượt quest; đã dừng để tránh xung đột."); return false; }
@@ -251,6 +260,9 @@
       if (data.type === "start" && !run) {
         const s = binding?.scene;
         if (!s || !connected(s) || s.self.dead || s.leaving || GSTFarmRouting.blocked(s) || s.panels.open || manual(s)) message = "Đóng bảng game và chờ nhân vật ổn định trước khi bắt đầu.";
+        else if (globalThis.GSTFarmPolicy?.isNative?.()
+            && active(s).some((q) => selected.includes(String(q.id)) && !complete(s, q) && localKill(s, q)))
+          message = "Chế độ Native không cho Auto Quest mượn hỗ trợ farm của extension; các quest cần đánh quái chưa thể chạy.";
         else if (s.auto.on) message = "Tắt Auto Farm trước; Auto Quest sẽ tự bật khi cần và tắt khi đủ mục tiêu.";
         else if (!selected.length) message = "Chọn ít nhất một quest đã nhận.";
         else if (!GSTFarmQuest.ready() && active(s).some((q) => selected.includes(String(q.id)) && !complete(s, q) && localKill(s, q))) message = "Bản cơ bản cần Quái muốn farm = Tất cả quái. Lưu lựa chọn farm rồi thử lại.";

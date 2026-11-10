@@ -3,10 +3,11 @@
   const origin = "https://nghichthienky.online";
   const channel = "gst:farm:v1";
   globalThis.GSTFarmConfigurationReady = false;
-  let settings = { policyMode: "extended", enabled: false, radius: 22, autoRespawn: true, autoMeditate: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
+  let settings = { policyMode: "native", enabled: false, radius: 22, autoRespawn: true, autoMeditate: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
     searchScope: "radius", idleMode: "hold", preferLoot: true, excludeBoss: false,
     bossDodge: true, bossRetreat: true };
   let filterBinding = null;
+  let excludedBossChange = null;
   let death = null;
   let respawnMessage = "";
   let watcher = null;
@@ -52,6 +53,7 @@
       ? "level_priority" : "";
   }
   function realmBossEligible(scene) {
+    if (settings.policyMode === "native") return true;
     if (settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode)) return false;
     const levelRequired = ["maxLevel", "minLevel", "range"].includes(settings.targetMode);
     if (!levelRequired) return true;
@@ -64,11 +66,13 @@
     return actors.some((actor) => matchesTarget(actor.st))
       || (finite(level) && matchesTarget({ cls: "boss", lv: level }));
   }
-  globalThis.GSTFarmPriority = { compare: comparePriority, ranked, switchReason,
-    matches: matchesTarget,
-    excludesBoss: () => settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode),
+  globalThis.GSTFarmPriority = { compare: (a, b) => settings.policyMode === "native" ? 0 : comparePriority(a, b),
+    ranked: () => settings.policyMode !== "native" && ranked(),
+    switchReason: (...args) => settings.policyMode === "native" ? "" : switchReason(...args),
+    matches: (enemy) => settings.policyMode === "native" || matchesTarget(enemy),
+    excludesBoss: () => settings.policyMode !== "native" && (settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode)),
     realmBossEligible,
-    bossFocus: (scene) => ["boss", "bossLevel"].includes(settings.targetMode)
+    bossFocus: (scene) => settings.policyMode !== "native" && ["boss", "bossLevel"].includes(settings.targetMode)
       && realmBossEligible(scene) };
   function filterLabel() {
     if (settings.targetMode === "bossLevel") return "Ưu tiên boss, rồi quái tu vi cao đến thấp";
@@ -83,6 +87,7 @@
     return "Farm tất cả quái";
   }
   function matchesTarget(enemy) {
+    if (settings.policyMode === "native") return true;
     if ((settings.excludeBoss || settings.targetMode === "highLevel" || settings.targetMode === "lowLevel") && isBoss(enemy)) return false;
     if (settings.targetMode === "boss") return enemy?.cls === "boss" || enemy?.wb === true;
     if (["all", "bossLevel", "highLevel", "lowLevel"].includes(settings.targetMode)) return true;
@@ -97,6 +102,7 @@
   }
 
   function guardFarmKey(event) {
+    if (settings.policyMode === "native") return;
     if (document.getElementById("gst-game-menu")?.dataset.open === "true") return;
     // Alt shortcuts (including configurable Harvest) belong to their own handlers.
     if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) return;
@@ -165,7 +171,11 @@
       discover();
     }
   }
-  window.addEventListener("keydown", guardFarmKey, true);
+  function syncFarmKeyGuard() {
+    window.removeEventListener("keydown", guardFarmKey, true);
+    if (settings.policyMode !== "native") window.addEventListener("keydown", guardFarmKey, true);
+  }
+  syncFarmKeyGuard();
 
   function connected(scene) {
     const driver = scene.driver;
@@ -237,11 +247,43 @@
     if (!(settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode)) || !scene?.auto?.on) return;
     const actor = scene.views?.get?.(scene.auto.target);
     if (actor?.k !== "m" || !isBoss(actor.st)) return;
+    const replacementPath = [];
+    excludedBossChange = { auto: scene.auto, target: actor.id,
+      path: Array.isArray(scene.auto.path) ? [...scene.auto.path] : null,
+      replacementPath };
     // Retain the numeric target sentinel required by the native interface.
     scene.auto.target = 0;
-    if (Array.isArray(scene.auto.path)) scene.auto.path = [];
+    if (Array.isArray(scene.auto.path)) scene.auto.path = replacementPath;
     scene.auto.think = 0;
     if (session?.scene === scene) session.rankTarget = null;
+  }
+  function restoreExcludedBossTarget(scene) {
+    const change = excludedBossChange;
+    excludedBossChange = null;
+    if (!change || scene?.auto !== change.auto) return;
+    const actor = scene.views?.get?.(change.target);
+    let restoredTarget = false;
+    if (scene.auto.target === 0 && actor?.k === "m" && !actor.dead && isBoss(actor.st)
+        && nativeEligible(actor.st)) {
+      scene.auto.target = change.target;
+      restoredTarget = true;
+    }
+    if (change.path && scene.auto.path === change.replacementPath) scene.auto.path = change.path;
+    if (restoredTarget) scene.auto.think = 0;
+  }
+  function restoreRankedTarget(owner) {
+    const change = owner?.targetOverride;
+    if (!change) return;
+    owner.targetOverride = null;
+    if (owner.auto.target !== change.to) return;
+    const previous = owner.scene.views?.get?.(change.target);
+    owner.auto.target = change.target === 0 || previous?.k === "m" && !previous.dead && nativeEligible(previous.st)
+      ? change.target : 0;
+    if (change.path && owner.auto.path === change.replacementPath) {
+      owner.auto.path = change.path;
+      if (owner.auto.chaseSince === change.chaseSinceSet) owner.auto.chaseSince = change.chaseSince;
+    }
+    owner.auto.think = 0;
   }
   function syncFilter(scene) {
     const filteringActive = () => settings.targetMode !== "all" || settings.excludeBoss;
@@ -312,9 +354,21 @@
       // Native pick() only returns a candidate; native update() normally
       // applies target, chaseSince and path on a target switch.
       if (s.auto.target !== selected.id) {
+        const previousOverride = s.targetOverride;
+        const stillOwned = previousOverride && s.auto.target === previousOverride.to;
+        const replacementPath = [];
+        const override = stillOwned ? previousOverride : {
+          target: s.auto.target,
+          path: Array.isArray(s.auto.path) ? [...s.auto.path] : null,
+          chaseSince: s.auto.chaseSince
+        };
+        override.to = selected.id;
+        override.replacementPath = replacementPath;
+        override.chaseSinceSet = time;
+        s.targetOverride = override;
         s.auto.target = selected.id;
         s.auto.chaseSince = time;
-        s.auto.path = [];
+        s.auto.path = replacementPath;
         s.auto.think = 0;
       }
       if (previous && previous.id !== enemy.id) {
@@ -359,6 +413,17 @@
     }
     message = reason;
     watch();
+  }
+
+  function stopForNativePolicy() {
+    if (watcher !== null) clearInterval(watcher);
+    watcher = null;
+    const oldSession = session;
+    if (session) stop("Auto Farm gốc đang được dùng; hỗ trợ farm mở rộng đã dừng.", true);
+    else clearFilter();
+    restoreRankedTarget(oldSession);
+    restoreExcludedBossTarget(sceneNow());
+    death = null; revival = null; blockedAuto = null;
   }
 
   function onShutdown() {
@@ -416,13 +481,13 @@
   function watch() {
     // Independent defense/meditation helpers still need a scene watcher when
     // the user disables respawn and expanded filtering.
-    if (!suspended && !session && watcher === null) {
+    if (settings.policyMode !== "native" && !suspended && !session && watcher === null) {
       watcher = setInterval(discover, 1000);
     }
   }
 
   function discover() {
-    if (suspended || session) return;
+    if (settings.policyMode === "native" || suspended || session) return;
     try {
       const scene = sceneNow();
       globalThis.GSTFarmCombat?.attach(scene);
@@ -479,7 +544,7 @@
       }
       const point = { x: scene.auto.ax, y: scene.auto.ay };
       session = { scene, auto: scene.auto, home: point, center: { ...point }, mapKey: nativeMapKey(scene.autoHost()), at: -Infinity,
-        reanchor: false };
+        reanchor: false, targetOverride: null };
       clearInterval(watcher);
       watcher = null;
       scene.events.on("preupdate", onFrame);
@@ -705,7 +770,8 @@
   }
 
   globalThis.GSTFarmQuest = {
-    ready: () => globalThis.GSTFarmConfigurationReady === true && settings.targetMode === "all",
+    ready: () => globalThis.GSTFarmConfigurationReady === true
+      && settings.policyMode !== "native" && settings.targetMode === "all",
     prepare(scene) {
       if (!this.ready() || !compatible(scene)) throw new Error("Farm configuration unavailable");
       blockedAuto = null; revival = null;
@@ -748,13 +814,19 @@
         targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20,
         idleMode: ["home", "seek"].includes(data.idleMode) ? data.idleMode : "hold",
         preferLoot: data.preferLoot !== false, selfDefense: data.selfDefense === true, autoEncounter: data.autoEncounter === true, excludeBoss: data.excludeBoss === true };
+      globalThis.GSTFarmPolicy?.setMode(settings.policyMode);
+      syncFarmKeyGuard();
+      if (settings.policyMode === "native") stopForNativePolicy();
+      globalThis.GSTFarmSession?.setPolicyMode?.(settings.policyMode, sceneNow());
       globalThis.GSTFarmRevivePolicy?.configure(settings.autoRespawn);
       globalThis.GSTFarmCombat?.configure(sceneNow(), settings.noRetreat);
       globalThis.GSTFarmBossSafety?.configure(sceneNow(), settings);
       globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);
       globalThis.GSTFarmDefense?.configure(sceneNow(), settings);
       globalThis.GSTFarmEncounter?.configure(sceneNow(), settings);
-      globalThis.GSTFarmMap?.configure(sceneNow(), settings);
+      globalThis.GSTFarmMap?.configure(sceneNow(), settings.policyMode === "native"
+        ? { ...settings, enabled: false, searchScope: "radius", targetMode: "all", excludeBoss: false }
+        : settings);
       globalThis.GSTFarmVisual?.configure(sceneNow(), settings);
       globalThis.GSTFarmRouting?.configure(sceneNow(), settings);
       globalThis.GSTMovementDiagnostics?.configure(settings);
@@ -762,7 +834,7 @@
       globalThis.GSTFarmCombat?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
       if (settings.targetMode === "all" && !settings.excludeBoss) clearFilter();
-      clearExcludedBossTarget(sceneNow());
+      if (settings.policyMode !== "native") clearExcludedBossTarget(sceneNow());
       if (session) {
         if (scopeChanged) { restore(session); session.at = -Infinity; }
         syncFilter(session.scene);
@@ -770,7 +842,12 @@
         if (!settings.enabled) restore(session);
       }
       if (!settings.autoRespawn) respawnMessage = "";
-      if (!settings.enabled && settings.targetMode === "all" && !settings.excludeBoss) {
+      if (settings.policyMode === "native") {
+        if (watcher !== null) clearInterval(watcher);
+        watcher = null;
+        shortcutMessage = "";
+        message = "Chế độ Native: Auto Farm do game điều khiển; hỗ trợ farm của extension đang tắt.";
+      } else if (!settings.enabled && settings.targetMode === "all" && !settings.excludeBoss) {
         if (watcher !== null) clearInterval(watcher);
         watcher = null;
         stop("Extended range disabled; original center restored where owned.");
@@ -801,7 +878,7 @@
       const defenseInfo = autoOn === false && !defense ? globalThis.GSTFarmDefense?.status(scene, true) : "";
       const encounterInfo = globalThis.GSTFarmEncounter?.status(scene) || "";
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
-        message: (settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage
+        message: (settings.policyMode !== "native" && settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage
           || (dead && respawnMessage ? respawnMessage : primary)) + (defenseInfo ? ` · ${defenseInfo}` : ""),
         encounterStatus: encounterInfo,
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);
@@ -821,7 +898,7 @@
     stop("Page left; extended range stopped.");
   });
   window.addEventListener("pageshow", () => {
-    window.addEventListener("keydown", guardFarmKey, true);
+    syncFarmKeyGuard();
     suspended = false;
     watch();
     discover();

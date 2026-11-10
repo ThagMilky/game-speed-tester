@@ -221,10 +221,10 @@
   }
   function shutdown() { detach(); watch(); }
   function watch() {
-    if (enabled && !suspended && !binding && watcher === null) watcher = setInterval(discover, 1000);
+    if (enabled && !globalThis.GSTFarmPolicy?.isNative?.() && !suspended && !binding && watcher === null) watcher = setInterval(discover, 1000);
   }
   function discover() {
-    if (!enabled || suspended || binding) return;
+    if (!enabled || globalThis.GSTFarmPolicy?.isNative?.() || suspended || binding) return;
     try {
       const scene = sceneNow();
       if (!scene?.sys?.isActive?.() || !scene.self || !connected(scene)
@@ -251,7 +251,7 @@
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:farm:v1"
         || event.data.type !== "configure") return;
-    enabled = event.data.breakSeals === true;
+    enabled = event.data.breakSeals === true && event.data.policyMode !== "native";
     if (!enabled) {
       detach(); clearInterval(watcher); watcher = null; message = "";
       // If safety existed only because seals were active, release it now.

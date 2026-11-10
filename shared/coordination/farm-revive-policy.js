@@ -5,7 +5,7 @@
     if (!owner?.modified) return;
     // Restore only the value this policy changed, not a separate game update.
     try {
-      if (owner.auto.stopOnRevive === false) owner.auto.stopOnRevive = true;
+      if (owner.auto.stopOnRevive === false) owner.auto.stopOnRevive = owner.originalStopOnRevive;
     } catch { /* The native controller may already be gone. */ }
     owner.modified = false;
   }
@@ -18,6 +18,7 @@
     old.scene.events.off("destroy", detach);
   }
   function attach(scene) {
+    if (globalThis.GSTFarmPolicy?.isNative?.()) { detach(); return; }
     if (binding?.scene === scene && binding?.auto === scene?.auto && scene && GSTFarmUpdate.attached(scene)) return;
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.update !== "function"
         || typeof scene.auto.on !== "boolean" || typeof scene.auto.stopOnRevive !== "boolean"
@@ -34,16 +35,16 @@
       }
       return false;
     });
-    binding = { scene, auto, remove, modified: false };
+    binding = { scene, auto, remove, modified: false, originalStopOnRevive: auto.stopOnRevive };
     scene.events.on("shutdown", detach);
     scene.events.on("destroy", detach);
   }
   globalThis.GSTFarmRevivePolicy = {
     configure: (value) => {
-      enabled = value === true;
-      if (!enabled) restoreNativePolicy(binding);
+      enabled = value === true && !globalThis.GSTFarmPolicy?.isNative?.();
+      if (!enabled) detach();
     },
-    attach: (scene) => { try { attach(scene); } catch { detach(); } },
+    attach: (scene) => { try { if (!enabled) { detach(); return; } attach(scene); } catch { detach(); } },
     active: (scene) => enabled && !!binding && binding.scene === scene && binding.auto === scene?.auto && GSTFarmUpdate.attached(scene)
   };
   window.addEventListener("pagehide", detach);

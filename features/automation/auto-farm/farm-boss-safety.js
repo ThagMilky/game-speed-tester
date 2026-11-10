@@ -606,7 +606,7 @@
     });
   }
   function attach(scene) {
-    if (!enabled(scene) || suspended || !scene?.auto) { detach(); return; }
+    if (globalThis.GSTFarmPolicy?.isNative?.() || !enabled(scene) || suspended || !scene?.auto) { detach(); return; }
     if (binding?.scene === scene && binding.auto === scene.auto && GSTFarmUpdate.attached(scene)) return;
     detach();
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.update !== "function" || !scene.events?.on

@@ -45,7 +45,7 @@
     }
   }
   function attach(scene) {
-    if (!enabled || suspended || !scene?.auto) { detach(); return; }
+    if (!enabled || globalThis.GSTFarmPolicy?.isNative?.() || suspended || !scene?.auto) { detach(); return; }
     if (binding && binding.scene === scene && binding.auto === scene.auto && scene.auto.walk === binding.wrapper
         && GSTFarmUpdate.attached(scene)) return;
     detach();

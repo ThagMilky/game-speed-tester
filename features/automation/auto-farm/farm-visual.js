@@ -75,7 +75,7 @@
     } catch { detach(); }
   }
   function attach(scene) {
-    if (!enabled || suspended) { detach(); return; }
+    if (globalThis.GSTFarmPolicy?.isNative?.() || !enabled || suspended) { detach(); return; }
     if (binding?.scene === scene) return;
     detach();
     if (!scene?.sys?.isActive?.() || typeof scene.add?.graphics !== "function" || typeof scene.toPx !== "function"

@@ -24,7 +24,7 @@
         inCombat: () => { combat = true; return host.inCombat(); } };
     },
     attach(scene) {
-      if (!enabled || !scene?.auto) { detach(); return; }
+      if (!enabled || globalThis.GSTFarmPolicy?.isNative?.() || !scene?.auto) { detach(); return; }
       if (binding && binding.scene === scene && binding.auto === scene.auto && GSTFarmUpdate.attached(scene)) return;
       detach();
       if (!scene?.sys?.isActive?.() || typeof scene.auto?.update !== "function" || !scene.events?.on || !scene.events.off) return;

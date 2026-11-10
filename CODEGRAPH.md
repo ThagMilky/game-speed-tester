@@ -1,6 +1,6 @@
 # CodeGraph — Game Speed Tester
 
-> Bản đồ code extension đối chiếu với `main` tại commit `c82bdc5` (2026-11-08), trước commit cập nhật tài liệu. Tài liệu tĩnh, không tự sinh từ code và không phải bằng chứng gameplay.
+> Bản đồ tĩnh về entry point, bridge, dependency và ownership của extension. Tài liệu không tự sinh từ code và không phải bằng chứng gameplay.
 
 ## 1. Đọc từ đâu?
 
@@ -29,7 +29,7 @@
 
 Trong MAIN, `features/automation/auto-harvest/harvest-main-options.js` tạo `GSTHarvest`; `shared/coordination/farm-update.js`, `shared/navigation/navigation.js` và `shared/navigation/farm-input.js` được nạp trước các consumer. Trong ISOLATED, `features/automation/auto-harvest/harvest-options.js` đứng trước `features/automation/auto-harvest/harvest-content.js`. Các `*-popup.js` được nạp theo thẻ `<script>` trong `popup.html`, không theo danh sách content script trong manifest.
 
-`features/automation/auto-farm/farm-compatibility.js` cung cấp bảng cảnh giới/tầng và bán kính Auto Farm gốc cho popup; bản MAIN `farm-compatibility-main.js` được nạp trước các consumer Auto Farm trong `manifest.json`. Cả hai bản phải giữ cùng dữ liệu quy đổi. `farm-policy.js` được nạp trong popup, ISOLATED và MAIN; trường `policyMode` được lưu cùng `farmPreferences` và đi qua cầu `gst:farm:v1`. Hiện `extended` là mặc định tương thích; `native` và `disabled` mới chỉ được lưu/đọc/chuyển tiếp, chưa được kích hoạt hay cung cấp lựa chọn trong UI.
+`features/automation/auto-farm/farm-compatibility.js` cung cấp bảng cảnh giới/tầng và bán kính Auto Farm gốc cho popup; bản MAIN `farm-compatibility-main.js` được nạp trước các consumer Auto Farm trong `manifest.json`. Cả hai bản phải giữ cùng dữ liệu quy đổi. `farm-policy.js` được nạp trong popup, ISOLATED và MAIN; trường `policyMode` được lưu cùng `farmPreferences` và đi qua cầu `gst:farm:v1`. MAIN tạm khóa hỗ trợ farm cho tới khi đọc được policy đã lưu. `extended` giữ hành vi hiện tại; `native` gỡ các hỗ trợ riêng của Auto Farm, gồm bộ lọc, điều phối farm, wrapper phím, can thiệp hồi sinh và yêu cầu bay do farm. `disabled` vẫn chưa có khóa kích hoạt và chưa được đưa ra UI. Realm boss seek vẫn có thể dùng `farm-map` theo cấu hình Realm; các dịch vụ phối hợp dùng chung vẫn phục vụ Harvest, Chest, Realm và map travel. Auto Quest từ chối phần cần extension farm khi đang ở `native`.
 
 ## 3. Luồng popup → game
 
@@ -123,7 +123,7 @@ flowchart TD
 | Speed đi bộ/bay, khôi phục | `ui/popup/popup.js`, `core/content.js`, `core/page.js` | `features/movement/flight/flight-page.js`, `features/automation/auto-farm/farm-page.js` |
 | Menu tool và popup: điều hướng từng trang, Tổng quan, Chẩn đoán | `popup.html`, `ui/popup/popup-layout.js`, `ui/popup/popup.css` | `ui/game-menu/menu-monitor.js`, `ui/game-menu/menu-orientation.js`, `ui/game-menu/game-menu.js` |
 | Bảng game tự nhảy cuộn lên khi dữ liệu làm mới | `ui/interface/game-panel-scroll.js`, `manifest.json` | Wiki `GAME_ASSET_WIKI_v1.0/modules/WorldScene/` là tài liệu từ build trước; source mới là `GAME_ASSET_WIKI_v1.0/source/WorldScene-Sqt7xE3s.js`. Xác minh symbol và call site trực tiếp trước khi dựa vào chúng (`Sd.show/refresh` chưa được xác nhận cho source mới) |
-| Auto Farm đứng yên, bật/tắt, lọc quái | `features/automation/auto-farm/farm-page.js`, `features/automation/auto-farm/farm-content.js`, `features/automation/auto-farm/farm-session.js` | `shared/navigation/farm-routing.js`, `features/automation/auto-farm/farm-behavior.js`, `features/automation/auto-farm/farm-map.js` |
+| Auto Farm đứng yên, bật/tắt, lọc quái, policy `extended`/`native`/`disabled` | `features/automation/auto-farm/farm-policy.js`, `features/automation/auto-farm/farm-page.js`, `features/automation/auto-farm/farm-content.js`, `features/automation/auto-farm/farm-session.js` | `shared/navigation/farm-routing.js`, `features/automation/auto-farm/farm-behavior.js`, `features/automation/auto-farm/farm-map.js`, `features/automation/auto-farm/farm-combat.js`, `features/automation/auto-farm/farm-defense.js`, `shared/coordination/farm-revive-policy.js`, `features/movement/flight/flight-page.js`, `features/automation/auto-quest/quest-page.js` |
 | Kẹt đường/overshoot | `shared/navigation/navigation.js`, `shared/navigation/farm-routing.js`, `shared/navigation/farm-input.js` | `features/automation/auto-farm/farm-map.js`, owner liên quan |
 | Xung đột farm/thu hoạch/bí cảnh/rương/quest | `shared/coordination/farm-update.js`, `shared/navigation/farm-routing.js` | `features/automation/auto-harvest/harvest-page.js`, `features/automation/auto-realm/realm-page.js`, `features/automation/auto-chest/chest-page.js`, `features/automation/auto-quest/quest-page.js`, `features/automation/auto-farm/farm-seals.js` |
 | Hồi sinh, farm qua reload/đổi map | `shared/coordination/farm-revive-policy.js`, `features/automation/auto-farm/farm-page.js`, `features/automation/auto-farm/farm-session.js` | `features/automation/auto-harvest/harvest-page.js`, `features/automation/auto-realm/realm-page.js` |
@@ -140,6 +140,7 @@ flowchart TD
 ## 6. Source game tham khảo và giới hạn
 
 - [Wiki v1.0](GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md) là bản đồ điều hướng; dùng [lookup guide](GAME_ASSET_WIKI_v1.0/AI_SOURCE_LOOKUP_GUIDE.md), module và index/record phù hợp để tìm đúng hệ thống. Sau đó đọc có mục tiêu các đoạn cần thiết, imports/exports và call sites trong `GAME_ASSET_WIKI_v1.0/source/`; xem [source manifest](GAME_ASSET_WIKI_v1.0/SOURCE_MANIFEST.json) và danh sách file thực tế để xác định source cần dùng.
+- Trong checkout này, `source/WorldScene-Sqt7xE3s.js` có SHA-256 `43b80f3f4622995937053b0eefacc39563d20ed94e70aa142d3e8ed659e922c3`, khác hash `5d5ede1b50cdcebed76efae6fea1836f067fc61f153cab5b02eb3f8a7cb29d18` trong manifest cho `WorldScene-b_2tpaKT.js`; không xem file đó là bản tương ứng đã xác minh.
 - Wiki indexes/offsets có thể thuộc build trước. Các source mới được cung cấp gồm `WorldScene-Sqt7xE3s.js`, `trangbi-BmFV4GIV.js`, `sim-Qna-9JFS.js` và `index-BAuBWBxK.js`; hash/chụp ngày/live compatibility chưa được xác minh. Không áp offset/symbol cũ lên các file này; tìm trực tiếp phần code cần thiết.
 - Ngày capture, hash source, tương thích live và hành vi runtime chưa được xác minh. Không sửa, triển khai hoặc đưa file snapshot vào runtime extension; client source không chứng minh server chấp nhận hành động.
 - Graph dựa trên source tại commit nền; không xác nhận gameplay, CI hoặc server chấp nhận thao tác.
@@ -162,7 +163,7 @@ Chỉ liệt kê **điểm kích hoạt quan trọng đã thấy trong source** 
 | --- | --- | --- |
 | Popup bấm **Lưu tốc độ** (`click`) | `ui/popup/popup.js` → `save()` | Kiểm tra input, lưu `preferences` vào `chrome.storage.local`. |
 | Popup đổi lựa chọn hoặc xác nhận số Auto Farm (`change` / `blur` / `Enter`) | `ui/popup/popup.js` → `updateFarmPreferences()` | Lựa chọn lưu qua hàng đợi và khóa; bán kính lưu khi rời ô hoặc nhấn Enter; khoảng tu vi được xác thực và lưu thành cặp nguyên tử. |
-| Phím điều khiển Auto Farm (`keydown`) | `features/automation/auto-farm/farm-page.js` → `guardFarmKey(event)` | Kiểm tra focus, ô nhập, phím mặc định/tùy chỉnh; nhường tổ hợp Alt+chữ/số cho Thu hoạch (kể cả khi cùng ký tự phím); gọi đường bật/tắt Auto Farm khi được phép. |
+| Phím điều khiển Auto Farm (`keydown`) | `features/automation/auto-farm/farm-page.js` → `guardFarmKey(event)` | Trong `extended`, kiểm tra focus, ô nhập, phím mặc định/tùy chỉnh và nhường tổ hợp Alt+chữ/số cho Thu hoạch; trong `native`, tháo listener để game nhận lại phím gốc và không chặn phím tùy chỉnh. |
 | Phím điều khiển tay khi đang tự hái (`keydown`) | `features/automation/auto-harvest/harvest-page.js` → `onKey(event)` | Tạm nhường điều khiển sau thao tác di chuyển/chiến đấu/tương tác tay hợp lệ. |
 | Cài đặt đổi (`chrome.storage.onChanged`) | `core/content.js` → callback inline → `configure()` / `renderOverlay()` | Đồng bộ thay đổi tốc độ và bảng trạng thái từ storage. |
 | Popup hỏi trạng thái/hiển thị (`chrome.runtime.onMessage`) | `core/content.js` → callback inline | Nhận `gst:status`, `gst:display`; trả lời hoặc chuyển `gst:command:v1` sang MAIN. |
@@ -179,8 +180,8 @@ Chỉ liệt kê **điểm kích hoạt quan trọng đã thấy trong source** 
 | Sự kiện / điểm hook | File → handler | Vai trò chính |
 | --- | --- | --- |
 | `scene.events.preupdate` | `core/page.js` → `onSpeedFrame()` | Hỗ trợ áp tốc độ theo nhịp scene khi cơ chế tương ứng được gắn. |
-| `scene.events.preupdate` | `features/automation/auto-farm/farm-page.js` → `onFrame()` | Theo dõi và phối hợp logic hỗ trợ Auto Farm trong scene. |
-| `scene.events.preupdate` | `features/automation/auto-farm/farm-session.js` → `frame()` | Quan sát/khôi phục ý định Auto Farm theo điều kiện phiên. |
+| `scene.events.preupdate` | `features/automation/auto-farm/farm-page.js` → `onFrame()` | Theo dõi và phối hợp logic hỗ trợ Auto Farm trong scene; tháo phiên và filter khi policy chuyển sang `native`. |
+| `scene.events.preupdate` | `features/automation/auto-farm/farm-session.js` → `frame()` | Quan sát/khôi phục ý định Auto Farm theo điều kiện phiên; `native` gỡ wrapper, ghi intent OFF và không tự khôi phục khi quay lại `extended`. |
 | `scene.events.preupdate` | `features/automation/auto-harvest/harvest-page.js` → `onFrame()` | Điều phối vòng theo dõi thu hoạch và trạng thái nhân vật. |
 | `scene.events.preupdate` | `features/automation/auto-realm/realm-page.js`, `features/automation/auto-chest/chest-page.js`, `features/automation/auto-quest/quest-page.js` → `guard()` | Theo dõi trạng thái scene và khả năng tiếp tục/gỡ điều khiển của từng tính năng. |
 | `scene.auto.update` qua `GSTFarmUpdate.add()` | `shared/coordination/farm-update.js` → callback của từng module (xem **mục 4**) | Gọi các handler theo priority; callback trả `true` thì dừng lượt, ngược lại nhường update gốc. **Không phải** DOM event hay một timer riêng cho mỗi tính năng. |

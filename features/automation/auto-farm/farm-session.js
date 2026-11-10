@@ -1,8 +1,8 @@
 (() => {
   "use strict";
   const origin = "https://nghichthienky.online", storageKey = "gst:farm-intent:v1";
-  let configured = false, keep = true, suspended = false, watcher = null, binding = null;
-  let intent = null, stableAt = null, pausedUntil = 0, attempted = false, at = -Infinity;
+  let configured = false, keep = true, suspended = false, watcher = null, binding = null, policyMode = "extended";
+  let intent = null, stableAt = null, pausedUntil = 0, attempted = false, at = -Infinity, suppressSeed = false;
   let resumeTimer = null;
   let seedCurrent = false;
   const restoreAttempts = new WeakSet();
@@ -15,13 +15,14 @@
   }
   function save(scene, on) {
     if (typeof scene.profile?.name !== "string") return;
+    if (on) suppressSeed = false;
     intent = { name: scene.profile.name, on, blocked: false };
     try { sessionStorage.setItem(storageKey, JSON.stringify(intent)); }
     catch { /* Do not claim persistence when browser storage is unavailable. */ }
     monitorResume();
   }
   function monitorResume() {
-    const needed = configured && !suspended && binding && keep && intent?.on && !binding.scene.auto.on && !attempted;
+    const needed = configured && policyMode !== "native" && !suppressSeed && !suspended && binding && keep && intent?.on && !binding.scene.auto.on && !attempted;
     if (!needed && resumeTimer !== null) { clearInterval(resumeTimer); resumeTimer = null; }
     // Native background stepping only runs while auto.on. This timer only
     // waits to restore an OFF scene and stops as soon as native farming resumes.
@@ -45,7 +46,7 @@
     try {
       const scene = binding?.scene;
       if (!scene) return;
-      if (sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto) { detach(); watch(); return; }
+      if (policyMode === "native" || sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto) { detach(); watch(); return; }
       const now = performance.now();
       if (now - at < 200) return;
       at = now;
@@ -57,7 +58,7 @@
         monitorResume();
         restoreAttempts.delete(scene.auto);
         binding.seenOn = true;
-        if (!intent?.on) save(scene, true);
+        if (!intent?.on && !suppressSeed) save(scene, true);
         stableAt = null; attempted = false;
         return;
       }
@@ -66,7 +67,7 @@
         save(scene, false);
         binding.seenOn = false;
       }
-      if (!keep || !intent?.on || intent.blocked || suspended) return;
+      if (!keep || suppressSeed || !intent?.on || intent.blocked || suspended) return;
       if (connected(scene) && !scene.leaving && scene.self.dead) { stableAt = null; GSTHarvest.respawn(scene); return; }
       if (globalThis.GSTFarmConfigurationReady !== true) { stableAt = null; return; }
       if (!connected(scene) || scene.leaving || GSTFarmRouting.blocked(scene) || scene.pendingSkill || scene.aiming
@@ -92,7 +93,7 @@
     } catch { detach(); watch(); }
   }
   function discover() {
-    if (!configured || !keep || suspended || binding) return;
+    if (!configured || policyMode === "native" || !keep || suspended || binding) return;
     try {
       const scene = sceneNow();
       if (!scene?.sys?.isActive?.() || !scene.self || typeof scene.profile?.name !== "string"
@@ -100,8 +101,10 @@
           || !connected(scene) || !scene.events?.on || !scene.events.off) return;
       try { intent = JSON.parse(sessionStorage.getItem(storageKey)); }
       catch { intent = null; }
-      if (seedCurrent || !intent || intent.name !== scene.profile.name || typeof intent.on !== "boolean") save(scene, scene.auto.on);
-      else if (scene.auto.on && !intent.on) save(scene, true);
+      if (seedCurrent || !intent || intent.name !== scene.profile.name || typeof intent.on !== "boolean") {
+        if (!suppressSeed) save(scene, scene.auto.on);
+        else intent = { name: scene.profile.name, on: false, blocked: false };
+      } else if (scene.auto.on && !intent.on && !suppressSeed) save(scene, true);
       seedCurrent = false;
       const original = scene.toggleAutoFarm;
       const descriptor = Object.getOwnPropertyDescriptor(scene, "toggleAutoFarm");
@@ -137,14 +140,41 @@
       monitorResume();
     } catch { detach(); watch(); }
   }
-  function watch() { if (configured && keep && !suspended && !binding && watcher === null) watcher = setInterval(discover, 1000); }
+  function watch() { if (configured && policyMode !== "native" && keep && !suspended && !binding && watcher === null) watcher = setInterval(discover, 1000); }
   globalThis.GSTFarmSession = {
+    setPolicyMode(mode, scene) {
+      policyMode = globalThis.GSTFarmPolicy?.normalize(mode) ?? "extended";
+      if (policyMode === "native") {
+        suppressSeed = true;
+        const target = binding?.scene ?? scene;
+        if (target?.profile?.name === intent?.name) save(target, false);
+        else {
+          try {
+            const stored = JSON.parse(sessionStorage.getItem(storageKey));
+            if (stored && typeof stored.name === "string") {
+              intent = { ...stored, on: false, blocked: false };
+              sessionStorage.setItem(storageKey, JSON.stringify(intent));
+            } else if (intent?.on === true) {
+              intent = { ...intent, on: false, blocked: false };
+              sessionStorage.setItem(storageKey, JSON.stringify(intent));
+            }
+          } catch {
+            if (intent?.on === true) intent = { ...intent, on: false, blocked: false };
+          }
+        }
+        detach(); clearInterval(watcher); watcher = null; monitorResume();
+        return;
+      }
+      watch(); discover(); monitorResume();
+    },
     forget: (scene) => {
+      if (policyMode === "native") return;
       if (binding?.scene === scene) { save(scene, false); binding.seenOn = false; stableAt = null; }
     },
-    remember: (scene) => { if (keep && scene?.auto?.on) save(scene, true); },
-    waiting: (scene) => !!binding && binding.scene === scene && keep && intent?.on && !scene.auto.on,
+    remember: (scene) => { if (policyMode !== "native" && keep && scene?.auto?.on) save(scene, true); },
+    waiting: (scene) => policyMode !== "native" && !!binding && binding.scene === scene && keep && intent?.on && !scene.auto.on,
     status: (scene) => binding && binding.scene === scene && keep && intent?.on && !scene.auto.on
+      && policyMode !== "native"
       ? (globalThis.GSTFarmConfigurationReady !== true ? "Chờ đọc cài đặt Auto Farm trước khi khôi phục."
         : attempted ? "Chưa bật lại được Auto Farm; kiểm tra game hoặc bấm V bằng tay."
         : "Đang giữ ý định Auto Farm; chờ nhân vật ổn định để bật lại.") : ""

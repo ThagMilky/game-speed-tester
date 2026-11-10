@@ -543,7 +543,7 @@
       clearEpisode("Tự vệ đang nhường thao tác tay.");
   }
   function attach(scene) {
-    if (!enabled || !configured || suspended) { detach(); return; }
+    if (globalThis.GSTFarmPolicy?.isNative?.() || !enabled || !configured || suspended) { detach(); return; }
     if (binding?.scene === scene && binding.auto === scene?.auto && GSTFarmUpdate.attached(scene)) return;
     detach();
     if (!scene?.auto || !scene.self || !scene.events?.on || !scene.events?.off || typeof scene.auto.update !== "function"
@@ -592,7 +592,7 @@
         && boundary(scene, enemy);
     },
     status(scene, includeIdle = false) {
-      if (!enabled || !scene || sceneNow() !== scene) return "";
+      if (globalThis.GSTFarmPolicy?.isNative?.() || !enabled || !scene || sceneNow() !== scene) return "";
       if (!settings.selfDefense && !settings.nearbyClear) return "";
       if (!binding || binding.scene !== scene) return includeIdle ? "Tự vệ không khả dụng; đang chờ scene." : "";
       try {

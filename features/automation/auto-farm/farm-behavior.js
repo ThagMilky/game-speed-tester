@@ -209,6 +209,12 @@
     const scene = binding?.scene;
     if (!scene) return;
     if (sceneNow() !== scene || scene.auto !== binding.auto || !scene.sys?.isActive?.()) { detach(); return; }
+    if (globalThis.GSTFarmPolicy?.isNative?.()) {
+      meditationGuard(scene);
+      const owner = binding;
+      if (owner?.nativeDetachPending && !scene.self?.med && !owner.medPending) detach();
+      return;
+    }
     if (!syncContext(scene)) return;
     if (manual(scene)) {
       manualUntil = performance.now() + 3000;
@@ -283,7 +289,7 @@
     return { eligible, skipped: false, waiting };
   }
   function collecting(scene) {
-    if (!binding || binding.scene !== scene || !scene?.auto?.on || suspended) return false;
+    if (globalThis.GSTFarmPolicy?.isNative?.() || !binding || binding.scene !== scene || !scene?.auto?.on || suspended) return false;
     try {
       const plan = lootPlan(scene, scene.autoHost(), scene.now());
       return !!plan && (plan.eligible.length > 0 || plan.waiting);
@@ -294,7 +300,7 @@
   function collectLoot(host, time) {
     const scene = binding?.scene;
     try {
-      if (!scene) return false;
+      if (!scene || globalThis.GSTFarmPolicy?.isNative?.()) return false;
       const plan = lootPlan(scene, host, time);
       if (!plan || !plan.eligible.length && !plan.waiting) {
         if (lootActive) {
@@ -381,7 +387,7 @@
     observedTarget = null; lootSite = null; lootActive = false; lootLastCount = 0; lootAbandoned = false;
   }
   function attach(scene) {
-    if (!configured || suspended) { detach(); return; }
+    if (!configured || globalThis.GSTFarmPolicy?.isNative?.() || suspended) { detach(); return; }
     if (binding && binding.scene === scene && binding.auto === scene?.auto && GSTFarmUpdate.attached(scene)) return;
     detach();
     if (!scene?.sys?.isActive?.() || !scene.self || !connected(scene) || typeof scene.auto?.idle !== "function"
@@ -394,7 +400,7 @@
       lastScanAt: -Infinity, lastScanSafe: false, contextKey: mapContext(scene) };
     binding = owner;
     wrap(owner, scene.auto, "idle", (original) => function (host, time, x, y) {
-      if (this !== owner.auto || !this.on || blocked(scene)
+      if (globalThis.GSTFarmPolicy?.isNative?.() || this !== owner.auto || !this.on || blocked(scene)
           || typeof host.loot !== "function" || typeof host.steer !== "function") return original.call(this, host, time, x, y);
       if (settings.idleMode !== "hold") {
         const result = original.call(this, host, time, x, y);
@@ -424,13 +430,24 @@
         nearbyClear: value.nearbyClear === true, nearbyRadius: value.nearbyRadius };
       if (binding && binding.scene !== scene) detach();
       if (binding && Object.keys(next).some((key) => settings[key] !== next[key])) binding.readySince = null;
-      settings = next; this.attach(scene);
+      settings = next;
+      if (globalThis.GSTFarmPolicy?.isNative?.()) {
+        settings.autoMeditate = false;
+        if (binding && (binding.medOwned || binding.medPending)) {
+          binding.nativeDetachPending = true;
+          if (binding.medOwned) wakeMeditation(binding.scene);
+          else if (binding.medPending === "start") binding.cancelStart = true;
+        } else detach();
+        return;
+      }
+      this.attach(scene);
     },
     attach(scene) { try { attach(scene); } catch { detach(); say("Chưa gắn được hành vi chờ/nhặt đồ."); } },
     pendingLoot: collecting,
-    ownsMeditation: (scene) => binding?.scene === scene && binding.medOwned === true,
+    ownsMeditation: (scene) => !globalThis.GSTFarmPolicy?.isNative?.() && binding?.scene === scene && binding.medOwned === true,
     wake: wakeMeditation,
     status(scene) {
+      if (globalThis.GSTFarmPolicy?.isNative?.()) return "";
       if (binding?.scene === scene && !syncContext(scene)) return "";
       if (!scene?.auto?.on) return "";
       if (!binding || binding.scene !== scene) return "";

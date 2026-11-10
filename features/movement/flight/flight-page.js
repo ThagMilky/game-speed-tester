@@ -191,8 +191,9 @@
     if (event.source !== window || event.origin !== origin) return;
     const data = event.data;
     if (data?.channel === "gst:farm:v1" && data.type === "configure") {
-      // A configure message confirms the Auto Farm bridge; respawn is an independent setting.
-      farm = true;
+      // Native mode removes only the flight demand owned by Auto Farm.
+      // Always Flying remains an independent demand.
+      farm = data.policyMode !== "native";
       configure();
     }
     if (data?.channel !== "gst:flight:v1") return;

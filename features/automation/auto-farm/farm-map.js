@@ -220,8 +220,8 @@
   }
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
-  const seekRealmBoss = (scene) => preferences.excludeBoss !== true
-    && !["highLevel", "lowLevel"].includes(preferences.targetMode)
+  const seekRealmBoss = (scene) => (globalThis.GSTFarmPolicy?.isNative?.()
+    || (preferences.excludeBoss !== true && !["highLevel", "lowLevel"].includes(preferences.targetMode)))
     && globalThis.GSTFarmPriority?.realmBossEligible?.(scene) !== false
     && globalThis.GSTRealm?.seekBoss?.(scene) === true;
   // Known targets inside a configured radius also need long-distance navigation.
@@ -656,7 +656,7 @@
     resumeTarget = null; handoff = null; resumeReason = null; centerSync = null;
   }
   function attach(scene) {
-    if (!wanted(scene) || suspended) { detach(); return; }
+    if ((globalThis.GSTFarmPolicy?.isNative?.() && !seekRealmBoss(scene)) || !wanted(scene) || suspended) { detach(); return; }
     if (binding && binding.scene === scene && binding.auto === scene?.auto && GSTFarmUpdate.attached(scene)) return;
     detach();
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.walk !== "function" || typeof scene.now !== "function"
