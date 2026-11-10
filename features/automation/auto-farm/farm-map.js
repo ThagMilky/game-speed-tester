@@ -323,15 +323,12 @@
     }
     const known = [...scene.views.values()].some((actor) => actor.k === "m" && !actor.dead
       && (actor.st?.cls === "boss" || actor.st?.wb === true));
-    if (known) { message = "Boss đã có dữ liệu nhưng không qua bộ lọc/ngưỡng né hiện tại."; return null; }
+    if (known) { message = "Boss đã có dữ liệu nhưng không qua bộ lọc hiện tại."; return null; }
     const metadata = scene.self.realm?.inside?.boss;
     if (!metadata || !finite(metadata.hp) || metadata.hp <= 0) {
       message = metadata?.hp === 0 ? "Boss bí cảnh đã bị hạ; giữ bộ lọc Chỉ boss."
         : "Chưa có tọa độ boss trong dữ liệu game gửi về; chưa thể tự đi tìm boss này.";
       return metadata?.hp === 0 || !scouting ? null : scout(scene, time);
-    }
-    if (preferences.avoidEnabled) {
-      message = "Boss chưa có dữ liệu level để áp dụng ngưỡng né; chưa tự đi tới tọa độ boss."; return null;
     }
     if (!withinArea(area, metadata)) {
       message = "Tọa độ boss nằm ngoài vùng farm đã chọn; không tự đi tới."; return null;
@@ -384,7 +381,7 @@
     const scene = binding?.scene;
     if (!scene) return;
     if (sceneNow() !== scene || binding.auto !== scene.auto || !scene.sys?.isActive?.()) { detach(); return; }
-    if (job && (globalThis.GSTMapTravel?.active(scene) || !allowed(scene) || scene.castAt !== job.castAt || GSTFarmBehavior.controls(scene)
+    if (job && (globalThis.GSTMapTravel?.active(scene) || !allowed(scene) || scene.castAt !== job.castAt
         || globalThis.GSTFarmBossSafety?.controls(scene))) {
       release(); retryAt = scene.now() + 0.5;
     }
@@ -393,7 +390,7 @@
     const scene = binding?.scene;
     try {
       if (!scene || !wanted(scene) || suspended || globalThis.GSTMapTravel?.active(scene)
-          || !allowed(scene) || GSTFarmBehavior.controls(scene)
+          || !allowed(scene)
           || globalThis.GSTFarmBossSafety?.controls(scene)) {
         release();
         if (!scene?.auto?.on || !wanted(scene) || suspended || (scene && GSTFarmInput.movement(scene)))

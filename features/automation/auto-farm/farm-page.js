@@ -4,7 +4,7 @@
   const channel = "gst:farm:v1";
   globalThis.GSTFarmConfigurationReady = false;
   let settings = { enabled: false, radius: 22, autoRespawn: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
-    searchScope: "radius", idleMode: "hold", preferLoot: true, avoidEnabled: false, excludeBoss: false, avoidLevel: 10, avoidDistance: 2,
+    searchScope: "radius", idleMode: "hold", preferLoot: true, excludeBoss: false,
     bossDodge: true, bossRetreat: true };
   let filterBinding = null;
   let death = null;
@@ -52,8 +52,7 @@
   }
   function realmBossEligible(scene) {
     if (settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode)) return false;
-    const levelRequired = settings.avoidEnabled
-      || ["maxLevel", "minLevel", "range"].includes(settings.targetMode);
+    const levelRequired = ["maxLevel", "minLevel", "range"].includes(settings.targetMode);
     if (!levelRequired) return true;
     // A boss hidden by the level filter is not a reason to block chest
     // collection. Unknown levels are not treated as confirmed eligible.
@@ -81,7 +80,6 @@
     return "Farm tất cả quái";
   }
   function matchesTarget(enemy) {
-    if (settings.avoidEnabled && (!finite(enemy?.lv) || enemy.lv >= settings.avoidLevel)) return false;
     if ((settings.excludeBoss || settings.targetMode === "highLevel" || settings.targetMode === "lowLevel") && isBoss(enemy)) return false;
     if (settings.targetMode === "boss") return enemy?.cls === "boss" || enemy?.wb === true;
     if (["all", "bossLevel", "highLevel", "lowLevel"].includes(settings.targetMode)) return true;
@@ -191,7 +189,6 @@
     if (scene.pendingSkill || scene.aiming) return "Đang chờ/ngắm chiêu tay; kết thúc hoặc hủy ngắm để farm tiếp.";
     if (scene.self.med && !scene.auto.resting) return "Game vẫn ghi nhận đang bế quan; chờ game xác nhận thoát bế quan để farm tiếp.";
     if (scene.auto.resting) return "Auto Farm đang rút lui/hồi máu; chưa tiếp tục tìm quái.";
-    if (globalThis.GSTFarmBehavior?.controls(scene)) return globalThis.GSTFarmBehavior.status(scene);
     if (GSTHarvest.controls(scene)) return "Đang nhường di chuyển cho Tự hái.";
     if (globalThis.GSTQuest?.controls(scene)) return "Auto Quest đang về NPC/trả nhiệm vụ.";
     if (globalThis.GSTChest?.controls(scene)) return "Đang nhường di chuyển để tìm và mở rương bí cảnh.";
@@ -230,7 +227,7 @@
   }
 
   function syncFilter(scene) {
-    const filteringActive = () => settings.targetMode !== "all" || settings.avoidEnabled || settings.excludeBoss;
+    const filteringActive = () => settings.targetMode !== "all" || settings.excludeBoss;
     const boundaryActive = () => settings.enabled && settings.searchScope === "radius";
     if (!filteringActive() && !boundaryActive()) { clearFilter(); return; }
     if (filterBinding?.scene === scene && scene.autoHost === filterBinding.wrapper) return;
@@ -244,8 +241,7 @@
       if ((!filteringActive() && !boundaryActive()) || !this.auto?.on) return host;
       // Keep the wrapper through recovery; the enemy getter exposes raw threats while resting.
       const eligible = (enemy) => nativeEligible(enemy) && insideFarmBoundary(this, enemy)
-        && matchesTarget(enemy) && (!filteringActive()
-          || (globalThis.GSTFarmBehavior?.allowsTarget(this, enemy) ?? true));
+        && matchesTarget(enemy);
       const allEligibleEnemies = () => {
         const enemies = typeof host?.enemies === "function" ? host.enemies() : [];
         return Array.isArray(enemies) ? enemies.filter(eligible) : [];
@@ -329,7 +325,7 @@
   function stop(reason, block = false) {
     // Keep the inert filter attached through death/off so the next native
     // update after revival/re-enable cannot select an unfiltered target.
-    if (block || (settings.targetMode === "all" && !settings.avoidEnabled && !settings.excludeBoss)) clearFilter();
+    if (block || (settings.targetMode === "all" && !settings.excludeBoss)) clearFilter();
     if (block) revival = null;
     if (session) {
       const old = session;
@@ -415,7 +411,7 @@
       globalThis.GSTFarmRouting?.attach(scene);
       globalThis.GSTFarmDiagnostics?.attach(scene);
       checkRespawn(scene);
-      if (!settings.enabled && settings.targetMode === "all" && !settings.avoidEnabled && !settings.excludeBoss) return;
+      if (!settings.enabled && settings.targetMode === "all" && !settings.excludeBoss) return;
       if (compatible(scene) && scene.self && !scene.leaving
           && connected(scene) && scene.auto !== blockedAuto) syncFilter(scene);
       else clearFilter();
@@ -504,7 +500,7 @@
       }
       const searchRadius = nativeRadius(s.scene);
       if (searchRadius === null && (settings.enabled || settings.targetMode !== "all"
-          || settings.avoidEnabled || settings.excludeBoss)) {
+          || settings.excludeBoss)) {
         clearFilter();
         message = "Bán kính Auto Farm gốc không được hỗ trợ; phần chọn mục tiêu mở rộng đang nhường cho game.";
         return;
@@ -539,10 +535,6 @@
       }
       if (globalThis.GSTFarmMap?.controls(s.scene) || globalThis.GSTFarmMap?.nativeHandling(s.scene)) {
         message = GSTFarmMap.status(s.scene); return;
-      }
-      if (globalThis.GSTFarmBehavior?.controls(s.scene)) {
-        message = globalThis.GSTFarmBehavior.status(s.scene);
-        return;
       }
       if (globalThis.GSTQuest?.controls(s.scene)) { message = "Nhường di chuyển để Auto Quest về NPC/trả nhiệm vụ."; return; }
       if (GSTHarvest.controls(s.scene)) {
@@ -711,8 +703,7 @@
       const filterChanged = settings.searchScope !== data.searchScope || settings.targetMode !== targetMode(data.targetMode)
         || settings.targetLevel !== data.targetLevel
         || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel
-        || settings.avoidEnabled !== (data.avoidEnabled === true) || settings.excludeBoss !== (data.excludeBoss === true)
-        || settings.avoidLevel !== data.avoidLevel;
+        || settings.excludeBoss !== (data.excludeBoss === true);
       settings = { enabled: data.enabled, radius: data.radius, autoRespawn: true, noRetreat: data.noRetreat !== false,
         bossDodge: data.bossDodge !== false, bossRetreat: data.bossRetreat !== false,
         showTargetLine: data.showTargetLine === true,
@@ -722,9 +713,7 @@
         targetMinLevel: Number.isSafeInteger(data.targetMinLevel) && data.targetMinLevel > 0 ? data.targetMinLevel : 1,
         targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20,
         idleMode: ["home", "seek"].includes(data.idleMode) ? data.idleMode : "hold",
-        preferLoot: data.preferLoot !== false, avoidEnabled: data.avoidEnabled === true, excludeBoss: data.excludeBoss === true,
-        avoidLevel: Number.isSafeInteger(data.avoidLevel) && data.avoidLevel > 0 ? data.avoidLevel : 10,
-        avoidDistance: finite(data.avoidDistance) ? Math.max(1, Math.min(6, data.avoidDistance)) : 2 };
+        preferLoot: data.preferLoot !== false, excludeBoss: data.excludeBoss === true };
       globalThis.GSTFarmCombat?.configure(sceneNow(), settings.noRetreat);
       globalThis.GSTFarmBossSafety?.configure(sceneNow(), settings);
       globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);
@@ -735,7 +724,7 @@
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());
       globalThis.GSTFarmCombat?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
-      if (settings.targetMode === "all" && !settings.avoidEnabled && !settings.excludeBoss) clearFilter();
+      if (settings.targetMode === "all" && !settings.excludeBoss) clearFilter();
       if (session) {
         if (scopeChanged) { restore(session); session.at = -Infinity; }
         syncFilter(session.scene);
@@ -743,7 +732,7 @@
         if (!settings.enabled) restore(session);
       }
       if (!settings.autoRespawn) respawnMessage = "";
-      if (!settings.enabled && settings.targetMode === "all" && !settings.avoidEnabled && !settings.excludeBoss) {
+      if (!settings.enabled && settings.targetMode === "all" && !settings.excludeBoss) {
         if (watcher !== null) clearInterval(watcher);
         watcher = null;
         stop("Extended range disabled; original center restored where owned.");

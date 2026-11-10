@@ -229,21 +229,13 @@ Chỉ xử lý phím trong trang game đang hiển thị và có focus, không t
 - Khi driver mất kết nối/đang reconnect, rời scene hoặc interface không hợp lệ: dừng phiên và không tự tiếp tục trên cùng instance. Sau khi kết nối lại vẫn cần **V tắt rồi V bật**. Đổi map tạo scene mới được module giữ ý định Auto Farm khôi phục nếu bật lựa chọn giữ farm; OFF chủ động vẫn giữ OFF. Cơ chế tiếp tục sau hồi sinh chỉ áp dụng khi còn cùng scene/instance và kết nối vẫn hợp lệ.
 - Khi mở rộng hoặc tự hồi sinh bật nhưng đang chờ Auto Farm/scene, dùng một watcher mỗi giây. Khi đã gắn scene, dừng watcher và dùng event `preupdate` có giới hạn xử lý mỗi 500 ms. Không tạo timer theo từng quái; khi tắt cả hai tùy chọn hoặc rời trang không còn watcher/listener scene của các thao tác tự động này. Timer chỉ đọc của bảng trạng thái là riêng và phụ thuộc mục Auto Farm đang được hiển thị. Popup đọc thông báo riêng trong **Extended Auto Farm Range**, không phụ thuộc timer speed override.
 
-### Đứng chờ và né quái level cao (2026-11-04)
+### Đứng chờ sau khi hết mục tiêu
 
-Sau cập nhật, Reload extension rồi tải lại game. Trong **Auto Farm → Khi không còn mục tiêu**, chọn **Nhặt đồ rồi đứng chờ tại chỗ** (mặc định mới) hoặc **Nhặt đồ rồi quay về điểm bắt đầu**, rồi bấm **Lưu cách chờ / né quái**. Tâm và bán kính tìm quái không chạy theo chỗ đứng mới. Module chỉ bọc nhánh idle sau khi không còn loot hợp lệ trong vùng gốc; có đồ thì dùng idle gốc để nhặt trước. Không chặn rest/backOff khi game đang thiếu HP/hết đan. Tự hái/Tự vào cổng được bật riêng vẫn có thể di chuyển; đứng chờ không khóa nhân vật hoặc tắt những tính năng đó.
+Trong **Auto Farm → Khi hết mục tiêu · nhặt đồ**, chọn nhặt đồ rồi đứng chờ tại chỗ, quay về điểm bắt đầu hoặc chủ động tìm quái mới. Lựa chọn tự lưu; không có nút Lưu riêng. Ưu tiên nhặt đồ sau giao tranh vẫn là tùy chọn riêng và dùng cơ chế nhặt gốc của game.
 
-**Né quái level cao** mặc định tắt, ngưỡng gợi ý 10 và lùi 2 ô, chỉnh 1–6 ô. Bật, nhập ngưỡng **level ≥** và khoảng lùi rồi lưu. Quái từ ngưỡng trở lên hoặc thiếu level không được chủ động chọn để đánh, kể cả All/Chỉ boss; lúc hồi máu vẫn trả danh sách quái đầy đủ cho game. Không đoán level từ tên/HP. Khi ngưỡng mâu thuẫn bộ lọc farm, có thể không còn mục tiêu phù hợp.
+Tính năng né quái theo ngưỡng level đã được gỡ. Các cài đặt né cũ không còn được đọc hoặc áp dụng. Bộ lọc quái theo cảnh giới/tầng, né chiêu boss và rút lui khi đánh boss vẫn là các tính năng riêng.
 
-Chỉ quan sát lời gọi scene.onEvent hiện có sau khi hàm gốc chạy: e=dmg, kind=p, id=you, v>0 và by là ID số nguyên khớp một quái còn sống trong views, có level đúng ngưỡng. Source có trường by cho một số sự kiện, nhưng chưa có bằng chứng runtime rằng đòn quái đánh người luôn có by. Thiếu/không khớp nguồn thì báo **Nhận sát thương chưa rõ nguồn**, không dựa vào tụt HP hay con gần nhất để né. Không hook socket, chỉnh packet hoặc ghi log sự kiện thô.
-
-Mỗi lượt né chọn một điểm lùi trong vùng farm, tăng khoảng cách với quái vừa gây đòn, thử tối đa 7 hướng bằng clear/route gốc. Kiểm tra toàn bộ quái level cao trong views, không dùng danh sách đã lọc level. Chỉ nhận đường ngắn, không tiến gần hơn vào các quái mạnh khác; rìa vùng/đường bị chặn thì không tự kéo tâm hoặc chạy về cổng. Dùng auto.walk trên navigation riêng qua dispatcher ưu tiên 2 (sau chính sách hồi sinh, trước cổng/phong ấn/hái), giữ target/path/tâm của native. Kết thúc khi gần điểm lùi, đã ra xa đủ hoặc tối đa 3 giây; nghỉ 3 giây trước lượt tiếp. Một đòn chỉ dùng khởi động một lượt; chỉ có đòn mới rõ nguồn mới khởi động lượt khác. Không rượt né vô hạn chỉ vì quái đang đứng gần.
-
-Tạm ghi nhớ các thủ phạm tối đa 8 giây, bỏ khi chết/biến mất; trong thời gian này lọc bảo thủ các mục tiêu thấp level có đường thẳng đi qua vùng nguy hiểm để tránh quay ngay về con vừa né. Không tự tăng tầm đánh hoặc chạy một bộ chiến đấu riêng: đang lùi tạm nhường nhịp chiến đấu gốc, hết lượt thì native tiếp tục chọn/đánh quái phù hợp. Chưa kiểm tra đường vòng tới mọi mục tiêu; bộ lọc này có thể bỏ qua mục tiêu vốn có đường vòng an toàn. Khoảng cách tránh chỉ là ước lượng theo bán kính quái, không phải tầm đánh thật của mọi loại; 2 ô không đảm bảo tránh được đòn đánh xa.
-
-Thao tác tay nhường ít nhất 3 giây; hồi HP/MP, chết, chuyển map, mất kết nối, hộp thoại/kiểm tra người chơi và bảo vệ đầu bí cảnh vẫn được ưu tiên. Hái/cổng/phong ấn nhường khi lượt né nắm điều khiển, rồi quay lại luồng cũ theo điều kiện hiện có. Tắt né dọn lượt/nguồn sát thương; chọn quay về và tắt né gỡ module, chỉ khôi phục hàm gốc nếu hook vẫn thuộc module. Không thêm timer riêng, quyền, dependency, request mạng, hoặc sửa ms/damage/cooldown. Cài đặt lưu chung farmPreferences qua đổi map; nguồn sát thương/path né chỉ tồn tại trong scene và dọn lúc rời scene/trang.
-
-**Tests/lint/typecheck/browser/gameplay: NOT RUN. Đứng chờ, nguồn by và né trong phiên chơi thật: UNVERIFIED. CI: NOT CHECKED.** Chỉ đối chiếu source và review diff/status; các kết quả QA cũ không bao phủ module này.
+Hành vi runtime/gameplay chưa được xác minh cho thay đổi này.
 
 ### Tối ưu FPS (2026-11-04)
 

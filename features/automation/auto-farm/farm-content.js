@@ -41,11 +41,7 @@
       breakSeals: value?.breakSeals === true,
       idleMode: ["home", "seek"].includes(value?.idleMode) ? value.idleMode : "hold",
       preferLoot: value?.preferLoot !== false,
-      avoidEnabled: value?.avoidEnabled === true,
       excludeBoss: value?.excludeBoss === true,
-      avoidLevel: Number.isSafeInteger(value?.avoidLevel) && value.avoidLevel > 0 ? value.avoidLevel : 10,
-      avoidDistance: typeof value?.avoidDistance === "number" && Number.isFinite(value.avoidDistance)
-        ? Math.max(1, Math.min(6, value.avoidDistance)) : 2,
       targetMode: value?.targetMode === "level" ? "maxLevel"
         : value?.targetMode === "bossFirst" ? "bossLevel"
         : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(value?.targetMode) ? value.targetMode : "all",

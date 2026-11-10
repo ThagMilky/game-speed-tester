@@ -59,8 +59,7 @@
   function stabilizeApproach() {
     const scene = approachScene;
       if (GSTHarvest.controls(scene) || globalThis.GSTFarmSeals?.controls(scene) || globalThis.GSTRealm?.controls(scene)
-          || globalThis.GSTChest?.controls(scene) || globalThis.GSTFarmMap?.controls(scene)
-          || globalThis.GSTFarmBehavior?.controls(scene)) { approachPosition = null; return; }
+          || globalThis.GSTChest?.controls(scene) || globalThis.GSTFarmMap?.controls(scene)) { approachPosition = null; return; }
     const auto = scene?.auto;
     const self = scene?.self;
     const previous = approachPosition;

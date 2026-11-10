@@ -30,7 +30,6 @@
     if (values.farmPreferences?.enabled === true) labels.push(values.farmPreferences.searchScope === "map" ? "Farm toàn map" : "Farm tự chọn ô");
     for (const [key, field, label] of [
       ["farmPreferences", "breakSeals", "Phong ấn"],
-      ["farmPreferences", "avoidEnabled", "Né quái"],
       ["harvestPreferences", "enabled", "Thu hoạch"],
       ["realmPreferences", "enabled", "Vào bí cảnh"],
       ["chestPreferences", "enabled", "Mở rương"],

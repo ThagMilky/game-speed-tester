@@ -45,9 +45,6 @@ const farmTargetMinLevel = document.getElementById("farmTargetMinLevel");
 const farmTargetMaxLevel = document.getElementById("farmTargetMaxLevel");
 const farmIdleMode = document.getElementById("farmIdleMode");
 const farmPreferLoot = document.getElementById("farmPreferLoot");
-const farmAvoidEnabled = document.getElementById("farmAvoidEnabled");
-const farmAvoidLevel = document.getElementById("farmAvoidLevel");
-const farmAvoidDistance = document.getElementById("farmAvoidDistance");
 const positiveLevel = (value, fallback) => Number.isSafeInteger(value) && value > 0 ? value : fallback;
 const farmCompatibility = globalThis.GSTFarmCompatibility;
 function fillFarmThreshold(select, kind, current) {
@@ -69,7 +66,6 @@ function syncFarmLevelInputs() {
   fillFarmThreshold(farmTargetLevel, farmTargetMode.value === "minLevel" ? "min" : "max",
     Number(farmTargetLevel.value) || 1);
 }
-fillFarmThreshold(farmAvoidLevel, "min", 10);
 const farmStatus = document.getElementById("farmStatus");
 const autoFarmValue = document.getElementById("autoFarmValue");
 const farmFeedback = document.getElementById("farmFeedback");
@@ -161,18 +157,16 @@ let farmDraftError = false;
 function farmHasDraft() {
   return farmDraftError || Number(farmTargetMinLevel.value) !== farmConfirmed.targetMinLevel
     || Number(farmTargetMaxLevel.value) !== farmConfirmed.targetMaxLevel
-    || [farmRadius, farmAvoidDistance].some((input) => input.value !== String(farmConfirmed[input === farmRadius ? "radius" : "avoidDistance"]));
+    || farmRadius.value !== String(farmConfirmed.radius);
 }
 function farmMessage(message) {
   farmFeedback.textContent = message + (farmDraftError ? " · Khoảng tu vi không hợp lệ, chưa lưu." : farmHasDraft() ? " · Có bản nháp chưa lưu." : "");
 }
 function syncFarmScope() {
   farmRadius.closest(".input-action").hidden = farmSearchScope.value !== "radius";
-  document.getElementById("farmAvoidFields").hidden = !farmAvoidEnabled.checked;
 }
 function farmSummaries() {
   document.getElementById("farmBossSummary").textContent = `Boss · ${farmConfirmed.excludeBoss ? "không chọn boss" : "cho phép boss"}`;
-  document.getElementById("farmAvoidSummary").textContent = `Né quái mạnh · ${farmConfirmed.avoidEnabled ? "bật" : "tắt"}`;
   document.getElementById("farmRecoverySummary").textContent = `Hồi phục · ${farmConfirmed.noRetreat ? "không rút lui" : "theo game"}`;
 }
 async function saveFarmPatch(patch, rollback) {
@@ -189,7 +183,7 @@ async function saveFarmPatch(patch, rollback) {
 }
 for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmNoRetreat, "noRetreat"],
   [breakSeals, "breakSeals"], [farmPreferLoot, "preferLoot"], [farmBossDodge, "bossDodge"],
-  [farmBossRetreat, "bossRetreat"], [farmAvoidEnabled, "avoidEnabled"]]) {
+  [farmBossRetreat, "bossRetreat"]]) {
   input.addEventListener("change", async () => {
     const next = input.checked;
     input.disabled = true;
@@ -218,9 +212,9 @@ farmTargetMode.addEventListener("change", async () => {
   farmTargetMode.disabled = farmExcludeBoss.disabled = false;
 });
 for (const [input, key] of [[farmSearchScope, "searchScope"], [farmIdleMode, "idleMode"],
-  [farmTargetLevel, "targetLevel"], [farmAvoidLevel, "avoidLevel"]]) {
+  [farmTargetLevel, "targetLevel"]]) {
   input.addEventListener("change", async () => {
-    const value = input.tagName === "SELECT" && [farmTargetLevel, farmAvoidLevel].includes(input) ? Number(input.value) : input.value;
+    const value = input === farmTargetLevel ? Number(input.value) : input.value;
     const patch = key === "searchScope" ? { enabled: true, searchScope: value, ...(farmConfirmed.enabled ? {} : { radius: 11 }) } : { [key]: value };
     input.disabled = true;
     syncFarmScope();
@@ -242,8 +236,7 @@ for (const input of [farmTargetMinLevel, farmTargetMaxLevel]) {
     farmTargetMinLevel.disabled = farmTargetMaxLevel.disabled = false;
   });
 }
-for (const [input, key, valid] of [[farmRadius, "radius", (n) => Number.isSafeInteger(n) && n >= 1 && n <= 1000],
-  [farmAvoidDistance, "avoidDistance", (n) => Number.isFinite(n) && n >= 1 && n <= 6 && Number.isInteger(n * 2)]]) {
+for (const [input, key, valid] of [[farmRadius, "radius", (n) => Number.isSafeInteger(n) && n >= 1 && n <= 1000]]) {
   input.addEventListener("input", () => farmMessage("Bản nháp chưa lưu; nhấn Enter để xác nhận."));
   input.addEventListener("keydown", async (event) => {
     if (event.key !== "Enter") return;
@@ -251,7 +244,7 @@ for (const [input, key, valid] of [[farmRadius, "radius", (n) => Number.isSafeIn
     const value = input.valueAsNumber;
     if (!input.checkValidity() || !valid(value)) { farmFeedback.textContent = "Giá trị không hợp lệ; cài đặt cũ được giữ."; return; }
     input.disabled = true;
-    await saveFarmPatch(key === "radius" ? { enabled: true, radius: value } : { [key]: value }, () => { input.value = String(farmConfirmed[key]); });
+    await saveFarmPatch({ enabled: true, radius: value }, () => { input.value = String(farmConfirmed[key]); });
     input.disabled = false;
   });
 }
@@ -429,11 +422,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   breakSeals.disabled = false;
   farmIdleMode.value = ["home", "seek"].includes(farmPreferences?.idleMode) ? farmPreferences.idleMode : "hold";
   farmPreferLoot.checked = farmPreferences?.preferLoot !== false;
-  farmAvoidEnabled.checked = farmPreferences?.avoidEnabled === true;
   farmExcludeBoss.checked = farmPreferences?.excludeBoss === true;
-  fillFarmThreshold(farmAvoidLevel, "min", positiveLevel(farmPreferences?.avoidLevel, 10));
-  farmAvoidDistance.value = Number.isFinite(farmPreferences?.avoidDistance)
-    ? Math.max(1, Math.min(6, farmPreferences.avoidDistance)) : 2;
   farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
     : farmPreferences?.targetMode === "bossFirst" ? "bossLevel"
     : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
@@ -460,8 +449,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   farmConfirmed = {
     enabled: farmPreferences?.enabled === true, radius: Number(farmRadius.value), searchScope: farmSearchScope.value,
     targetMode: farmTargetMode.value, targetLevel, targetMinLevel, targetMaxLevel,
-    avoidLevel: Number(farmAvoidLevel.value), avoidDistance: Number(farmAvoidDistance.value),
-    avoidEnabled: farmAvoidEnabled.checked, excludeBoss: farmExcludeBoss.checked,
+    excludeBoss: farmExcludeBoss.checked,
     noRetreat: farmNoRetreat.checked, showTargetLine: farmShowTargetLine.checked,
     breakSeals: breakSeals.checked, idleMode: farmIdleMode.value, preferLoot: farmPreferLoot.checked,
     bossDodge: farmBossDodge.checked, bossRetreat: farmBossRetreat.checked

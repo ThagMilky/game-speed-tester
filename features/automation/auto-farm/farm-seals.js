@@ -56,7 +56,6 @@
     if (!enabled || suspended || !scene.auto.on) return "";
     if (globalThis.GSTMapTravel?.active(scene)) return "Nhường cho hành trình bản đồ.";
     if (globalThis.GSTQuest?.active(scene)) return "Nhường cho Auto Quest đang chạy.";
-    if (globalThis.GSTFarmBehavior?.controls(scene)) return "Nhường di chuyển để né quái level cao.";
     if (globalThis.GSTFarmBossSafety?.controls(scene)) return "Nhường di chuyển để né skill boss hoặc hồi HP.";
     if (globalThis.GSTRealm?.controls(scene)) return "Nhường di chuyển để vào bí cảnh.";
     if (!scene.self || scene.self.dead || scene.leaving || !connected(scene)) return "Chờ nhân vật/kết nối ổn định.";
