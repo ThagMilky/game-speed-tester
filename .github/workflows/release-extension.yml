@@ -52,17 +52,22 @@ jobs:
           if os.environ["GITHUB_EVENT_NAME"] == "workflow_dispatch" and os.environ["GITHUB_REF"] != "refs/heads/main":
               raise SystemExit("Manual releases must run from main.")
 
+          allowed_dirs = {"core", "features", "shared", "ui", "uncategorized"}
           files = [root / "manifest.json"] + sorted(
-              path for path in root.iterdir()
-              if path.is_file() and path.suffix in {".js", ".css", ".html"}
+              path for path in root.rglob("*")
+              if path.is_file()
+              and path.suffix in {".js", ".css", ".html"}
+              and (path.parent == root or path.parts[0] in allowed_dirs)
           )
-          included = {path.name for path in files}
+          included = {path.as_posix() for path in files}
           required = {"manifest.json", manifest["action"]["default_popup"]}
           for content_script in manifest.get("content_scripts", []):
               required.update(content_script.get("js", []))
               required.update(content_script.get("css", []))
           for resources in manifest.get("web_accessible_resources", []):
               required.update(resources.get("resources", []))
+          popup_html = (root / manifest["action"]["default_popup"]).read_text(encoding="utf-8")
+          required.update(re.findall(r'(?:src|href)="([^"]+\.(?:js|css))"', popup_html))
           missing = required - included
           if missing:
               raise SystemExit(f"Missing packaged extension files: {sorted(missing)}")
@@ -71,7 +76,7 @@ jobs:
           output.parent.mkdir(exist_ok=True)
           with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
               for path in files:
-                  archive.write(path, arcname=f"Game-Speed-Tester/{path.name}")
+                  archive.write(path, arcname=f"Game-Speed-Tester/{path.as_posix()}")
               archive.writestr(
                   "Game-Speed-Tester/INSTALL.txt",
                   "Game Speed Tester - Chrome extension\n\n"

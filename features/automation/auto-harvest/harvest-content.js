@@ -19,7 +19,7 @@
     try {
       storageApi = typeof chrome.storage?.local?.get;
       isolatedDeclared = chrome.runtime.getManifest().content_scripts.some((script) =>
-        (!script.world || script.world === "ISOLATED") && script.js?.includes("harvest-options.js"));
+        (!script.world || script.world === "ISOLATED") && script.js?.includes("features/automation/auto-harvest/harvest-options.js"));
     } catch { /* Context-invalid diagnostics should still be readable. */ }
     return {
       build: "harvest-bridge-log-2-events", world: "ISOLATED",
