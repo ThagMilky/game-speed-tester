@@ -1,8 +1,9 @@
 (() => {
   "use strict";
-  // Recovery is best-effort. Never change the game's session, auth, movement,
-  // WebSocket transport, or server rejection handling.
+  // Observe native transport health; keep handshake, credentials and retry
+  // decisions inside the game's original driver.
   const retryDelays = [15000, 30000, 60000];
+  const replyTimeout = 12000;
   let suspended = false, timer = null, state = null;
 
   function sceneNow() {
@@ -11,86 +12,193 @@
         ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
     } catch { return null; }
   }
-  function valid(scene) {
+  function eligible(scene) {
     const driver = scene?.driver;
     return scene?.sys?.isActive?.() === true && sceneNow() === scene && !scene.leaving
-      && driver?.online === true && !driver.closing && !driver.displaced && !driver.noticed
-      && navigator.onLine !== false && typeof driver.link?.open === "function";
+      && driver?.online === true && driver.ready === true
+      && !driver.closing && !driver.displaced
+      && typeof driver.link?.open === "function";
+  }
+  function detach() {
+    const previous = state;
+    state = null;
+    if (!previous) return;
+    const { driver } = previous;
+    try {
+      if (driver.receive === previous.receiveHook) {
+        if (previous.receiveDescriptor) Object.defineProperty(driver, "receive", previous.receiveDescriptor);
+        else delete driver.receive;
+      }
+      if (driver.onStatus === previous.statusHook) driver.onStatus = previous.originalStatus;
+    } catch { /* Never disturb the native driver during scene teardown. */ }
+  }
+  function attach(scene) {
+    const driver = scene.driver;
+    if (state?.scene === scene && state.driver === driver
+        && driver.receive === state.receiveHook && driver.onStatus === state.statusHook) return state;
+    detach();
+    if (typeof driver.receive !== "function" || typeof driver.onStatus !== "function") return null;
+    const now = performance.now();
+    const owner = {
+      scene, driver, lastInbound: now, waitingSince: null, downSince: null,
+      healthySince: null, attempts: 0, lastAttempt: -Infinity, pending: false,
+      confirmed: false, receiveDescriptor: Object.getOwnPropertyDescriptor(driver, "receive"),
+      originalReceive: driver.receive, originalStatus: driver.onStatus
+    };
+    owner.receiveHook = function (...args) {
+      const result = owner.originalReceive.apply(this, args);
+      // The original decoder handles all packets. Only observe arrival time.
+      if (state === owner && this === driver && typeof args[0] === "string") {
+        owner.lastInbound = performance.now();
+        owner.waitingSince = null;
+        if (!driver.reconnecting && !driver.handingOver && owner.downSince !== null) {
+          owner.healthySince ??= owner.lastInbound;
+          owner.downSince = null;
+        }
+      }
+      return result;
+    };
+    owner.statusHook = function (...args) {
+      const result = owner.originalStatus.apply(this, args);
+      // The game emits this only after the server accepted resume.
+      if (state === owner && this === driver && args[0] === "Đã kết nối lại") {
+        owner.confirmed = true;
+      }
+      return result;
+    };
+    try {
+      driver.receive = owner.receiveHook;
+      driver.onStatus = owner.statusHook;
+      if (driver.receive !== owner.receiveHook || driver.onStatus !== owner.statusHook)
+        throw new Error("Driver callbacks unavailable");
+      state = owner;
+      return owner;
+    } catch {
+      try {
+        if (driver.receive === owner.receiveHook) {
+          if (owner.receiveDescriptor) Object.defineProperty(driver, "receive", owner.receiveDescriptor);
+          else delete driver.receive;
+        }
+        if (driver.onStatus === owner.statusHook) driver.onStatus = owner.originalStatus;
+      } catch { /* Preserve the game's callbacks if the bridge is unsupported. */ }
+      return null;
+    }
+  }
+  function restoreGameUI(owner) {
+    const scene = owner.scene;
+    // Do not hide a rejection or fabricate a connection. Only a confirmed
+    // native "resumed" status with an open transport authorizes restoration.
+    const lost = document.getElementById("lost");
+    const button = lost?.querySelector("button");
+    if (lost && button?.textContent?.trim() === "Kết nối lại"
+        && /Mất kết nối/.test(lost.textContent ?? "")) lost.remove();
+    const chat = scene.chat;
+    if (chat?.connected !== false || !(chat.root instanceof HTMLElement)
+        || chat.root.id !== "chat" || !chat.root.isConnected) return;
+    const label = chat.root.querySelector(".connection");
+    const send = chat.root.querySelector("button.send");
+    if (!(label instanceof HTMLElement) || !(send instanceof HTMLButtonElement)
+        || !(chat.feedback instanceof HTMLElement)) return;
+    chat.connected = true;
+    label.textContent = "Trực tuyến";
+    chat.feedback.textContent = "";
+    send.disabled = false;
+  }
+  function retry(owner, now, staleOpen) {
+    const { driver } = owner;
+    if (owner.pending || owner.attempts >= retryDelays.length || driver.noticed
+        || driver.reconnecting || driver.handingOver || navigator.onLine === false
+        || typeof driver.reconnect !== "function") return;
+    const since = owner.attempts === 0
+      ? (staleOpen ? owner.waitingSince : owner.downSince) : owner.lastAttempt;
+    const delay = owner.attempts === 0 && staleOpen ? replyTimeout : retryDelays[owner.attempts];
+    if (since === null || now - since < delay) return;
+    owner.pending = true;
+    owner.attempts++;
+    owner.lastAttempt = now;
+    try {
+      Promise.resolve(driver.reconnect("Mất phản hồi đường truyền")).catch(() => {
+        // Server responses and the game's native error UI remain authoritative.
+      }).finally(() => { if (state === owner) owner.pending = false; });
+    } catch { owner.pending = false; }
   }
   function watch() {
     if (suspended) return;
     const scene = sceneNow();
-    if (!valid(scene)) { state = null; return; }
-    const driver = scene.driver, now = performance.now();
-    if (!state || state.driver !== driver || state.scene !== scene) {
-      state = { driver, scene, downSince: null, restoredAt: null,
-        attempts: 0, lastAttempt: -Infinity, pending: false, lastProbe: -Infinity };
-    }
-    const owner = state;
+    if (!eligible(scene)) { detach(); return; }
+    const owner = attach(scene);
+    if (!owner) return;
+    const { driver } = owner, now = performance.now();
     let open;
     try { open = driver.link.open() === true; } catch { return; }
+    const stable = open && !driver.reconnecting && !driver.handingOver;
 
-    if (open && !driver.reconnecting && !driver.handingOver) {
-      if (owner.downSince !== null) {
-        owner.restoredAt ??= now;
-        // Avoid resetting the retry budget for a briefly opened, unstable socket.
-        if (now - owner.restoredAt >= 10000) {
-          owner.downSince = null;
-          owner.restoredAt = null;
-          owner.attempts = 0;
-          owner.lastAttempt = -Infinity;
-        }
-      }
-      // Native background Auto Farm / Harvest normally advances the game itself.
-      // Only run the native network tick if its own update has stalled.
-      const working = scene.auto?.on === true
-        || globalThis.GSTHarvest?.isEnabled?.() === true;
-      if (working && !owner.pending && typeof driver.update === "function"
-          && Number.isFinite(driver.tickAt) && driver.tickAt > 0
-          && now - driver.tickAt >= 6000 && now - owner.lastProbe >= 6000) {
-        owner.lastProbe = now;
-        try { driver.update(); } catch { /* Never interfere with game updates. */ }
-      }
+    if (stable && owner.confirmed) {
+      owner.confirmed = false;
+      owner.lastInbound = now;
+      owner.waitingSince = null;
+      owner.downSince = null;
+      owner.healthySince = now;
+      restoreGameUI(owner);
+    }
+    if (!stable) {
+      owner.healthySince = null;
+      owner.downSince ??= now;
+      if (!open) retry(owner, now, false);
       return;
     }
 
-    owner.restoredAt = null;
-    owner.downSince ??= now;
-    if (open || driver.reconnecting || driver.handingOver || owner.pending
-        || owner.attempts >= retryDelays.length || typeof driver.reconnect !== "function") return;
+    // The game may stop updating when idle, even if neither automation is ON.
+    // Advance only the original network tick, never movement or gameplay.
+    if (navigator.onLine !== false && !driver.noticed && !owner.pending
+        && typeof driver.update === "function" && Number.isFinite(driver.tickAt)
+        && now - driver.tickAt >= 1700) {
+      try { driver.update(); } catch { /* Leave gameplay in control. */ }
+    }
 
-    const delay = retryDelays[owner.attempts];
-    const since = owner.attempts === 0 ? owner.downSince : owner.lastAttempt;
-    if (now - since < delay) return;
-
-    owner.attempts++;
-    owner.lastAttempt = now;
-    owner.pending = true;
-    try {
-      Promise.resolve(driver.reconnect("Đường truyền bị ngắt")).catch(() => {
-        // The game's own status and error handlers remain authoritative.
-      }).finally(() => {
-        if (state === owner) owner.pending = false;
-      });
-    } catch { owner.pending = false; }
+    // Native update resets waitingSince after >2s between ticks. Track the
+    // first unanswered ping ourselves, using actual inbound server messages.
+    if (Number.isFinite(driver.pingAt) && driver.pingAt > owner.lastInbound
+        && owner.waitingSince === null) owner.waitingSince = driver.pingAt;
+    if (owner.waitingSince !== null && now - owner.waitingSince >= replyTimeout) {
+      owner.downSince ??= owner.waitingSince;
+      owner.healthySince = null;
+      retry(owner, now, true);
+      return;
+    }
+    if (owner.attempts > 0 && owner.healthySince !== null
+        && now - owner.healthySince >= 10000 && now - owner.lastInbound < 3000) {
+      owner.downSince = null;
+      owner.attempts = 0;
+      owner.lastAttempt = -Infinity;
+      owner.healthySince = null;
+    }
   }
   function start() {
     if (suspended || timer !== null) return;
-    timer = setInterval(watch, 3000);
+    timer = setInterval(watch, 1000);
     watch();
   }
   globalThis.GSTConnectionRecovery = {
     status(scene) {
-      if (!state || state.scene !== scene || state.downSince === null) return "";
-      if (state.attempts >= retryDelays.length && !state.pending && !scene.driver?.reconnecting)
-        return "Mạng: hết lượt thử tự kết nối lại; cần kiểm tra kết nối thủ công.";
-      return state.pending || scene.driver?.reconnecting
-        ? "Mạng: đang thử kết nối lại." : "Mạng: mất kết nối; sẽ thử lại khi an toàn.";
+      if (!state || state.scene !== scene) return "";
+      const { driver } = state;
+      let open = false;
+      try { open = driver.link.open() === true && !driver.reconnecting && !driver.handingOver; }
+      catch { /* Report the last known state. */ }
+      if (open && state.healthySince !== null && performance.now() - state.lastInbound < 10000) return "";
+      if (driver.displaced || driver.noticed)
+        return "Mạng: phiên không thể tự khôi phục; hãy dùng Kết nối lại của game.";
+      if (state.downSince === null) return "";
+      if (state.attempts >= retryDelays.length && !state.pending && !driver.reconnecting)
+        return "Mạng: hết lượt thử; hãy kiểm tra kết nối thủ công.";
+      return state.pending || driver.reconnecting
+        ? "Mạng: đang thử kết nối lại." : "Mạng: mất phản hồi; đang theo dõi và sẽ thử lại.";
     }
   };
   window.addEventListener("pagehide", () => {
     suspended = true;
-    clearInterval(timer); timer = null; state = null;
+    clearInterval(timer); timer = null; detach();
   });
   window.addEventListener("pageshow", () => { suspended = false; start(); });
   start();

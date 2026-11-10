@@ -59,7 +59,11 @@
         ? Math.max(1, Math.min(1000, value.radius)) : 22
     };
     const url = new URL(location.href);
-    if ((settings.enabled || settings.autoRespawn || settings.breakSeals || settings.targetMode !== "all") && !url.searchParams.has("timer")) {
+    // The network monitor also needs an exposed game scene when farm and harvest are OFF.
+    // The game only exposes window.game in its native ?timer mode; avoid offline lab mode.
+    const monitorOnlineConnection = url.searchParams.get("online") !== "0";
+    if ((monitorOnlineConnection || settings.enabled || settings.autoRespawn || settings.breakSeals
+        || settings.targetMode !== "all") && !url.searchParams.has("timer")) {
       if (!navigating) {
         navigating = true;
         url.search += `${url.search ? "&" : "?"}timer`;
