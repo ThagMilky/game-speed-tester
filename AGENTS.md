@@ -91,7 +91,7 @@ Khi hoàn tất: nêu thay đổi, các file extension sửa (gọn), source gam
 ## Trạng thái setup
 
 - AGENTS.md được tạo từ yêu cầu setup Wiki-driven workflow ngày 2026-11-05.
-- **Đã superseded:** Wiki v0.7 (`GAME_ASSET_WIKI_v0.7.md`) là tài liệu setup lịch sử; không dùng làm hướng dẫn định tuyến hiện hành. Wiki v1.0 tại `GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md` là bản đồ điều hướng hiện tại.
+- Wiki v0.7 đã lỗi thời và được xóa khỏi repository. Wiki v1.0 tại `GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md` là bản đồ điều hướng hiện tại.
 - Ghi chú setup ngày 2026-11-05 và provenance/limitations của Wiki v0.7 chỉ là lịch sử; nhãn CONFIRMED của bản đó không phải xác minh live hoặc toàn bộ source hiện tại.
 - Tại thời điểm setup 2026-11-05, các đề xuất tính năng cũ (auto click, rương, cổng) chưa được triển khai **trong bước setup**. Trạng thái tính năng hiện tại phải đọc từ source và `CODEGRAPH.md`, không lấy câu ghi nhận lịch sử này làm kết luận về HEAD hiện tại.
 
