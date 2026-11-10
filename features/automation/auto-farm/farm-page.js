@@ -242,8 +242,7 @@
     const wrapper = function (...args) {
       const host = original.apply(this, args);
       if ((!filteringActive() && !boundaryActive()) || !this.auto?.on) return host;
-      // Native rest logic also reads enemies to decide whether it is safe to heal.
-      if (this.auto?.resting) return host;
+      // Keep the wrapper through recovery; the enemy getter exposes raw threats while resting.
       const eligible = (enemy) => nativeEligible(enemy) && insideFarmBoundary(this, enemy)
         && matchesTarget(enemy) && (!filteringActive()
           || (globalThis.GSTFarmBehavior?.allowsTarget(this, enemy) ?? true));
