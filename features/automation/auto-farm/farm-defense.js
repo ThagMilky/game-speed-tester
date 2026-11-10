@@ -6,7 +6,7 @@
   let message = "Chờ cài đặt tự vệ.", idleSince = null, idlePoint = null, lastIdleAt = -Infinity;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
-  const boss = (actor) => actor.st.cls === "boss" || actor.st.wb === true;
+  const boss = (actor) => actor?.st?.cls === "boss" || actor?.st?.wb === true;
   const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
   const actorFor = (scene, id) => {
     const actor = scene.views?.get?.(id);
@@ -80,6 +80,32 @@
       && finite(e.x) && finite(e.y) && Math.hypot(e.x - scene.auto.ax, e.y - scene.auto.ay) < radius
       && !(scene.auto.skipped?.get?.(e.id) > scene.now()));
   }
+  function rawEnemies(host) {
+    const enemies = typeof host.gstRawEnemies === "function" ? host.gstRawEnemies() : host.enemies();
+    return Array.isArray(enemies) ? enemies : [];
+  }
+  function hostileRecord(host, id) {
+    return rawEnemies(host).find((enemy) => enemy?.id === id && enemy.hostile === true) ?? null;
+  }
+  function threatCandidates(scene, host, pos) {
+    const result = new Map();
+    for (const enemy of rawEnemies(host)) {
+      if (enemy?.hostile !== true || !Number.isSafeInteger(enemy.id)) continue;
+      const actor = actorFor(scene, enemy.id);
+      if (actor && distance(pos, actor) <= 3.2) result.set(actor.id, actor);
+    }
+    // Keep visible nearby bosses in the retreat safety set even when their
+    // ordinary-target record is absent from the host list.
+    for (const actor of scene.views.values()) {
+      if (actor?.k === "m" && !actor.dead && boss(actor) && finite(actor.x) && finite(actor.y)
+          && distance(pos, actor) <= 3.2) result.set(actor.id, actor);
+    }
+    return [...result.values()];
+  }
+  function nearbyBoss(scene, pos) {
+    return [...scene.views.values()].some((actor) => actor?.k === "m" && !actor.dead && boss(actor)
+      && finite(actor.x) && finite(actor.y) && distance(pos, actor) <= 3.2);
+  }
   function boundary(scene, point) {
     if (!finite(scene.map?.w) || !finite(scene.map?.h) || point.x < 0 || point.y < 0
         || point.x >= scene.map.w || point.y >= scene.map.h) return false;
@@ -90,11 +116,20 @@
     return finite(origin?.x) && finite(origin?.y) && (finite(radius) || radius === Infinity)
       && distance(point, origin) <= radius;
   }
-  function retreat(scene, host, attacker) {
-    const pos = { x: scene.px, y: scene.py }, angle = Math.atan2(pos.y - attacker.y, pos.x - attacker.x);
+  function retreat(scene, host, attackers) {
+    const pos = { x: scene.px, y: scene.py };
+    const away = attackers.reduce((sum, actor) => {
+      const dx = pos.x - actor.x, dy = pos.y - actor.y, length = Math.hypot(dx, dy) || 1;
+      return { x: sum.x + dx / length, y: sum.y + dy / length };
+    }, { x: 0, y: 0 });
+    if (Math.hypot(away.x, away.y) < 0.1) return null;
+    const angle = Math.atan2(away.y, away.x);
     for (const offset of [0, 0.5, -0.5, 1, -1]) {
       const point = { x: pos.x + Math.cos(angle + offset) * 2, y: pos.y + Math.sin(angle + offset) * 2 };
-      if (boundary(scene, pos) && boundary(scene, point) && host.clear(pos.x, pos.y, point.x, point.y)) return point;
+      const dx = point.x - pos.x, dy = point.y - pos.y;
+      const clearsThreats = attackers.every((actor) => dx * (pos.x - actor.x) + dy * (pos.y - actor.y) > 0);
+      if (clearsThreats && boundary(scene, pos) && boundary(scene, point)
+          && host.clear(pos.x, pos.y, point.x, point.y)) return point;
     }
     return null;
   }
@@ -104,33 +139,52 @@
     try {
       const host = scene.autoHost();
       if (!validateContext(scene, host)) return;
-      if (event?.e !== "dmg" || event.kind !== "p" || event.id !== scene.you
-          || !finite(event.v) || event.v <= 0 || !Number.isSafeInteger(event.by)) return;
-      const attacker = actorFor(scene, event.by), time = scene.now();
-      if (!attacker || !finite(time)) return;
+      if (event?.e !== "dmg" || event.kind !== "p" || event.id !== scene.you || !finite(event.v) || event.v <= 0) return;
+      const time = scene.now(), pos = { x: scene.px, y: scene.py };
+      if (!finite(time)) return;
       if (blocked(scene) || nativeBusy(scene, host)) {
         clearEpisode("Tự vệ đang nhường thao tác khác."); return;
       }
+      const attributed = Number.isSafeInteger(event.by);
+      const identified = attributed ? actorFor(scene, event.by) : null;
+      if (attributed && !identified) {
+        message = "Tự vệ nhường: mã nguồn sát thương không còn trong dữ liệu quái."; return;
+      }
+      const threats = threatCandidates(scene, host, pos);
+      if (identified && distance(pos, identified) <= 3.2 && !threats.some((actor) => actor.id === identified.id))
+        threats.push(identified);
+      if (!threats.length) {
+        message = "Tự vệ nhường: không có quái thù địch gần để chọn an toàn."; return;
+      }
+      const threatIds = threats.map((actor) => actor.id);
       if (episode) {
-        if (attacker.id === episode.id) {
-          episode.hitAt = time;
-          if (continuation) continuation.hitAt = time;
-        } else if (boss(attacker) && !episode.boss && time - episode.started < 4) {
-          clearEpisode();
-          continuation = { id: attacker.id, hitAt: time };
-          episode = { id: attacker.id, boss: true, started: time, hitAt: time, farmOn: scene.auto.on };
-          message = "Tự vệ · đang chuẩn bị lùi khỏi boss.";
-        }
+        episode.hitAt = time;
+        if (continuation) continuation.hitAt = time;
+        const added = threatIds.some((id) => !episode.threatIds.includes(id));
+        episode.threatIds = [...new Set([...episode.threatIds, ...threatIds])];
+        episode.boss ||= threats.some(boss);
+        episode.ambiguous = episode.threatIds.length > 1;
+        if (added && episode.ambiguous || episode.boss) episode.attackAllowed = false;
         return;
       }
-      const continuing = continuation && time >= continuation.hitAt && time - continuation.hitAt <= 8
-        && actorFor(scene, continuation.id) && (attacker.id === continuation.id || boss(attacker));
-      if (!continuing && performance.now() - lastIdleAt > 500) return;
+      const continuing = continuation && time >= continuation.hitAt && time <= continuation.until
+        && continuation.ids.some((id) => threatIds.includes(id) && actorFor(scene, id));
+      const stationary = performance.now() - lastIdleAt <= 1200 && idlePoint && distance(pos, idlePoint) <= 0.1;
+      if (!continuing && !stationary) {
+        message = "Tự vệ nhường: chưa xác nhận trạng thái đứng chờ gần đây."; return;
+      }
       if (scene.autoX || scene.autoY || (finite(scene.castAt) && scene.castAt > time && !continuing)) return;
       lastIdleAt = -Infinity;
-      continuation = { id: attacker.id, hitAt: time };
-      episode = { id: attacker.id, boss: boss(attacker), started: time, hitAt: time, farmOn: scene.auto.on };
-      message = episode.boss ? "Tự vệ · đang chuẩn bị lùi khỏi boss." : "Tự vệ · đang chuẩn bị phản ứng.";
+      continuation = { ids: threatIds, hitAt: time, until: time + 8 };
+      const single = threats.length === 1 ? threats[0] : null;
+      const canAttack = !!single && !boss(single) && !nearbyBoss(scene, pos)
+        && hostileRecord(host, single.id) !== null && distance(pos, single) <= nearby;
+      episode = { id: single?.id ?? threatIds[0], threatIds, boss: threats.some(boss), attackAllowed: canAttack,
+        ambiguous: threats.length > 1, started: time, hitAt: time, farmOn: scene.auto.on };
+      message = episode.boss ? "Tự vệ · chuẩn bị lùi khỏi boss; không dùng đòn đánh thường."
+        : episode.ambiguous ? "Tự vệ nhường đòn đánh: có nhiều mối đe dọa; đang tìm hướng lùi an toàn."
+        : canAttack ? "Tự vệ · đang kiểm tra đường tới quái gần."
+        : "Tự vệ · chưa đủ dữ liệu cho đòn đánh thường; đang kiểm tra đường lùi.";
     } catch { clearEpisode("Tự vệ không khả dụng; thiếu dữ liệu game."); }
   }
   function guard() {
@@ -141,15 +195,17 @@
       if (!validateContext(scene, host)) return;
       if (blocked(scene) || nativeBusy(scene, host)) { clearEpisode("Tự vệ đang nhường thao tác khác."); return; }
       if (episode) return;
-      const time = scene.now();
-      if (continuation && (time < continuation.hitAt || time - continuation.hitAt > 8
-          || !actorFor(scene, continuation.id))) continuation = null;
+      const time = scene.now(), now = performance.now();
+      if (continuation && (time < continuation.hitAt || time > continuation.until
+          || !continuation.ids.some((id) => actorFor(scene, id)))) continuation = null;
       if (scene.autoX || scene.autoY) { clearEpisode("Tự vệ đang nhường di chuyển khác."); return; }
       if (scene.self.combat || (finite(scene.castAt) && scene.castAt > time)) {
-        idleSince = null; idlePoint = null; lastIdleAt = -Infinity; return;
+        idleSince = null;
+        if (now - lastIdleAt > 1200) { idlePoint = null; lastIdleAt = -Infinity; }
+        return;
       }
       continuation = null;
-      const pos = { x: scene.px, y: scene.py }, now = performance.now();
+      const pos = { x: scene.px, y: scene.py };
       if (!idlePoint || distance(pos, idlePoint) > 0.1) { idlePoint = pos; idleSince = now; }
       if (now - idleSince >= 350) { lastIdleAt = now; message = "Tự vệ bật · đang chờ."; }
     } catch { clearEpisode("Tự vệ không khả dụng; thiếu dữ liệu hoặc giao diện game."); }
@@ -158,39 +214,59 @@
     const scene = binding?.scene, job = episode;
     if (!scene || !job) return false;
     try {
-      const attacker = actorFor(scene, job.id), pos = { x: scene.px, y: scene.py };
+      const pos = { x: scene.px, y: scene.py };
       if (!validateContext(scene, host)) return false;
       if (blocked(scene) || nativeBusy(scene, host)) {
         clearEpisode("Tự vệ đang nhường thao tác khác."); return false;
       }
-      if (!attacker || time < job.started) {
+      const priorThreatIds = new Set(job.threatIds);
+      const attackersById = new Map(job.threatIds.map((id) => actorFor(scene, id)).filter(Boolean).map((actor) => [actor.id, actor]));
+      const visibleThreats = threatCandidates(scene, host, pos);
+      const newThreatVisible = visibleThreats.some((actor) => !priorThreatIds.has(actor.id));
+      for (const actor of visibleThreats) attackersById.set(actor.id, actor);
+      const attackers = [...attackersById.values()];
+      if (!attackers.length || time < job.started) {
         clearEpisode("Tự vệ đã dừng và nhường game."); return false;
       }
+      if (newThreatVisible || attackers.length > job.threatIds.length) {
+        job.ambiguous = true;
+        job.attackAllowed = false;
+      }
+      job.boss ||= attackers.some(boss);
+      job.threatIds = attackers.map((actor) => actor.id);
       if (time - job.started > 4 || time - job.hitAt > 3) {
         clearEpisode("Tự vệ đã kết thúc lượt; chờ đòn mới.", true); return false;
       }
-      if (!job.boss && !job.goal && distance(pos, attacker) <= nearby && host.clear(pos.x, pos.y, attacker.x, attacker.y)) {
+      const attacker = attackers.length === 1 ? attackers[0] : null;
+      const ordinaryThreat = attacker && !boss(attacker) && hostileRecord(host, attacker.id);
+      if (job.attackAllowed && !job.boss && !job.goal && attacker && ordinaryThreat
+          && !nearbyBoss(scene, pos) && distance(pos, attacker) <= nearby
+          && host.clear(pos.x, pos.y, attacker.x, attacker.y)) {
         if (!job.facing) { job.previousLock = scene.lockId; job.previousFace = [scene.faceX, scene.faceY]; }
         if (!validateContext(scene, host)) return false;
         host.face(attacker.x, attacker.y, attacker.id); job.facing = [scene.faceX, scene.faceY];
-        host.basic(); message = "Tự vệ · đang dùng đòn đánh thường."; return true;
+        host.basic(); message = "Tự vệ · đã yêu cầu đòn đánh thường; chưa xác minh trúng đích."; return true;
       }
       if (!job.goal) {
-        job.goal = retreat(scene, host, attacker);
-        if (!job.goal) { clearEpisode("Tự vệ nhường: không có đường lùi an toàn.", true); return false; }
+        job.goal = retreat(scene, host, attackers);
+        if (!job.goal) {
+          clearEpisode(job.ambiguous ? "Tự vệ nhường: nhiều mối đe dọa và không có hướng lùi an toàn." : "Tự vệ nhường: không có đường lùi an toàn.", true);
+          return false;
+        }
       }
       if (!boundary(scene, pos) || !boundary(scene, job.goal) || !host.clear(pos.x, pos.y, job.goal.x, job.goal.y)
           || distance(pos, job.goal) <= 0.3 || time - job.started > 3) {
         clearEpisode("Tự vệ đã kết thúc lượt lùi.", true); return false;
       }
       const dx = job.goal.x - pos.x, dy = job.goal.y - pos.y, length = Math.hypot(dx, dy);
-      // Distance from the current attacker must not decrease anywhere on the segment.
-      if (dx * (pos.x - attacker.x) + dy * (pos.y - attacker.y) <= 0) {
+      // Distance from every current threat must not decrease along the escape direction.
+      if (attackers.some((actor) => dx * (pos.x - actor.x) + dy * (pos.y - actor.y) <= 0)) {
         clearEpisode("Tự vệ nhường: đường lùi không còn an toàn.", true); return false;
       }
       if (!validateContext(scene, host)) return false;
       host.steer(dx / length, dy / length); job.steer = [scene.autoX, scene.autoY];
-      message = job.boss ? "Tự vệ · đang đi lùi khỏi boss." : "Tự vệ · đang đi lùi khỏi quái.";
+      message = job.boss ? "Tự vệ · đang đi lùi khỏi boss." : job.ambiguous
+        ? "Tự vệ · đang lùi khỏi nhóm mối đe dọa đã thấy." : "Tự vệ · đang đi lùi khỏi quái gần.";
       return true;
     } catch { clearEpisode("Tự vệ không khả dụng; đã nhường game."); return false; }
   }

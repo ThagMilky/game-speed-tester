@@ -77,7 +77,7 @@
       <summary><span><strong>Auto Farm</strong><small>Phạm vi, nhặt đồ và tự dùng đan</small></span></summary>
       <div class="card-body">
         <p id="farmStatus" class="feature-status" role="status" aria-live="polite">Đang đọc trạng thái…</p>
-        <p class="save-mode">Lựa chọn tự lưu · Số xác nhận bằng Enter</p>
+        <p class="save-mode">Lựa chọn tự lưu · Bán kính lưu khi rời ô hoặc nhấn Enter</p>
         <div class="farm-grid">
         <fieldset id="farmControls" disabled aria-label="Tùy chọn Auto Farm">
           <div class="farm-column farm-left">
@@ -85,7 +85,7 @@
           <select id="farmSearchScope"><option value="radius">Tự chọn số ô</option><option value="map">Toàn map hiện tại</option></select>
           <details class="diagnostic"><summary>Giải thích vùng tìm</summary><p>Tìm quanh điểm bắt đầu hoặc tìm trên toàn map. Toàn map chỉ dựa vào dữ liệu game cung cấp và không bảo đảm tìm hết quái.</p></details>
           <div class="input-action">
-            <div><label for="farmRadius">Giới hạn vùng farm <span class="range">1–1.000 ô</span></label><input id="farmRadius" type="number" min="1" max="1000" step="1" value="22" required></div>
+            <div><label for="farmRadius">Giới hạn vùng farm <span class="range">1–1.000 ô</span></label><input id="farmRadius" type="number" min="1" max="1000" step="1" value="22" required><small id="farmRadiusError" class="field-error" aria-live="polite"></small></div>
           </div>
           <p class="save-mode">Số ô tính từ điểm bắt đầu farm. Ví dụ 30: tìm quái cách điểm đó tối đa 30 ô.</p>
           <p class="hint">Tự hồi sinh: luôn BẬT khi đang Auto Farm; tiếp tục farm sau mỗi lần hồi sinh, không giới hạn số lần chết. Vẫn chờ nút game sẵn sàng. Bạn chủ động tắt farm thì giữ TẮT.</p>
@@ -94,8 +94,8 @@
             <div id="farmSingleLevel"><label for="farmTargetLevel">Mức tu vi quái</label><select id="farmTargetLevel" required disabled></select></div>
           </div>
           <div id="farmLevelRange" class="two-columns separated" hidden>
-            <div><label for="farmTargetMinLevel">Từ cảnh giới/tầng</label><select id="farmTargetMinLevel" required disabled></select></div>
-            <div><label for="farmTargetMaxLevel">Đến cảnh giới/tầng</label><select id="farmTargetMaxLevel" required disabled></select></div>
+            <div><label for="farmTargetMinLevel">Từ cảnh giới/tầng</label><select id="farmTargetMinLevel" required disabled></select><small id="farmTargetMinLevelError" class="field-error" aria-live="polite"></small></div>
+            <div><label for="farmTargetMaxLevel">Đến cảnh giới/tầng</label><select id="farmTargetMaxLevel" required disabled></select><small id="farmTargetMaxLevelError" class="field-error" aria-live="polite"></small></div>
           </div>
           </div>
           <div class="farm-column farm-middle">

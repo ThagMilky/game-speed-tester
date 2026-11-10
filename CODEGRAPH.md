@@ -154,7 +154,7 @@ Chỉ liệt kê **điểm kích hoạt quan trọng đã thấy trong source** 
 | Sự kiện / thông điệp | File → handler | Vai trò chính |
 | --- | --- | --- |
 | Popup bấm **Lưu tốc độ** (`click`) | `ui/popup/popup.js` → `save()` | Kiểm tra input, lưu `preferences` vào `chrome.storage.local`. |
-| Popup đổi lựa chọn hoặc xác nhận số Auto Farm (`change` / `Enter`) | `ui/popup/popup.js` → `updateFarmPreferences()` | Lưu từng thay đổi qua hàng đợi và khóa; số chỉ lưu khi xác nhận. |
+| Popup đổi lựa chọn hoặc xác nhận số Auto Farm (`change` / `blur` / `Enter`) | `ui/popup/popup.js` → `updateFarmPreferences()` | Lựa chọn lưu qua hàng đợi và khóa; bán kính lưu khi rời ô hoặc nhấn Enter; khoảng tu vi được xác thực và lưu thành cặp nguyên tử. |
 | Phím điều khiển Auto Farm (`keydown`) | `features/automation/auto-farm/farm-page.js` → `guardFarmKey(event)` | Kiểm tra focus, ô nhập, phím mặc định/tùy chỉnh; gọi đường bật/tắt Auto Farm khi được phép. |
 | Phím điều khiển tay khi đang tự hái (`keydown`) | `features/automation/auto-harvest/harvest-page.js` → `onKey(event)` | Tạm nhường điều khiển sau thao tác di chuyển/chiến đấu/tương tác tay hợp lệ. |
 | Cài đặt đổi (`chrome.storage.onChanged`) | `core/content.js` → callback inline → `configure()` / `renderOverlay()` | Đồng bộ thay đổi tốc độ và bảng trạng thái từ storage. |
@@ -165,7 +165,7 @@ Chỉ liệt kê **điểm kích hoạt quan trọng đã thấy trong source** 
 | `window.message`: `gst:realm:v1` | `features/automation/auto-realm/realm-page.js` → callback inline; `features/automation/auto-farm/farm-session.js` → callback inline (`configure`) | Đổi cấu hình vào bí cảnh; cập nhật lựa chọn **giữ Auto Farm** khi đổi map. |
 | `window.message`: `gst:chest:v1` | `features/automation/auto-chest/chest-page.js` → callback inline | Đổi cấu hình rương và trả trạng thái `gst:chest-status:v1`. |
 | `window.message`: `gst:quest:v1` | `features/automation/auto-quest/quest-page.js` → callback inline | Nhận `configure`/`start`/`stop`, quản lý danh sách quest và gửi status. |
-| Menu trong game: `click`, `pointer*`, `keydown`, `gst:menu-*` | `ui/game-menu/game-menu.js` → `open()` / `close()` / `beginEdit()` / `savePosition()` và callbacks inline | Mở/đóng popup nhúng, kéo vị trí, xử lý Esc và thông điệp menu. |
+| Menu trong game: `click`, `pointer*`, `keydown`, `gst:menu-*` | `ui/game-menu/game-menu.js` → `open()` / `close()` / `beginEdit()` / `savePosition()` và callbacks inline; `popup.js` trả lời `gst:menu-before-close:v1` | Mở/đóng popup nhúng; trước khi xóa iframe, yêu cầu popup xác nhận/lưu bản nháp số Auto Farm qua storage hiện có; lỗi lưu hoặc dữ liệu chưa hợp lệ giữ menu mở. Kéo vị trí và xử lý Esc vẫn theo luồng hiện có. |
 
 ### 8.2. Nhịp game và module sở hữu lượt điều khiển
 

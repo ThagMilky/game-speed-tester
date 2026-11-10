@@ -10,8 +10,9 @@
   function contextAlive() {
     try { return chrome.runtime.id === extensionId; } catch { return false; }
   }
-  let root = null, panel = null, frame = null, opened = false, launch = null, editor = null, feedback = null, observer = null;
+  let root = null, panel = null, frame = null, frameLoaded = false, opened = false, launch = null, editor = null, feedback = null, closeNotice = null, observer = null;
   let saved = GSTMenuPosition.normalize(null), draft = null, editing = false, dragging = null, saving = false, revision = 0;
+  let closeRequest = 0, closing = false;
   function bounds() {
     const rect = launch.getBoundingClientRect();
     const margin = 12;
@@ -30,9 +31,10 @@
     if (editor) editor.hidden = true;
     position();
   }
-  function beginEdit() {
+  async function beginEdit() {
     mount(); if (!launch || saving) return;
-    close(); editing = true; draft = { ...saved, position: "custom" }; root.dataset.open = "true"; root.dataset.editing = "true";
+    if (!await close()) return;
+    editing = true; draft = { ...saved, position: "custom" }; root.dataset.open = "true"; root.dataset.editing = "true";
     editor.hidden = false; feedback.textContent = "Kéo nút Menu tool tới chỗ muốn đặt, rồi bấm Lưu vị trí.";
     position();
   }
@@ -44,22 +46,61 @@
     catch { if (feedback) feedback.textContent = "Chưa lưu được. Thử Lưu vị trí lại hoặc bấm Hủy."; }
     finally { saving = false; }
   }
-  function close() {
+  async function requestFrameSave(target) {
+    if (!frameLoaded) {
+      const loaded = await new Promise((resolve) => {
+        const timer = setTimeout(() => resolve(false), 8000);
+        target.addEventListener("load", () => { clearTimeout(timer); resolve(frame === target); }, { once: true });
+      });
+      if (!loaded) return false;
+    }
+    const id = ++closeRequest;
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => finish(false), 8000);
+      const onMessage = (event) => {
+        if (event.source !== target.contentWindow || event.origin !== location.origin
+            || event.data?.channel !== "gst:menu-before-close-result:v1" || event.data.id !== id) return;
+        finish(event.data.saved === true);
+      };
+      function finish(saved) {
+        clearTimeout(timer); window.removeEventListener("message", onMessage); resolve(saved);
+      }
+      window.addEventListener("message", onMessage);
+      target.contentWindow.postMessage({ channel: "gst:menu-before-close:v1", id }, new URL(popupUrl).origin);
+    });
+  }
+  async function close(force = false) {
+    if (closing) return false;
+    const activeFrame = frame;
+    if (!force && activeFrame && contextAlive()) {
+      closing = true;
+      let savedFrame = false;
+      try { savedFrame = await requestFrameSave(activeFrame); } catch { savedFrame = false; }
+      closing = false;
+      if (frame !== activeFrame) return true;
+      if (!savedFrame) {
+        if (closeNotice) { closeNotice.textContent = "Chưa đóng menu: hãy sửa lỗi hoặc lưu xong các trường Auto Farm."; closeNotice.hidden = false; }
+        return false;
+      }
+    }
     opened = false;
     if (root) root.dataset.open = "false";
     if (panel) panel.hidden = true;
+    if (closeNotice) { closeNotice.textContent = ""; closeNotice.hidden = true; }
     // Remove the iframe so its popup refresh interval stops while closed.
-    frame?.remove(); frame = null;
+    frame?.remove(); frame = null; frameLoaded = false;
+    return true;
   }
   function open() {
     if (!contextAlive()) {
-      close();
+      void close(true);
       if (launch) { launch.textContent = "Tải lại trang để cập nhật tool"; launch.disabled = true; }
       return;
     }
     mount(); if (!panel || opened || editing) return;
     opened = true; root.dataset.open = "true"; panel.hidden = false;
-    frame = document.createElement("iframe"); frame.title = "Menu Game Speed Tester";
+    frame = document.createElement("iframe"); frameLoaded = false; frame.title = "Menu Game Speed Tester";
+    frame.addEventListener("load", () => { if (frame) frameLoaded = true; });
     frame.src = popupUrl;
     frame.style.cssText = "border:0;width:100%;flex:1;min-height:0;background:#11191f";
     panel.querySelector("section").append(frame); frame.focus();
@@ -110,24 +151,28 @@
     panel.setAttribute("role", "dialog"); panel.setAttribute("aria-modal", "true"); panel.setAttribute("aria-label", "Menu điều khiển extension");
     const section = document.createElement("section"), header = document.createElement("header"), title = document.createElement("span");
     title.textContent = "Menu điều khiển";
-    const dismiss = document.createElement("button"); dismiss.textContent = "×"; dismiss.setAttribute("aria-label", "Đóng menu"); dismiss.addEventListener("click", close);
-    header.append(title, dismiss); section.append(header); panel.append(section); shadow.append(style, launch, panel, editor); document.body.append(root);
+    const dismiss = document.createElement("button"); dismiss.textContent = "×"; dismiss.setAttribute("aria-label", "Đóng menu"); dismiss.addEventListener("click", () => { void close(); });
+    closeNotice = document.createElement("p"); closeNotice.hidden = true; closeNotice.setAttribute("role", "status");
+    closeNotice.style.cssText = "margin:6px 0;color:#ffb4a8;font:12px sans-serif";
+    header.append(title, dismiss); section.append(header, closeNotice); panel.append(section); shadow.append(style, launch, panel, editor); document.body.append(root);
     position(); observer = new ResizeObserver(position); observer.observe(launch);
     for (const name of ["pointerdown", "pointerup", "mousedown", "mouseup", "click", "wheel"]) root.addEventListener(name, (event) => event.stopPropagation());
   }
   window.addEventListener("keydown", (event) => {
     if (!opened && !editing) return;
     event.stopImmediatePropagation();
-    if (event.key === "Escape") { event.preventDefault(); if (editing) { if (!saving) endEdit(); } else close(); }
+    if (event.key === "Escape") { event.preventDefault(); if (editing) { if (!saving) endEdit(); } else void close(); }
   }, true);
   window.addEventListener("message", (event) => {
     if (frame && event.source === frame.contentWindow && event.origin === `chrome-extension://${extensionId}`
         && ["gst:menu-close:v1", "gst:menu-edit:v1"].includes(event.data?.channel)) {
-      if (event.data.channel === "gst:menu-edit:v1") beginEdit(); else close();
+      if (event.data.channel === "gst:menu-edit:v1") void beginEdit(); else void close();
     }
   });
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
-    if (sender.id === chrome.runtime.id && message?.type === "gst:menu-position-edit") { beginEdit(); respond({ editing }); return; }
+    if (sender.id === chrome.runtime.id && message?.type === "gst:menu-position-edit") {
+      beginEdit().then(() => respond({ editing })); return true;
+    }
     if (sender.id === chrome.runtime.id && message?.type === "gst:open-menu") { open(); respond({ opened }); }
   });
   chrome.storage.onChanged.addListener((changes, area) => {
@@ -149,6 +194,6 @@
   }).catch(() => {});
   window.addEventListener("resize", position);
   document.addEventListener("DOMContentLoaded", mount, { once: true }); mount();
-  window.addEventListener("pagehide", () => { close(); endEdit(); observer?.disconnect(); observer = null; root?.remove(); root = null; panel = null; launch = null; editor = null; feedback = null; });
+  window.addEventListener("pagehide", () => { void close(true); endEdit(); observer?.disconnect(); observer = null; root?.remove(); root = null; panel = null; launch = null; editor = null; feedback = null; closeNotice = null; });
   window.addEventListener("pageshow", mount);
 })();
