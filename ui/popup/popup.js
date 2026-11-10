@@ -60,10 +60,8 @@ function fillFarmThreshold(select, kind, current) {
   select.value = String(current);
 }
 function syncFarmLevelInputs() {
-  document.getElementById("farmBossSafetyOptions").hidden =
-    !["boss", "bossLevel"].includes(farmTargetMode.value);
   const range = farmTargetMode.value === "range";
-  document.getElementById("farmSingleLevel").hidden = range;
+  document.getElementById("farmSingleLevel").hidden = !["maxLevel", "minLevel"].includes(farmTargetMode.value);
   document.getElementById("farmLevelRange").hidden = !range;
   farmTargetLevel.disabled = !["maxLevel", "minLevel"].includes(farmTargetMode.value);
   farmTargetMinLevel.disabled = farmTargetMaxLevel.disabled = !range;
@@ -86,6 +84,7 @@ async function saveShortcut(code) {
   try {
     await chrome.storage.local.set({ farmShortcut: { code } });
     shortcutLabel.textContent = label;
+    document.getElementById("farmShortcutSummary").textContent = `Phím tắt · ${label}`;
     shortcutFeedback.textContent = "Đã lưu.";
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -156,88 +155,101 @@ async function refreshFarm() {
   } finally { farmBusy = false; }
 }
 
-async function saveFarm(section) {
-  let patch;
-  if (section === "scope") {
-    if (farmSearchScope.value !== "radius" && (!Number.isFinite(farmRadius.valueAsNumber)
-        || farmRadius.valueAsNumber < 1 || farmRadius.valueAsNumber > 1000)) farmRadius.value = "22";
-    if (!farmRadius.reportValidity()) return;
-    const radius = farmRadius.valueAsNumber;
-    if (!Number.isFinite(radius) || radius < 1 || radius > 1000) return;
-    patch = { enabled: true, searchScope: farmSearchScope.value === "map" ? "map" : "radius", radius };
-  } else if (section === "filter") {
-    const targetMode = ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
-    const needsLevel = targetMode === "maxLevel" || targetMode === "minLevel";
-    const targetLevel = Number(farmTargetLevel.value);
-    if (needsLevel && (!Number.isSafeInteger(targetLevel) || targetLevel < 1)) return;
-    const targetMinLevel = Number(farmTargetMinLevel.value);
-    const targetMaxLevel = Number(farmTargetMaxLevel.value);
-    if (targetMode === "range") {
-      if (![targetMinLevel, targetMaxLevel].every((level) => Number.isSafeInteger(level) && level > 0)) return;
-      if (targetMinLevel > targetMaxLevel) {
-        farmFeedback.textContent = "Cảnh giới/tầng kết thúc phải bằng hoặc cao hơn cảnh giới/tầng bắt đầu.";
-        return;
-      }
-    }
-    patch = { targetMode, targetLevel: positiveLevel(targetLevel, 1),
-      targetMinLevel: positiveLevel(targetMinLevel, 1), targetMaxLevel: positiveLevel(targetMaxLevel, 20),
-      bossDodge: farmBossDodge.checked, bossRetreat: farmBossRetreat.checked };
-    if (["boss", "bossLevel"].includes(targetMode)) {
-      patch.excludeBoss = false; farmExcludeBoss.checked = false;
-    }
-  } else {
-    const avoidLevel = Number(farmAvoidLevel.value), avoidDistance = farmAvoidDistance.valueAsNumber;
-    if (farmAvoidEnabled.checked && (!Number.isSafeInteger(avoidLevel) || avoidLevel < 1
-        || !Number.isFinite(avoidDistance) || avoidDistance < 1 || avoidDistance > 6)) return;
-    patch = { idleMode: ["home", "seek"].includes(farmIdleMode.value) ? farmIdleMode.value : "hold",
-      preferLoot: farmPreferLoot.checked,
-      avoidLevel: positiveLevel(avoidLevel, 10),
-      avoidDistance: Number.isFinite(avoidDistance) ? Math.max(1, Math.min(6, avoidDistance)) : 2 };
-  }
-  farmControls.disabled = true;
+let farmConfirmed = {};
+let farmDraftError = false;
+function farmHasDraft() {
+  return farmDraftError || [farmRadius, farmAvoidDistance].some((input) => input.value !== String(farmConfirmed[input === farmRadius ? "radius" : "avoidDistance"]));
+}
+function farmMessage(message) {
+  farmFeedback.textContent = message + (farmDraftError ? " · Khoảng tu vi không hợp lệ, chưa lưu." : farmHasDraft() ? " · Có bản nháp chưa lưu." : "");
+}
+function syncFarmScope() {
+  farmRadius.closest(".input-action").hidden = farmSearchScope.value !== "radius";
+  document.getElementById("farmAvoidFields").hidden = !farmAvoidEnabled.checked;
+}
+function farmSummaries() {
+  document.getElementById("farmBossSummary").textContent = `Boss · ${farmConfirmed.excludeBoss ? "không chọn boss" : "cho phép boss"}`;
+  document.getElementById("farmAvoidSummary").textContent = `Né quái mạnh · ${farmConfirmed.avoidEnabled ? "bật" : "tắt"}`;
+  document.getElementById("farmRecoverySummary").textContent = `Hồi phục · ${farmConfirmed.noRetreat ? "không rút lui" : "theo game"}`;
+}
+async function saveFarmPatch(patch, rollback) {
+  farmMessage("Đang lưu…");
   try {
     await updateFarmPreferences(patch);
-    farmFeedback.textContent = "";
-    await refreshFarm();
+    Object.assign(farmConfirmed, patch);
+    farmSummaries();
+    farmMessage("Đã lưu lựa chọn.");
   } catch {
-    farmFeedback.textContent = "Chưa lưu được tùy chọn Auto Farm. Hãy mở lại popup.";
-  } finally {
-    farmControls.disabled = false;
+    rollback?.();
+    farmMessage("Chưa lưu được lựa chọn; cài đặt cũ được giữ.");
   }
 }
-document.getElementById("saveFarm").addEventListener("click", () => saveFarm("scope"));
-document.getElementById("saveFarmFilter").addEventListener("click", () => saveFarm("filter"));
-document.getElementById("saveFarmBehavior").addEventListener("click", () => saveFarm("behavior"));
-farmTargetMode.addEventListener("change", () => {
-  syncFarmLevelInputs();
-  if (["boss", "bossLevel"].includes(farmTargetMode.value)) farmExcludeBoss.checked = false;
-});
-for (const input of [farmTargetMinLevel, farmTargetMaxLevel]) {
-  input.addEventListener("change", () => { farmFeedback.textContent = ""; });
-}
-for (const input of [farmTargetLevel, farmAvoidLevel])
-  input.addEventListener("change", () => { farmFeedback.textContent = ""; });
-function syncFarmScope() {
-  farmRadius.disabled = farmSearchScope.value !== "radius";
-}
-farmSearchScope.addEventListener("change", syncFarmScope);
-// These switches save only their own field, never unfinished range/filter drafts.
 for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmNoRetreat, "noRetreat"],
-  [breakSeals, "breakSeals"], [farmAvoidEnabled, "avoidEnabled"], [farmExcludeBoss, "excludeBoss"]]) {
+  [breakSeals, "breakSeals"], [farmPreferLoot, "preferLoot"], [farmBossDodge, "bossDodge"],
+  [farmBossRetreat, "bossRetreat"], [farmAvoidEnabled, "avoidEnabled"]]) {
   input.addEventListener("change", async () => {
-    const next = input.checked, previousMode = farmTargetMode.value;
-    const resetBossFocus = key === "excludeBoss" && next && ["boss", "bossLevel"].includes(previousMode);
-    if (resetBossFocus) { farmTargetMode.value = "highLevel"; syncFarmLevelInputs(); }
+    const next = input.checked;
     input.disabled = true;
-    try {
-      await updateFarmPreferences(resetBossFocus ? { excludeBoss: true, targetMode: "highLevel" } : { [key]: next });
-      farmFeedback.textContent = "";
-    } catch {
-      input.checked = !next;
-      if (resetBossFocus) { farmTargetMode.value = previousMode; syncFarmLevelInputs(); }
-      farmFeedback.textContent = "Chưa lưu được lựa chọn. Hãy thử lại.";
+    syncFarmScope();
+    await saveFarmPatch({ [key]: next }, () => { input.checked = farmConfirmed[key]; syncFarmScope(); });
+    input.disabled = false;
+  });
+}
+farmExcludeBoss.addEventListener("change", async () => {
+  const next = farmExcludeBoss.checked;
+  const patch = { excludeBoss: next };
+  if (next && ["boss", "bossLevel"].includes(farmConfirmed.targetMode)) patch.targetMode = "highLevel";
+  farmExcludeBoss.disabled = farmTargetMode.disabled = true;
+  if (patch.targetMode) { farmTargetMode.value = patch.targetMode; syncFarmLevelInputs(); }
+  await saveFarmPatch(patch, () => { farmExcludeBoss.checked = farmConfirmed.excludeBoss; farmTargetMode.value = farmConfirmed.targetMode; syncFarmLevelInputs(); });
+  farmExcludeBoss.disabled = farmTargetMode.disabled = false;
+});
+farmTargetMode.addEventListener("change", async () => {
+  const mode = farmTargetMode.value;
+  const patch = { targetMode: mode };
+  if (["boss", "bossLevel"].includes(mode)) patch.excludeBoss = false;
+  farmTargetMode.disabled = farmExcludeBoss.disabled = true;
+  if (patch.excludeBoss === false) farmExcludeBoss.checked = false;
+  syncFarmLevelInputs();
+  await saveFarmPatch(patch, () => { farmTargetMode.value = farmConfirmed.targetMode; farmExcludeBoss.checked = farmConfirmed.excludeBoss; syncFarmLevelInputs(); });
+  farmTargetMode.disabled = farmExcludeBoss.disabled = false;
+});
+for (const [input, key] of [[farmSearchScope, "searchScope"], [farmIdleMode, "idleMode"],
+  [farmTargetLevel, "targetLevel"], [farmAvoidLevel, "avoidLevel"]]) {
+  input.addEventListener("change", async () => {
+    const value = input.tagName === "SELECT" && [farmTargetLevel, farmAvoidLevel].includes(input) ? Number(input.value) : input.value;
+    const patch = key === "searchScope" ? { enabled: true, searchScope: value, ...(farmConfirmed.enabled ? {} : { radius: 11 }) } : { [key]: value };
+    input.disabled = true;
+    syncFarmScope();
+    await saveFarmPatch(patch, () => { input.value = String(farmConfirmed[key]); syncFarmScope(); });
+    input.disabled = false;
+  });
+}
+for (const input of [farmTargetMinLevel, farmTargetMaxLevel]) {
+  input.addEventListener("change", async () => {
+    const min = Number(farmTargetMinLevel.value), max = Number(farmTargetMaxLevel.value);
+    if (!Number.isSafeInteger(min) || !Number.isSafeInteger(max) || min < 1 || max < 1 || min > max) {
+      farmDraftError = true;
+      farmFeedback.textContent = "Khoảng tu vi không hợp lệ; mức kết thúc phải từ mức bắt đầu trở lên.";
+      return;
     }
-    finally { input.disabled = false; }
+    farmTargetMinLevel.disabled = farmTargetMaxLevel.disabled = true;
+    farmDraftError = false;
+    await saveFarmPatch({ targetMinLevel: min, targetMaxLevel: max }, () => { farmDraftError = true; });
+    farmTargetMinLevel.disabled = farmTargetMaxLevel.disabled = false;
+  });
+}
+for (const [input, key, valid] of [[farmRadius, "radius", (n) => Number.isSafeInteger(n) && n >= 1 && n <= 1000],
+  [farmAvoidDistance, "avoidDistance", (n) => Number.isFinite(n) && n >= 1 && n <= 6 && Number.isInteger(n * 2)]]) {
+  input.addEventListener("input", () => farmMessage("Bản nháp chưa lưu; nhấn Enter để xác nhận."));
+  input.addEventListener("keydown", async (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    const value = input.valueAsNumber;
+    if (!input.checkValidity() || !valid(value)) { farmFeedback.textContent = "Giá trị không hợp lệ; cài đặt cũ được giữ."; return; }
+    input.disabled = true;
+    await saveFarmPatch(key === "radius" ? { enabled: true, radius: value } : { [key]: value }, () => { input.value = String(farmConfirmed[key]); });
+    input.disabled = false;
   });
 }
 farmReturnDeath.addEventListener("change", async () => {
@@ -250,13 +262,12 @@ farmReturnDeath.addEventListener("change", async () => {
     await chrome.storage.local.set({
       areaMapOptions: { ...saved.areaMapOptions, returnDeath: next }
     });
-    farmFeedback.textContent = "";
+    farmMessage("Đã lưu lựa chọn.");
   } catch {
     farmReturnDeath.checked = !next;
     farmFeedback.textContent = "Chưa lưu được tùy chọn quay lại điểm chết. Hãy thử lại.";
   } finally { farmReturnDeath.disabled = false; }
 });
-farmRadius.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm("scope"); });
 for (const name of Object.keys(GSTFont.families)) {
   const option = document.createElement("option");
   option.value = name;
@@ -443,12 +454,24 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   farmRadius.value = typeof farmPreferences?.radius === "number" && Number.isFinite(farmPreferences.radius)
     ? Math.max(1, Math.min(1000, farmPreferences.radius)) : 22;
   if (farmPreferences?.enabled !== true) farmRadius.value = "11";
+  farmConfirmed = {
+    enabled: farmPreferences?.enabled === true, radius: Number(farmRadius.value), searchScope: farmSearchScope.value,
+    targetMode: farmTargetMode.value, targetLevel, targetMinLevel, targetMaxLevel,
+    avoidLevel: Number(farmAvoidLevel.value), avoidDistance: Number(farmAvoidDistance.value),
+    avoidEnabled: farmAvoidEnabled.checked, excludeBoss: farmExcludeBoss.checked,
+    noRetreat: farmNoRetreat.checked, showTargetLine: farmShowTargetLine.checked,
+    breakSeals: breakSeals.checked, idleMode: farmIdleMode.value, preferLoot: farmPreferLoot.checked,
+    bossDodge: farmBossDodge.checked, bossRetreat: farmBossRetreat.checked
+  };
+  syncFarmScope();
+  farmSummaries();
   farmControls.disabled = false;
   const shortcutCode = farmShortcut?.code;
   if (Number.isInteger(shortcutCode) && ((shortcutCode >= 48 && shortcutCode <= 57)
       || (shortcutCode >= 65 && shortcutCode <= 90) || (shortcutCode >= 112 && shortcutCode <= 121 && shortcutCode !== 116))) {
     shortcutLabel.textContent = `Phím tùy chỉnh: ${shortcutCode >= 112 ? `F${shortcutCode - 111}` : String.fromCharCode(shortcutCode)}`;
   }
+  document.getElementById("farmShortcutSummary").textContent = `Phím tắt · ${shortcutLabel.textContent}`;
   shortcutControls.disabled = false;
   refresh();
 }).catch(() => {

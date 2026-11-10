@@ -77,34 +77,18 @@
       <summary><span><strong>Auto Farm</strong><small>Phạm vi, nhặt đồ và tự dùng đan</small></span></summary>
       <div class="card-body">
         <p id="farmStatus" class="feature-status" role="status" aria-live="polite">Đang đọc trạng thái…</p>
-        <details class="diagnostic"><summary>Phím tắt Auto Farm · <span id="shortcutLabel">V</span></summary>
-        <fieldset id="shortcutControls" class="separated" disabled aria-label="Phím tắt Auto Farm">
-          <p class="field-title">Phím bật/tắt Auto Farm</p>
-          <div class="button-row"><button id="captureShortcut" type="button">Đặt phím</button><button id="resetShortcut" type="button" class="quiet">Dùng phím gốc</button></div>
-          <p class="hint">Gợi ý F6. Hỗ trợ chữ, số, F1–F10 trừ F5; Esc để hủy. Chỉ nhận phím khi đang ở trang game.</p>
-          <p id="shortcutFeedback" class="notice" role="status"></p>
-        </fieldset>
-        </details>
+        <p class="save-mode">Lựa chọn tự lưu · Số xác nhận bằng Enter</p>
+        <div class="farm-grid">
         <fieldset id="farmControls" disabled aria-label="Tùy chọn Auto Farm">
-          <p class="save-mode">Công tắc tự lưu · Phạm vi và bộ lọc dùng nút Lưu</p>
-          <div class="wide-groups"><div class="wide-group">
+          <div class="farm-column farm-left">
           <label for="farmSearchScope">Vùng tìm quái</label>
           <select id="farmSearchScope"><option value="radius">Tự chọn số ô</option><option value="map">Toàn map hiện tại</option></select>
-          <p class="hint">Tự chọn số ô: tìm quanh điểm bắt đầu farm trong khoảng bạn nhập bên dưới. Toàn map: tự đi tìm quái phù hợp bộ lọc trên map hiện tại, rồi dùng Auto Farm gốc để đánh. Khi chưa thấy mục tiêu sẽ dò các điểm có thể đi tới; không bảo đảm tìm hết quái nếu game chưa gửi dữ liệu. Chọn xong bấm Lưu phạm vi. Bật/tắt Auto Farm bằng phím ở trên.</p>
-          <label class="check-row"><input id="farmShowTargetLine" type="checkbox"><span>Hiện đường tới mục tiêu</span></label>
-          <p class="hint">Tick để hiện, bỏ tick để ẩn; tự lưu. Xanh lá: quái hoặc tọa độ boss đang tiếp cận. Vàng nét đứt: điểm dò, chưa phải quái. Xanh dương: các điểm rẽ trên đường đi. Đường thẳng tới mục tiêu chỉ để quan sát, không cho đi xuyên vật cản.</p>
+          <details class="diagnostic"><summary>Giải thích vùng tìm</summary><p>Tìm quanh điểm bắt đầu hoặc tìm trên toàn map. Toàn map chỉ dựa vào dữ liệu game cung cấp và không bảo đảm tìm hết quái.</p></details>
           <div class="input-action">
             <div><label for="farmRadius">Giới hạn vùng farm <span class="range">1–1.000 ô</span></label><input id="farmRadius" type="number" min="1" max="1000" step="1" value="22" required></div>
-            <button id="saveFarm" type="button" class="primary">Lưu phạm vi</button>
           </div>
           <p class="save-mode">Số ô tính từ điểm bắt đầu farm. Ví dụ 30: tìm quái cách điểm đó tối đa 30 ô.</p>
           <p class="hint">Tự hồi sinh: luôn BẬT khi đang Auto Farm; tiếp tục farm sau mỗi lần hồi sinh, không giới hạn số lần chết. Vẫn chờ nút game sẵn sàng. Bạn chủ động tắt farm thì giữ TẮT.</p>
-          <div class="separated">
-            <label class="switch-row"><span>Tự quay lại điểm chết sau hồi sinh</span><input id="farmReturnDeath" class="switch" type="checkbox"></label>
-            <p class="save-mode">Tự lưu · chỉ chạy khi Auto Farm đang bật · mặc định TẮT</p>
-            <p class="hint">Sau khi hồi sinh, trở lại gần vị trí chết rồi tiếp tục farm tại đó. Chỉ áp dụng cùng bản đồ, không áp dụng trong bí cảnh; điểm chờ được giữ tối đa 2 phút trong tab. Di chuyển tay hoặc tắt Auto Farm sẽ hủy hành trình.</p>
-          </div>
-          </div><div class="wide-group">
           <div class="two-columns separated">
             <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="boss">Chỉ boss</option><option value="bossLevel">Boss trước → tu vi cao đến thấp</option><option value="highLevel">Tu vi cao → thấp (quái thường)</option><option value="lowLevel">Tu vi thấp → cao (quái thường)</option><option value="maxLevel">Tới cảnh giới/tầng chọn</option><option value="minLevel">Từ cảnh giới/tầng chọn</option><option value="range">Trong khoảng cảnh giới/tầng</option></select></div>
             <div id="farmSingleLevel"><label for="farmTargetLevel">Mức tu vi quái</label><select id="farmTargetLevel" required disabled></select></div>
@@ -113,40 +97,52 @@
             <div><label for="farmTargetMinLevel">Từ cảnh giới/tầng</label><select id="farmTargetMinLevel" required disabled></select></div>
             <div><label for="farmTargetMaxLevel">Đến cảnh giới/tầng</label><select id="farmTargetMaxLevel" required disabled></select></div>
           </div>
-          <button id="saveFarmFilter" type="button" class="full">Lưu lựa chọn quái</button>
+          </div>
+          <div class="farm-column farm-middle">
+          <details class="advanced" open><summary>Khi hết mục tiêu · nhặt đồ</summary><div class="advanced-body">
+            <label for="farmIdleMode">Khi không còn mục tiêu</label>
+            <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi đứng chờ tại chỗ</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option><option value="seek">Nhặt đồ rồi chủ động tìm quái mới</option></select>
+            <p class="hint">Chủ động tìm: dò vị trí mới trong bán kính đã chọn, hoặc dùng cách dò toàn map có sẵn. Vẫn giữ bộ lọc quái, giới hạn vùng tìm và nhường thao tác khác.</p>
+            <label class="check-row"><input id="farmPreferLoot" type="checkbox" checked><span>Ưu tiên nhặt đồ sau giao tranh, trước khi chuyển bãi quái</span></label>
+            <p class="hint">Ưu tiên đồ gần bãi vừa đánh, kể cả khi không bật Mở rộng vùng tìm quái. Chờ ngắn để vật phẩm xuất hiện; dùng cơ chế nhặt và giới hạn thử của game. Đồ không thể nhặt sẽ được bỏ qua tạm thời.</p>
+          </div></details>
+          <details class="advanced separated"><summary id="farmAvoidSummary">Né quái mạnh</summary><div class="advanced-body">
+            <label class="check-row"><input id="farmAvoidEnabled" type="checkbox"><span>Né quái level cao khi Auto Farm bật</span></label>
+            <div id="farmAvoidFields" class="two-columns">
+              <div><label for="farmAvoidLevel">Né từ cảnh giới/tầng</label><select id="farmAvoidLevel" required></select></div>
+              <div><label for="farmAvoidDistance">Lùi mỗi lượt (1–6 ô)</label><input id="farmAvoidDistance" type="number" min="1" max="6" step="0.5" value="2" required></div>
+            </div>
+            <p class="hint">Chỉ hoạt động khi Auto Farm đang BẬT. Quái từ mức né trở lên không được chọn để chủ động đánh, kể cả khi chọn Tất cả/Chỉ boss. Chỉ lùi sau đòn có nguồn xác định; không đoán từ con gần nhất. Chờ 3 giây giữa lượt né; ra xa thì tiếp tục farm quái phù hợp. 2 ô không bảo đảm thoát đòn đánh xa. Không có đường ngắn an toàn thì nhường xử lý gốc.</p>
+          </div></details>
+          </div>
+          <div class="farm-column farm-right">
+          <details id="farmBossSafetyOptions" class="advanced separated"><summary id="farmBossSummary">Boss</summary><div class="advanced-body">
           <label class="check-row"><input id="farmExcludeBoss" type="checkbox"><span>Không chọn boss làm mục tiêu</span></label>
-          <p class="hint">Tự lưu. Lọc boss theo dữ liệu game cung cấp; kỹ năng đánh lan vẫn có thể trúng boss gần đó. Không tự tránh đường đi gần boss. Nếu chọn Chỉ boss cùng lúc, Auto Farm sẽ không chọn mục tiêu.</p>
-          <p class="hint">Boss trước: ưu tiên boss có dữ liệu và phù hợp bộ lọc, sau đó tới quái tu vi cao nhất còn tiếp cận được. Level cao → thấp và Level thấp → cao chỉ chọn quái thường. Mức tối đa lấy hết tầng đã chọn; mức tối thiểu và né quái bắt đầu từ đầu tầng; khoảng gồm trọn hai tầng đã chọn. Mức cũ không trùng ranh giới tầng được giữ nguyên cho tới khi bạn đổi lựa chọn. Các chế độ ưu tiên không đặt giới hạn tu vi; vẫn áp dụng tùy chọn né quái. Bộ lọc dùng được cả với bán kính gốc.</p>
-          <div id="farmBossSafetyOptions" class="separated" hidden>
+          <p class="hint">Tự lưu. Lọc boss theo dữ liệu game cung cấp; kỹ năng đánh lan vẫn có thể trúng boss gần đó. Không tự tránh đường đi gần boss. Bật tùy chọn này sẽ chuyển bộ lọc boss sang quái thường.</p>
             <p class="field-title">Tự bảo vệ khi đánh boss</p>
             <label class="check-row"><input id="farmBossDodge" type="checkbox" checked><span>Né chiêu boss và dùng Q giữ khoảng cách khi tất cả skill tấn công đang hồi</span></label>
             <label class="check-row"><input id="farmBossRetreat" type="checkbox" checked><span>HP dưới 30%: lùi giữ khoảng cách, chờ dùng đan (đánh lại khi HP ≥ 40%)</span></label>
-            <p class="hint">Áp dụng cho Chỉ boss và Boss trước → Level cao đến thấp. Khi toàn bộ skill tấn công còn hồi, ưu tiên Q rồi giữ khoảng cách; khi skill sẵn sàng thì game tiếp tục đánh. Né vòng cảnh báo bằng Q nếu đủ điều kiện, nếu Q đang hồi thì chạy ra ngoài. Đọc vòng thật từ game/bí cảnh nếu có; điểm ngắm của chiêu boss chỉ được coi là vùng ước lượng, không bảo đảm né mọi chiêu. Bấm Lưu lựa chọn quái để áp dụng.</p>
-          </div>
-          <p class="hint">Chế độ Tự chọn số ô và Toàn map cũng yêu cầu bật bay nếu nhân vật đang đi bộ.</p>
-          </div><div class="wide-group">
+            <p class="hint">Áp dụng cho Chỉ boss và Boss trước → Level cao đến thấp. Khi toàn bộ skill tấn công còn hồi, ưu tiên Q rồi giữ khoảng cách; khi skill sẵn sàng thì game tiếp tục đánh. Né vòng cảnh báo bằng Q nếu đủ điều kiện, nếu Q đang hồi thì chạy ra ngoài. Đọc vòng thật từ game/bí cảnh nếu có; điểm ngắm của chiêu boss chỉ được coi là vùng ước lượng, không bảo đảm né mọi chiêu.</p>
+          </div></details>
+          <details class="advanced separated"><summary id="farmRecoverySummary">Hồi phục</summary><div class="advanced-body">
           <div class="separated">
             <label class="switch-row"><span>Không rút lui hồi máu khi hết đan HP</span><input id="farmNoRetreat" class="switch" type="checkbox" checked></label>
             <p class="save-mode">Tự lưu · chỉ áp dụng khi Auto Farm bật · mặc định BẬT</p>
             <p class="hint">BẬT: khi máu thấp và hết cả hai loại đan HP, tool bỏ bước tự rút lui/bế quan hồi máu để Auto Farm tiếp tục chiến đấu. TẮT: game tự rút lui/bế quan và tiếp tục farm khi hồi đủ 95% HP. Còn đan thì game vẫn dùng theo cài đặt. Không bỏ qua chết, choáng, mất kết nối hoặc trạng thái game chặn hành động; Né quái level cao vẫn là tùy chọn riêng.</p>
           </div>
-          <details class="advanced separated"><summary>Khi hết mục tiêu · nhặt đồ · né quái</summary><div class="advanced-body">
-            <label for="farmIdleMode">Khi không còn mục tiêu</label>
-            <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi đứng chờ tại chỗ</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option><option value="seek">Nhặt đồ rồi chủ động tìm quái mới</option></select>
-            <p class="hint">Chủ động tìm: dò vị trí mới trong bán kính đã chọn, hoặc dùng cách dò toàn map có sẵn. Vẫn giữ bộ lọc quái, giới hạn vùng tìm và nhường thao tác khác.</p>
-            <label class="check-row"><input id="farmPreferLoot" type="checkbox" checked><span>Ưu tiên nhặt đồ sau giao tranh, trước khi chuyển bãi quái</span></label>
-            <p class="hint">Ưu tiên đồ gần bãi vừa đánh, kể cả khi không bật Mở rộng vùng tìm quái. Chờ ngắn để vật phẩm xuất hiện; dùng cơ chế nhặt và giới hạn thử của game. Đồ không thể nhặt sẽ được bỏ qua tạm thời. Bấm Lưu Tìm / nhặt / né để áp dụng.</p>
-            <label class="check-row"><input id="farmAvoidEnabled" type="checkbox"><span>Né quái level cao khi Auto Farm bật</span></label>
-            <div class="two-columns">
-              <div><label for="farmAvoidLevel">Né từ cảnh giới/tầng</label><select id="farmAvoidLevel" required></select></div>
-              <div><label for="farmAvoidDistance">Lùi mỗi lượt (1–6 ô)</label><input id="farmAvoidDistance" type="number" min="1" max="6" step="0.5" value="2" required></div>
-            </div>
-            <button id="saveFarmBehavior" type="button" class="full">Lưu tìm quái / nhặt đồ / né quái</button>
-            <p class="hint">Chỉ hoạt động khi Auto Farm đang BẬT. Quái từ mức né trở lên không được chọn để chủ động đánh, kể cả khi chọn Tất cả/Chỉ boss. Chỉ lùi sau đòn có nguồn xác định; không đoán từ con gần nhất. Chờ 3 giây giữa lượt né; ra xa thì tiếp tục farm quái phù hợp. 2 ô không bảo đảm thoát đòn đánh xa. Không có đường ngắn an toàn thì nhường xử lý gốc.</p>
+          <div class="separated">
+            <label class="switch-row"><span>Tự quay lại điểm chết sau hồi sinh</span><input id="farmReturnDeath" class="switch" type="checkbox"></label>
+            <p class="save-mode">Tự lưu · chỉ chạy khi Auto Farm đang bật · mặc định TẮT</p>
+            <p class="hint">Sau khi hồi sinh, trở lại gần vị trí chết rồi tiếp tục farm tại đó. Chỉ áp dụng cùng bản đồ, không áp dụng trong bí cảnh; điểm chờ được giữ tối đa 2 phút trong tab. Di chuyển tay hoặc tắt Auto Farm sẽ hủy hành trình.</p>
+          </div>
           </div></details>
-          </div></div>
+          <details class="advanced separated"><summary>Hiển thị đường tới mục tiêu</summary><div class="advanced-body">
+          <label class="check-row"><input id="farmShowTargetLine" type="checkbox"><span>Hiện đường tới mục tiêu</span></label>
+          </div></details>
+          </div>
         </fieldset>
-        <p id="farmFeedback" class="notice" role="alert"></p>
+        <div class="farm-extra">
+          <details class="advanced separated"><summary id="potionSummary">Đan HP/MP · độc lập Auto Farm</summary><div class="advanced-body">
         <fieldset id="potionControls" class="separated" disabled aria-label="Tự dùng đan HP và MP">
           <p class="field-title">Tự dùng đan HP/MP · độc lập Auto Farm</p>
           <p class="hint">Bật riêng từng loại để tự dùng đan ngay cả khi tắt Auto Farm. Ngưỡng bạn đặt thay thế ngưỡng tự dùng đan của game cho loại đó; khi tắt, game hoạt động theo mức gốc.</p>
@@ -162,10 +158,23 @@
               <input id="potionMpPercent" type="number" min="1" max="99" step="1" value="25" required>
             </div>
           </div>
-          <button id="savePotionPreferences" type="button" class="full">Lưu tự dùng đan</button>
           <p class="hint">Tự chọn ngưỡng 1–99%, mỗi bước 1%. Dùng cơ chế đan, thời gian hồi và số lượng có sẵn của game; ưu tiên HP khi cả hai cùng thấp.</p>
           <p id="potionFeedback" class="notice" role="status"></p>
         </fieldset>
+          </div></details>
+          <details class="advanced separated"><summary id="farmShortcutSummary">Phím tắt</summary><div class="advanced-body">
+        <details class="diagnostic"><summary>Phím tắt Auto Farm · <span id="shortcutLabel">V</span></summary>
+        <fieldset id="shortcutControls" class="separated" disabled aria-label="Phím tắt Auto Farm">
+          <p class="field-title">Phím bật/tắt Auto Farm</p>
+          <div class="button-row"><button id="captureShortcut" type="button">Đặt phím</button><button id="resetShortcut" type="button" class="quiet">Dùng phím gốc</button></div>
+          <p class="hint">Gợi ý F6. Hỗ trợ chữ, số, F1–F10 trừ F5; Esc để hủy. Chỉ nhận phím khi đang ở trang game.</p>
+          <p id="shortcutFeedback" class="notice" role="status"></p>
+        </fieldset>
+        </details>
+          </div></details>
+        </div>
+        </div>
+        <p id="farmFeedback" class="notice" role="alert"></p>
         <details class="diagnostic">
           <summary>Hỗ trợ khi gặp lỗi</summary>
 
@@ -451,14 +460,6 @@
       </div>
     </section>
   </main>
-  <div id="farmSaveDock" class="save-dock" hidden aria-label="Lưu các nhóm cài đặt Auto Farm">
-    <span class="save-dock-title">Lưu Auto Farm</span>
-    <div class="save-dock-buttons">
-      <button type="button" data-trigger-save="saveFarm">Phạm vi</button>
-      <button type="button" data-trigger-save="saveFarmFilter">Bộ lọc quái</button>
-      <button type="button" data-trigger-save="saveFarmBehavior">Tìm / nhặt / né</button>
-    </div>
-  </div>
   <footer>
     <p id="feedback" class="notice" role="alert"></p>
     <details class="diagnostic"><summary>Kết nối &amp; thông tin hoạt động</summary><p id="status" role="status" aria-live="polite">Đang tải cài đặt…</p></details>

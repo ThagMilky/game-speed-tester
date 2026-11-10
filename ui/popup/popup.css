@@ -249,18 +249,6 @@ body.embedded {
 }
 .dashboard-tile strong { font-size: 17px; }
 .dashboard-tile span { color: var(--muted); font-size: 13px; font-weight: 400; line-height: 1.4; }
-.save-dock {
-  padding: 10px 16px;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.save-dock-title { font-size: 13px; font-weight: 600; color: var(--muted); }
-.save-dock-buttons { display: flex; gap: 8px; margin-top: 6px; }
-.save-dock-buttons button { min-width: 0; flex: 1; font-size: 14px; min-height: 38px; padding: 6px 8px; }
-body.layout-ready #saveFarm,
-body.layout-ready #saveFarmFilter,
-body.layout-ready #saveFarmBehavior { display: none; }
 .app-content footer { flex-shrink: 0; padding: 7px 18px; background: var(--surface); border-top: 1px solid var(--border); }
 .app-content footer > .hint { display: none; }
 .app-content footer .diagnostic { margin: 0; }
@@ -298,9 +286,24 @@ body.layout-ready #saveFarmBehavior { display: none; }
     padding: 11px 13px;
     font-size: 16px;
   }
-  body.embedded[data-orientation="horizontal"] .wide-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; align-items: start; }
+  body.embedded[data-orientation="horizontal"] .wide-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
   body.embedded[data-orientation="horizontal"] .wide-group { min-width: 0; }
   body.embedded[data-orientation="horizontal"] .diagnostics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Auto Farm uses the space left after the navigation and panel padding. */
+.farm-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+#farmControls { display: contents; }
+.farm-column, .farm-extra { min-width: 0; }
+#farmControls .input-action { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) {
+  body.embedded[data-orientation="horizontal"] .farm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1050px) {
+  body.embedded[data-orientation="horizontal"] .farm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.embedded[data-orientation="horizontal"] .farm-extra { grid-column: 3; }
+}
+@media (max-width: 759px) {
+  body.embedded .wide-groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 }
 @media (max-width: 600px) {
   .dashboard-grid { grid-template-columns: 1fr; }
@@ -308,5 +311,4 @@ body.layout-ready #saveFarmBehavior { display: none; }
   #featurePanels { padding: 12px; }
   #featurePanels > .card > .card-body { padding: 13px 12px; }
   .dashboard-tile { min-height: 82px; }
-  .save-dock-buttons button { font-size: 12px; }
 }

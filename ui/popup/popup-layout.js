@@ -4,7 +4,6 @@
 (() => {
   const container = document.getElementById("featurePanels");
   const overview = document.getElementById("overviewPage");
-  const dock = document.getElementById("farmSaveDock");
   const views = new Map([...container.querySelectorAll(":scope > [data-panel]")]
     .map((panel) => [panel.dataset.panel, panel]));
   const navigation = [...document.querySelectorAll("[data-nav-panel]")];
@@ -44,7 +43,6 @@
       if (item.dataset.navPanel === page) item.setAttribute("aria-current", "page");
       else item.removeAttribute("aria-current");
     }
-    dock.hidden = page !== "farm";
     container.scrollTop = 0;
     if (save) {
       navigationRevision++;
@@ -56,16 +54,6 @@
   for (const item of document.querySelectorAll("[data-open-panel]")) {
     item.addEventListener("click", () => selectPage(item.dataset.openPanel));
   }
-
-  const farmControls = document.getElementById("farmControls");
-  function syncSaveButtons() {
-    for (const button of dock.querySelectorAll("[data-trigger-save]")) button.disabled = farmControls.disabled;
-  }
-  for (const button of dock.querySelectorAll("[data-trigger-save]")) {
-    button.addEventListener("click", () => document.getElementById(button.dataset.triggerSave)?.click());
-  }
-  new MutationObserver(syncSaveButtons).observe(farmControls, { attributes: true, attributeFilter: ["disabled"] });
-  syncSaveButtons();
 
   document.body.classList.add("layout-ready");
   selectPage("overview", false);
