@@ -53,7 +53,7 @@
       targetMinLevel: Number.isSafeInteger(value?.targetMinLevel) && value.targetMinLevel > 0 ? value.targetMinLevel : 1,
       targetMaxLevel: Number.isSafeInteger(value?.targetMaxLevel) && value.targetMaxLevel > 0 ? value.targetMaxLevel : 20,
       radius: typeof value?.radius === "number" && Number.isFinite(value.radius)
-        ? Math.max(11, Math.min(1000, value.radius)) : 22
+        ? Math.max(1, Math.min(1000, value.radius)) : 22
     };
     const url = new URL(location.href);
     if ((settings.enabled || settings.autoRespawn || settings.breakSeals || settings.targetMode !== "all") && !url.searchParams.has("timer")) {

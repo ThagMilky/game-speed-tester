@@ -35,6 +35,7 @@
         "features/automation/auto-farm/farm-combat.js",
         "shared/navigation/navigation.js",
         "shared/coordination/farm-revive-policy.js",
+        "features/automation/auto-farm/farm-compatibility-main.js",
         "shared/navigation/farm-input.js",
         "features/movement/map/map-travel-page.js",
         "shared/navigation/farm-routing.js",

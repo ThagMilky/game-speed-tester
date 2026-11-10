@@ -2,6 +2,7 @@
   "use strict";
   let preferences = {}, binding = null, job = null, retryAt = 0, message = "", suspended = false;
   const finite = Number.isFinite, deferred = new Map();
+  const nativeEligible = (enemy) => enemy?.hostile === true || enemy?.aggro === false;
   const explored = new Map();
   let scanAt = 0, correctionUntil = 0, lastFix;
   let resumeTarget = null, handoff = null, resumeReason = null, centerSync = null;
@@ -20,6 +21,10 @@
   function routeLog(scene, reason, extra = {}) {
     globalThis.GSTMovementDiagnostics?.event?.(scene, reason, extra);
   }
+  function hostMapKey(host) {
+    try { return typeof host?.mapKey === "function" ? host.mapKey() : null; }
+    catch { return null; }
+  }
   function endHandoff(reason = "target_unavailable") {
     if (handoff?.fromMap) resumeReason = reason;
     handoff = null;
@@ -27,7 +32,7 @@
   function nativeTarget(scene, enemies, area, time) {
     if (!Number.isSafeInteger(scene.auto.target)) return null;
     return Array.isArray(enemies) ? enemies.find((enemy) => enemy.id === scene.auto.target
-      && !enemy.dead && enemy.hostile && withinArea(area, enemy)
+      && !enemy.dead && nativeEligible(enemy) && withinArea(area, enemy)
       && !(scene.auto.skipped.get(enemy.id) > time)
       && !(deferred.get(enemy.id) > time)) ?? null : null;
   }
@@ -39,7 +44,7 @@
         fromOwner: "GSTFarmMap", toOwner: "native_farm_eligible", handoffReason: reason });
     }
     if (!handoff || handoff.id !== target.id) handoff = { id: target.id, at: time, fromMap };
-    // Native pick()/idle() search within 11 units of auto.ax/ay. A map target
+    // Native pick()/idle() search within auto.radius of auto.ax/ay. A map target
     // may be 40+ units away from the old center, so hand off the center too.
     if (finite(target.x) && finite(target.y)) {
       scene.auto.ax = target.x; scene.auto.ay = target.y;
@@ -84,7 +89,7 @@
     if (bossPriority) return false;
     if (handoff) {
       const held = Array.isArray(enemies) && enemies.find((enemy) => enemy.id === handoff.id
-        && !enemy.dead && enemy.hostile && withinArea(area, enemy));
+          && !enemy.dead && nativeEligible(enemy) && withinArea(area, enemy));
       if (!held) endHandoff("target_unavailable");
       else if (scene.auto.target !== handoff.id) endHandoff("native_target_changed");
       else {
@@ -102,7 +107,7 @@
       }
     }
     if (!engaged) return false;
-    // Native has a genuinely nearby target, not simply an actor within 11 tiles.
+    // Native has a genuinely nearby target, not simply an actor within search reach.
     if (job && !(host.inCombat?.() && distance <= handoffReach)) return false;
     yieldToNative(scene, time, target, job ? "native_engaged" : "native_target");
     return true;
@@ -225,7 +230,7 @@
     if (preferences.searchScope === "map" || seekRealmBoss(scene))
       return { minX: 0, minY: 0, maxX: w, maxY: h, home: null };
     const home = globalThis.GSTHarvest?.farmOrigin?.(scene), radius = preferences.radius;
-    if (!home || ![home.x, home.y, radius].every(finite) || radius < 11) return null;
+    if (!home || ![home.x, home.y, radius].every(finite) || radius < 1) return null;
     return { minX: Math.max(0, home.x - radius), maxX: Math.min(w, home.x + radius),
       minY: Math.max(0, home.y - radius), maxY: Math.min(h, home.y + radius), home, radius };
   }
@@ -278,7 +283,7 @@
     const enemies = typeof host.enemies === "function" ? host.enemies() : [];
     if (!Array.isArray(enemies)) return null;
     for (const [id, until] of deferred) if (until <= time) deferred.delete(id);
-    const monsters = enemies.filter((enemy) => !enemy.dead && enemy.hostile && finite(enemy.id)
+    const monsters = enemies.filter((enemy) => !enemy.dead && nativeEligible(enemy) && finite(enemy.id)
       && withinArea(area, enemy));
     const eligible = monsters.filter((enemy) => !(scene.auto.skipped.get(enemy.id) > time) && !deferred.has(enemy.id));
     // Opt-in realm boss search uses the known encounter coordinates. Actual
@@ -395,6 +400,20 @@
           endHandoff("manual_override");
         return false;
       }
+      const mapKey = hostMapKey(host);
+      if (mapKey !== null && binding.mapKey !== mapKey) {
+        release(); endHandoff("map_changed");
+        resumeTarget = null; resumeReason = null; deferred.clear(); explored.clear(); scanAt = 0; retryAt = 0;
+        lastFix = undefined; correctionUntil = 0; centerSync = null;
+        binding.mapKey = mapKey;
+        message = "Map/kênh đã đổi; xóa hành trình và cache cũ, chờ dữ liệu mới.";
+        return false;
+      }
+      if (globalThis.GSTFarmCompatibility?.nativeRadius(scene.auto.radius) == null) {
+        release();
+        message = "Bán kính Auto Farm gốc không được hỗ trợ; đã nhường tìm mục tiêu cho game.";
+        return false;
+      }
       const area = searchArea(scene);
       if (!area) { release(); return false; }
       if (typeof GSTHarvest.needsRecovery !== "function" || GSTHarvest.needsRecovery(scene)) { release(); return false; }
@@ -425,8 +444,9 @@
           && typeof host.enemies === "function") {
         const pos = { x: scene.px, y: scene.py };
         const blocker = host.enemies().filter((enemy) => !isBoss(enemy) && enemy.id !== target.id
-          && !enemy.dead && enemy.hostile && finite(enemy.x) && finite(enemy.y)
-          && range(enemy, pos) < 3.5 && range(enemy, { x: scene.auto.ax, y: scene.auto.ay }) < 11
+          && !enemy.dead && nativeEligible(enemy) && finite(enemy.x) && finite(enemy.y)
+          && range(enemy, pos) < 3.5 && range(enemy, { x: scene.auto.ax, y: scene.auto.ay })
+            < (globalThis.GSTFarmCompatibility?.nativeRadius(scene.auto.radius) ?? -Infinity)
           && segmentDistance(enemy, pos, target) < (finite(enemy.radius) ? enemy.radius : 1) + 0.7)
           .sort((a, b) => range(a, pos) - range(b, pos))[0];
         if (blocker && !(scene.auto.skipped.get(blocker.id) > time)
@@ -582,7 +602,9 @@
     detach();
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.walk !== "function" || typeof scene.now !== "function"
         || typeof scene.views?.values !== "function" || !scene.events?.on || !scene.events.off) return;
-    binding = { scene, auto: scene.auto, remove: GSTFarmUpdate.add(scene, 4, (host, time) => update(host, time)),
+    const initialHost = typeof scene.autoHost === "function" ? scene.autoHost() : null;
+    binding = { scene, auto: scene.auto, mapKey: hostMapKey(initialHost),
+      remove: GSTFarmUpdate.add(scene, 4, (host, time) => update(host, time)),
       removeScout: GSTFarmUpdate.add(scene, 25, (host, time) => update(host, time, true)),
       modalAt: -Infinity, modal: false, lastHit: null, handledHit: null, hitSequence: 0 };
     binding.removeHits = GSTFarmEvents.add(scene, (event) => observeHit(scene, event));

@@ -89,7 +89,8 @@
   }
   function area(scene) {
     const home = GSTHarvest.farmOrigin(scene) ?? { x: scene.auto.ax, y: scene.auto.ay };
-    return { home, radius: settings.enabled && settings.searchScope === "map" ? Infinity : settings.enabled ? settings.radius : 11,
+    const nativeRadius = globalThis.GSTFarmCompatibility?.nativeRadius(scene.auto?.radius) ?? -Infinity;
+    return { home, radius: settings.enabled && settings.searchScope === "map" ? Infinity : settings.enabled ? settings.radius : nativeRadius,
       w: scene.map?.w, h: scene.map?.h, whole: settings.enabled && settings.searchScope === "map" };
   }
   function safePath(scene, points, origin, zone, primary) {
@@ -367,11 +368,15 @@
     binding = owner;
     wrap(owner, scene.auto, "idle", (original) => function (host, time, x, y) {
       if (this !== owner.auto || !this.on || settings.idleMode !== "hold" || blocked(scene)
-          || typeof host.loot !== "function" || typeof host.steer !== "function") return original.call(this, host, time, x, y);
+      || typeof host.loot !== "function" || typeof host.steer !== "function") return original.call(this, host, time, x, y);
+      const nativeRadius = globalThis.GSTFarmCompatibility?.nativeRadius(this.radius);
+      if (nativeRadius == null) return original.call(this, host, time, x, y);
       const loot = host.loot();
       if (!Array.isArray(loot) || loot.some((item) => finite(item.x) && finite(item.y)
-          && Math.hypot(item.x - this.ax, item.y - this.ay) < 11
+          && Math.hypot(item.x - this.ax, item.y - this.ay) < nativeRadius
           && !this.lootSkip.has(`${item.x.toFixed(1)},${item.y.toFixed(1)}`))) return original.call(this, host, time, x, y);
+      if (loot.length === 0) this.lootFails = 0;
+      if (typeof this.rideIfIdle === "function" && this.rideIfIdle(host, time)) return;
       host.steer(0, 0); this.stillSince = time;
       owner.idleAt = performance.now();
     });

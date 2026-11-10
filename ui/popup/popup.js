@@ -48,6 +48,17 @@ const farmAvoidEnabled = document.getElementById("farmAvoidEnabled");
 const farmAvoidLevel = document.getElementById("farmAvoidLevel");
 const farmAvoidDistance = document.getElementById("farmAvoidDistance");
 const positiveLevel = (value, fallback) => Number.isSafeInteger(value) && value > 0 ? value : fallback;
+const farmCompatibility = globalThis.GSTFarmCompatibility;
+function fillFarmThreshold(select, kind, current) {
+  const options = farmCompatibility.options(kind, current);
+  select.replaceChildren(...options.map(({ value, label }) => {
+    const option = document.createElement("option");
+    option.value = String(value);
+    option.textContent = label;
+    return option;
+  }));
+  select.value = String(current);
+}
 function syncFarmLevelInputs() {
   document.getElementById("farmBossSafetyOptions").hidden =
     !["boss", "bossLevel"].includes(farmTargetMode.value);
@@ -56,8 +67,10 @@ function syncFarmLevelInputs() {
   document.getElementById("farmLevelRange").hidden = !range;
   farmTargetLevel.disabled = !["maxLevel", "minLevel"].includes(farmTargetMode.value);
   farmTargetMinLevel.disabled = farmTargetMaxLevel.disabled = !range;
-  farmTargetMaxLevel.setCustomValidity("");
+  fillFarmThreshold(farmTargetLevel, farmTargetMode.value === "minLevel" ? "min" : "max",
+    Number(farmTargetLevel.value) || 1);
 }
+fillFarmThreshold(farmAvoidLevel, "min", 10);
 const farmStatus = document.getElementById("farmStatus");
 const autoFarmValue = document.getElementById("autoFarmValue");
 const farmFeedback = document.getElementById("farmFeedback");
@@ -147,26 +160,22 @@ async function saveFarm(section) {
   let patch;
   if (section === "scope") {
     if (farmSearchScope.value !== "radius" && (!Number.isFinite(farmRadius.valueAsNumber)
-        || farmRadius.valueAsNumber < 11 || farmRadius.valueAsNumber > 1000)) farmRadius.value = "22";
+        || farmRadius.valueAsNumber < 1 || farmRadius.valueAsNumber > 1000)) farmRadius.value = "22";
     if (!farmRadius.reportValidity()) return;
     const radius = farmRadius.valueAsNumber;
-    if (!Number.isFinite(radius) || radius < 11 || radius > 1000) return;
+    if (!Number.isFinite(radius) || radius < 1 || radius > 1000) return;
     patch = { enabled: true, searchScope: farmSearchScope.value === "map" ? "map" : "radius", radius };
   } else if (section === "filter") {
     const targetMode = ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(farmTargetMode.value) ? farmTargetMode.value : "all";
     const needsLevel = targetMode === "maxLevel" || targetMode === "minLevel";
-    if (needsLevel && !farmTargetLevel.reportValidity()) return;
-    const targetLevel = farmTargetLevel.valueAsNumber;
+    const targetLevel = Number(farmTargetLevel.value);
     if (needsLevel && (!Number.isSafeInteger(targetLevel) || targetLevel < 1)) return;
-    const targetMinLevel = farmTargetMinLevel.valueAsNumber;
-    const targetMaxLevel = farmTargetMaxLevel.valueAsNumber;
-    farmTargetMaxLevel.setCustomValidity("");
+    const targetMinLevel = Number(farmTargetMinLevel.value);
+    const targetMaxLevel = Number(farmTargetMaxLevel.value);
     if (targetMode === "range") {
-      if (!farmTargetMinLevel.reportValidity() || !farmTargetMaxLevel.reportValidity()) return;
       if (![targetMinLevel, targetMaxLevel].every((level) => Number.isSafeInteger(level) && level > 0)) return;
       if (targetMinLevel > targetMaxLevel) {
-        farmTargetMaxLevel.setCustomValidity("Level cao nhất phải lớn hơn hoặc bằng level thấp nhất.");
-        farmTargetMaxLevel.reportValidity();
+        farmFeedback.textContent = "Cảnh giới/tầng kết thúc phải bằng hoặc cao hơn cảnh giới/tầng bắt đầu.";
         return;
       }
     }
@@ -177,8 +186,7 @@ async function saveFarm(section) {
       patch.excludeBoss = false; farmExcludeBoss.checked = false;
     }
   } else {
-    if (farmAvoidEnabled.checked && (!farmAvoidLevel.reportValidity() || !farmAvoidDistance.reportValidity())) return;
-    const avoidLevel = farmAvoidLevel.valueAsNumber, avoidDistance = farmAvoidDistance.valueAsNumber;
+    const avoidLevel = Number(farmAvoidLevel.value), avoidDistance = farmAvoidDistance.valueAsNumber;
     if (farmAvoidEnabled.checked && (!Number.isSafeInteger(avoidLevel) || avoidLevel < 1
         || !Number.isFinite(avoidDistance) || avoidDistance < 1 || avoidDistance > 6)) return;
     patch = { idleMode: ["home", "seek"].includes(farmIdleMode.value) ? farmIdleMode.value : "hold",
@@ -205,10 +213,10 @@ farmTargetMode.addEventListener("change", () => {
   if (["boss", "bossLevel"].includes(farmTargetMode.value)) farmExcludeBoss.checked = false;
 });
 for (const input of [farmTargetMinLevel, farmTargetMaxLevel]) {
-  input.addEventListener("input", () => farmTargetMaxLevel.setCustomValidity(""));
-  input.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm("filter"); });
+  input.addEventListener("change", () => { farmFeedback.textContent = ""; });
 }
-farmTargetLevel.addEventListener("keydown", (event) => { if (event.key === "Enter") saveFarm("filter"); });
+for (const input of [farmTargetLevel, farmAvoidLevel])
+  input.addEventListener("change", () => { farmFeedback.textContent = ""; });
 function syncFarmScope() {
   farmRadius.disabled = farmSearchScope.value !== "radius";
 }
@@ -409,7 +417,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   farmPreferLoot.checked = farmPreferences?.preferLoot !== false;
   farmAvoidEnabled.checked = farmPreferences?.avoidEnabled === true;
   farmExcludeBoss.checked = farmPreferences?.excludeBoss === true;
-  farmAvoidLevel.value = positiveLevel(farmPreferences?.avoidLevel, 10);
+  fillFarmThreshold(farmAvoidLevel, "min", positiveLevel(farmPreferences?.avoidLevel, 10));
   farmAvoidDistance.value = Number.isFinite(farmPreferences?.avoidDistance)
     ? Math.max(1, Math.min(6, farmPreferences.avoidDistance)) : 2;
   farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
@@ -425,13 +433,15 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
       farmFeedback.textContent = "Chưa lưu được bộ lọc cũ; hãy bấm Lưu lựa chọn quái.";
     });
   }
-  farmTargetLevel.value = Number.isSafeInteger(farmPreferences?.targetLevel) && farmPreferences.targetLevel > 0
-    ? farmPreferences.targetLevel : 1;
-  farmTargetMinLevel.value = positiveLevel(farmPreferences?.targetMinLevel, 1);
-  farmTargetMaxLevel.value = positiveLevel(farmPreferences?.targetMaxLevel, 20);
+  const targetLevel = positiveLevel(farmPreferences?.targetLevel, 1);
+  const targetMinLevel = positiveLevel(farmPreferences?.targetMinLevel, 1);
+  const targetMaxLevel = positiveLevel(farmPreferences?.targetMaxLevel, 20);
+  fillFarmThreshold(farmTargetLevel, farmTargetMode.value === "minLevel" ? "min" : "max", targetLevel);
+  fillFarmThreshold(farmTargetMinLevel, "min", targetMinLevel);
+  fillFarmThreshold(farmTargetMaxLevel, "max", targetMaxLevel);
   syncFarmLevelInputs();
   farmRadius.value = typeof farmPreferences?.radius === "number" && Number.isFinite(farmPreferences.radius)
-    ? Math.max(11, Math.min(1000, farmPreferences.radius)) : 22;
+    ? Math.max(1, Math.min(1000, farmPreferences.radius)) : 22;
   if (farmPreferences?.enabled !== true) farmRadius.value = "11";
   farmControls.disabled = false;
   const shortcutCode = farmShortcut?.code;

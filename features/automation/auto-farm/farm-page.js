@@ -2,7 +2,6 @@
   "use strict";
   const origin = "https://nghichthienky.online";
   const channel = "gst:farm:v1";
-  const baseRadius = 11;
   globalThis.GSTFarmConfigurationReady = false;
   let settings = { enabled: false, radius: 22, autoRespawn: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
     searchScope: "radius", idleMode: "hold", preferLoot: true, avoidEnabled: false, excludeBoss: false, avoidLevel: 10, avoidDistance: 2,
@@ -20,6 +19,12 @@
   let message = "Extended range disabled.";
   const finite = (value) => typeof value === "number" && Number.isFinite(value);
   const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const nativeEligible = (enemy) => enemy?.hostile === true || enemy?.aggro === false;
+  const nativeRadius = (scene) => globalThis.GSTFarmCompatibility?.nativeRadius(scene?.auto?.radius) ?? null;
+  const nativeMapKey = (host) => {
+    try { return typeof host?.mapKey === "function" ? host.mapKey() : null; }
+    catch { return null; }
+  };
   GSTHarvest.farmOrigin = (scene) => session?.scene === scene ? { ...session.home } : null;
   // Both features share the same once-per-death request state.
   GSTHarvest.respawn = (scene) => checkRespawn(scene, true);
@@ -64,14 +69,15 @@
     bossFocus: (scene) => ["boss", "bossLevel"].includes(settings.targetMode)
       && realmBossEligible(scene) };
   function filterLabel() {
-    if (settings.targetMode === "bossLevel") return "Ưu tiên boss, rồi quái level cao đến thấp";
-    if (settings.targetMode === "highLevel") return "Ưu tiên quái thường level cao đến thấp";
-    if (settings.targetMode === "lowLevel") return "Ưu tiên quái thường level thấp đến cao";
+    if (settings.targetMode === "bossLevel") return "Ưu tiên boss, rồi quái tu vi cao đến thấp";
+    if (settings.targetMode === "highLevel") return "Ưu tiên quái thường tu vi cao đến thấp";
+    if (settings.targetMode === "lowLevel") return "Ưu tiên quái thường tu vi thấp đến cao";
     if (settings.targetMode === "boss") return "Chỉ farm boss";
-    if (settings.targetMode === "maxLevel") return `Chỉ farm level ≤ ${settings.targetLevel}`;
-    if (settings.targetMode === "minLevel") return `Chỉ farm level ≥ ${settings.targetLevel}`;
+    if (settings.targetMode === "maxLevel") return `Chỉ farm tới ${globalThis.GSTFarmCompatibility?.describe(settings.targetLevel, "max") ?? `level ${settings.targetLevel}`}`;
+    if (settings.targetMode === "minLevel") return `Chỉ farm từ ${globalThis.GSTFarmCompatibility?.describe(settings.targetLevel, "min") ?? `level ${settings.targetLevel}`}`;
     if (settings.targetMode === "range") return settings.targetMinLevel <= settings.targetMaxLevel
-      ? `Chỉ farm level ${settings.targetMinLevel}–${settings.targetMaxLevel}` : "Khoảng level chưa hợp lệ; không chọn quái";
+      ? `Chỉ farm ${globalThis.GSTFarmCompatibility?.describe(settings.targetMinLevel, "min") ?? `level ${settings.targetMinLevel}`} đến ${globalThis.GSTFarmCompatibility?.describe(settings.targetMaxLevel, "max") ?? `level ${settings.targetMaxLevel}`}`
+      : "Khoảng tu vi chưa hợp lệ; không chọn quái";
     return "Farm tất cả quái";
   }
   function matchesTarget(enemy) {
@@ -213,8 +219,20 @@
     else delete binding.scene.autoHost;
   }
 
+  function boundaryHome(scene) {
+    return session?.scene === scene ? session.home : { x: scene.auto?.ax, y: scene.auto?.ay };
+  }
+  function insideFarmBoundary(scene, actor) {
+    if (!settings.enabled || settings.searchScope !== "radius") return true;
+    const home = boundaryHome(scene);
+    return [home?.x, home?.y, settings.radius, actor?.x, actor?.y].every(finite)
+      && settings.radius >= 1 && distance(home, actor) <= settings.radius;
+  }
+
   function syncFilter(scene) {
-    if (settings.targetMode === "all" && !settings.avoidEnabled && !settings.excludeBoss) { clearFilter(); return; }
+    const filteringActive = () => settings.targetMode !== "all" || settings.avoidEnabled || settings.excludeBoss;
+    const boundaryActive = () => settings.enabled && settings.searchScope === "radius";
+    if (!filteringActive() && !boundaryActive()) { clearFilter(); return; }
     if (filterBinding?.scene === scene && scene.autoHost === filterBinding.wrapper) return;
     clearFilter();
     const original = scene.autoHost;
@@ -223,19 +241,26 @@
     const descriptor = Object.getOwnPropertyDescriptor(scene, "autoHost");
     const wrapper = function (...args) {
       const host = original.apply(this, args);
-      if ((settings.targetMode === "all" && !settings.avoidEnabled && !settings.excludeBoss) || !this.auto?.on) return host;
+      if ((!filteringActive() && !boundaryActive()) || !this.auto?.on) return host;
+      // Native rest logic also reads enemies to decide whether it is safe to heal.
+      if (this.auto?.resting) return host;
+      const eligible = (enemy) => nativeEligible(enemy) && insideFarmBoundary(this, enemy)
+        && matchesTarget(enemy) && (!filteringActive()
+          || (globalThis.GSTFarmBehavior?.allowsTarget(this, enemy) ?? true));
       const allEligibleEnemies = () => {
         const enemies = typeof host?.enemies === "function" ? host.enemies() : [];
-        if (this.auto?.resting) return Array.isArray(enemies) ? enemies : [];
-        return Array.isArray(enemies) ? enemies.filter((enemy) => matchesTarget(enemy)
-          && (globalThis.GSTFarmBehavior?.allowsTarget(this, enemy) ?? true)) : [];
+        return Array.isArray(enemies) ? enemies.filter(eligible) : [];
       };
       return { ...host,
         // Chest safety must see actual nearby monsters, not farm-targeting filters.
         gstRawEnemies: () => host.enemies(),
         allEligibleEnemies, enemies: () => {
-          const filtered = allEligibleEnemies();
+          const enemies = typeof host?.enemies === "function" ? host.enemies() : [];
+          const filtered = Array.isArray(enemies) ? enemies.filter(eligible) : [];
           return ranked() && !this.auto?.resting ? filtered.sort(comparePriority) : filtered;
+        }, loot: () => {
+          const loot = typeof host?.loot === "function" ? host.loot() : [];
+          return Array.isArray(loot) ? loot.filter((item) => insideFarmBoundary(this, item)) : [];
         } };
     };
     scene.autoHost = wrapper;
@@ -254,7 +279,7 @@
       return true;
     }
     const ordered = candidates.filter((enemy) => finite(enemy?.id) && finite(enemy.x) && finite(enemy.y)
-      && !enemy.dead && enemy.hostile && !(s.auto.skipped.get(enemy.id) > time))
+      && !enemy.dead && nativeEligible(enemy) && !(s.auto.skipped.get(enemy.id) > time))
       .sort((a, b) => comparePriority(a, b) || distance(a, pos) - distance(b, pos));
     const previous = s.rankTarget;
     const held = previous && ordered.find((enemy) => enemy.id === previous.id);
@@ -344,19 +369,24 @@
       return "Chờ hết thời gian hồi sinh của game.";
     }
     if (death.requested) {
-      respawnMessage = "Revive clicked once; waiting for the game. Manual retry is available.";
-      return "Đã bấm hồi sinh một lần; chờ game xác nhận. Có thể thử lại bằng tay nếu cần.";
+      respawnMessage = "Đã gửi yêu cầu hồi sinh qua bộ điều khiển gốc; đang chờ game.";
+      return "Đã gửi yêu cầu hồi sinh một lần; chờ game xác nhận. Có thể thử lại bằng tay nếu cần.";
     }
     // The built-in farm retries every 2 seconds. Do not duplicate its pending attempt.
     if (scene.auto?.on && finite(scene.auto.reviveTry) && scene.auto.reviveTry > scene.now()) {
       respawnMessage = "Built-in Auto Farm already requested revival; waiting.";
       return "Auto Farm đang xử lý hồi sinh; chờ game.";
     }
+    const host = typeof scene.autoHost === "function" ? scene.autoHost() : null;
+    if (typeof host?.respawn !== "function") {
+      respawnMessage = "Không có bộ chọn cách hồi sinh của game; nhường xử lý cho giao diện gốc.";
+      return "Thiếu bộ chọn kiểu hồi sinh của game; nhường xử lý cho giao diện gốc.";
+    }
     death.requested = true;
     globalThis.GSTBackgroundDiagnostics?.record("revive_request", scene);
-    button.click();
-    respawnMessage = "Clicked the game's ready revive button; waiting for confirmation.";
-    return "Đã bấm hồi sinh; chờ game xác nhận rồi tiếp tục Tự hái.";
+    host.respawn();
+    respawnMessage = "Đã yêu cầu bộ điều khiển gốc chọn cách hồi sinh; đang chờ game.";
+    return "Đã yêu cầu bộ điều khiển gốc chọn cách hồi sinh; chờ game xác nhận.";
   }
 
   function ensureFlying(s) {
@@ -426,7 +456,7 @@
         revival = null;
       }
       const point = { x: scene.auto.ax, y: scene.auto.ay };
-      session = { scene, auto: scene.auto, home: point, center: { ...point }, at: -Infinity,
+      session = { scene, auto: scene.auto, home: point, center: { ...point }, mapKey: nativeMapKey(scene.autoHost()), at: -Infinity,
         reanchor: false };
       clearInterval(watcher);
       watcher = null;
@@ -462,6 +492,22 @@
         return;
       }
       const time = s.scene.now();
+      const host = s.scene.autoHost();
+      const mapKey = nativeMapKey(host);
+      if (mapKey !== null && s.mapKey !== mapKey) {
+        s.mapKey = mapKey;
+        s.home = { x: s.auto.ax, y: s.auto.ay };
+        s.center = { ...s.home };
+        s.rankTarget = null;
+        s.reanchor = false;
+      }
+      const searchRadius = nativeRadius(s.scene);
+      if (searchRadius === null && (settings.enabled || settings.targetMode !== "all"
+          || settings.avoidEnabled || settings.excludeBoss)) {
+        clearFilter();
+        message = "Bán kính Auto Farm gốc không được hỗ trợ; phần chọn mục tiêu mở rộng đang nhường cho game.";
+        return;
+      }
       globalThis.GSTFarmBehavior?.attach(s.scene);
       // Follow native target changes even when the user farms all monsters.
       // Refresh periodically because a boss actor can appear/disappear
@@ -473,7 +519,7 @@
         globalThis.GSTFarmBossSafety?.attach?.(s.scene);
       }
       syncFilter(s.scene);
-      // A native handoff moves the game's 11-tile center to the remote camp.
+      // A native handoff moves the game's search center to the remote camp.
       // It is not a manual relocation of the user's configured farm origin.
       const aligned = globalThis.GSTFarmMap?.consumeCenter?.(s.scene);
       if (aligned && s.auto.ax === aligned.x && s.auto.ay === aligned.y)
@@ -516,7 +562,6 @@
       }
       if (!finite(time) || time - s.at < 0.5) return;
       s.at = time;
-      const host = s.scene.autoHost();
       if (!settings.enabled) {
         if (s.auto.moved || time < s.auto.pauseUntil || GSTFarmInput.movement(s.scene)) s.rankTarget = null;
         if (ranked() && !s.auto.moved && time >= s.auto.pauseUntil && !s.auto.resting
@@ -528,7 +573,7 @@
             const centerPoint = { x: s.auto.ax, y: s.auto.ay };
             pickRanked(s, host, time, { x: point[0], y: point[1] },
               enemies.filter((enemy) => finite(enemy?.x) && finite(enemy.y)
-                && distance(enemy, centerPoint) < baseRadius), false);
+                && distance(enemy, centerPoint) < searchRadius), false);
           }
         }
         message = `${filterLabel()}; dùng bán kính gốc của game.`;
@@ -569,7 +614,7 @@
         return;
       }
       const eligible = enemies.filter((enemy) => finite(enemy?.id) && finite(enemy.x) && finite(enemy.y)
-        && !enemy.dead && enemy.hostile && (settings.searchScope === "map" ? finite(s.scene.map?.w) && finite(s.scene.map?.h)
+        && !enemy.dead && nativeEligible(enemy) && (settings.searchScope === "map" ? finite(s.scene.map?.w) && finite(s.scene.map?.h)
           && enemy.x >= 0 && enemy.y >= 0 && enemy.x < s.scene.map.w && enemy.y < s.scene.map.h
           : distance(enemy, s.home) < settings.radius)
         && !(s.auto.skipped.has(enemy.id) && s.auto.skipped.get(enemy.id) > time));
@@ -580,15 +625,15 @@
         && !(settings.searchScope === "map" && distance(enemy, pos) > 6));
       const target = candidates.find((enemy) => enemy.id === s.auto.target);
       if (ranked() && settings.searchScope !== "map" && pickRanked(s, host, time, pos, candidates, true)) {
-        message = "Giữ mục tiêu đã chọn theo ưu tiên boss/level cho tới khi cần đổi.";
+        message = "Giữ mục tiêu theo ưu tiên boss/cảnh giới cho tới khi cần đổi.";
         return;
       }
       if (target) {
-        if (distance(target, s.center) >= baseRadius - 0.5) shiftToward(s, target);
+        if (distance(target, s.center) >= searchRadius - 0.5) shiftToward(s, target, searchRadius);
         message = "Keeping the built-in target.";
         return;
       }
-      const local = candidates.filter((enemy) => distance(enemy, s.center) < baseRadius);
+      const local = candidates.filter((enemy) => distance(enemy, s.center) < searchRadius);
       const aggro = host.inCombat() ? local.filter((enemy) => enemy.aggro && distance(enemy, pos) < 3.2) : [];
       // Use the game's picker, including its reachability cache and skip backoff.
       if (local.length && s.auto.pick(host, time, local, aggro, pos.x, pos.y)) {
@@ -597,7 +642,7 @@
       }
       // Let idle() collect its pending local loot before moving the search center.
       if (host.loot().some((loot) => finite(loot.x) && finite(loot.y)
-          && distance(loot, s.center) < baseRadius
+          && distance(loot, s.center) < searchRadius
           && !(s.auto.lootSkip?.has(`${loot.x.toFixed(1)},${loot.y.toFixed(1)}`)))) {
         message = "Waiting for built-in loot collection.";
         return;
@@ -625,16 +670,16 @@
     }
   }
 
-  function shiftToward(s, enemy) {
+  function shiftToward(s, enemy, searchRadius) {
     if (settings.searchScope === "map") { center(s, { x: enemy.x, y: enemy.y }); return; }
     const length = distance(enemy, s.home);
-    // Keep the entire built-in 11-unit circle inside the configured home radius.
-    const shift = Math.min(length, settings.radius - baseRadius);
+    // Keep the entire native search circle inside the configured farm boundary.
+    const shift = Math.min(length, Math.max(0, settings.radius - searchRadius));
     const point = length > 0 ? {
       x: s.home.x + (enemy.x - s.home.x) / length * shift,
       y: s.home.y + (enemy.y - s.home.y) / length * shift
     } : s.home;
-    if (distance(point, s.center) > 0.25 || distance(enemy, s.center) >= baseRadius) center(s, point);
+    if (distance(point, s.center) > 0.25 || distance(enemy, s.center) >= searchRadius) center(s, point);
   }
 
   globalThis.GSTFarmQuest = {
@@ -660,7 +705,7 @@
       shortcutMessage = "";
     }
     if (data.type === "configure" && typeof data.enabled === "boolean"
-        && finite(data.radius) && data.radius >= 11 && data.radius <= 1000) {
+        && finite(data.radius) && data.radius >= 1 && data.radius <= 1000) {
       const scopeChanged = settings.searchScope !== (data.searchScope === "map" ? "map" : "radius");
       const filterChanged = settings.searchScope !== data.searchScope || settings.targetMode !== targetMode(data.targetMode)
         || settings.targetLevel !== data.targetLevel

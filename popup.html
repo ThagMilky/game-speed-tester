@@ -6,6 +6,7 @@
   <title>Game Speed Tester</title>
   <link rel="stylesheet" href="ui/popup/popup.css">
   <script src="ui/interface/font-options.js" defer></script>
+  <script src="features/automation/auto-farm/farm-compatibility.js" defer></script>
   <script src="ui/popup/popup.js" defer></script>
   <script src="ui/popup/popup-layout.js" defer></script>
   <script src="features/automation/auto-harvest/harvest-options.js" defer></script>
@@ -93,7 +94,7 @@
           <label class="check-row"><input id="farmShowTargetLine" type="checkbox"><span>Hiện đường tới mục tiêu</span></label>
           <p class="hint">Tick để hiện, bỏ tick để ẩn; tự lưu. Xanh lá: quái hoặc tọa độ boss đang tiếp cận. Vàng nét đứt: điểm dò, chưa phải quái. Xanh dương: các điểm rẽ trên đường đi. Đường thẳng tới mục tiêu chỉ để quan sát, không cho đi xuyên vật cản.</p>
           <div class="input-action">
-            <div><label for="farmRadius">Tìm quái trong vòng <span class="range">11–1.000 ô</span></label><input id="farmRadius" type="number" min="11" max="1000" step="1" value="22" required></div>
+            <div><label for="farmRadius">Giới hạn vùng farm <span class="range">1–1.000 ô</span></label><input id="farmRadius" type="number" min="1" max="1000" step="1" value="22" required></div>
             <button id="saveFarm" type="button" class="primary">Lưu phạm vi</button>
           </div>
           <p class="save-mode">Số ô tính từ điểm bắt đầu farm. Ví dụ 30: tìm quái cách điểm đó tối đa 30 ô.</p>
@@ -105,17 +106,17 @@
           </div>
           </div><div class="wide-group">
           <div class="two-columns separated">
-            <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="boss">Chỉ boss</option><option value="bossLevel">Boss trước → Level cao đến thấp</option><option value="highLevel">Level cao → thấp (quái thường)</option><option value="lowLevel">Level thấp → cao (quái thường)</option><option value="maxLevel">Level ≤ mức chọn</option><option value="minLevel">Level ≥ mức chọn</option><option value="range">Trong khoảng level</option></select></div>
-            <div id="farmSingleLevel"><label for="farmTargetLevel">Level quái</label><input id="farmTargetLevel" type="number" min="1" step="1" value="1" required disabled></div>
+            <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="boss">Chỉ boss</option><option value="bossLevel">Boss trước → tu vi cao đến thấp</option><option value="highLevel">Tu vi cao → thấp (quái thường)</option><option value="lowLevel">Tu vi thấp → cao (quái thường)</option><option value="maxLevel">Tới cảnh giới/tầng chọn</option><option value="minLevel">Từ cảnh giới/tầng chọn</option><option value="range">Trong khoảng cảnh giới/tầng</option></select></div>
+            <div id="farmSingleLevel"><label for="farmTargetLevel">Mức tu vi quái</label><select id="farmTargetLevel" required disabled></select></div>
           </div>
           <div id="farmLevelRange" class="two-columns separated" hidden>
-            <div><label for="farmTargetMinLevel">Thấp nhất</label><input id="farmTargetMinLevel" type="number" min="1" step="1" value="1" required disabled></div>
-            <div><label for="farmTargetMaxLevel">Cao nhất</label><input id="farmTargetMaxLevel" type="number" min="1" step="1" value="20" required disabled></div>
+            <div><label for="farmTargetMinLevel">Từ cảnh giới/tầng</label><select id="farmTargetMinLevel" required disabled></select></div>
+            <div><label for="farmTargetMaxLevel">Đến cảnh giới/tầng</label><select id="farmTargetMaxLevel" required disabled></select></div>
           </div>
           <button id="saveFarmFilter" type="button" class="full">Lưu lựa chọn quái</button>
           <label class="check-row"><input id="farmExcludeBoss" type="checkbox"><span>Không chọn boss làm mục tiêu</span></label>
           <p class="hint">Tự lưu. Lọc boss theo dữ liệu game cung cấp; kỹ năng đánh lan vẫn có thể trúng boss gần đó. Không tự tránh đường đi gần boss. Nếu chọn Chỉ boss cùng lúc, Auto Farm sẽ không chọn mục tiêu.</p>
-          <p class="hint">Boss trước: ưu tiên boss có dữ liệu và phù hợp bộ lọc, sau đó tới quái level cao nhất còn tiếp cận được. Level cao → thấp và Level thấp → cao chỉ chọn quái thường. ≤ 10: level 10 trở xuống; ≥ 10: level 10 trở lên; khoảng 10–20 gồm cả hai đầu. Các chế độ ưu tiên không đặt giới hạn level; vẫn áp dụng tùy chọn né quái. Bộ lọc dùng được cả với bán kính gốc.</p>
+          <p class="hint">Boss trước: ưu tiên boss có dữ liệu và phù hợp bộ lọc, sau đó tới quái tu vi cao nhất còn tiếp cận được. Level cao → thấp và Level thấp → cao chỉ chọn quái thường. Mức tối đa lấy hết tầng đã chọn; mức tối thiểu và né quái bắt đầu từ đầu tầng; khoảng gồm trọn hai tầng đã chọn. Mức cũ không trùng ranh giới tầng được giữ nguyên cho tới khi bạn đổi lựa chọn. Các chế độ ưu tiên không đặt giới hạn tu vi; vẫn áp dụng tùy chọn né quái. Bộ lọc dùng được cả với bán kính gốc.</p>
           <div id="farmBossSafetyOptions" class="separated" hidden>
             <p class="field-title">Tự bảo vệ khi đánh boss</p>
             <label class="check-row"><input id="farmBossDodge" type="checkbox" checked><span>Né chiêu boss và dùng Q giữ khoảng cách khi tất cả skill tấn công đang hồi</span></label>
@@ -137,7 +138,7 @@
             <p class="hint">Ưu tiên đồ gần bãi vừa đánh, kể cả khi không bật Mở rộng vùng tìm quái. Chờ ngắn để vật phẩm xuất hiện; dùng cơ chế nhặt và giới hạn thử của game. Đồ không thể nhặt sẽ được bỏ qua tạm thời. Bấm Lưu Tìm / nhặt / né để áp dụng.</p>
             <label class="check-row"><input id="farmAvoidEnabled" type="checkbox"><span>Né quái level cao khi Auto Farm bật</span></label>
             <div class="two-columns">
-              <div><label for="farmAvoidLevel">Né level ≥</label><input id="farmAvoidLevel" type="number" min="1" step="1" value="10" required></div>
+              <div><label for="farmAvoidLevel">Né từ cảnh giới/tầng</label><select id="farmAvoidLevel" required></select></div>
               <div><label for="farmAvoidDistance">Lùi mỗi lượt (1–6 ô)</label><input id="farmAvoidDistance" type="number" min="1" max="6" step="0.5" value="2" required></div>
             </div>
             <button id="saveFarmBehavior" type="button" class="full">Lưu tìm quái / nhặt đồ / né quái</button>
