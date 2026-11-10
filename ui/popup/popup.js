@@ -45,6 +45,7 @@ const farmTargetMinLevel = document.getElementById("farmTargetMinLevel");
 const farmTargetMaxLevel = document.getElementById("farmTargetMaxLevel");
 const farmIdleMode = document.getElementById("farmIdleMode");
 const farmPreferLoot = document.getElementById("farmPreferLoot");
+const farmSelfDefense = document.getElementById("farmSelfDefense");
 const positiveLevel = (value, fallback) => Number.isSafeInteger(value) && value > 0 ? value : fallback;
 const farmCompatibility = globalThis.GSTFarmCompatibility;
 function fillFarmThreshold(select, kind, current) {
@@ -166,6 +167,7 @@ function syncFarmScope() {
   farmRadius.closest(".input-action").hidden = farmSearchScope.value !== "radius";
 }
 function farmSummaries() {
+  document.getElementById("farmDefenseSummary").textContent = `Tự vệ khi đứng chờ · ${farmConfirmed.selfDefense ? "bật" : "tắt"}`;
   document.getElementById("farmBossSummary").textContent = `Boss · ${farmConfirmed.excludeBoss ? "không chọn boss" : "cho phép boss"}`;
   document.getElementById("farmRecoverySummary").textContent = `Hồi phục · ${farmConfirmed.noRetreat ? "không rút lui" : "theo game"}`;
 }
@@ -182,7 +184,7 @@ async function saveFarmPatch(patch, rollback) {
   }
 }
 for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmNoRetreat, "noRetreat"],
-  [breakSeals, "breakSeals"], [farmPreferLoot, "preferLoot"], [farmBossDodge, "bossDodge"],
+  [breakSeals, "breakSeals"], [farmPreferLoot, "preferLoot"], [farmSelfDefense, "selfDefense"], [farmBossDodge, "bossDodge"],
   [farmBossRetreat, "bossRetreat"]]) {
   input.addEventListener("change", async () => {
     const next = input.checked;
@@ -422,6 +424,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   breakSeals.disabled = false;
   farmIdleMode.value = ["home", "seek"].includes(farmPreferences?.idleMode) ? farmPreferences.idleMode : "hold";
   farmPreferLoot.checked = farmPreferences?.preferLoot !== false;
+  farmSelfDefense.checked = farmPreferences?.selfDefense === true;
   farmExcludeBoss.checked = farmPreferences?.excludeBoss === true;
   farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
     : farmPreferences?.targetMode === "bossFirst" ? "bossLevel"
@@ -451,7 +454,7 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
     targetMode: farmTargetMode.value, targetLevel, targetMinLevel, targetMaxLevel,
     excludeBoss: farmExcludeBoss.checked,
     noRetreat: farmNoRetreat.checked, showTargetLine: farmShowTargetLine.checked,
-    breakSeals: breakSeals.checked, idleMode: farmIdleMode.value, preferLoot: farmPreferLoot.checked,
+    breakSeals: breakSeals.checked, idleMode: farmIdleMode.value, preferLoot: farmPreferLoot.checked, selfDefense: farmSelfDefense.checked,
     bossDodge: farmBossDodge.checked, bossRetreat: farmBossRetreat.checked
   };
   syncFarmScope();

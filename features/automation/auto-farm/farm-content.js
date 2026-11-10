@@ -41,6 +41,7 @@
       breakSeals: value?.breakSeals === true,
       idleMode: ["home", "seek"].includes(value?.idleMode) ? value.idleMode : "hold",
       preferLoot: value?.preferLoot !== false,
+      selfDefense: value?.selfDefense === true,
       excludeBoss: value?.excludeBoss === true,
       targetMode: value?.targetMode === "level" ? "maxLevel"
         : value?.targetMode === "bossFirst" ? "bossLevel"

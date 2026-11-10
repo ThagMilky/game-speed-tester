@@ -41,6 +41,7 @@
         "shared/navigation/farm-routing.js",
         "features/movement/flight/flight-page.js",
         "features/automation/auto-farm/farm-behavior.js",
+        "features/automation/auto-farm/farm-defense.js",
         "features/automation/auto-farm/farm-boss-safety.js",
         "features/automation/auto-farm/farm-map.js",
         "features/automation/auto-farm/farm-visual.js",

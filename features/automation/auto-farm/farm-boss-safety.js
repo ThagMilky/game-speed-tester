@@ -65,7 +65,7 @@
       && (d.online === false || d.link?.open?.() === true);
   }
   function blocked(scene, imminent = false) {
-    return suspended || !scene?.auto?.on || !scene.self || scene.self.dead || scene.leaving
+    return suspended || globalThis.GSTFarmDefense?.controls?.(scene) || !scene?.auto?.on || !scene.self || scene.self.dead || scene.leaving
       || !scene.sys?.isActive?.() || !connected(scene) || GSTFarmRouting.blocked(scene)
       || GSTFarmInput.movement(scene) || scene.auto.moved || scene.now() < scene.auto.pauseUntil
       // Pending native casts/aim are handled after reading danger zones in
