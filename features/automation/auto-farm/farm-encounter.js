@@ -1,12 +1,12 @@
 (() => {
   "use strict";
   let enabled = false, suspended = false, binding = null, episode = null;
-  let message = "Đang chờ kỳ ngộ.", lastTick = -Infinity, manualAt = -Infinity;
+  let message = "Đang chờ kỳ ngộ.", lastTick = -Infinity, manualAttempt = null;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const finite = Number.isFinite;
   function reset(note) {
-    episode = null; manualAt = -Infinity;
+    episode = null; manualAttempt = null;
     if (note) message = note;
   }
   function detach() {
@@ -48,9 +48,14 @@
   }
   function manual(event) {
     if (!event.isTrusted || !binding || event.target !== binding.scene.kyNgoBar?.go) return;
-    manualAt = performance.now();
-    if (episode && episode.attempts < 2) {
-      episode.attempts++; episode.lastAttempt = manualAt; episode.pending = true;
+    const scene = binding.scene, current = scene.self?.kt?.kyngo;
+    const appearance = current && typeof current.k === "string" && current.k
+      && typeof current.s === "string" && current.s && finite(current.x) && finite(current.y)
+      && finite(current.left) && current.left > 0
+      ? { k: current.k, s: current.s, x: current.x, y: current.y } : null;
+    manualAttempt = { at: performance.now(), context: identity(scene), snapshot: scene.selfAt, appearance };
+    if (episode && appearance && same(episode, appearance) && episode.attempts < 2) {
+      episode.attempts++; episode.lastAttempt = manualAttempt.at; episode.pending = true;
       message = "Đã yêu cầu gặp kỳ ngộ; chờ xác nhận.";
     }
   }
@@ -82,7 +87,7 @@
         if (episode && stamp > episode.snapshot && !episode.ended) {
           episode.ended = true;
           episode.absentSnapshot = stamp;
-          manualAt = -Infinity;
+          manualAttempt = null;
           if (!episode.confirmed) message = "Kỳ ngộ không còn; chưa xác nhận đã nhận.";
         } else if (!episode) message = "Đang chờ kỳ ngộ.";
         return;
@@ -91,14 +96,28 @@
           || !finite(current.x) || !finite(current.y) || !finite(current.left) || current.left <= 0) {
         message = "Kỳ ngộ: dữ liệu không hợp lệ hoặc đã hết hạn."; return;
       }
-      if (episode && !episode.ended && !same(episode, current)) {
-        message = "Kỳ ngộ: dữ liệu thay đổi; chờ xác nhận lượt mới."; return;
+      const changedAppearance = episode && !episode.ended && stamp > episode.snapshot
+        && !same(episode, current);
+      const manualForCurrent = manualAttempt && now - manualAttempt.at < 5000
+        && manualAttempt.context === key && manualAttempt.appearance
+        && finite(manualAttempt.snapshot) && stamp >= manualAttempt.snapshot
+        && same(manualAttempt.appearance, current);
+      if (changedAppearance) {
+        // The game creates each appearance with a five-minute `until` deadline.
+        // A changed kind, map, or coordinate on a newer complete snapshot marks
+        // a new appearance even when the intervening absent snapshot was missed.
+        episode.ended = true;
+        episode.absentSnapshot = stamp;
+        if (!manualForCurrent) manualAttempt = null;
+        if (!episode.confirmed) message = "Kỳ ngộ cũ không còn; chưa xác nhận đã nhận.";
       }
-      if (!episode || (episode.ended && stamp > episode.absentSnapshot)) {
+      if (!episode || (episode.ended && (changedAppearance || stamp > episode.absentSnapshot))) {
         episode = { k: current.k, s: current.s, x: current.x, y: current.y, attempts: 0,
           lastAttempt: -Infinity, pending: false, confirmed: false, baselineTotal: savedTotal,
           profile: scene.profile, startSnapshot: stamp, snapshot: stamp, deadline: now + Math.max(0, current.left - 1 - (time - stamp)) * 1000 };
-        if (now - manualAt < 5000) { episode.attempts = 1; episode.lastAttempt = manualAt; episode.pending = true; }
+        if (manualForCurrent) {
+          episode.attempts = 1; episode.lastAttempt = manualAttempt.at; episode.pending = true;
+        }
       } else if (episode.ended) {
         return; // A new appearance requires a later fresh snapshot.
       } else if (stamp > episode.snapshot) {
@@ -112,7 +131,7 @@
       const go = button(scene);
       if (!go) { message = "Kỳ ngộ: nút Gặp của game chưa khả dụng."; return; }
       if (episode.pending) message = "Đã yêu cầu gặp kỳ ngộ; chờ xác nhận.";
-      if (episode.attempts >= 2 || now - episode.lastAttempt < 5000 || now - manualAt < 5000) return;
+      if (episode.attempts >= 2 || now - episode.lastAttempt < 5000 || manualForCurrent) return;
       // Re-read the snapshot immediately before invoking the one native button path.
       const fresh = scene.self?.kt?.kyngo, latestTime = scene.now();
       if (sceneNow() !== scene || identity(scene) !== binding.identity || !validConnection(scene) || blocked(scene)

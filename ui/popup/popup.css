@@ -82,7 +82,8 @@ input[type="search"] { width: 100%; min-height: 36px; padding: 7px 9px; font: in
 .harvest-settings, .harvest-selection { min-width: 0; }
 .harvest-header { margin-bottom: 18px; }
 .harvest-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0; font-size: 11px; }
-.harvest-list { max-height: clamp(220px, 48vh, 480px); overflow-y: auto; border: 1px solid var(--border); border-radius: 7px; padding: 6px 9px; }
+#harvestItems { max-height: clamp(220px, 48vh, 480px); }
+.harvest-list { max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: 7px; padding: 6px 9px; }
 .harvest-list .check-row { align-items: flex-start; padding: 5px 0; }
 .harvest-list input { margin-top: 3px; }
 .harvest-list small { display: block; color: var(--muted); font-size: 10px; }

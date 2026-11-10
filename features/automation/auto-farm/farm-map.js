@@ -319,7 +319,7 @@
     if (target) return { ...target, actor: true, switchReason: better || localPriority || "" };
     if (monsters.length) { message = "Các mục tiêu phù hợp đang được tạm bỏ do cooldown/đường bị chặn; chờ trước khi thử lại."; return null; }
     if (preferences.targetMode !== "boss") {
-      return scouting ? scout(scene, time) : null;
+      return scouting && preferences.idleMode === "seek" ? scout(scene, time) : null;
     }
     const known = [...scene.views.values()].some((actor) => actor.k === "m" && !actor.dead
       && (actor.st?.cls === "boss" || actor.st?.wb === true));
@@ -328,7 +328,7 @@
     if (!metadata || !finite(metadata.hp) || metadata.hp <= 0) {
       message = metadata?.hp === 0 ? "Boss bí cảnh đã bị hạ; giữ bộ lọc Chỉ boss."
         : "Chưa có tọa độ boss trong dữ liệu game gửi về; chưa thể tự đi tìm boss này.";
-      return metadata?.hp === 0 || !scouting ? null : scout(scene, time);
+      return metadata?.hp === 0 || !scouting || preferences.idleMode !== "seek" ? null : scout(scene, time);
     }
     if (!withinArea(area, metadata)) {
       message = "Tọa độ boss nằm ngoài vùng farm đã chọn; không tự đi tới."; return null;
@@ -434,6 +434,9 @@
       if (globalThis.GSTFarmBehavior?.pendingLoot?.(scene)) {
         release(); message = "Đang nhường nhặt đồ ở bãi vừa đánh trước khi tìm quái mới."; return false;
       }
+      // Scouting is owned movement. Stop only that job when idle policy changes;
+      // continue below so known eligible actors are still pursued this update.
+      if (job?.scout && preferences.idleMode !== "seek") release();
       const target = destination(scene, host, time, scouting);
       if (!target) { if (scouting || !job?.scout) release(); return false; }
       if (scouting && !target.scout) return false;

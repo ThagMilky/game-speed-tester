@@ -128,7 +128,17 @@ let farmSaveQueue = Promise.resolve();
 function updateFarmPreferences(patch) {
   const save = farmSaveQueue.catch(() => {}).then(() => navigator.locks.request("gst:farm-preferences", async () => {
     const saved = await chrome.storage.local.get("farmPreferences");
-    const farmPreferences = { ...saved.farmPreferences, ...patch };
+    const current = saved.farmPreferences ?? {};
+    const farmPreferences = { ...current, ...patch };
+    if (["boss", "bossLevel"].includes(normalizeFarmTargetMode(patch.targetMode))) farmPreferences.excludeBoss = false;
+    else if (patch.excludeBoss === true && ["boss", "bossLevel"].includes(normalizeFarmTargetMode(current.targetMode)))
+      farmPreferences.targetMode = "highLevel";
+    else if (Object.keys(patch).length === 0) {
+      if (current.excludeBoss === true && ["boss", "bossLevel"].includes(normalizeFarmTargetMode(current.targetMode)))
+        farmPreferences.targetMode = "highLevel";
+      else if (current.targetMode === "bossFirst") farmPreferences.targetMode = "bossLevel";
+      else if (current.targetMode === "level") farmPreferences.targetMode = "maxLevel";
+    }
     await chrome.storage.local.set({ farmPreferences });
     return farmPreferences;
   }));
@@ -158,6 +168,59 @@ async function refreshFarm() {
 
 let farmConfirmed = {};
 let farmDraftError = false;
+let farmSyncReady = false;
+let farmStorageRevision = 0;
+let latestFarmPreferences;
+function normalizeFarmTargetMode(mode) {
+  return mode === "level" ? "maxLevel" : mode === "bossFirst" ? "bossLevel"
+    : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(mode) ? mode : "all";
+}
+function normalizedFarmPreferences(raw = {}) {
+  const mode = normalizeFarmTargetMode(raw.targetMode);
+  const radius = typeof raw.radius === "number" && Number.isFinite(raw.radius)
+    ? Math.max(1, Math.min(1000, raw.radius)) : 22;
+  return {
+    enabled: raw.enabled === true, radius: raw.enabled === true ? radius : 11,
+    searchScope: raw.enabled === true && raw.searchScope === "map" ? "map" : "radius",
+    targetMode: mode, targetLevel: positiveLevel(raw.targetLevel, 1),
+    targetMinLevel: positiveLevel(raw.targetMinLevel, 1), targetMaxLevel: positiveLevel(raw.targetMaxLevel, 20),
+    excludeBoss: raw.excludeBoss === true, noRetreat: raw.noRetreat !== false,
+    showTargetLine: raw.showTargetLine === true, breakSeals: raw.breakSeals === true,
+    idleMode: ["home", "seek"].includes(raw.idleMode) ? raw.idleMode : "hold",
+    preferLoot: raw.preferLoot !== false, selfDefense: raw.selfDefense === true,
+    autoEncounter: raw.autoEncounter === true, bossDodge: raw.bossDodge !== false,
+    bossRetreat: raw.bossRetreat !== false
+  };
+}
+function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {}) {
+  const keepDraft = preserveDraft && farmHasDraft();
+  const next = normalizedFarmPreferences(raw);
+  farmConfirmed = next;
+  farmSearchScope.value = next.searchScope;
+  farmNoRetreat.checked = next.noRetreat;
+  farmBossDodge.checked = next.bossDodge;
+  farmBossRetreat.checked = next.bossRetreat;
+  farmShowTargetLine.checked = next.showTargetLine;
+  breakSeals.checked = next.breakSeals;
+  farmIdleMode.value = next.idleMode;
+  farmPreferLoot.checked = next.preferLoot;
+  farmSelfDefense.checked = next.selfDefense;
+  farmAutoEncounter.checked = next.autoEncounter;
+  farmExcludeBoss.checked = next.excludeBoss;
+  farmTargetMode.value = next.targetMode;
+  farmTargetLevel.value = String(next.targetLevel);
+  if (!keepDraft || forceKeys.includes("targetMinLevel")) farmTargetMinLevel.value = String(next.targetMinLevel);
+  if (!keepDraft || forceKeys.includes("targetMaxLevel")) farmTargetMaxLevel.value = String(next.targetMaxLevel);
+  if (!keepDraft || forceKeys.includes("radius")) farmRadius.value = String(next.radius);
+  if (forceKeys.includes("targetMinLevel") && forceKeys.includes("targetMaxLevel")) farmDraftError = false;
+  syncFarmScope(); syncFarmLevelInputs(); farmSummaries(); farmMessage("Đã đồng bộ cài đặt.");
+}
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local" || !changes.farmPreferences) return;
+  farmStorageRevision++;
+  latestFarmPreferences = changes.farmPreferences.newValue ?? {};
+  if (farmSyncReady) syncFarmPreferences(latestFarmPreferences);
+});
 function farmHasDraft() {
   return farmDraftError || Number(farmTargetMinLevel.value) !== farmConfirmed.targetMinLevel
     || Number(farmTargetMaxLevel.value) !== farmConfirmed.targetMaxLevel
@@ -178,9 +241,9 @@ function farmSummaries() {
 async function saveFarmPatch(patch, rollback) {
   farmMessage("Đang lưu…");
   try {
-    await updateFarmPreferences(patch);
-    Object.assign(farmConfirmed, patch);
-    farmSummaries();
+    const committed = await updateFarmPreferences(patch);
+    latestFarmPreferences = committed;
+    syncFarmPreferences(committed, { forceKeys: [...Object.keys(patch), "targetMode", "excludeBoss"] });
     farmMessage("Đã lưu lựa chọn.");
   } catch {
     rollback?.();
@@ -397,6 +460,7 @@ fontControls.addEventListener("change", async () => {
   }
 });
 
+const farmLoadRevision = farmStorageRevision;
 chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences", "farmPreferences", "farmShortcut", "areaMapOptions"]).then(({ preferences, displayPreferences, fontPreferences, farmPreferences, farmShortcut, areaMapOptions }) => {
   enabledInput.checked = preferences?.enabled === true;
   document.getElementById("speedSettings").hidden = !enabledInput.checked;
@@ -417,53 +481,19 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   fontFamily.value = font.font;
   fontFamily.disabled = !font.enabled;
   fontControls.disabled = false;
-  farmSearchScope.value = farmPreferences?.enabled === true && farmPreferences?.searchScope === "map" ? "map" : "radius";
-  farmNoRetreat.checked = farmPreferences?.noRetreat !== false;
   farmReturnDeath.checked = areaMapOptions?.returnDeath === true;
-  farmBossDodge.checked = farmPreferences?.bossDodge !== false;
-  farmBossRetreat.checked = farmPreferences?.bossRetreat !== false;
-  syncFarmScope();
-  farmShowTargetLine.checked = farmPreferences?.showTargetLine === true;
-  breakSeals.checked = farmPreferences?.breakSeals === true;
+  const initialFarmPreferences = farmLoadRevision === farmStorageRevision
+    ? (farmPreferences ?? {}) : (latestFarmPreferences ?? {});
+  syncFarmPreferences(initialFarmPreferences, { preserveDraft: false });
   breakSeals.disabled = false;
-  farmIdleMode.value = ["home", "seek"].includes(farmPreferences?.idleMode) ? farmPreferences.idleMode : "hold";
-  farmPreferLoot.checked = farmPreferences?.preferLoot !== false;
-  farmSelfDefense.checked = farmPreferences?.selfDefense === true;
-  farmAutoEncounter.checked = farmPreferences?.autoEncounter === true;
-  farmExcludeBoss.checked = farmPreferences?.excludeBoss === true;
-  farmTargetMode.value = farmPreferences?.targetMode === "level" ? "maxLevel"
-    : farmPreferences?.targetMode === "bossFirst" ? "bossLevel"
-    : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(farmPreferences?.targetMode) ? farmPreferences.targetMode : "all";
-  if (farmExcludeBoss.checked && ["boss", "bossLevel"].includes(farmTargetMode.value)) {
-    farmTargetMode.value = "highLevel";
-    updateFarmPreferences({ targetMode: "highLevel" }).catch(() => {
-      farmFeedback.textContent = "Chưa đồng bộ được bộ lọc boss; hãy lưu lại.";
-    });
-  } else if (farmPreferences?.targetMode === "bossFirst") {
-    updateFarmPreferences({ targetMode: "bossLevel" }).catch(() => {
-      farmFeedback.textContent = "Chưa lưu được bộ lọc cũ; hãy bấm Lưu lựa chọn quái.";
-    });
-  }
-  const targetLevel = positiveLevel(farmPreferences?.targetLevel, 1);
-  const targetMinLevel = positiveLevel(farmPreferences?.targetMinLevel, 1);
-  const targetMaxLevel = positiveLevel(farmPreferences?.targetMaxLevel, 20);
-  fillFarmThreshold(farmTargetLevel, farmTargetMode.value === "minLevel" ? "min" : "max", targetLevel);
-  fillFarmThreshold(farmTargetMinLevel, "min", targetMinLevel);
-  fillFarmThreshold(farmTargetMaxLevel, "max", targetMaxLevel);
-  syncFarmLevelInputs();
-  farmRadius.value = typeof farmPreferences?.radius === "number" && Number.isFinite(farmPreferences.radius)
-    ? Math.max(1, Math.min(1000, farmPreferences.radius)) : 22;
-  if (farmPreferences?.enabled !== true) farmRadius.value = "11";
-  farmConfirmed = {
-    enabled: farmPreferences?.enabled === true, radius: Number(farmRadius.value), searchScope: farmSearchScope.value,
-    targetMode: farmTargetMode.value, targetLevel, targetMinLevel, targetMaxLevel,
-    excludeBoss: farmExcludeBoss.checked,
-    noRetreat: farmNoRetreat.checked, showTargetLine: farmShowTargetLine.checked,
-    breakSeals: breakSeals.checked, idleMode: farmIdleMode.value, preferLoot: farmPreferLoot.checked, selfDefense: farmSelfDefense.checked, autoEncounter: farmAutoEncounter.checked,
-    bossDodge: farmBossDodge.checked, bossRetreat: farmBossRetreat.checked
-  };
-  syncFarmScope();
-  farmSummaries();
+  latestFarmPreferences = initialFarmPreferences;
+  farmSyncReady = true;
+  const migrationNeeded = initialFarmPreferences.excludeBoss && ["boss", "bossLevel"].includes(normalizeFarmTargetMode(initialFarmPreferences.targetMode))
+    || ["bossFirst", "level"].includes(initialFarmPreferences.targetMode);
+  if (migrationNeeded) updateFarmPreferences({}).then((committed) => {
+    latestFarmPreferences = committed;
+    syncFarmPreferences(committed);
+  }).catch(() => { farmFeedback.textContent = "Chưa đồng bộ được bộ lọc boss; hãy lưu lại."; });
   farmControls.disabled = false;
   farmRightControls.disabled = false;
   const shortcutCode = farmShortcut?.code;
