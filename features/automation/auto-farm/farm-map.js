@@ -223,9 +223,9 @@
   const seekRealmBoss = (scene) => preferences.excludeBoss !== true
     && !["highLevel", "lowLevel"].includes(preferences.targetMode)
     && globalThis.GSTRealm?.seekBoss?.(scene) === true;
-  const wanted = (scene) => (preferences.enabled && (preferences.searchScope === "map"
-    || (preferences.searchScope === "radius" && preferences.idleMode === "seek")))
-    || seekRealmBoss(scene);
+  // Known targets inside a configured radius also need long-distance navigation.
+  // Idle policy only decides what to do AFTER all eligible targets are exhausted.
+  const wanted = (scene) => preferences.enabled === true || seekRealmBoss(scene);
   function searchArea(scene) {
     const w = scene.map?.w, h = scene.map?.h;
     if (![w, h].every(finite) || w <= 0 || h <= 0) return null;
@@ -320,9 +320,13 @@
     if (target?.id === resumeTarget) resumeTarget = null;
     if (target) return { ...target, actor: true, switchReason: better || localPriority || "" };
     if (monsters.length) { message = "Các mục tiêu phù hợp đang được tạm bỏ do cooldown/đường bị chặn; chờ trước khi thử lại."; return null; }
-    if (preferences.targetMode !== "boss") {
-      return scouting && preferences.idleMode === "seek" ? scout(scene, time) : null;
+    if (!scouting && preferences.idleMode === "home") {
+      const home = globalThis.GSTHarvest?.farmOrigin?.(scene);
+      if (home && withinArea(area, home) && range(home, { x: scene.px, y: scene.py }) > 1.2)
+        return { id: "farm:home", x: home.x, y: home.y, actor: false, home: true };
     }
+    if (preferences.targetMode !== "boss")
+      return scouting && preferences.idleMode === "seek" ? scout(scene, time) : null;
     const known = [...scene.views.values()].some((actor) => actor.k === "m" && !actor.dead
       && (actor.st?.cls === "boss" || actor.st?.wb === true));
     if (known) { message = "Boss đã có dữ liệu nhưng không qua bộ lọc hiện tại."; return null; }
@@ -346,6 +350,21 @@
     if (job?.scout) { explored.set(job.id, Infinity); release(); }
     if (time < scanAt) { message = "Chưa thấy quái phù hợp; chờ nhịp dò vùng tiếp theo."; return null; }
     scanAt = time + 1;
+    // Prefer existing map/observed camp coordinates before sampling arbitrary cells.
+    const camps = globalThis.GSTAreaMap?.knownCamps?.(scene) ?? [];
+    const camp = camps.filter((item) => {
+        if (item.boss && globalThis.GSTFarmPriority?.excludesBoss?.()) return false;
+        if (!Number.isSafeInteger(item.level)) return preferences.targetMode === "all"
+          || preferences.targetMode === "boss" && item.boss === true;
+        return globalThis.GSTFarmPriority?.matches?.({
+          lv: item.level, cls: item.boss ? "boss" : "mob", wb: item.boss === true
+        }) !== false;
+      })
+      .filter((item) => withinArea(area, item) && range(item, { x: scene.px, y: scene.py }) > 2
+        && !(explored.get(`camp:${item.x.toFixed(1)}:${item.y.toFixed(1)}`) > time))
+      .sort((a, b) => range(a, { x: scene.px, y: scene.py }) - range(b, { x: scene.px, y: scene.py }))[0];
+    if (camp) return { id: `camp:${camp.x.toFixed(1)}:${camp.y.toFixed(1)}`,
+      x: camp.x, y: camp.y, actor: false, scout: true };
     if (![scene.px, scene.py].every(finite) || typeof scene.collision?.blockedCell !== "function") {
       message = "Thiếu dữ liệu va chạm để dò map an toàn."; return null;
     }
@@ -513,7 +532,7 @@
         job.replans = 0; job.lastReplanAt = -Infinity;
       }
       const remaining = Math.hypot(scene.px - job.x, scene.py - job.y);
-      const waitingForBoss = !target.actor && !target.scout && remaining <= 6;
+      const waitingForBoss = !target.actor && !target.scout && !target.home && remaining <= 6;
       if (waitingForBoss) {
         // Reaching the known boss position is successful navigation.
         // Waiting for the game to publish the boss actor is not a route stall.
@@ -576,13 +595,17 @@
       if (target.scout && Math.hypot(scene.px - target.x, scene.py - target.y) <= 1.2) {
         explored.set(target.id, Infinity); release(); walking.steer(0, 0);
         message = "Đã tới điểm dò; đang tìm quái đúng bộ lọc.";
+      } else if (target.home && remaining <= 1.2) {
+        release(); walking.steer(0, 0);
+        message = "Đã về điểm bắt đầu; chờ quái xuất hiện.";
       } else if (waitingForBoss) {
         walking.steer(0, 0); message = "Đã tới gần tọa độ boss; chờ game cung cấp actor boss để Auto Farm chọn mục tiêu.";
       } else if (!GSTNavigation.walk(scene, owner.navigation, walking, time, scene.px, scene.py, next.x, next.y,
-          owner.checkpoint ? 0.8 : target.scout ? 1 : target.actor ? 1.8 : 5) || owner.denied) {
+          owner.checkpoint ? 0.8 : target.home ? 0.8 : target.scout ? 1 : target.actor ? 1.8 : 5) || owner.denied) {
         return recover(scene, walking, time, owner.denied ? "blocked" : "walk_failed",
           Math.hypot(scene.px - owner.x, scene.py - owner.y));
-      } else message = target.scout ? `Đang dò vùng mới tìm quái đúng bộ lọc · còn ${distance.toFixed(1)} ô.`
+      } else message = target.home ? `Đang quay về điểm bắt đầu · còn ${distance.toFixed(1)} ô.`
+        : target.scout ? `Đang dò vùng mới tìm quái đúng bộ lọc · còn ${distance.toFixed(1)} ô.`
         : target.actor ? `Đang tới mục tiêu/bãi quái tiếp theo · còn ${distance.toFixed(1)} ô; tới gần sẽ dùng Auto Farm gốc đánh.`
         : "Đang tới tọa độ boss bí cảnh bằng đường đi gốc; chưa tự tấn công khi thiếu actor.";
       return true;
