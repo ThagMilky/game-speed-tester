@@ -33,6 +33,10 @@
     settings = {
       enabled: value?.enabled === true,
       showTargetLine: value?.showTargetLine === true,
+      showRange: value?.showRange === true,
+      nearbyClear: value?.nearbyClear === true,
+      nearbyRadius: Number.isSafeInteger(value?.nearbyRadius)
+        ? Math.max(1, Math.min(6, value.nearbyRadius)) : 2,
       autoRespawn: value?.autoRespawn !== false,
       autoMeditate: value?.autoMeditate !== false,
       noRetreat: value?.noRetreat !== false,
