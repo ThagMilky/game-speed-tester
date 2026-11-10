@@ -113,6 +113,15 @@
       state.camps.splice(0, state.camps.length, ...stable, ...recent);
     }
   }
+  // Read-only map observations. No synthesized actors or persistent coordinate storage.
+  globalThis.GSTAreaMap = {
+    knownCamps(scene) {
+      if (!scene?.map || !scene.sys?.isActive?.()) return [];
+      const state = memoryFor(scene);
+      return state.camps.filter((camp) => inside(scene.map, camp))
+        .map((camp) => ({ x: camp.x, y: camp.y, level: camp.level, boss: camp.boss, live: camp.live }));
+    }
+  };
   function raster(state) {
     const map = state.map, collision = state.collision;
     if (!map || !valid(map.w) || !valid(map.h) || map.w <= 0 || map.h <= 0
