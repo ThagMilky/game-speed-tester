@@ -1,12 +1,35 @@
 (() => {
   "use strict";
   let enabled = false, binding = null, suspended = false;
+  let preferences = {};
   function detach() {
     const old = binding; binding = null;
     if (!old) return;
     old.scene.events.off("postupdate", draw);
     old.scene.events.off("shutdown", detach); old.scene.events.off("destroy", detach);
     old.graphics.destroy();
+  }
+  function drawRange(scene, graphics) {
+    if (!preferences.showRange || !Number.isFinite(scene.px) || !Number.isFinite(scene.py)) return;
+    const zoom = scene.cameras?.main?.zoom || 1;
+    const circle = (point, tiles, color, alpha) => {
+      if (!Number.isFinite(point?.x) || !Number.isFinite(point?.y)
+          || !Number.isFinite(tiles) || tiles < 1) return;
+      const center = scene.toPx(point.x, point.y);
+      const edge = scene.toPx(point.x + tiles, point.y);
+      const radius = Math.abs(edge[0] - center[0]);
+      if (!Number.isFinite(radius) || radius <= 0) return;
+      graphics.lineStyle(1.5 / zoom, color, alpha);
+      graphics.strokeCircle(center[0], center[1], radius);
+    };
+    const home = globalThis.GSTHarvest?.farmOrigin?.(scene)
+      ?? { x: scene.auto.ax, y: scene.auto.ay };
+    const native = globalThis.GSTFarmCompatibility?.nativeRadius(scene.auto.radius);
+    if (preferences.searchScope !== "map" || !preferences.enabled)
+      circle(home, preferences.enabled ? preferences.radius : native, 0x64baff, 0.7);
+    circle({ x: scene.auto.ax, y: scene.auto.ay }, native, 0x73d3c2, 0.55);
+    if (preferences.nearbyClear)
+      circle({ x: scene.px, y: scene.py }, preferences.nearbyRadius, 0xffd27d, 0.85);
   }
   function draw() {
     const owner = binding;
@@ -17,6 +40,8 @@
     owner.nextAt = performance.now() + 100;
     graphics.clear();
     try {
+      drawRange(scene, graphics);
+      if (!preferences.showTargetLine) return;
       const journey = globalThis.GSTFarmMap?.journey(scene);
       const actor = journey ? null : scene.views?.get(scene.auto.target);
       const target = journey ?? (actor && !actor.dead ? actor : null);
@@ -61,7 +86,11 @@
   }
   function safeAttach(scene) { try { attach(scene); } catch { detach(); } }
   globalThis.GSTFarmVisual = {
-    configure(scene, value) { enabled = value.showTargetLine === true; safeAttach(scene); }, attach: safeAttach
+    configure(scene, value) {
+      preferences = value;
+      enabled = value.showTargetLine === true || value.showRange === true;
+      safeAttach(scene);
+    }, attach: safeAttach
   };
   window.addEventListener("pagehide", () => { suspended = true; detach(); });
   window.addEventListener("pageshow", () => {
