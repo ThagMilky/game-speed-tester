@@ -77,7 +77,7 @@
       <summary><span><strong>Auto Farm</strong><small>Phạm vi, nhặt đồ và tự dùng đan</small></span></summary>
       <div class="card-body">
         <p id="farmStatus" class="feature-status" role="status" aria-live="polite">Đang đọc trạng thái…</p>
-        <p class="save-mode">Lựa chọn tự lưu · Bán kính lưu khi rời ô hoặc nhấn Enter</p>
+        <p class="save-mode">Lựa chọn tự lưu · Bán kính lưu khi rời ô nhập (Enter cũng được)</p>
         <div class="farm-grid">
         <fieldset id="farmControls" disabled aria-label="Tùy chọn Auto Farm">
           <div class="farm-column farm-left">
@@ -160,7 +160,7 @@
               <input id="potionMpPercent" type="number" min="1" max="99" step="1" value="25" required>
             </div>
           </div>
-          <p class="hint">Tự chọn ngưỡng 1–99%, mỗi bước 1%. Dùng cơ chế đan, thời gian hồi và số lượng có sẵn của game; ưu tiên HP khi cả hai cùng thấp.</p>
+          <p class="hint">Tự chọn ngưỡng 1–99%, mỗi bước 1%. Rời ô nhập để lưu. Dùng cơ chế đan, thời gian hồi và số lượng có sẵn của game; ưu tiên HP khi cả hai cùng thấp.</p>
           <p id="potionFeedback" class="notice" role="status"></p>
         </fieldset>
           </div></details>
@@ -206,7 +206,7 @@
               <p class="hint">Tìm quanh điểm bắt đầu hoặc trong map hiện tại; không tự đổi map.</p>
               <div id="harvestRadiusField" class="separated">
                 <label for="harvestRadius">Bán kính tìm (1–1.000 ô)</label><input id="harvestRadius" type="number" min="1" max="1000" step="0.5" value="6" required>
-                <p class="hint">Tính từ điểm bắt đầu thu hoạch hoặc tâm Auto Farm. Nhấn Enter để lưu.</p>
+                <p class="hint">Tính từ điểm bắt đầu thu hoạch hoặc tâm Auto Farm. Rời ô nhập để lưu.</p>
               </div>
               <details class="advanced separated"><summary id="harvestCoordSummary">Phối hợp &amp; hiển thị</summary><div class="advanced-body">
                 <label class="check-row"><input id="harvestAllowFarm" type="checkbox"><span>Cho phép thu hoạch khi Auto Farm đang bật</span></label>
@@ -216,7 +216,7 @@
               </div></details>
               <details class="advanced separated"><summary id="harvestAdvancedSummary">Nâng cao</summary><div class="advanced-body">
                 <label for="harvestReach">Khoảng cách dừng (0.5–1.5 ô)</label><input id="harvestReach" type="number" min="0.5" max="1.5" step="0.1" value="1.2" required>
-                <p class="hint">Khoảng cách dừng trước khi thử hái/đào; không tăng tầm tương tác của game. Nhấn Enter để lưu.</p>
+                <p class="hint">Khoảng cách dừng trước khi thử hái/đào; không tăng tầm tương tác của game. Rời ô nhập để lưu.</p>
               </div></details>
               <details class="diagnostic"><summary>Thông tin hoạt động</summary><p>Tự hồi sinh khi Thu hoạch bật. Di chuyển hoặc đánh tay tạm dừng; hộp thoại NPC và kiểm tra người chơi vẫn được ưu tiên. Khi bị đánh, sau 10 giây chưa thu hoạch được sẽ tạm bỏ mục tiêu 60 giây.</p></details>
             </div>
@@ -328,7 +328,7 @@
         <p class="hint">Đã bay thì bỏ qua. Đang đi bộ thì chờ ổn định 1 giây, yêu cầu bay một lần và chờ game xác nhận. Giữ lựa chọn qua đổi map/hồi sinh. Tắt công tắc không ép hạ xuống đi bộ; Auto Farm vẫn có hỗ trợ bay riêng. Nếu bạn tự tắt bay khi công tắc đang bật, tool sẽ bật lại sau khoảng nghỉ. Không spam khi game chưa cho phép bay.</p>
         <p id="flightStatus" class="hint" role="status">Đang đọc trạng thái bay…</p>
         <fieldset id="controls" disabled aria-label="Tùy chọn tốc độ">
-          <p class="save-mode">Công tắc tự lưu · Đổi số rồi bấm Lưu tốc độ</p>
+          <p class="save-mode">Công tắc tự lưu · Đổi số rồi rời ô nhập để lưu (hoặc bấm Lưu tốc độ)</p>
           <label class="switch-row"><span>Bật điều chỉnh tốc độ</span><input id="enabled" class="switch" type="checkbox"></label>
           <div id="speedSettings" hidden>
           <p class="field-title">Bình thường</p>

@@ -425,8 +425,20 @@ window.addEventListener("message", async (event) => {
       || event.data?.channel !== "gst:menu-before-close:v1"
       || !Number.isSafeInteger(event.data.id) || event.data.id <= 0) return;
   let result;
-  try { result = await flushFarmNumericDrafts(); }
-  catch { result = { saved: false, reason: "persistence" }; }
+  try {
+    result = await flushFarmNumericDrafts();
+    if (result.saved) {
+      const potion = globalThis.GSTPotionPopup?.flushNumericDrafts;
+      const harvest = globalThis.GSTHarvestPopup?.flushNumericDrafts;
+      if (!potion || !harvest) result = { saved: false, reason: "load" };
+      else {
+        for (const flush of [potion, harvest, flushSpeedNumericDrafts]) {
+          result = await flush();
+          if (!result.saved) break;
+        }
+      }
+    }
+  } catch { result = { saved: false, reason: "persistence" }; }
   window.parent.postMessage({ channel: "gst:menu-before-close-result:v1", id: event.data.id, ...result }, trustedGameOrigin);
 });
 farmReturnDeath.addEventListener("change", async () => {
@@ -453,6 +465,7 @@ for (const name of Object.keys(GSTFont.families)) {
 }
 let busy = false;
 let saving = false;
+let speedConfirmed = null, speedReady = false, speedSaveQueue = Promise.resolve();
 
 async function refresh() {
   globalThis.GSTMenuMonitor?.render();
@@ -484,28 +497,56 @@ async function refresh() {
   }
 }
 
-async function save() {
-  if (saving) return;
-  if (!speedInputs.every((input) => input.reportValidity())) return;
-  const walkingSpeed = walkingInput.valueAsNumber;
-  const flyingSpeed = flyingInput.valueAsNumber;
-  if (!speedInputs.map((input) => input.valueAsNumber).every((speed) => Number.isFinite(speed) && speed >= 1 && speed <= 6)) return;
-  saving = true;
-  controls.disabled = true;
-  try {
-    await chrome.storage.local.set({ preferences: { enabled: enabledInput.checked, walkingSpeed, flyingSpeed,
-      farmWalkingSpeed: farmWalkingInput.valueAsNumber, farmFlyingSpeed: farmFlyingInput.valueAsNumber } });
-    feedback.textContent = "";
-    await refresh();
-  } catch {
-    feedback.textContent = "Chưa lưu được cài đặt tốc độ. Hãy mở lại popup và thử lại.";
-  } finally {
-    controls.disabled = false;
-    saving = false;
+const speedLabels = {
+  walkingSpeed: "Tốc độ đi bộ", flyingSpeed: "Tốc độ bay",
+  farmWalkingSpeed: "Tốc độ đi bộ khi farm", farmFlyingSpeed: "Tốc độ bay khi farm"
+};
+function invalidSpeedInput() {
+  return speedInputs.find((input) => !input.checkValidity()
+    || !Number.isFinite(input.valueAsNumber) || input.valueAsNumber < 1 || input.valueAsNumber > 6);
+}
+function speedSnapshot() {
+  return { enabled: enabledInput.checked, walkingSpeed: walkingInput.valueAsNumber,
+    flyingSpeed: flyingInput.valueAsNumber, farmWalkingSpeed: farmWalkingInput.valueAsNumber,
+    farmFlyingSpeed: farmFlyingInput.valueAsNumber };
+}
+function save() {
+  if (saving) return Promise.resolve(false);
+  const invalid = invalidSpeedInput();
+  if (invalid) {
+    feedback.textContent = `${speedLabels[invalid.id]} phải từ 1 đến 6.`;
+    return Promise.resolve(false);
   }
+  const values = speedSnapshot();
+  const operation = speedSaveQueue.catch(() => {}).then(async () => {
+    if (speedConfirmed && Object.keys(values).every((key) => speedConfirmed[key] === values[key])) return true;
+    try {
+      await chrome.storage.local.set({ preferences: values });
+      speedConfirmed = { ...values };
+      feedback.textContent = "";
+      void refresh();
+      return true;
+    } catch {
+      feedback.textContent = "Chưa lưu được cài đặt tốc độ. Hãy thử lưu lại.";
+      return false;
+    }
+  });
+  speedSaveQueue = operation;
+  return operation;
+}
+async function flushSpeedNumericDrafts() {
+  if (!speedReady) return { saved: false, reason: "load" };
+  // Reset/disabled speed must not be blocked by an inactive numeric draft.
+  if (!enabledInput.checked) {
+    const queued = await speedSaveQueue.then((saved) => saved !== false, () => false);
+    return queued ? { saved: true } : { saved: false, reason: "persistence" };
+  }
+  const invalid = invalidSpeedInput();
+  if (invalid) return { saved: false, reason: "invalid", field: invalid.id };
+  return await save() ? { saved: true } : { saved: false, reason: "persistence" };
 }
 
-document.getElementById("save").addEventListener("click", save);
+document.getElementById("save").addEventListener("click", () => { void save(); });
 enabledInput.addEventListener("change", () => {
   document.getElementById("speedSettings").hidden = !enabledInput.checked;
   // Disabling must work even when the speed input contains invalid draft text.
@@ -515,11 +556,12 @@ enabledInput.addEventListener("change", () => {
     if (!farmWalkingInput.checkValidity()) farmWalkingInput.value = "2";
     if (!farmFlyingInput.checkValidity()) farmFlyingInput.value = "1.5";
   }
-  save();
+  void save();
 });
 for (const input of speedInputs) {
+  input.addEventListener("blur", () => { void save(); });
   input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") save();
+    if (event.key === "Enter") { event.preventDefault(); void save(); }
   });
 }
 
@@ -581,6 +623,8 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
     input.value = typeof speed === "number" && Number.isFinite(speed)
       ? Math.min(6, Math.max(1, speed)) : fallback;
   }
+  speedConfirmed = speedSnapshot();
+  speedReady = true;
   controls.disabled = false;
   showOverlay.checked = displayPreferences?.visible !== false;
   for (const input of displayFields) {
@@ -631,9 +675,15 @@ window.addEventListener("pagehide", () => clearInterval(refreshTimer), { once: t
 document.getElementById("resetGameSpeed").addEventListener("click", async () => {
   if (saving) return;
   saving = true; controls.disabled = true;
-  try {
+  const operation = speedSaveQueue.catch(() => {}).then(async () => {
     const saved = await chrome.storage.local.get("preferences");
-    await chrome.storage.local.set({ preferences: { ...saved.preferences, enabled: false } });
+    const value = { ...saved.preferences, enabled: false };
+    await chrome.storage.local.set({ preferences: value });
+    speedConfirmed = { ...speedSnapshot(), ...value, enabled: false };
+  });
+  speedSaveQueue = operation;
+  try {
+    await operation;
     enabledInput.checked = false;
     feedback.textContent = "Đã tắt điều chỉnh tốc độ để dùng tốc độ gốc của game.";
     await refresh();

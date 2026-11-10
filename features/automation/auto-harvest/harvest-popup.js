@@ -19,6 +19,7 @@
   let mapAvailable = false, saveMessage = "";
   const rangeErrors = new Map();
   const dirty = new Set(), editVersions = new Map(), failedFields = new Set();
+  const rangeWrites = new Map();
   let busy = false;
   let loaded = false;
   const debugPanel = byId("harvestDebugPanel");
@@ -88,7 +89,7 @@
   const fold = (value) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
   const kind = byId("harvestKind"), line = byId("harvestShowTargetLine");
   function updateMessage() {
-    const draft = dirty.size ? " · Có số chưa xác nhận bằng Enter." : "";
+    const draft = dirty.size ? " · Có số chưa lưu; rời ô nhập để lưu." : "";
     feedback.textContent = ([...rangeErrors.values()][0] || (failedFields.size ? "Một lựa chọn chưa lưu; hãy kiểm tra và thử lại." : pending.length ? "Đang lưu…" : saveMessage)) + draft;
   }
   function derivePreferences() {
@@ -163,6 +164,7 @@
       derivePreferences(); renderList(); updateMessage();
       if (!pending.length) refresh();
     });
+    return operation;
   }
   const change = (key, input) => input.addEventListener("change", () => {
     const value = input.type === "checkbox" ? input.checked : input.value;
@@ -182,24 +184,59 @@
       return { items: GSTHarvest.normalize({ ...current, items: [...items] }).items };
     }, "items");
   });
+  function commitRange(key, input) {
+    if (!loaded) return Promise.resolve(false);
+    const value = input.valueAsNumber;
+    if (!input.checkValidity() || !Number.isFinite(value)) {
+      rangeErrors.set(key, "Số không hợp lệ; hãy kiểm tra giới hạn và bước nhập.");
+      updateMessage();
+      return Promise.resolve(false);
+    }
+    rangeErrors.delete(key);
+    const version = editVersions.get(key) ?? 0;
+    const active = rangeWrites.get(key);
+    if (active?.version === version) return active.promise;
+    if (!active && value === confirmed[key]) {
+      dirty.delete(key);
+      failedFields.delete(key);
+      updateMessage();
+      return Promise.resolve(true);
+    }
+    const operation = save(() => ({ [key]: value }), key);
+    // Only clear the draft if the user has not edited again during persistence.
+    const done = operation.then(() => {
+      if ((editVersions.get(key) ?? 0) === version && input.valueAsNumber === value && input.checkValidity()) dirty.delete(key);
+      return true;
+    }, () => false).finally(() => {
+      if (rangeWrites.get(key)?.promise === done) rangeWrites.delete(key);
+      updateMessage();
+    });
+    rangeWrites.set(key, { version, promise: done });
+    return done;
+  }
   for (const [key, input] of ranges) {
-    input.addEventListener("input", () => { dirty.add(key); editVersions.set(key, (editVersions.get(key) ?? 0) + 1); if (input.checkValidity()) rangeErrors.delete(key); updateMessage(); });
+    input.addEventListener("input", () => {
+      dirty.add(key);
+      editVersions.set(key, (editVersions.get(key) ?? 0) + 1);
+      if (input.checkValidity()) rangeErrors.delete(key);
+      updateMessage();
+    });
+    input.addEventListener("blur", () => { void commitRange(key, input); });
     input.addEventListener("keydown", (event) => {
       if (event.key !== "Enter") return;
       event.preventDefault();
-      const value = input.valueAsNumber;
-      if (!input.checkValidity() || !Number.isFinite(value)) {
-        rangeErrors.set(key, "Số không hợp lệ; hãy kiểm tra giới hạn và bước nhập."); updateMessage(); return;
-      }
-      rangeErrors.delete(key);
-      const action = () => ({ [key]: value }), version = editVersions.get(key) ?? 0;
-      save(action, key);
-      // A later edit remains a draft even if this write completes.
-      queue.then(() => {
-        if ((editVersions.get(key) ?? 0) === version && input.valueAsNumber === value && input.checkValidity()) dirty.delete(key);
-        updateMessage();
-      }, () => {});
+      void commitRange(key, input);
     });
+  }
+  async function flushNumericDrafts() {
+    if (!loaded) return { saved: false, reason: "load" };
+    for (const [key, input] of ranges)
+      if (!input.checkValidity() || !Number.isFinite(input.valueAsNumber))
+        return { saved: false, reason: "invalid", field: key === "radius" ? "harvestRadius" : "harvestReach" };
+    const results = await Promise.all(ranges.map(([key, input]) => commitRange(key, input)));
+    const queued = await queue.then(() => true, () => false);
+    return results.every(Boolean) && queued && !dirty.size && !failedFields.size
+      ? { saved: true } : { saved: false, reason: "persistence" };
   }
   async function refresh() {
     if (busy || !loaded || pending.length) return;
@@ -227,7 +264,7 @@
       if (catalog.length || available || mapAvailable) { catalog = []; available = false; mapAvailable = false; renderList(); }
     } finally { busy = false; refreshDebug(); }
   }
-  globalThis.GSTHarvestPopup = { refresh };
+  globalThis.GSTHarvestPopup = { refresh, flushNumericDrafts };
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local" || !changes.harvestPreferences) return;
     storageRevision++;

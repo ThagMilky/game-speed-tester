@@ -77,7 +77,9 @@
         const result = event.data.saved === true ? { saved: true } : {
           saved: false,
           reason: ["invalid", "persistence", "load"].includes(event.data.reason) ? event.data.reason : "timeout",
-          field: ["radius", "min", "max"].includes(event.data.field) ? event.data.field : null
+          field: ["radius", "min", "max", "potionHpPercent", "potionMpPercent",
+            "harvestRadius", "harvestReach", "walkingSpeed", "flyingSpeed",
+            "farmWalkingSpeed", "farmFlyingSpeed"].includes(event.data.field) ? event.data.field : null
         };
         finish(result);
       };
@@ -115,12 +117,20 @@
           ? ({
             radius: "Giới hạn vùng farm",
             min: "Tu vi tối thiểu",
-            max: "Tu vi tối đa / khoảng tu vi"
-          }[result.field] || "Trường Auto Farm")
+            max: "Tu vi tối đa / khoảng tu vi",
+            potionHpPercent: "Ngưỡng HP dùng đan",
+            potionMpPercent: "Ngưỡng MP dùng đan",
+            harvestRadius: "Bán kính thu hoạch",
+            harvestReach: "Khoảng cách dừng thu hoạch",
+            walkingSpeed: "Tốc độ đi bộ",
+            flyingSpeed: "Tốc độ bay",
+            farmWalkingSpeed: "Tốc độ đi bộ khi farm",
+            farmFlyingSpeed: "Tốc độ bay khi farm"
+          }[result.field] || "Ô nhập")
           : null;
         const message = notice ? `Chưa đóng menu: ${notice} chưa hợp lệ. Hãy sửa giá trị.`
-          : result.reason === "persistence" ? "Chưa đóng menu: lưu cài đặt Auto Farm thất bại. Hãy thử lưu lại."
-          : result.reason === "load" ? "Chưa đóng menu: chưa tải được cài đặt Auto Farm. Hãy thử mở lại menu."
+          : result.reason === "persistence" ? "Chưa đóng menu: lưu cài đặt thất bại. Hãy thử lưu lại."
+          : result.reason === "load" ? "Chưa đóng menu: chưa tải được cài đặt. Hãy thử mở lại menu."
           : "Chưa đóng menu: không nhận được phản hồi từ menu nhúng. Hãy thử lại.";
         if (closeNotice) { closeNotice.textContent = message; closeNotice.hidden = false; }
         return false;
