@@ -97,6 +97,8 @@
 
   function guardFarmKey(event) {
     if (document.getElementById("gst-game-menu")?.dataset.open === "true") return;
+    // Alt shortcuts (including configurable Harvest) belong to their own handlers.
+    if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) return;
     let code = 86;
     let scene = null;
     try {
@@ -408,13 +410,15 @@
   }
 
   function watch() {
-    if ((settings.enabled || settings.autoRespawn || settings.targetMode !== "all") && !suspended && !session && watcher === null) {
+    // Independent defense/meditation helpers still need a scene watcher when
+    // the user disables respawn and expanded filtering.
+    if (!suspended && !session && watcher === null) {
       watcher = setInterval(discover, 1000);
     }
   }
 
   function discover() {
-    if ((!settings.enabled && !settings.autoRespawn && settings.targetMode === "all") || suspended || session) return;
+    if (suspended || session) return;
     try {
       const scene = sceneNow();
       globalThis.GSTFarmCombat?.attach(scene);
