@@ -288,7 +288,7 @@
     scene.events.on("destroy", clearFilter);
   }
 
-  function pickRanked(s, host, time, pos, candidates, moveCenter) {
+  function pickRanked(s, host, time, pos, candidates, moveCenter, searchRadius) {
     // Native combat may already be fighting a nearby attacker. Do not
     // repeatedly restore an old ranked target while that fight is active.
     const native = s.scene.views?.get?.(s.auto.target);
@@ -324,7 +324,7 @@
             : held ? "pick_failed" : "target_unavailable" });
       }
       s.rankTarget = { id: enemy.id, at: previous?.id === enemy.id ? previous.at : time };
-      if (moveCenter) shiftToward(s, enemy);
+      if (moveCenter) shiftToward(s, enemy, searchRadius);
       return true;
     }
     s.rankTarget = null;
@@ -594,7 +594,7 @@
             const centerPoint = { x: s.auto.ax, y: s.auto.ay };
             pickRanked(s, host, time, { x: point[0], y: point[1] },
               enemies.filter((enemy) => finite(enemy?.x) && finite(enemy.y)
-                && distance(enemy, centerPoint) < searchRadius), false);
+                && distance(enemy, centerPoint) < searchRadius), false, searchRadius);
           }
         }
         message = `${filterLabel()}; dùng bán kính gốc của game.`;
@@ -645,7 +645,8 @@
         // Probing a full long route with pick() here would repeatedly mark them skipped.
         && !(distance(enemy, pos) > 6));
       const target = candidates.find((enemy) => enemy.id === s.auto.target);
-      if (ranked() && settings.searchScope !== "map" && pickRanked(s, host, time, pos, candidates, true)) {
+      if (ranked() && settings.searchScope !== "map"
+          && pickRanked(s, host, time, pos, candidates, true, searchRadius)) {
         message = "Giữ mục tiêu theo ưu tiên boss/cảnh giới cho tới khi cần đổi.";
         return;
       }
@@ -678,7 +679,7 @@
         }
       }
       if (next) {
-        shiftToward(s, next);
+        shiftToward(s, next, searchRadius);
         message = "Search center extended; built-in Auto Farm will choose/pursue a target.";
       } else {
         center(s, s.home);
