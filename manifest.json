@@ -4,19 +4,96 @@
   "version": "1.0.2",
   "description": "Local movement-speed override for authorized testing on nghichthienky.online.",
   "minimum_chrome_version": "111",
-  "permissions": ["storage"],
-  "web_accessible_resources": [{ "resources": ["popup.html"], "matches": ["https://nghichthienky.online/*"] }],
-  "action": { "default_popup": "popup.html" },
+  "permissions": [
+    "storage"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "popup.html"
+      ],
+      "matches": [
+        "https://nghichthienky.online/*"
+      ]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
-      "matches": ["https://nghichthienky.online/*"],
-      "js": ["harvest-main-options.js", "background-diagnostics.js", "movement-log-schema.js", "movement-diagnostics.js", "farm-update.js", "potion-page.js", "farm-combat.js", "navigation.js", "farm-revive-policy.js", "farm-input.js", "map-travel-page.js", "farm-routing.js", "flight-page.js", "farm-behavior.js", "farm-boss-safety.js", "farm-map.js", "farm-visual.js", "area-map-page.js", "page.js", "farm-page.js", "farm-diagnostics.js", "farm-session.js", "farm-seals.js", "realm-history.js", "realm-page.js", "harvest-visual.js", "harvest-page.js", "fps-map.js", "fps-minimap.js", "fps-minimap-zoom.js", "fps-minimap-colors.js", "fps-page.js", "realm-time-page.js", "chest-page.js", "background-page.js", "quest-page.js"],
+      "matches": [
+        "https://nghichthienky.online/*"
+      ],
+      "js": [
+        "features/automation/auto-harvest/harvest-main-options.js",
+        "shared/diagnostics/background-diagnostics.js",
+        "shared/diagnostics/movement-log-schema.js",
+        "shared/diagnostics/movement-diagnostics.js",
+        "shared/coordination/farm-update.js",
+        "features/automation/auto-potion/potion-page.js",
+        "features/automation/auto-farm/farm-combat.js",
+        "shared/navigation/navigation.js",
+        "shared/coordination/farm-revive-policy.js",
+        "shared/navigation/farm-input.js",
+        "features/movement/map/map-travel-page.js",
+        "shared/navigation/farm-routing.js",
+        "features/movement/flight/flight-page.js",
+        "features/automation/auto-farm/farm-behavior.js",
+        "features/automation/auto-farm/farm-boss-safety.js",
+        "features/automation/auto-farm/farm-map.js",
+        "features/automation/auto-farm/farm-visual.js",
+        "features/movement/map/area-map-page.js",
+        "core/page.js",
+        "features/automation/auto-farm/farm-page.js",
+        "shared/diagnostics/farm-diagnostics.js",
+        "features/automation/auto-farm/farm-session.js",
+        "features/automation/auto-farm/farm-seals.js",
+        "features/automation/auto-realm/realm-history.js",
+        "features/automation/auto-realm/realm-page.js",
+        "features/automation/auto-harvest/harvest-visual.js",
+        "features/automation/auto-harvest/harvest-page.js",
+        "features/visual/fps/fps-map.js",
+        "features/visual/fps/fps-minimap.js",
+        "features/visual/fps/fps-minimap-zoom.js",
+        "features/visual/fps/fps-minimap-colors.js",
+        "features/visual/fps/fps-page.js",
+        "features/automation/auto-realm/realm-time-page.js",
+        "features/automation/auto-chest/chest-page.js",
+        "features/visual/background/background-page.js",
+        "features/automation/auto-quest/quest-page.js"
+      ],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
-      "matches": ["https://nghichthienky.online/*"],
-      "js": ["harvest-options.js", "content.js", "game-panel-scroll.js", "font-options.js", "font.js", "potion-content.js", "farm-content.js", "movement-log-schema.js", "farm-diagnostics-content.js", "harvest-content.js", "realm-content.js", "realm-history-content.js", "fps-options.js", "fps-content.js", "realm-time-content.js", "chest-content.js", "menu-position.js", "game-menu.js", "area-map-content.js", "background-content.js", "quest-content.js", "flight-content.js"],
+      "matches": [
+        "https://nghichthienky.online/*"
+      ],
+      "js": [
+        "features/automation/auto-harvest/harvest-options.js",
+        "core/content.js",
+        "ui/interface/game-panel-scroll.js",
+        "ui/interface/font-options.js",
+        "ui/interface/font.js",
+        "features/automation/auto-potion/potion-content.js",
+        "features/automation/auto-farm/farm-content.js",
+        "shared/diagnostics/movement-log-schema.js",
+        "shared/diagnostics/farm-diagnostics-content.js",
+        "features/automation/auto-harvest/harvest-content.js",
+        "features/automation/auto-realm/realm-content.js",
+        "features/automation/auto-realm/realm-history-content.js",
+        "features/visual/fps/fps-options.js",
+        "features/visual/fps/fps-content.js",
+        "features/automation/auto-realm/realm-time-content.js",
+        "features/automation/auto-chest/chest-content.js",
+        "ui/game-menu/menu-position.js",
+        "ui/game-menu/game-menu.js",
+        "features/movement/map/area-map-content.js",
+        "features/visual/background/background-content.js",
+        "features/automation/auto-quest/quest-content.js",
+        "features/movement/flight/flight-content.js"
+      ],
       "run_at": "document_start",
       "world": "ISOLATED"
     }

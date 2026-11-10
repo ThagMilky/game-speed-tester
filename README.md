@@ -11,49 +11,51 @@ Chrome Extension Manifest V3 phục vụ kiểm thử anti-cheat có sự cho ph
 ## Tính năng chính theo source hiện tại
 
 - **Popup:** điều hướng theo từng trang ở thanh bên: Tổng quan, Auto Farm, Thu hoạch, Bí cảnh, Auto Quest, Tốc độ & bay, Hình ảnh & FPS, Giao diện và Chẩn đoán. Ghi nhớ trang bằng `popupActivePage`; không còn kéo thả thứ tự panel.
-- **Auto Farm:** sử dụng Auto Farm của game để chiến đấu, hỗ trợ lọc quái theo level/boss, phạm vi bán kính 11–1.000 ô hoặc tìm mục tiêu trên toàn map hiện tại. Khi di chuyển xa, `farm-map.js` dùng đường đi gốc rồi nhường Auto Farm gốc đánh ở gần. Khi game gửi sự kiện sát thương có ID quái gây đòn (`event.by`), bộ tìm quái có thể ưu tiên quái đó ở gần; không suy đoán kẻ đánh chỉ từ cờ `aggro`. `farm-behavior.js` và `farm-map.js` dùng chung `GSTFarmEvents` để theo dõi sự kiện.
+- **Auto Farm:** sử dụng Auto Farm của game để chiến đấu, hỗ trợ lọc quái theo level/boss, phạm vi bán kính 11–1.000 ô hoặc tìm mục tiêu trên toàn map hiện tại. Khi di chuyển xa, `features/automation/auto-farm/farm-map.js` dùng đường đi gốc rồi nhường Auto Farm gốc đánh ở gần. Khi game gửi sự kiện sát thương có ID quái gây đòn (`event.by`), bộ tìm quái có thể ưu tiên quái đó ở gần; không suy đoán kẻ đánh chỉ từ cờ `aggro`. `features/automation/auto-farm/farm-behavior.js` và `features/automation/auto-farm/farm-map.js` dùng chung `GSTFarmEvents` để theo dõi sự kiện.
 - **Map toàn khu vực:** mở bằng dấu `.` mặc định (có thể đổi phím trong Giao diện); có marker và **Click để di chuyển**. Tọa độ click tính theo lần vẽ canvas cuối cùng, kể cả ngay sau khi zoom. WASD/joystick chủ động hủy hành trình. Tùy chọn quay lại nơi chết lưu điểm trong cùng tab tối đa 2 phút, **không áp dụng trong bí cảnh**. Khả năng đến đích phụ thuộc dữ liệu map/va chạm game.
 - **Phát hành:** GitHub Actions tạo ZIP trong Releases theo `manifest.json`; người nhận giải nén và **Load unpacked**, không tự cập nhật qua Chrome Web Store. Xem [RELEASE.md](RELEASE.md).
 
 ## Cấu trúc
 
+Mã nguồn được tổ chức theo `core/`, `features/`, `shared/` và `ui/`. Các thành phần chưa rõ trách nhiệm sẽ được đưa vào `uncategorized/` sau khi kiểm tra. Những hướng dẫn lịch sử bên dưới có thể còn nhắc đường dẫn cũ; xem `CODEGRAPH.md` và `manifest.json` để biết đường dẫn đang nạp.
+
 ```text
 game-speed-tester/
   manifest.json   Quyền storage và hai content script giới hạn đúng website
-  content.js     Đọc cài đặt, thêm timer, cầu nối popup và bảng trạng thái trên game
-  font-options.js Danh sách 10 font và quy tắc tùy chọn dùng chung
-  font.js        Bật/tắt và áp dụng font giao diện web sau 1 giây
-  fps-options.js Tùy chọn FPS dùng chung giữa popup và ISOLATED
-  fps-popup.js   Lưu lựa chọn giảm hình ảnh, khôi phục và đọc FPS
-  fps-content.js Storage và cầu nối FPS theo danh sách trường boolean
-  fps-page.js    Bộ lọc camera và hook tạo hiệu ứng trong MAIN world
-  farm-page.js   Mở rộng tâm tìm kiếm của Auto Farm có sẵn, chạy trong MAIN world
-  farm-content.js Storage và cầu nối riêng cho tùy chọn/trạng thái Auto Farm
-  farm-session.js Giữ ý định Auto Farm theo tab qua tải lại/đổi map
-  farm-update.js Một wrapper update chung để bàn giao phong ấn/Tự hái/game gốc
-  farm-input.js  Một wrapper click-to-move chung, kiểm tra focus lúc thực thi
-  farm-behavior.js Hành vi đứng chờ/né, cung cấp GSTFarmEvents cho scene.onEvent
-  farm-map.js    Tiếp cận quái toàn map, dùng GSTFarmEvents để nhận sát thương
-  farm-boss-safety.js Né cảnh báo boss và phối hợp rút lui HP thấp
-  map-travel-page.js Điều hướng điểm click và quay về nơi chết ngoài bí cảnh
-  area-map-page.js Vẽ bản đồ toàn khu vực và nhận click theo khung đã vẽ
-  farm-diagnostics.js Theo dõi các lần bật/tắt và nguyên nhân, không điều khiển farm
-  farm-diagnostics-content.js Cầu nối chỉ đọc chẩn đoán, lọc trường xuất
-  farm-diagnostics-popup.js Sao chép chẩn đoán theo yêu cầu, không polling riêng
-  farm-seals.js  Hỗ trợ di chuyển và đánh phong ấn bí cảnh bằng hàm gốc
-  harvest-options.js Tùy chọn Tự hái dùng chung; cầu nối điều phối trong MAIN world
-  harvest-main-options.js Bản sinh từ harvest-options.js, đường dẫn riêng cho MAIN
-  harvest-page.js Chọn cây, tìm đường, tương tác gốc và bàn giao với Auto Farm
-  harvest-content.js Storage/cầu nối trạng thái và danh mục cây từ game
-  harvest-popup.js Tìm tên không dấu, tick chọn, lưu tùy chọn Tự hái
-  realm-page.js   Chọn cổng toàn map, đi và vào bằng callback gốc
-  realm-content.js Storage/cầu nối cài đặt và trạng thái bí cảnh
-  realm-popup.js  Công tắc bí cảnh, quyền phối hợp và giữ farm qua đổi map
-  page.js        Truy cập Phaser, tách snapshot dùng cho scene rồi chỉnh ms
+  core/content.js     Đọc cài đặt, thêm timer, cầu nối popup và bảng trạng thái trên game
+  ui/interface/font-options.js Danh sách 10 font và quy tắc tùy chọn dùng chung
+  ui/interface/font.js        Bật/tắt và áp dụng font giao diện web sau 1 giây
+  features/visual/fps/fps-options.js Tùy chọn FPS dùng chung giữa popup và ISOLATED
+  features/visual/fps/fps-popup.js   Lưu lựa chọn giảm hình ảnh, khôi phục và đọc FPS
+  features/visual/fps/fps-content.js Storage và cầu nối FPS theo danh sách trường boolean
+  features/visual/fps/fps-page.js    Bộ lọc camera và hook tạo hiệu ứng trong MAIN world
+  features/automation/auto-farm/farm-page.js   Mở rộng tâm tìm kiếm của Auto Farm có sẵn, chạy trong MAIN world
+  features/automation/auto-farm/farm-content.js Storage và cầu nối riêng cho tùy chọn/trạng thái Auto Farm
+  features/automation/auto-farm/farm-session.js Giữ ý định Auto Farm theo tab qua tải lại/đổi map
+  shared/coordination/farm-update.js Một wrapper update chung để bàn giao phong ấn/Tự hái/game gốc
+  shared/navigation/farm-input.js  Một wrapper click-to-move chung, kiểm tra focus lúc thực thi
+  features/automation/auto-farm/farm-behavior.js Hành vi đứng chờ/né, cung cấp GSTFarmEvents cho scene.onEvent
+  features/automation/auto-farm/farm-map.js    Tiếp cận quái toàn map, dùng GSTFarmEvents để nhận sát thương
+  features/automation/auto-farm/farm-boss-safety.js Né cảnh báo boss và phối hợp rút lui HP thấp
+  features/movement/map/map-travel-page.js Điều hướng điểm click và quay về nơi chết ngoài bí cảnh
+  features/movement/map/area-map-page.js Vẽ bản đồ toàn khu vực và nhận click theo khung đã vẽ
+  shared/diagnostics/farm-diagnostics.js Theo dõi các lần bật/tắt và nguyên nhân, không điều khiển farm
+  shared/diagnostics/farm-diagnostics-content.js Cầu nối chỉ đọc chẩn đoán, lọc trường xuất
+  shared/diagnostics/farm-diagnostics-popup.js Sao chép chẩn đoán theo yêu cầu, không polling riêng
+  features/automation/auto-farm/farm-seals.js  Hỗ trợ di chuyển và đánh phong ấn bí cảnh bằng hàm gốc
+  features/automation/auto-harvest/harvest-options.js Tùy chọn Tự hái dùng chung; cầu nối điều phối trong MAIN world
+  features/automation/auto-harvest/harvest-main-options.js Bản sinh từ features/automation/auto-harvest/harvest-options.js, đường dẫn riêng cho MAIN
+  features/automation/auto-harvest/harvest-page.js Chọn cây, tìm đường, tương tác gốc và bàn giao với Auto Farm
+  features/automation/auto-harvest/harvest-content.js Storage/cầu nối trạng thái và danh mục cây từ game
+  features/automation/auto-harvest/harvest-popup.js Tìm tên không dấu, tick chọn, lưu tùy chọn Tự hái
+  features/automation/auto-realm/realm-page.js   Chọn cổng toàn map, đi và vào bằng callback gốc
+  features/automation/auto-realm/realm-content.js Storage/cầu nối cài đặt và trạng thái bí cảnh
+  features/automation/auto-realm/realm-popup.js  Công tắc bí cảnh, quyền phối hợp và giữ farm qua đổi map
+  core/page.js        Truy cập Phaser, tách snapshot dùng cho scene rồi chỉnh ms
   popup.html     Giao diện
-  popup.css      Định dạng giao diện
-  popup.js       Lưu tùy chọn và đọc trạng thái tab đang mở
-  popup-layout.js Điều hướng trang popup, lưu popupActivePage, không kéo thả panel
+  ui/popup/popup.css      Định dạng giao diện
+  ui/popup/popup.js       Lưu tùy chọn và đọc trạng thái tab đang mở
+  ui/popup/popup-layout.js Điều hướng trang popup, lưu popupActivePage, không kéo thả panel
   README.md
 ```
 

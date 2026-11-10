@@ -1,5 +1,5 @@
 // Canonical helper. Regenerate harvest-main-options.js from this file with:
-// Copy-Item -LiteralPath .\harvest-options.js -Destination .\harvest-main-options.js
+// Copy-Item -LiteralPath .\features\automation\auto-harvest\harvest-options.js -Destination .\features\automation\auto-harvest\harvest-main-options.js
 (() => {
   "use strict";
   const bounded = (value, fallback, min, max) => typeof value === "number" && Number.isFinite(value)
