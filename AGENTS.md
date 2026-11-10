@@ -14,8 +14,8 @@
 
 1. Đọc AGENTS.md, tham khảo `CODEGRAPH.md` cho extension và [Wiki v1.0](GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md) làm bản đồ source game.
 2. Xác định feature qua Wiki; xem module và index/record liên quan để khoanh vùng.
-3. Ưu tiên file hiện có trong `game-reference/` để kiểm tra implementation. Chỉ đọc các đoạn source, imports/exports và call sites cần thiết; không đọc toàn bộ bundle.
-4. Thư mục `GAME_ASSET_WIKI_v1.0/source/` là snapshot tham chiếu được giữ trong Wiki, không mặc định đồng nhất với `game-reference/`. Trước khi áp dụng offset Wiki lên file khác, xác minh source identity; nếu chưa xác minh, tự tìm đoạn code liên quan trong file cần dùng.
+3. Dùng file hiện có trong `GAME_ASSET_WIKI_v1.0/source/` để kiểm tra implementation. Chỉ đọc các đoạn source, imports/exports và call sites cần thiết; không đọc toàn bộ bundle.
+4. Thư mục `GAME_ASSET_WIKI_v1.0/source/` là bộ source tham chiếu của repository. Trước khi dựa vào offset Wiki, xác minh hash và danh tính file với source manifest; nếu chưa xác minh, tự tìm đoạn code liên quan trong file cần dùng.
 5. Đọc flow extension hiện có và tái sử dụng source/thông tin đã có trước khi yêu cầu file ngoài. Không tự động xin source cho mọi task.
 6. Nếu thiếu source thực sự cần thiết, chỉ xin file cụ thể và giải thích lý do. Không xin toàn bộ assets trừ khi task thực sự cần.
 7. Trước khi sửa dựa vào implementation game cụ thể, đối chiếu source thật, imports/exports, chữ ký hàm và call site liên quan.
@@ -29,7 +29,7 @@ Nếu Wiki thiếu: báo rõ, không bịa nội dung hoặc tuyên bố đã đ
 
 - `CODEGRAPH.md` ở root là bản đồ tĩnh entry point, bridge, dependency và ownership của extension. Đọc để khoanh vùng trước khi sửa nhiều module; không thay thế source thật. `README.md` mô tả cách sử dụng (các phần ghi ngày cũ là lịch sử), `RELEASE.md` mô tả quy trình ZIP hiện hành; chỉ cập nhật thông tin có chứng cứ từ source/workflow.
 - Cập nhật đúng phần CodeGraph liên quan khi thay đổi module, manifest/popup load order, channel, public API, priority hoặc ownership/dependency. Không sửa CodeGraph chỉ vì đổi logic nội bộ không làm đổi các quan hệ này.
-- Không xem CodeGraph là bằng chứng runtime/live game; Wiki và `game-reference/` vẫn là tài liệu định tuyến source game với giới hạn phiên bản riêng.
+- Không xem CodeGraph là bằng chứng runtime/live game; Wiki và `GAME_ASSET_WIKI_v1.0/source/` vẫn là tài liệu tham chiếu source game với giới hạn phiên bản riêng.
 ## Wiki là bản đồ điều hướng, không phải bằng chứng runtime
 
 - Tên class/hàm minified, dependency và hành vi trong Wiki có thể thuộc bản game cũ; không mặc định bản deployed hiện tại giống hệt.
@@ -42,11 +42,11 @@ Nếu Wiki thiếu: báo rõ, không bịa nội dung hoặc tuyên bố đã đ
 
 ## Source game cục bộ do người dùng cung cấp
 
-- Ưu tiên đọc source đã có trong `game-reference/` của repository. Chỉ kiểm tra `C:\Users\Milk\Downloads\Game` khi Agent thực sự có quyền truy cập máy cục bộ; không giả định ChatGPT/GitHub connector đọc được đường dẫn này.
+- Ưu tiên đọc source đã có trong `GAME_ASSET_WIKI_v1.0/source/` của repository. Chỉ kiểm tra `C:\Users\Milk\Downloads\Game` khi Agent thực sự có quyền truy cập máy cục bộ; không giả định ChatGPT/GitHub connector đọc được đường dẫn này.
 - Đây là snapshot source game hiện được người dùng lưu, không bảo đảm trùng bản game live trong tương lai. Game có thể cập nhật nội dung, tên bundle/hash và tên minified.
 - Không phụ thuộc tên file cố định: liệt kê file hiện có, dùng Wiki để định hướng rồi đối chiếu nội dung, imports/exports và call site để nhận diện đúng hệ thống. `WorldScene.js`/`index.js` có thể là tên người dùng đổi lại.
 - Nếu thiếu file cần thiết, không xác định được file nào tương ứng, hoặc có nghi vấn về tên/phiên bản ảnh hưởng kết quả, hỏi người dùng ngắn gọn và nêu rõ điểm chưa chắc. Không yêu cầu lại toàn bộ source mặc định.
-- Source trong thư mục cục bộ phục vụ đọc/đối chiếu; không tự sửa, di chuyển hoặc xóa. Chỉ lưu bản sao vào `game-reference/` khi được người dùng cho phép rõ ràng và repository đích phù hợp về quyền phân phối.
+- Source trong thư mục cục bộ phục vụ đọc/đối chiếu; không tự sửa, di chuyển hoặc xóa. Chỉ thêm hoặc thay thế source tham chiếu khi được người dùng cho phép rõ ràng và repository đích phù hợp về quyền phân phối; không tự tạo thêm bộ source trùng lặp.
 
 ## Ranh giới implementation
 
@@ -97,10 +97,10 @@ Khi hoàn tất: nêu thay đổi, các file extension sửa (gọn), source gam
 
 ## Game source snapshots
 
-- Game source snapshots are available in `game-reference/`.
-- Use [Wiki v1.0](GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md) and its [source lookup guide](GAME_ASSET_WIKI_v1.0/AI_SOURCE_LOOKUP_GUIDE.md) to route to relevant modules/records, then inspect only necessary portions of the available `game-reference/` source.
-- Wiki `source/` and `game-reference/` are separate reference collections; do not assume their files or offsets match. Establish source identity before applying Wiki offsets; otherwise locate the needed code directly.
-- Use available `game-reference/` files before requesting additional source from the user.
+- Game source snapshots are available in `GAME_ASSET_WIKI_v1.0/source/`.
+- Use [Wiki v1.0](GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md) and its [source lookup guide](GAME_ASSET_WIKI_v1.0/AI_SOURCE_LOOKUP_GUIDE.md) to route to relevant modules/records, then inspect only necessary portions of the available Wiki `source/` files.
+- Establish source identity against the source manifest before relying on Wiki offsets; otherwise locate the needed code directly.
+- Use available Wiki `source/` files before requesting additional source from the user.
 - Treat these files as read-only reference material.
 - Do not modify, regenerate, or include game source files in the extension runtime.
 - Do not assume the snapshots match the current live game.

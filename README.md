@@ -2,7 +2,7 @@
 
 Source chính: [ThagMilky/game-speed-tester](https://github.com/ThagMilky/game-speed-tester), nhánh `main`. Cài extension trực tiếp từ thư mục chứa `manifest.json` bằng **Load unpacked** tại `chrome://extensions`; không cần build hoặc Node.js. Để chia sẻ với bạn bè, repository đã có GitHub Actions **Release extension** đóng gói ZIP theo phiên bản `manifest.json`; xem [RELEASE.md](RELEASE.md).
 
-Nếu chuyển thư mục Load unpacked sang đường dẫn khác, Chrome có thể tạo ID extension khác và không tự chuyển cài đặt cũ. Cập nhật source local theo quy trình Git hiện có, nhấn **Reload** cho extension rồi tải lại tab game. Gói ZIP Release không chứa Git history, tài liệu phát triển hoặc `game-reference/`.
+Nếu chuyển thư mục Load unpacked sang đường dẫn khác, Chrome có thể tạo ID extension khác và không tự chuyển cài đặt cũ. Cập nhật source local theo quy trình Git hiện có, nhấn **Reload** cho extension rồi tải lại tab game. Gói ZIP Release không chứa Git history hoặc thư mục tài liệu và source tham chiếu `GAME_ASSET_WIKI_v1.0/`.
 
 Chrome Extension Manifest V3 phục vụ kiểm thử anti-cheat có sự cho phép, chỉ trên `https://nghichthienky.online/*`. Mặc định **tắt**; tốc độ **đi bộ 3.5**, **bay 2**; mỗi giá trị điều chỉnh trong **1.0–6.0**.
 

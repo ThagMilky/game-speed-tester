@@ -6,7 +6,7 @@
 
 - Xác định tính năng tại **bảng định tuyến** (mục 5), sau đó đọc implementation và call site thật.
 - `manifest.json` quyết định script nào được chạy, **thứ tự nạp**, `MAIN`/`ISOLATED` và quyền extension. Các nhóm dưới đây phản ánh thư mục thực tế sau khi tách theo tính năng. Thư mục `shared/` chứa bộ điều phối/đường đi/chẩn đoán dùng chung; `core/` giữ các entry point đa trách nhiệm. Thứ tự nạp thực tế vẫn do `manifest.json` và `popup.html` quyết định.
-- `CODEGRAPH.md` mô tả **extension**; [Wiki v1.0](GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md) là bản đồ điều hướng source game, còn `game-reference/` chứa source ưu tiên dùng để kiểm tra implementation. Cần đối chiếu source hiện tại trước khi sửa.
+- `CODEGRAPH.md` mô tả **extension**; [Wiki v1.0](GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md) là bản đồ điều hướng source game, còn `GAME_ASSET_WIKI_v1.0/source/` chứa source dùng để kiểm tra implementation. Cần đối chiếu source hiện tại trước khi sửa.
 
 ## 2. Nhóm file
 
@@ -24,7 +24,7 @@
 | FPS / minimap | `features/visual/fps/fps-content.js`, `features/visual/fps/fps-page.js`, `features/visual/fps/fps-popup.js`, `features/visual/fps/fps-options.js`, `features/visual/fps/fps-map.js`, `features/visual/fps/fps-minimap.js`, `features/visual/fps/fps-minimap-zoom.js`, `features/visual/fps/fps-minimap-colors.js` |
 | Bản đồ toàn khu vực / hành trình | `features/movement/map/area-map-page.js`, `features/movement/map/area-map-content.js`, `features/movement/map/area-map-popup.js`, `features/movement/map/map-travel-page.js` |
 | Nền, font, chẩn đoán | `features/visual/background/background-page.js`, `features/visual/background/background-content.js`, `shared/diagnostics/background-diagnostics.js`, `ui/interface/font.js`, `ui/interface/font-options.js`, `shared/diagnostics/farm-diagnostics.js`, `shared/diagnostics/farm-diagnostics-content.js`, `shared/diagnostics/farm-diagnostics-popup.js`, `shared/diagnostics/movement-diagnostics.js`, `shared/diagnostics/movement-log-schema.js` |
-| Docs / source snapshot | `AGENTS.md`, `README.md`, `RELEASE.md`, `CODEGRAPH.md`, `GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md`, `GAME_ASSET_WIKI_v1.0/AI_SOURCE_LOOKUP_GUIDE.md`, `game-reference/README.md` |
+| Docs / source snapshot | `AGENTS.md`, `README.md`, `RELEASE.md`, `CODEGRAPH.md`, `GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md`, `GAME_ASSET_WIKI_v1.0/AI_SOURCE_LOOKUP_GUIDE.md`, `GAME_ASSET_WIKI_v1.0/SOURCE_MANIFEST.json` |
 
 Trong MAIN, `features/automation/auto-harvest/harvest-main-options.js` tạo `GSTHarvest`; `shared/coordination/farm-update.js`, `shared/navigation/navigation.js` và `shared/navigation/farm-input.js` được nạp trước các consumer. Trong ISOLATED, `features/automation/auto-harvest/harvest-options.js` đứng trước `features/automation/auto-harvest/harvest-content.js`. Các `*-popup.js` được nạp theo thẻ `<script>` trong `popup.html`, không theo danh sách content script trong manifest.
 
@@ -127,8 +127,8 @@ flowchart TD
 
 ## 6. Source game tham khảo và giới hạn
 
-- [Wiki v1.0](GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md) là bản đồ điều hướng; dùng [lookup guide](GAME_ASSET_WIKI_v1.0/AI_SOURCE_LOOKUP_GUIDE.md), module và index/record phù hợp để tìm đúng hệ thống. Sau đó đọc có mục tiêu các đoạn cần thiết, imports/exports và call sites trong `game-reference/`; xem [game-reference/README.md](game-reference/README.md) để biết inventory hiện tại.
-- `GAME_ASSET_WIKI_v1.0/source/` là bộ source tham chiếu của Wiki, tách biệt với `game-reference/`. Không giả định nội dung hoặc offset giống nhau; xác minh source identity trước khi dùng offset Wiki trên file khác, nếu không thì tìm trực tiếp đoạn code cần thiết.
+- [Wiki v1.0](GAME_ASSET_WIKI_v1.0/GAME_ASSET_WIKI_v1.0.md) là bản đồ điều hướng; dùng [lookup guide](GAME_ASSET_WIKI_v1.0/AI_SOURCE_LOOKUP_GUIDE.md), module và index/record phù hợp để tìm đúng hệ thống. Sau đó đọc có mục tiêu các đoạn cần thiết, imports/exports và call sites trong `GAME_ASSET_WIKI_v1.0/source/`; xem [source manifest](GAME_ASSET_WIKI_v1.0/SOURCE_MANIFEST.json) và danh sách file thực tế để xác định source cần dùng.
+- `GAME_ASSET_WIKI_v1.0/source/` là bộ source tham chiếu của repository. Xác minh hash và danh tính file với source manifest trước khi dựa vào offset Wiki; nếu chưa xác minh thì tìm trực tiếp đoạn code cần thiết.
 - Ngày capture, hash source, tương thích live và hành vi runtime chưa được xác minh. Không sửa, triển khai hoặc đưa file snapshot vào runtime extension; client source không chứng minh server chấp nhận hành động.
 - Graph dựa trên source tại commit nền; không xác nhận gameplay, CI hoặc server chấp nhận thao tác.
 

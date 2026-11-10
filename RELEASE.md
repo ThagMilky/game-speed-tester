@@ -24,7 +24,7 @@ Khi cập nhật, giải nén phiên bản mới vào **cùng đường dẫn th
 
 ## Nội dung ZIP và giới hạn
 
-ZIP chỉ chứa `manifest.json`, các file `.js`, `.css`, `.html` trong `core/`, `features/`, `shared/`, `ui/` và các entry ở thư mục gốc và `INSTALL.txt` cho người dùng. File tài liệu `.md` không nằm trong gói và một commit chỉ sửa tài liệu không yêu cầu tạo ZIP mới. Workflow kiểm tra các file được tham chiếu trong manifest trước khi tạo ZIP. Thư mục `game-reference/`, tài liệu phát triển, Git history, thư mục `work/` và dữ liệu cục bộ không nằm trong gói.
+ZIP chỉ chứa `manifest.json`, các file `.js`, `.css`, `.html` trong `core/`, `features/`, `shared/`, `ui/` và các entry ở thư mục gốc và `INSTALL.txt` cho người dùng. File tài liệu `.md` không nằm trong gói và một commit chỉ sửa tài liệu không yêu cầu tạo ZIP mới. Workflow kiểm tra các file được tham chiếu trong manifest trước khi tạo ZIP. Thư mục `GAME_ASSET_WIKI_v1.0/` (gồm cả source tham chiếu), tài liệu phát triển, Git history, thư mục `work/` và dữ liệu cục bộ không nằm trong gói.
 
 Đây là cách phân phối tiện ích **Load unpacked**, không phải CRX hay Chrome Web Store; không có cập nhật tự động trong trình duyệt. ZIP không che giấu mã nguồn.
 
