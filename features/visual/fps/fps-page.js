@@ -2,6 +2,7 @@
   "use strict";
   const origin = "https://nghichthienky.online";
   const fields = ["hidePlayers", "hidePlayerEffects", "hideOwnEffects", "hideMonsterEffects",
+    "hideDisciples", "hidePets", "hideCompanionEffects", "hideBasicEffects",
     "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings", "hideBosses", "hideBossEffects", "simpleMinimap", "minimapColors"];
   let settings = {}, measure = false, suspended = false, watcher = null, binding = null;
   let failure = "";
@@ -11,11 +12,16 @@
   const on = (key) => settings.enabled && settings[key];
 
   const boss = (actor) => actor?.st?.cls === "boss" || actor?.st?.wb === true;
+  const disciple = (actor) => actor?.k === "m" && actor.st?.cls === "pet"
+    && typeof actor.st.set === "string" && actor.st.set.startsWith("@p:detu_");
   function suppress(scene, id) {
     if (id === scene.you) return on("hideOwnEffects");
     const actor = scene.views.get(id);
-    return actor?.k === "p" ? on("hidePlayers") || on("hidePlayerEffects")
-      : actor?.k === "m" && actor.st?.cls !== "pet" ? boss(actor) ? on("hideBossEffects") : on("hideMonsterEffects") : false;
+    if (actor?.k === "p") return on("hidePlayers") || on("hidePlayerEffects");
+    if (actor?.k !== "m") return false;
+    if (actor.st?.cls === "pet") return on("hideCompanionEffects")
+      || (disciple(actor) ? on("hideDisciples") : on("hidePets"));
+    return boss(actor) ? on("hideBossEffects") : on("hideMonsterEffects");
   }
 
   function restoreMasks(owner) {
@@ -90,11 +96,15 @@
       owner.epoch++;
       const scene = owner.scene;
       owner.mapReady = GSTFpsMap.update(scene, settings, (value) => mask(owner, value));
-      if (on("hidePlayers") || on("hideMonsters") || on("hideBosses") || on("hideBossEffects") || on("hidePlayerEffects") || on("hideMonsterEffects")) {
+      if (on("hidePlayers") || on("hideMonsters") || on("hideBosses") || on("hideBossEffects") || on("hidePlayerEffects")
+          || on("hideMonsterEffects") || on("hideDisciples") || on("hidePets") || on("hideCompanionEffects")) {
         for (const actor of scene.views.values()) {
           const player = actor.k === "p" && actor.id !== scene.you;
-          const monster = actor.k === "m" && actor.st?.cls !== "pet";
-          if ((player && on("hidePlayers")) || (monster && (boss(actor) ? on("hideBosses") : on("hideMonsters")))) {
+          const companion = actor.k === "m" && actor.st?.cls === "pet";
+          const monster = actor.k === "m" && !companion;
+          const hideCompanion = companion && (disciple(actor) ? on("hideDisciples") : on("hidePets"));
+          if ((player && on("hidePlayers")) || hideCompanion
+              || (monster && (boss(actor) ? on("hideBosses") : on("hideMonsters")))) {
             mask(owner, actor.ch);
             mask(owner, actor.shadow);
             if (player) {
@@ -111,6 +121,10 @@
       if (on("hideOwnEffects")) {
         mask(owner, scene.myAura);
         mask(owner, scene.cultivation?.entries?.get(scene.you));
+      }
+      if (on("hideNumbers")) {
+        // Chieu/Danh use Juice's own text pool, not scene.floatText().
+        for (const number of scene.juice?.nums ?? []) mask(owner, number.txt);
       }
       if (on("reduceEnvironment")) {
         for (const item of scene.emitters ?? []) for (const particle of item.em?.ps ?? []) mask(owner, particle.img);
@@ -154,26 +168,44 @@
     if (!scene?.sys?.isActive?.() || typeof scene.views?.values !== "function"
         || typeof scene.views?.get !== "function" || !scene.events?.on || !scene.events.off
         || !Number.isInteger(scene.cameras?.main?.id)) return;
-    const owner = { scene, masks: new Map(), dom: new Map(), hooks: [], suppressedCast: false, epoch: 0 };
+    const owner = { scene, masks: new Map(), dom: new Map(), hooks: [], epoch: 0 };
     binding = owner;
     const minimapRange = () => settings.enabled ? settings.minimapRange : 1;
     wrap(owner, scene.minimap, "draw", GSTFpsMinimap.handler(scene, () => on("simpleMinimap"), minimapRange));
     wrap(owner, scene.minimap, "draw", GSTFpsMinimapZoom.handler(minimapRange));
     wrap(owner, scene.minimap, "draw", GSTFpsMinimapColors.handler(scene,
       () => ({ enabled: on("minimapColors"), selfColor: settings.minimapSelfColor })));
-    // Preserve castFx's animation/timing branches. Suppress only its visual factories.
+    // castFx only creates client-side visuals. The authoritative skill request,
+    // cooldowns and event bookkeeping happen outside this method.
+    // Skip the entire visual path so Chieu/Danh/Qt fallback effects cannot leak.
     wrap(owner, scene, "castFx", function (original, args) {
-      const previous = owner.suppressedCast;
-      owner.suppressedCast = suppress(scene, args[0]);
-      try { return original.apply(this, args); }
-      finally { owner.suppressedCast = previous; }
-    });
-    wrap(owner, scene.liveSkills, "play", function (original, args) {
-      if (owner.suppressedCast) return;
+      if (suppress(scene, args[0]) || (on("hideBasicEffects") && args[1] === "Space")) return;
       return original.apply(this, args);
     });
+    // Source-less weapon-proc events also reach this visual method.
     wrap(owner, scene.weaponFx, "play", function (original, args) {
-      if (owner.suppressedCast) return true; // Native uses true to avoid a second FX fallback.
+      if (on("hideBasicEffects")) return true;
+      return original.apply(this, args);
+    });
+    // Skill hit renderers have their own FX/number pools. Returning "handled"
+    // keeps the game's event branch while avoiding a generic visual fallback.
+    wrap(owner, scene.chieu, "hit", function (original, args) {
+      if (suppress(scene, args[0])) return true;
+      return original.apply(this, args);
+    });
+    wrap(owner, scene.danh, "hit", function (original, args) {
+      if (suppress(scene, args[0]) || on("hideBasicEffects")) return true;
+      return original.apply(this, args);
+    });
+    wrap(owner, scene.chieu, "petFx", function (original, args) {
+      // Only pet:* is a companion effect. pas:* belongs to player passives
+      // and has no caster ID, so do not blanket-hide it.
+      if (typeof args[0] === "string" && args[0].startsWith("pet:")
+          && (on("hideCompanionEffects") || on("hidePets"))) return;
+      return original.apply(this, args);
+    });
+    wrap(owner, scene.juice, "number", function (original, args) {
+      if (on("hideNumbers")) return;
       return original.apply(this, args);
     });
     wrap(owner, scene.statusFx, "render", function (original, args) {
@@ -181,7 +213,8 @@
       return original.apply(this, args);
     });
     wrap(owner, scene, "afterImage", function (original, args) {
-      if (!on("hidePlayers") && !on("hidePlayerEffects") && !on("hideOwnEffects") && !on("hideMonsterEffects") && !on("hideBossEffects")) {
+      if (!on("hidePlayers") && !on("hidePlayerEffects") && !on("hideOwnEffects") && !on("hideMonsterEffects")
+          && !on("hideBossEffects") && !on("hideDisciples") && !on("hidePets") && !on("hideCompanionEffects")) {
         return original.apply(this, args);
       }
       const character = args[0] ?? scene.player;
