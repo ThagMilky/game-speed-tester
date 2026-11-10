@@ -43,10 +43,14 @@ const farmTargetMode = document.getElementById("farmTargetMode");
 const farmBossDodge = document.getElementById("farmBossDodge");
 const farmBossRetreat = document.getElementById("farmBossRetreat");
 const farmExcludeBoss = document.getElementById("farmExcludeBoss");
-const farmTargetLevel = document.getElementById("farmTargetLevel");
-const farmTargetMinLevel = document.getElementById("farmTargetMinLevel");
-const farmTargetMaxLevel = document.getElementById("farmTargetMaxLevel");
+const farmTargetRealm = document.getElementById("farmTargetRealm");
+const farmTargetTier = document.getElementById("farmTargetTier");
+const farmTargetMinRealm = document.getElementById("farmTargetMinRealm");
+const farmTargetMinTier = document.getElementById("farmTargetMinTier");
+const farmTargetMaxRealm = document.getElementById("farmTargetMaxRealm");
+const farmTargetMaxTier = document.getElementById("farmTargetMaxTier");
 const farmRadiusError = document.getElementById("farmRadiusError");
+const farmTargetLevelError = document.getElementById("farmTargetLevelError");
 const farmTargetMinLevelError = document.getElementById("farmTargetMinLevelError");
 const farmTargetMaxLevelError = document.getElementById("farmTargetMaxLevelError");
 const farmIdleMode = document.getElementById("farmIdleMode");
@@ -57,24 +61,73 @@ const farmAutoRespawn = document.getElementById("farmAutoRespawn");
 const farmAutoEncounter = document.getElementById("farmAutoEncounter");
 const positiveLevel = (value, fallback) => Number.isSafeInteger(value) && value > 0 ? value : fallback;
 const farmCompatibility = globalThis.GSTFarmCompatibility;
-function fillFarmThreshold(select, kind, current) {
-  const options = farmCompatibility.options(kind, current);
-  select.replaceChildren(...options.map(({ value, label }) => {
-    const option = document.createElement("option");
-    option.value = String(value);
-    option.textContent = label;
-    return option;
-  }));
-  select.value = String(current);
+const farmTargetRows = {
+  single: { realm: farmTargetRealm, tier: farmTargetTier, error: farmTargetLevelError },
+  min: { realm: farmTargetMinRealm, tier: farmTargetMinTier, error: farmTargetMinLevelError },
+  max: { realm: farmTargetMaxRealm, tier: farmTargetMaxTier, error: farmTargetMaxLevelError }
+};
+function fillFarmRealms(row, includeLegacy = false) {
+  const options = [new Option("Chọn cảnh giới", ""), ...farmCompatibility.realms.map((realm) => new Option(realm, realm))];
+  if (includeLegacy) options.push(new Option("Mức đã lưu (giữ nguyên)", "legacy"));
+  row.realm.replaceChildren(...options);
 }
+function fillFarmTiers(row) {
+  row.tier.replaceChildren(new Option("Chọn tầng", ""),
+    ...farmCompatibility.tierNumbers.map((tier) => new Option(String(tier), String(tier))));
+}
+function setFarmSelection(row, kind, value, preserveDraft = false) {
+  if (preserveDraft) {
+    if (row.realm.value === "legacy" && ![...row.realm.options].some((option) => option.value === "legacy"))
+      row.realm.add(new Option("Mức đã lưu (giữ nguyên)", "legacy"));
+    return;
+  }
+  const selected = farmCompatibility.selection(kind, value);
+  fillFarmRealms(row, selected.legacy);
+  row.realm.value = selected.realm;
+  row.realm.dataset.legacyValue = String(value);
+  fillFarmTiers(row);
+  row.tier.value = selected.legacy ? "" : String(selected.tier);
+  row.tier.disabled = selected.legacy;
+}
+function farmSelectionValue(row, kind) {
+  if (row.realm.value === "legacy") {
+    const value = Number(row.realm.dataset.legacyValue);
+    return Number.isSafeInteger(value) && value > 0 ? value : null;
+  }
+  return farmCompatibility.valueFor(row.realm.value, row.tier.value, kind);
+}
+function activeFarmTargetMode() { return farmTargetMode.value || farmConfirmed.targetMode || "all"; }
+function farmLevelDraft() {
+  const mode = activeFarmTargetMode();
+  if (["maxLevel", "minLevel"].includes(mode)) {
+    const kind = mode === "minLevel" ? "min" : "max";
+    const value = farmSelectionValue(farmTargetRows.single, kind);
+    return { active: true, valid: value !== null, dirty: value === null || value !== farmConfirmed.targetLevel };
+  }
+  if (mode === "range") {
+    const min = farmSelectionValue(farmTargetRows.min, "min");
+    const max = farmSelectionValue(farmTargetRows.max, "max");
+    return { active: true, valid: min !== null && max !== null && min <= max,
+      dirty: min === null || max === null || min !== farmConfirmed.targetMinLevel || max !== farmConfirmed.targetMaxLevel };
+  }
+  return { active: false, valid: true, dirty: false };
+}
+function clearFarmTargetErrors() {
+  for (const row of Object.values(farmTargetRows)) row.error.textContent = "";
+}
+for (const row of Object.values(farmTargetRows)) { fillFarmRealms(row); fillFarmTiers(row); }
 function syncFarmLevelInputs() {
-  const range = farmTargetMode.value === "range";
-  document.getElementById("farmSingleLevel").hidden = !["maxLevel", "minLevel"].includes(farmTargetMode.value);
+  const mode = activeFarmTargetMode(), single = ["maxLevel", "minLevel"].includes(mode), range = mode === "range";
+  document.getElementById("farmSingleLevel").hidden = !single;
   document.getElementById("farmLevelRange").hidden = !range;
-  farmTargetLevel.disabled = !["maxLevel", "minLevel"].includes(farmTargetMode.value);
-  farmTargetMinLevel.disabled = farmTargetMaxLevel.disabled = !range;
-  fillFarmThreshold(farmTargetLevel, farmTargetMode.value === "minLevel" ? "min" : "max",
-    Number(farmTargetLevel.value) || 1);
+  document.getElementById("farmSingleLevelLabel").textContent = mode === "minLevel"
+    ? "≥ Cảnh giới đã chọn" : "≤ Cảnh giới đã chọn";
+  farmTargetRows.single.realm.disabled = !single;
+  farmTargetRows.single.tier.disabled = !single || farmTargetRows.single.realm.value === "legacy";
+  for (const name of ["min", "max"]) {
+    farmTargetRows[name].realm.disabled = !range;
+    farmTargetRows[name].tier.disabled = !range || farmTargetRows[name].realm.value === "legacy";
+  }
 }
 const farmStatus = document.getElementById("farmStatus");
 const autoFarmValue = document.getElementById("autoFarmValue");
@@ -209,6 +262,11 @@ function normalizedFarmPreferences(raw = {}) {
 }
 function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {}) {
   const keepDraft = preserveDraft && farmHasDraft();
+  const oldMode = activeFarmTargetMode(), levelDraft = keepDraft ? farmLevelDraft() : { dirty: false };
+  const draftSingleValue = ["maxLevel", "minLevel"].includes(oldMode)
+    ? farmSelectionValue(farmTargetRows.single, oldMode === "minLevel" ? "min" : "max") : null;
+  const draftMinValue = oldMode === "range" ? farmSelectionValue(farmTargetRows.min, "min") : null;
+  const draftMaxValue = oldMode === "range" ? farmSelectionValue(farmTargetRows.max, "max") : null;
   const next = normalizedFarmPreferences(raw);
   farmConfirmed = next;
   farmSearchScope.value = next.searchScope;
@@ -227,16 +285,25 @@ function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {})
   farmAutoEncounter.checked = next.autoEncounter;
   farmExcludeBoss.checked = next.excludeBoss;
   farmTargetMode.value = next.targetMode;
-  farmTargetLevel.value = String(next.targetLevel);
-  const minValue = keepDraft && !forceKeys.includes("targetMinLevel") ? Number(farmTargetMinLevel.value) : next.targetMinLevel;
-  const maxValue = keepDraft && !forceKeys.includes("targetMaxLevel") ? Number(farmTargetMaxLevel.value) : next.targetMaxLevel;
-  fillFarmThreshold(farmTargetMinLevel, "min", Number.isSafeInteger(minValue) ? minValue : next.targetMinLevel);
-  fillFarmThreshold(farmTargetMaxLevel, "max", Number.isSafeInteger(maxValue) ? maxValue : next.targetMaxLevel);
-  if (keepDraft && !forceKeys.includes("targetMinLevel") && !Number.isSafeInteger(minValue)) farmTargetMinLevel.value = "";
-  if (keepDraft && !forceKeys.includes("targetMaxLevel") && !Number.isSafeInteger(maxValue)) farmTargetMaxLevel.value = "";
+  const preserveSingle = levelDraft.dirty && ["maxLevel", "minLevel"].includes(oldMode)
+    && ["maxLevel", "minLevel"].includes(next.targetMode) && !forceKeys.includes("targetLevel");
+  if (preserveSingle && draftSingleValue !== null)
+    setFarmSelection(farmTargetRows.single, next.targetMode === "minLevel" ? "min" : "max", draftSingleValue);
+  else setFarmSelection(farmTargetRows.single, next.targetMode === "minLevel" ? "min" : "max", next.targetLevel,
+    preserveSingle);
+  const preserveRange = levelDraft.dirty && oldMode === "range" && next.targetMode === "range"
+    && !forceKeys.includes("targetMinLevel") && !forceKeys.includes("targetMaxLevel");
+  setFarmSelection(farmTargetRows.min, "min", preserveRange && draftMinValue !== null ? draftMinValue : next.targetMinLevel,
+    preserveRange && draftMinValue === null);
+  setFarmSelection(farmTargetRows.max, "max", preserveRange && draftMaxValue !== null ? draftMaxValue : next.targetMaxLevel,
+    preserveRange && draftMaxValue === null);
   if (!keepDraft || forceKeys.includes("radius")) farmRadius.value = String(next.radius);
   if (!keepDraft || forceKeys.includes("nearbyRadius")) farmNearbyRadius.value = String(next.nearbyRadius);
-  if (forceKeys.includes("targetMinLevel") && forceKeys.includes("targetMaxLevel")) farmDraftError = false;
+  if (!keepDraft || forceKeys.includes("targetLevel")
+      || forceKeys.includes("targetMinLevel") && forceKeys.includes("targetMaxLevel")) {
+    farmDraftError = false;
+    clearFarmTargetErrors();
+  }
   syncFarmScope(); syncFarmLevelInputs(); farmSummaries();
   farmFeedback.textContent = farmHasDraft() ? "Có bản nháp chưa lưu." : "Đã đồng bộ cài đặt.";
 }
@@ -247,18 +314,25 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (farmSyncReady) syncFarmPreferences(latestFarmPreferences);
 });
 function farmHasDraft() {
-  return farmDraftError || Number(farmTargetMinLevel.value) !== farmConfirmed.targetMinLevel
-    || Number(farmTargetMaxLevel.value) !== farmConfirmed.targetMaxLevel
+  return farmDraftError || farmLevelDraft().dirty
     || farmRadius.value !== String(farmConfirmed.radius)
     || farmNearbyRadius.value !== String(farmConfirmed.nearbyRadius);
 }
 function farmMessage(message) {
-  farmFeedback.textContent = message + (farmDraftError ? " & Khoảng tu vi không hợp lệ, chưa lưu." : farmHasDraft() ? " & Có bản nháp chưa lưu." : "");
+  farmFeedback.textContent = message + (farmDraftError ? " · Cảnh giới/tầng chưa hợp lệ, chưa lưu." : farmHasDraft() ? " · Có bản nháp chưa lưu." : "");
 }
 function syncFarmScope() {
   farmRadius.closest(".input-action").hidden = farmSearchScope.value !== "radius";
 }
 function farmSummaries() {
+  const prefs = farmConfirmed, compatibility = farmCompatibility;
+  const targetSummary = prefs.targetMode === "maxLevel" ? `Chỉ farm ≤ ${compatibility.describe(prefs.targetLevel, "max")}`
+    : prefs.targetMode === "minLevel" ? `Chỉ farm ≥ ${compatibility.describe(prefs.targetLevel, "min")}`
+    : prefs.targetMode === "range" ? prefs.targetMinLevel <= prefs.targetMaxLevel
+      ? `Chỉ farm trong khoảng ${compatibility.describe(prefs.targetMinLevel, "min")} đến ${compatibility.describe(prefs.targetMaxLevel, "max")}`
+      : "Khoảng cảnh giới đã lưu chưa hợp lệ; chưa chọn quái."
+      : "";
+  document.getElementById("farmTargetSummary").textContent = targetSummary;
   document.getElementById("farmEncounterSummary").textContent = `Auto nhận kỳ ngộ · ${farmConfirmed.autoEncounter ? "bật" : "tắt"}`;
   document.getElementById("farmDefenseSummary").textContent = `Tự vệ ${farmConfirmed.selfDefense ? "bật" : "tắt"} · Dọn gần ${farmConfirmed.nearbyClear ? "bật" : "tắt"} · Thiền ${farmConfirmed.autoMeditate ? "bật" : "tắt"} · Hồi sinh ${farmConfirmed.autoRespawn ? "bật" : "tắt"}`;
   document.getElementById("farmBossSummary").textContent = `Boss · ${farmConfirmed.excludeBoss ? "không chọn boss" : "cho phép boss"}`;
@@ -319,18 +393,27 @@ farmExcludeBoss.addEventListener("change", async () => {
 });
 farmTargetMode.addEventListener("change", async () => {
   const mode = farmTargetMode.value;
+  const previousMode = farmConfirmed.targetMode;
+  farmTargetMode.disabled = farmExcludeBoss.disabled = true;
+  farmTargetMode.value = previousMode;
+  const targetSaved = await commitFarmTargetDraft(previousMode);
+  if (!targetSaved) {
+    farmTargetMode.value = previousMode;
+    syncFarmLevelInputs();
+    farmTargetMode.disabled = farmExcludeBoss.disabled = false;
+    farmMessage("Hoàn tất lựa chọn cảnh giới/tầng hiện tại trước khi đổi chế độ.");
+    return;
+  }
+  farmTargetMode.value = mode;
   const patch = { targetMode: mode };
   if (["boss", "bossLevel"].includes(mode)) patch.excludeBoss = false;
-  farmTargetMode.disabled = farmExcludeBoss.disabled = true;
   if (patch.excludeBoss === false) farmExcludeBoss.checked = false;
-  syncFarmLevelInputs();
   await saveFarmPatch(patch, () => { farmTargetMode.value = farmConfirmed.targetMode; farmExcludeBoss.checked = farmConfirmed.excludeBoss; syncFarmLevelInputs(); });
   farmTargetMode.disabled = farmExcludeBoss.disabled = false;
 });
-for (const [input, key] of [[farmSearchScope, "searchScope"], [farmIdleMode, "idleMode"],
-  [farmTargetLevel, "targetLevel"]]) {
+for (const [input, key] of [[farmSearchScope, "searchScope"], [farmIdleMode, "idleMode"]]) {
   input.addEventListener("change", async () => {
-    const value = input === farmTargetLevel ? Number(input.value) : input.value;
+    const value = input.value;
     const patch = key === "searchScope" ? { enabled: true, searchScope: value, ...(farmConfirmed.enabled ? {} : { radius: 11 }) } : { [key]: value };
     input.disabled = true;
     syncFarmScope();
@@ -338,45 +421,70 @@ for (const [input, key] of [[farmSearchScope, "searchScope"], [farmIdleMode, "id
     input.disabled = false;
   });
 }
-let farmRangeCommit = null, farmRadiusCommit = null;
-function clearFarmRangeErrors() {
-  farmTargetMinLevelError.textContent = "";
-  farmTargetMaxLevelError.textContent = "";
+let farmSingleCommit = null, farmRangeCommit = null, farmRadiusCommit = null;
+function commitFarmSingle(mode = activeFarmTargetMode()) {
+  if (farmSingleCommit) return farmSingleCommit;
+  if (!["maxLevel", "minLevel"].includes(mode)) return Promise.resolve(true);
+  const kind = mode === "minLevel" ? "min" : "max", row = farmTargetRows.single;
+  row.error.textContent = "";
+  const value = farmSelectionValue(row, kind);
+  if (value === null) {
+    farmDraftError = true;
+    row.error.textContent = "Chọn đủ cảnh giới và tầng từ 1 đến 10.";
+    farmFeedback.textContent = row.error.textContent;
+    return Promise.resolve(false);
+  }
+  farmDraftError = false;
+  if (value === farmConfirmed.targetLevel) return Promise.resolve(true);
+  const save = (async () => {
+    row.realm.disabled = row.tier.disabled = true;
+    const saved = await saveFarmPatch({ targetLevel: value });
+    syncFarmLevelInputs();
+    if (!saved) {
+      row.error.textContent = "Chưa lưu được lựa chọn; mức đã lưu trước đó vẫn được giữ.";
+      farmFeedback.textContent = row.error.textContent;
+    }
+    return saved;
+  })();
+  farmSingleCommit = save;
+  save.finally(() => { if (farmSingleCommit === save) farmSingleCommit = null; });
+  return save;
 }
 function commitFarmRange() {
   if (farmRangeCommit) return farmRangeCommit;
-  const min = Number(farmTargetMinLevel.value), max = Number(farmTargetMaxLevel.value);
-  clearFarmRangeErrors();
-  if (!Number.isSafeInteger(min) || min < 1) {
+  const min = farmSelectionValue(farmTargetRows.min, "min");
+  const max = farmSelectionValue(farmTargetRows.max, "max");
+  clearFarmTargetErrors();
+  if (min === farmConfirmed.targetMinLevel && max === farmConfirmed.targetMaxLevel) {
+    farmDraftError = false;
+    return Promise.resolve(true);
+  }
+  if (min === null) {
     farmDraftError = true;
-    farmTargetMinLevelError.textContent = "Chọn cảnh giới/tầng tối thiểu hợp lệ.";
+    farmTargetMinLevelError.textContent = "Chọn đủ cảnh giới và tầng tối thiểu từ 1 đến 10.";
     farmFeedback.textContent = farmTargetMinLevelError.textContent;
     return Promise.resolve(false);
   }
-  if (!Number.isSafeInteger(max) || max < 1) {
+  if (max === null) {
     farmDraftError = true;
-    farmTargetMaxLevelError.textContent = "Chọn cảnh giới/tầng tối đa hợp lệ.";
+    farmTargetMaxLevelError.textContent = "Chọn đủ cảnh giới và tầng tối đa từ 1 đến 10.";
     farmFeedback.textContent = farmTargetMaxLevelError.textContent;
     return Promise.resolve(false);
   }
   if (min > max) {
     farmDraftError = true;
-    farmTargetMaxLevelError.textContent = "Tu vi tối đa phải lớn hơn hoặc bằng tối thiểu.";
+    farmTargetMaxLevelError.textContent = "Cảnh giới/tầng tối đa phải bằng hoặc cao hơn tối thiểu.";
     farmFeedback.textContent = farmTargetMaxLevelError.textContent;
     return Promise.resolve(false);
   }
   farmDraftError = false;
-  if (min === farmConfirmed.targetMinLevel && max === farmConfirmed.targetMaxLevel) {
-    farmFeedback.textContent = farmHasDraft() ? "Có bản nháp chưa lưu." : "";
-    return Promise.resolve(true);
-  }
   const save = (async () => {
-    farmTargetMinLevel.disabled = farmTargetMaxLevel.disabled = true;
+    for (const name of ["min", "max"]) farmTargetRows[name].realm.disabled = farmTargetRows[name].tier.disabled = true;
     const saved = await saveFarmPatch({ targetMinLevel: min, targetMaxLevel: max });
-    farmTargetMinLevel.disabled = farmTargetMaxLevel.disabled = false;
+    syncFarmLevelInputs();
     if (!saved) {
-      farmTargetMaxLevelError.textContent = "Chưa lưu được khoảng tu vi.";
-      farmFeedback.textContent = "Lỗi lưu cài đặt; khoảng tu vi đã lưu trước đó được giữ.";
+      farmTargetMaxLevelError.textContent = "Chưa lưu được khoảng cảnh giới; mức đã lưu trước đó vẫn được giữ.";
+      farmFeedback.textContent = farmTargetMaxLevelError.textContent;
     }
     return saved;
   })();
@@ -384,9 +492,28 @@ function commitFarmRange() {
   save.finally(() => { if (farmRangeCommit === save) farmRangeCommit = null; });
   return save;
 }
-for (const input of [farmTargetMinLevel, farmTargetMaxLevel]) {
-  input.addEventListener("change", () => { void commitFarmRange(); });
-  input.addEventListener("blur", () => { void commitFarmRange(); });
+function commitFarmTargetDraft(mode = activeFarmTargetMode()) {
+  if (["maxLevel", "minLevel"].includes(mode)) return commitFarmSingle(mode);
+  return mode === "range" ? commitFarmRange() : Promise.resolve(true);
+}
+for (const [name, row] of Object.entries(farmTargetRows)) {
+  row.realm.addEventListener("change", () => {
+    const key = name === "single" ? "targetLevel" : name === "min" ? "targetMinLevel" : "targetMaxLevel";
+    row.realm.dataset.legacyValue = String(farmConfirmed[key]);
+    fillFarmTiers(row);
+    row.tier.value = "";
+    row.tier.disabled = row.realm.value === "legacy" || row.realm.disabled;
+    if (row.realm.value !== "legacy") {
+      farmDraftError = true;
+      row.error.textContent = "Chọn tầng để hoàn tất lựa chọn cảnh giới.";
+      farmFeedback.textContent = row.error.textContent;
+    } else void (name === "single" ? commitFarmSingle() : commitFarmRange());
+    syncFarmLevelInputs();
+  });
+  row.tier.addEventListener("change", () => {
+    if (name === "single") void commitFarmSingle();
+    else void commitFarmRange();
+  });
 }
 function commitFarmRadius() {
   if (farmRadiusCommit) return farmRadiusCommit;
@@ -429,26 +556,23 @@ farmRadius.addEventListener("keydown", (event) => {
 async function flushFarmNumericDrafts() {
   if (!farmSyncReady) return { saved: false, reason: "load" };
   const pending = [];
+  const mode = activeFarmTargetMode(), targetDraft = farmLevelDraft();
+  if (farmSingleCommit) pending.push(farmSingleCommit);
+  else if (["maxLevel", "minLevel"].includes(mode) && targetDraft.dirty) pending.push(commitFarmSingle(mode));
   if (farmRangeCommit) pending.push(farmRangeCommit);
-  else if (Number(farmTargetMinLevel.value) !== farmConfirmed.targetMinLevel
-      || Number(farmTargetMaxLevel.value) !== farmConfirmed.targetMaxLevel || farmDraftError)
+  else if (mode === "range" && targetDraft.dirty)
     pending.push(commitFarmRange());
   if (farmRadiusCommit) pending.push(farmRadiusCommit);
   else if (farmRadius.value !== String(farmConfirmed.radius)) pending.push(commitFarmRadius());
   const hadPendingSave = farmPendingSaves > 0;
   const results = await Promise.all(pending);
   const queueSaved = !hadPendingSave || await farmSaveQueue.then(() => true, () => false);
-  const min = Number(farmTargetMinLevel.value), max = Number(farmTargetMaxLevel.value);
   if (!farmRadius.value.trim() || !farmRadius.checkValidity()
       || !Number.isSafeInteger(farmRadius.valueAsNumber) || farmRadius.valueAsNumber < 1 || farmRadius.valueAsNumber > 1000)
     return { saved: false, reason: "invalid", field: "radius" };
-  if (!Number.isSafeInteger(min) || min < 1)
-    return { saved: false, reason: "invalid", field: "min" };
-  if (!Number.isSafeInteger(max) || max < 1 || min > max)
-    return { saved: false, reason: "invalid", field: "max" };
+  if (farmDraftError) return { saved: false, reason: "invalid", field: mode === "range" ? "min" : "target" };
   if (!results.every(Boolean) || !queueSaved) return { saved: false, reason: "persistence" };
-  const saved = !farmDraftError && farmRadius.value === String(farmConfirmed.radius)
-    && min === farmConfirmed.targetMinLevel && max === farmConfirmed.targetMaxLevel;
+  const saved = !farmLevelDraft().dirty && farmRadius.value === String(farmConfirmed.radius);
   return saved ? { saved: true } : { saved: false, reason: "persistence" };
 }
 const trustedGameOrigin = "https://nghichthienky.online";

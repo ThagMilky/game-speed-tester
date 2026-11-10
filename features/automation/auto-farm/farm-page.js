@@ -75,11 +75,11 @@
     if (settings.targetMode === "highLevel") return "Ưu tiên quái thường tu vi cao đến thấp";
     if (settings.targetMode === "lowLevel") return "Ưu tiên quái thường tu vi thấp đến cao";
     if (settings.targetMode === "boss") return "Chỉ farm boss";
-    if (settings.targetMode === "maxLevel") return `Chỉ farm tới ${globalThis.GSTFarmCompatibility?.describe(settings.targetLevel, "max") ?? `level ${settings.targetLevel}`}`;
-    if (settings.targetMode === "minLevel") return `Chỉ farm từ ${globalThis.GSTFarmCompatibility?.describe(settings.targetLevel, "min") ?? `level ${settings.targetLevel}`}`;
+    if (settings.targetMode === "maxLevel") return `Chỉ farm ≤ ${globalThis.GSTFarmCompatibility?.describe(settings.targetLevel, "max") ?? "Mức đã lưu (giữ nguyên)"}`;
+    if (settings.targetMode === "minLevel") return `Chỉ farm ≥ ${globalThis.GSTFarmCompatibility?.describe(settings.targetLevel, "min") ?? "Mức đã lưu (giữ nguyên)"}`;
     if (settings.targetMode === "range") return settings.targetMinLevel <= settings.targetMaxLevel
-      ? `Chỉ farm ${globalThis.GSTFarmCompatibility?.describe(settings.targetMinLevel, "min") ?? `level ${settings.targetMinLevel}`} đến ${globalThis.GSTFarmCompatibility?.describe(settings.targetMaxLevel, "max") ?? `level ${settings.targetMaxLevel}`}`
-      : "Khoảng tu vi chưa hợp lệ; không chọn quái";
+      ? `Chỉ farm trong khoảng ${globalThis.GSTFarmCompatibility?.describe(settings.targetMinLevel, "min") ?? "Mức đã lưu (giữ nguyên)"} đến ${globalThis.GSTFarmCompatibility?.describe(settings.targetMaxLevel, "max") ?? "Mức đã lưu (giữ nguyên)"}`
+      : "Khoảng cảnh giới chưa hợp lệ; không chọn quái";
     return "Farm tất cả quái";
   }
   function matchesTarget(enemy) {

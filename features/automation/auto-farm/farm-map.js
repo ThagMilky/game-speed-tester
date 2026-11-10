@@ -222,6 +222,7 @@
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const seekRealmBoss = (scene) => preferences.excludeBoss !== true
     && !["highLevel", "lowLevel"].includes(preferences.targetMode)
+    && globalThis.GSTFarmPriority?.realmBossEligible?.(scene) !== false
     && globalThis.GSTRealm?.seekBoss?.(scene) === true;
   // Known targets inside a configured radius also need long-distance navigation.
   // Idle policy only decides what to do AFTER all eligible targets are exhausted.
@@ -296,6 +297,23 @@
       if (withinArea(area, metadata)) {
         const liveBoss = eligible.find((enemy) => isBoss(enemy));
         if (liveBoss) return { ...liveBoss, actor: true };
+        const knownBosses = [...scene.views.values()].filter((actor) => actor?.k === "m"
+          && !actor.dead && isBoss(actor.st));
+        if (knownBosses.length) {
+          const priority = globalThis.GSTFarmPriority;
+          if (knownBosses.some((actor) => priority?.matches?.(actor.st) === false)) {
+            message = "Boss đã có dữ liệu nhưng không qua bộ lọc cảnh giới/tầng hiện tại.";
+            return null;
+          }
+          const retryAt = Math.min(...knownBosses.map((actor) => Math.max(
+            scene.auto.skipped.get(actor.id) || time, deferred.get(actor.id) || time))
+            .filter((until) => until > time));
+          if (Number.isFinite(retryAt)) {
+            exhaustedUntil = retryAt;
+            message = "Boss phù hợp đang được tạm bỏ; chờ hết thời gian thử lại trước khi tiếp tục.";
+          } else message = "Boss đã có dữ liệu nhưng chưa đủ điều kiện chọn bởi Auto Farm gốc.";
+          return null;
+        }
         if (!scouting) return { id: "realm:boss", x: metadata.x, y: metadata.y, actor: false };
       }
     }

@@ -42,9 +42,14 @@
   const connected = (scene) => scene.driver && !scene.driver.closing && !scene.driver.reconnecting
     && !scene.driver.displaced && (scene.driver.online === false || scene.driver.link?.open?.() === true);
   function say(text, seconds = 4) { message = text; noteUntil = performance.now() + seconds * 1000; }
+  function extensionMeditating(scene) {
+    const owner = binding;
+    return owner?.scene === scene && scene.self?.med === true && !owner.medManual
+      && (owner.medOwned || owner.medPending === "start");
+  }
   function manual(scene) {
     return GSTFarmInput.movement(scene) || scene.pendingSkill || scene.aiming || scene.heldAttack
-      || scene.auto.moved || scene.now() < scene.auto.pauseUntil;
+      || (!extensionMeditating(scene) && (scene.auto.moved || scene.now() < scene.auto.pauseUntil));
   }
   function blocked(scene) {
     return globalThis.GSTMapTravel?.active(scene) || !scene.auto.on || !scene.self || scene.self.dead || !connected(scene) || scene.leaving
@@ -72,12 +77,14 @@
   }
   function idleSafe(owner, host) {
     const scene = owner.scene, now = performance.now();
+    const ownedMeditationPause = extensionMeditating(scene);
     if (!scene.auto.on || !scene.self || scene.self.dead || !connected(scene) || scene.leaving
         || !scene.sys?.isActive?.() || scene.auto !== owner.auto || scene.auto.resting
         || scene.self.fish || scene.self.combat || scene.harvesting || scene.keyCapture
         || scene.chat?.typing || scene.uiBlocked || scene.panels?.open || scene.overlay?.dialogOpen
-        || scene.pendingSkill || scene.aiming || scene.heldAttack || scene.auto.moved
-        || scene.now() < scene.auto.pauseUntil || GSTFarmInput.movement(scene)
+        || scene.pendingSkill || scene.aiming || scene.heldAttack
+        || (!ownedMeditationPause && (scene.auto.moved || scene.now() < scene.auto.pauseUntil))
+        || GSTFarmInput.movement(scene)
         || GSTFarmRouting.blocked(scene) || now < manualUntil
         || globalThis.GSTMapTravel?.active?.(scene) || globalThis.GSTQuest?.active?.(scene)
         || globalThis.GSTFarmSeals?.pending?.(scene) || collecting(scene)

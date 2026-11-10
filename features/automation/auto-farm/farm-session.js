@@ -70,7 +70,7 @@
       if (connected(scene) && !scene.leaving && scene.self.dead) { stableAt = null; GSTHarvest.respawn(scene); return; }
       if (globalThis.GSTFarmConfigurationReady !== true) { stableAt = null; return; }
       if (!connected(scene) || scene.leaving || GSTFarmRouting.blocked(scene) || scene.pendingSkill || scene.aiming
-          || scene.heldAttack || scene.clickOrder || scene.joyX || scene.joyY
+          || scene.uiBlocked || scene.heldAttack || scene.clickOrder || scene.joyX || scene.joyY
           || (!(scene.chat?.typing || scene.inputFieldActive?.())
             && ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"].some((key) => scene.keys?.[key]?.isDown))) {
         stableAt = null; return;

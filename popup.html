@@ -90,14 +90,34 @@
           <p class="save-mode">Số ô tính từ điểm bắt đầu farm. Ví dụ 30: tìm quái cách điểm đó tối đa 30 ô.</p>
           <label class="check-row"><input id="farmShowRange" type="checkbox"><span>Hiện vòng phạm vi farm trên game</span></label>
           <p class="hint">Vòng xanh là giới hạn từ điểm bắt đầu; vòng xanh lá là vùng quét của Auto Farm gốc; vòng vàng quanh bản thân là vùng dọn quái gần khi bật.</p>
-          <div class="two-columns separated">
-            <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="boss">Chỉ boss</option><option value="bossLevel">Boss trước → tu vi cao đến thấp</option><option value="highLevel">Tu vi cao → thấp (quái thường)</option><option value="lowLevel">Tu vi thấp → cao (quái thường)</option><option value="maxLevel">Tới cảnh giới/tầng chọn</option><option value="minLevel">Từ cảnh giới/tầng chọn</option><option value="range">Trong khoảng cảnh giới/tầng</option></select></div>
-            <div id="farmSingleLevel"><label for="farmTargetLevel">Mức tu vi quái</label><select id="farmTargetLevel" required disabled></select></div>
+          <div class="separated"><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="boss">Chỉ boss</option><option value="bossLevel">Boss trước → tu vi cao đến thấp</option><option value="highLevel">Tu vi cao → thấp (quái thường)</option><option value="lowLevel">Tu vi thấp → cao (quái thường)</option><option value="maxLevel">≤ Cảnh giới đã chọn</option><option value="minLevel">≥ Cảnh giới đã chọn</option><option value="range">Trong khoảng cảnh giới</option></select></div>
+          <div id="farmSingleLevel" class="farm-level-selection" hidden>
+            <label id="farmSingleLevelLabel">Cảnh giới và tầng</label>
+            <div class="farm-level-pair">
+              <div><label for="farmTargetRealm">Cảnh giới</label><select id="farmTargetRealm"></select></div>
+              <div><label for="farmTargetTier">Tầng</label><select id="farmTargetTier"></select></div>
+            </div>
+            <small id="farmTargetLevelError" class="field-error" aria-live="polite"></small>
           </div>
-          <div id="farmLevelRange" class="two-columns separated" hidden>
-            <div><label for="farmTargetMinLevel">Từ cảnh giới/tầng</label><select id="farmTargetMinLevel" required disabled></select><small id="farmTargetMinLevelError" class="field-error" aria-live="polite"></small></div>
-            <div><label for="farmTargetMaxLevel">Đến cảnh giới/tầng</label><select id="farmTargetMaxLevel" required disabled></select><small id="farmTargetMaxLevelError" class="field-error" aria-live="polite"></small></div>
+          <div id="farmLevelRange" class="farm-level-range" hidden>
+            <div class="farm-level-range-row">
+              <label class="farm-level-row-title">Tối thiểu</label>
+              <div class="farm-level-pair">
+                <div><label for="farmTargetMinRealm">Cảnh giới</label><select id="farmTargetMinRealm"></select></div>
+                <div><label for="farmTargetMinTier">Tầng</label><select id="farmTargetMinTier"></select></div>
+              </div>
+              <small id="farmTargetMinLevelError" class="field-error" aria-live="polite"></small>
+            </div>
+            <div class="farm-level-range-row">
+              <label class="farm-level-row-title">Tối đa</label>
+              <div class="farm-level-pair">
+                <div><label for="farmTargetMaxRealm">Cảnh giới</label><select id="farmTargetMaxRealm"></select></div>
+                <div><label for="farmTargetMaxTier">Tầng</label><select id="farmTargetMaxTier"></select></div>
+              </div>
+              <small id="farmTargetMaxLevelError" class="field-error" aria-live="polite"></small>
+            </div>
           </div>
+          <p id="farmTargetSummary" class="hint" role="status" aria-live="polite"></p>
           </div>
           <div class="farm-column farm-middle">
           <details class="advanced" open><summary>Khi hết mục tiêu &amp; nhặt đồ</summary><div class="advanced-body">
