@@ -632,7 +632,8 @@
     const here = new Set((scene?.nodes ?? []).filter((n) => matchesKind(n) && typeof n.item === "string")
       .map((n) => n.item.normalize("NFC")));
     const resultMessage = lastResult && performance.now() < lastResult.until ? `${lastResult.text} ${message}` : message;
-    window.postMessage({ channel: "gst:harvest-status:v1", requestId, message: [summary() + ".", lastOutcome, resultMessage, globalThis.GSTBackground?.status()].filter(Boolean).join(" "),
+    window.postMessage({ channel: "gst:harvest-status:v1", requestId, message: [summary() + ".", lastOutcome, resultMessage, globalThis.GSTBackground?.status(),
+      globalThis.GSTConnectionRecovery?.status(scene)].filter(Boolean).join(" "),
       enabled: settings.enabled, configKey: JSON.stringify(settings), totals: { ...totals }, recentAttempts: [...recentAttempts],
       available: names.size > 0, mapAvailable,
       catalog: [...names].slice(0, 200).map((name) => ({ name, inMap: here.has(name), kind: types.get(name) === 2 ? "ore" : types.get(name) === 3 ? "both" : "plant" })) }, origin);

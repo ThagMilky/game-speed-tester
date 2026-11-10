@@ -56,6 +56,7 @@
         "features/automation/auto-realm/realm-page.js",
         "features/automation/auto-harvest/harvest-visual.js",
         "features/automation/auto-harvest/harvest-page.js",
+        "features/automation/auto-reconnect/reconnect-page.js",
         "features/visual/fps/fps-map.js",
         "features/visual/fps/fps-minimap.js",
         "features/visual/fps/fps-minimap-zoom.js",

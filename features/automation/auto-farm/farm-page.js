@@ -789,7 +789,8 @@
       } catch { /* Read-only status must not start or restart gameplay. */ }
       const scene = sceneNow();
       const defense = globalThis.GSTFarmDefense?.status(scene) || "";
-      const primary = defense || globalThis.GSTFarmBossSafety?.status(scene) || waitReason
+      const network = globalThis.GSTConnectionRecovery?.status(scene) || "";
+      const primary = network || defense || globalThis.GSTFarmBossSafety?.status(scene) || waitReason
         || globalThis.GSTFarmMap?.status(scene) || globalThis.GSTFarmBehavior?.status(scene)
         || globalThis.GSTFarmSession?.status(scene) || globalThis.GSTFarmSeals?.status(scene) || message;
       const defenseInfo = autoOn === false && !defense ? globalThis.GSTFarmDefense?.status(scene, true) : "";
