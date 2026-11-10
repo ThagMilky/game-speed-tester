@@ -65,6 +65,7 @@
       || (finite(level) && matchesTarget({ cls: "boss", lv: level }));
   }
   globalThis.GSTFarmPriority = { compare: comparePriority, ranked, switchReason,
+    matches: matchesTarget,
     excludesBoss: () => settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode),
     realmBossEligible,
     bossFocus: (scene) => ["boss", "bossLevel"].includes(settings.targetMode)
@@ -639,7 +640,7 @@
       const candidates = eligible.filter((enemy) => !(s.auto.skipped.get(enemy.id) > time)
         // The map navigator approaches all distant targets with native walk/hop first.
         // Probing a full long route with pick() here would repeatedly mark them skipped.
-        && !(settings.searchScope === "map" && distance(enemy, pos) > 6));
+        && !(distance(enemy, pos) > 6));
       const target = candidates.find((enemy) => enemy.id === s.auto.target);
       if (ranked() && settings.searchScope !== "map" && pickRanked(s, host, time, pos, candidates, true)) {
         message = "Giữ mục tiêu theo ưu tiên boss/cảnh giới cho tới khi cần đổi.";
@@ -731,7 +732,10 @@
       settings = { enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn !== false,
         autoMeditate: data.autoMeditate !== false, noRetreat: data.noRetreat !== false,
         bossDodge: data.bossDodge !== false, bossRetreat: data.bossRetreat !== false,
-        showTargetLine: data.showTargetLine === true,
+        showTargetLine: data.showTargetLine === true, showRange: data.showRange === true,
+        nearbyClear: data.nearbyClear === true,
+        nearbyRadius: Number.isSafeInteger(data.nearbyRadius)
+          ? Math.max(1, Math.min(6, data.nearbyRadius)) : 2,
         searchScope: data.searchScope === "map" ? "map" : "radius",
         targetMode: targetMode(data.targetMode),
         targetLevel: Number.isSafeInteger(data.targetLevel) && data.targetLevel > 0 ? data.targetLevel : 1,
