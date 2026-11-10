@@ -103,17 +103,19 @@
     if (globalThis.GSTMapTravel?.active?.(scene))
       return finite(w) && finite(h) && w > 0 && h > 0
         ? { w, h, home: { x: scene.px, y: scene.py }, radius: Infinity } : null;
-    const radius = settings.enabled ? settings.radius : 11;
+    const wholeMap = settings.enabled && settings.searchScope === "map";
+    const radius = wholeMap ? Infinity : settings.enabled ? settings.radius
+      : globalThis.GSTFarmCompatibility?.nativeRadius(scene.auto?.radius) ?? null;
     const home = GSTHarvest.farmOrigin(scene) ?? { x: scene.auto.ax, y: scene.auto.ay };
-    if (![w, h, radius, home.x, home.y].every(finite) || w <= 0 || h <= 0 || radius < 11) return null;
+    if (![w, h, home.x, home.y].every(finite) || w <= 0 || h <= 0
+        || !wholeMap && (!finite(radius) || radius < 1)) return null;
     // Ordinary radius farming stays inside its circle. An explicit realm
     // boss/seal objective may travel beyond it; only then use map boundaries
     // for emergency dodges rather than disabling safety outside the circle.
     const realmObjective = globalThis.GSTRealm?.seekBoss?.(scene) === true
       || globalThis.GSTFarmSeals?.pending?.(scene) === true;
-    const outsideFarmCircle = distance({ x: scene.px, y: scene.py }, home) > radius;
-    return { w, h, home, radius: settings.enabled && settings.searchScope === "map"
-      || (realmObjective && outsideFarmCircle) ? Infinity : radius };
+    const outsideFarmCircle = !wholeMap && distance({ x: scene.px, y: scene.py }, home) > radius;
+    return { w, h, home, radius: wholeMap || (realmObjective && outsideFarmCircle) ? Infinity : radius };
   }
   function inside(zone, pos) {
     return finite(pos?.x) && finite(pos?.y) && pos.x >= 0 && pos.y >= 0

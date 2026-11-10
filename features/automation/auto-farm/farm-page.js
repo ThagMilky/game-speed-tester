@@ -368,14 +368,13 @@
       respawnMessage = "Waiting for the game's revival countdown.";
       return "Chờ hết thời gian hồi sinh của game.";
     }
+    if (scene.auto?.on && typeof scene.auto.update === "function" && finite(scene.auto.reviveTry)) {
+      respawnMessage = "Built-in Auto Farm controls revival; waiting for its next attempt.";
+      return "Auto Farm gốc đang xử lý hồi sinh; chờ game.";
+    }
     if (death.requested) {
       respawnMessage = "Đã gửi yêu cầu hồi sinh qua bộ điều khiển gốc; đang chờ game.";
       return "Đã gửi yêu cầu hồi sinh một lần; chờ game xác nhận. Có thể thử lại bằng tay nếu cần.";
-    }
-    // The built-in farm retries every 2 seconds. Do not duplicate its pending attempt.
-    if (scene.auto?.on && finite(scene.auto.reviveTry) && scene.auto.reviveTry > scene.now()) {
-      respawnMessage = "Built-in Auto Farm already requested revival; waiting.";
-      return "Auto Farm đang xử lý hồi sinh; chờ game.";
     }
     const host = typeof scene.autoHost === "function" ? scene.autoHost() : null;
     if (typeof host?.respawn !== "function") {
