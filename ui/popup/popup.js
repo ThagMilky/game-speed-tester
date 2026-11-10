@@ -35,6 +35,9 @@ const farmReturnDeath = document.getElementById("farmReturnDeath");
 const breakSeals = document.getElementById("breakSeals");
 const farmSearchScope = document.getElementById("farmSearchScope");
 const farmShowTargetLine = document.getElementById("farmShowTargetLine");
+const farmShowRange = document.getElementById("farmShowRange");
+const farmNearbyClear = document.getElementById("farmNearbyClear");
+const farmNearbyRadius = document.getElementById("farmNearbyRadius");
 const farmRadius = document.getElementById("farmRadius");
 const farmTargetMode = document.getElementById("farmTargetMode");
 const farmBossDodge = document.getElementById("farmBossDodge");
@@ -193,7 +196,10 @@ function normalizedFarmPreferences(raw = {}) {
     targetMode: mode, targetLevel: positiveLevel(raw.targetLevel, 1),
     targetMinLevel: positiveLevel(raw.targetMinLevel, 1), targetMaxLevel: positiveLevel(raw.targetMaxLevel, 20),
     excludeBoss: raw.excludeBoss === true, noRetreat: raw.noRetreat !== false,
-    showTargetLine: raw.showTargetLine === true, breakSeals: raw.breakSeals === true,
+    showTargetLine: raw.showTargetLine === true, showRange: raw.showRange === true,
+    nearbyClear: raw.nearbyClear === true,
+    nearbyRadius: Number.isSafeInteger(raw.nearbyRadius) ? Math.max(1, Math.min(6, raw.nearbyRadius)) : 2,
+    breakSeals: raw.breakSeals === true,
     idleMode: ["home", "seek"].includes(raw.idleMode) ? raw.idleMode : "hold",
     preferLoot: raw.preferLoot !== false, selfDefense: raw.selfDefense === true,
     autoMeditate: raw.autoMeditate !== false, autoRespawn: raw.autoRespawn !== false,
@@ -210,6 +216,8 @@ function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {})
   farmBossDodge.checked = next.bossDodge;
   farmBossRetreat.checked = next.bossRetreat;
   farmShowTargetLine.checked = next.showTargetLine;
+  farmShowRange.checked = next.showRange;
+  farmNearbyClear.checked = next.nearbyClear;
   breakSeals.checked = next.breakSeals;
   farmIdleMode.value = next.idleMode;
   farmPreferLoot.checked = next.preferLoot;
@@ -227,6 +235,7 @@ function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {})
   if (keepDraft && !forceKeys.includes("targetMinLevel") && !Number.isSafeInteger(minValue)) farmTargetMinLevel.value = "";
   if (keepDraft && !forceKeys.includes("targetMaxLevel") && !Number.isSafeInteger(maxValue)) farmTargetMaxLevel.value = "";
   if (!keepDraft || forceKeys.includes("radius")) farmRadius.value = String(next.radius);
+  if (!keepDraft || forceKeys.includes("nearbyRadius")) farmNearbyRadius.value = String(next.nearbyRadius);
   if (forceKeys.includes("targetMinLevel") && forceKeys.includes("targetMaxLevel")) farmDraftError = false;
   syncFarmScope(); syncFarmLevelInputs(); farmSummaries();
   farmFeedback.textContent = farmHasDraft() ? "Có bản nháp chưa lưu." : "Đã đồng bộ cài đặt.";
@@ -240,7 +249,8 @@ chrome.storage.onChanged.addListener((changes, area) => {
 function farmHasDraft() {
   return farmDraftError || Number(farmTargetMinLevel.value) !== farmConfirmed.targetMinLevel
     || Number(farmTargetMaxLevel.value) !== farmConfirmed.targetMaxLevel
-    || farmRadius.value !== String(farmConfirmed.radius);
+    || farmRadius.value !== String(farmConfirmed.radius)
+    || farmNearbyRadius.value !== String(farmConfirmed.nearbyRadius);
 }
 function farmMessage(message) {
   farmFeedback.textContent = message + (farmDraftError ? " & Khoảng tu vi không hợp lệ, chưa lưu." : farmHasDraft() ? " & Có bản nháp chưa lưu." : "");
@@ -250,7 +260,7 @@ function syncFarmScope() {
 }
 function farmSummaries() {
   document.getElementById("farmEncounterSummary").textContent = `Auto nhận kỳ ngộ · ${farmConfirmed.autoEncounter ? "bật" : "tắt"}`;
-  document.getElementById("farmDefenseSummary").textContent = `Tự vệ ${farmConfirmed.selfDefense ? "bật" : "tắt"} · Thiền ${farmConfirmed.autoMeditate ? "bật" : "tắt"} · Hồi sinh ${farmConfirmed.autoRespawn ? "bật" : "tắt"}`;
+  document.getElementById("farmDefenseSummary").textContent = `Tự vệ ${farmConfirmed.selfDefense ? "bật" : "tắt"} · Dọn gần ${farmConfirmed.nearbyClear ? "bật" : "tắt"} · Thiền ${farmConfirmed.autoMeditate ? "bật" : "tắt"} · Hồi sinh ${farmConfirmed.autoRespawn ? "bật" : "tắt"}`;
   document.getElementById("farmBossSummary").textContent = `Boss · ${farmConfirmed.excludeBoss ? "không chọn boss" : "cho phép boss"}`;
   document.getElementById("farmRecoverySummary").textContent = `Hồi phục · ${farmConfirmed.noRetreat ? "không rút lui" : "theo game"}`;
 }
@@ -270,7 +280,8 @@ async function saveFarmPatch(patch, rollback) {
     return false;
   }
 }
-for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmNoRetreat, "noRetreat"],
+for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmShowRange, "showRange"],
+  [farmNearbyClear, "nearbyClear"], [farmNoRetreat, "noRetreat"],
   [breakSeals, "breakSeals"], [farmPreferLoot, "preferLoot"], [farmSelfDefense, "selfDefense"],
   [farmAutoMeditate, "autoMeditate"], [farmAutoRespawn, "autoRespawn"], [farmAutoEncounter, "autoEncounter"], [farmBossDodge, "bossDodge"],
   [farmBossRetreat, "bossRetreat"]]) {
@@ -282,6 +293,21 @@ for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmNoRetre
     input.disabled = false;
   });
 }
+farmNearbyRadius.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") farmNearbyRadius.blur();
+});
+farmNearbyRadius.addEventListener("change", async () => {
+  const value = Number(farmNearbyRadius.value);
+  if (!Number.isSafeInteger(value) || value < 1 || value > 6) {
+    farmNearbyRadius.value = String(farmConfirmed.nearbyRadius);
+    farmMessage("Bán kính dọn gần phải là số nguyên từ 1 đến 6.");
+    return;
+  }
+  farmNearbyRadius.disabled = true;
+  await saveFarmPatch({ nearbyRadius: value },
+    () => { farmNearbyRadius.value = String(farmConfirmed.nearbyRadius); });
+  farmNearbyRadius.disabled = false;
+});
 farmExcludeBoss.addEventListener("change", async () => {
   const next = farmExcludeBoss.checked;
   const patch = { excludeBoss: next };
