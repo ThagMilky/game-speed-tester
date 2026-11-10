@@ -20,7 +20,7 @@
     observedTarget = null; lootSite = null; lootActive = false; lootLastCount = 0; lootAbandoned = false;
     if (binding?.scene === scene) {
       Object.assign(binding, { idleAt: -Infinity, readySince: null, medOwned: false,
-        medPending: null, medManual: false, cancelStart: false,
+        medPending: null, medManual: false, cancelStart: false, medStillAt: null,
         lastScanAt: -Infinity, lastScanSafe: false });
     }
   }
@@ -85,16 +85,21 @@
           .some((name) => globalThis[name]?.controls?.(scene))) return false;
     // Only actionable filtered targets or actual local threats should block idle meditation.
     // Unknown distant monsters outside the filter must not prevent resting forever.
-    if (settings.idleMode === "seek") return false;
+    // Seeking may meditate only during an explicit exhausted/cooldown pause.
+    // The navigator will wake it once the next search is due.
+    if (settings.idleMode === "seek" && globalThis.GSTFarmMap?.mayMeditate?.(scene) !== true)
+      return false;
     const enemies = rawMonsters(host);
     const eligible = typeof host?.enemies === "function" ? host.enemies() : null;
     if (!enemies || !Array.isArray(eligible)) return false;
     const pos = { x: scene.px, y: scene.py };
     if (!finite(pos.x) || !finite(pos.y)) return false;
     const danger = enemies.some((mob) => !mob.dead && finite(mob.x) && finite(mob.y)
-      && mob.hostile === true && dist(mob, pos) <= Math.max(3.2, settings.nearbyClear ? settings.nearbyRadius : 0));
+      && (mob.hostile === true || settings.nearbyClear && mob.aggro === false)
+      && dist(mob, pos) <= Math.max(3.2, settings.nearbyClear ? settings.nearbyRadius : 0));
     const targets = eligible.some((mob) => !mob.dead && finite(mob.x) && finite(mob.y)
-      && inFarmArea(scene, mob) && globalThis.GSTFarmPriority?.matches?.(mob) !== false);
+      && inFarmArea(scene, mob) && globalThis.GSTFarmPriority?.matches?.(mob) !== false
+      && globalThis.GSTFarmMap?.actionable?.(scene, mob) !== false);
     const visibleBoss = [...(scene.views?.values?.() ?? [])].some((actor) => actor?.k === "m"
       && !actor.dead && (actor.st?.cls === "boss" || actor.st?.wb === true)
       && finite(actor.x) && finite(actor.y) && dist(actor, pos) < 7);
@@ -109,7 +114,8 @@
     }
     const selected = scene.views?.get?.(scene.auto.target);
     const selectedEligible = selected && !selected.dead && inFarmArea(scene, selected)
-      && globalThis.GSTFarmPriority?.matches?.(selected.st) !== false;
+      && globalThis.GSTFarmPriority?.matches?.(selected.st) !== false
+      && globalThis.GSTFarmMap?.actionable?.(scene, selected) !== false;
     return !selectedEligible && !scene.autoX && !scene.autoY;
   }
   function toggleMeditation(owner, host, direction) {
@@ -163,7 +169,7 @@
       }
     }
     if (!owner.lastScanSafe || owner.cancelStart) {
-      owner.readySince = null;
+      owner.readySince = null; owner.medStillAt = null;
       if (owner.medOwned) wakeMeditation(scene);
       if (!med && owner.medPending !== "start") owner.cancelStart = false;
       return;
@@ -172,7 +178,12 @@
     // The native idle() callback may not run when another controller has yielded.
     // Require actual stillness instead of depending on a callback timestamp.
     if (!finite(scene.px) || !finite(scene.py) || scene.autoX || scene.autoY) {
-      owner.readySince = null; return;
+      owner.readySince = null; owner.medStillAt = null; return;
+    }
+    const here = { x: scene.px, y: scene.py };
+    if (!owner.medStillAt || dist(owner.medStillAt, here) > 0.12) {
+      owner.medStillAt = here;
+      owner.readySince = now;
     }
     owner.readySince ??= now;
     if (now - owner.readySince >= 1800) {
@@ -372,7 +383,7 @@
         || typeof scene.auto.lootSkip?.has !== "function" || typeof scene.now !== "function" || !scene.events?.on || !scene.events.off) return;
     const owner = { scene, auto: scene.auto, undo: [], modalAt: -Infinity, modal: false,
       idleAt: -Infinity, readySince: null, medOwned: false, medPending: null,
-      medManual: false, cancelStart: false, medRequestAt: -Infinity,
+      medManual: false, cancelStart: false, medStillAt: null, medRequestAt: -Infinity,
       lastScanAt: -Infinity, lastScanSafe: false, contextKey: mapContext(scene) };
     binding = owner;
     wrap(owner, scene.auto, "idle", (original) => function (host, time, x, y) {
