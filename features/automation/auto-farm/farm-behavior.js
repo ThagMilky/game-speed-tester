@@ -83,9 +83,22 @@
         || globalThis.GSTFarmSeals?.pending?.(scene) || collecting(scene)
         || ["GSTFarmDefense", "GSTFarmMap", "GSTRealm", "GSTChest", "GSTHarvest", "GSTFarmSeals", "GSTFarmBossSafety"]
           .some((name) => globalThis[name]?.controls?.(scene))) return false;
+    // Only actionable filtered targets or actual local threats should block idle meditation.
+    // Unknown distant monsters outside the filter must not prevent resting forever.
+    if (settings.idleMode === "seek") return false;
     const enemies = rawMonsters(host);
-    if (!enemies || enemies.some((mob) => !mob.dead && finite(mob.x) && finite(mob.y)
-        && (inFarmArea(scene, mob) || dist(mob, { x: scene.px, y: scene.py }) < 7))) return false;
+    const eligible = typeof host?.enemies === "function" ? host.enemies() : null;
+    if (!enemies || !Array.isArray(eligible)) return false;
+    const pos = { x: scene.px, y: scene.py };
+    if (!finite(pos.x) || !finite(pos.y)) return false;
+    const danger = enemies.some((mob) => !mob.dead && finite(mob.x) && finite(mob.y)
+      && mob.hostile === true && dist(mob, pos) <= Math.max(3.2, settings.nearbyClear ? settings.nearbyRadius : 0));
+    const targets = eligible.some((mob) => !mob.dead && finite(mob.x) && finite(mob.y)
+      && inFarmArea(scene, mob) && globalThis.GSTFarmPriority?.matches?.(mob) !== false);
+    const visibleBoss = [...(scene.views?.values?.() ?? [])].some((actor) => actor?.k === "m"
+      && !actor.dead && (actor.st?.cls === "boss" || actor.st?.wb === true)
+      && finite(actor.x) && finite(actor.y) && dist(actor, pos) < 7);
+    if (danger || targets || visibleBoss) return false;
     const loot = typeof host?.loot === "function" ? host.loot() : null;
     if (!Array.isArray(loot) || loot.some((item) => inFarmArea(scene, item)
         && !scene.auto.lootSkip?.has?.(`${item.x.toFixed(1)},${item.y.toFixed(1)}`))) return false;
@@ -95,7 +108,9 @@
           || dist({ x: scene.px, y: scene.py }, home) > 1.2) return false;
     }
     const selected = scene.views?.get?.(scene.auto.target);
-    return (!selected || selected.dead) && !scene.autoX && !scene.autoY;
+    const selectedEligible = selected && !selected.dead && inFarmArea(scene, selected)
+      && globalThis.GSTFarmPriority?.matches?.(selected.st) !== false;
+    return !selectedEligible && !scene.autoX && !scene.autoY;
   }
   function toggleMeditation(owner, host, direction) {
     const now = performance.now();
@@ -154,7 +169,11 @@
       return;
     }
     if (med || owner.medManual || owner.medPending) return; // Never cancel manual meditation.
-    if (now - owner.idleAt > 1200) { owner.readySince = null; return; }
+    // The native idle() callback may not run when another controller has yielded.
+    // Require actual stillness instead of depending on a callback timestamp.
+    if (!finite(scene.px) || !finite(scene.py) || scene.autoX || scene.autoY) {
+      owner.readySince = null; return;
+    }
     owner.readySince ??= now;
     if (now - owner.readySince >= 1800) {
       try { toggleMeditation(owner, scene.autoHost(), "start"); } catch { /* Yield. */ }
@@ -383,7 +402,8 @@
       configured = true;
       const next = { idleMode: ["home", "seek"].includes(value.idleMode) ? value.idleMode : "hold",
         preferLoot: value.preferLoot !== false, autoMeditate: value.autoMeditate !== false,
-        enabled: value.enabled === true, radius: value.radius, searchScope: value.searchScope };
+        enabled: value.enabled === true, radius: value.radius, searchScope: value.searchScope,
+        nearbyClear: value.nearbyClear === true, nearbyRadius: value.nearbyRadius };
       if (binding && binding.scene !== scene) detach();
       if (binding && Object.keys(next).some((key) => settings[key] !== next[key])) binding.readySince = null;
       settings = next; this.attach(scene);
