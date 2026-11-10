@@ -33,7 +33,8 @@
     settings = {
       enabled: value?.enabled === true,
       showTargetLine: value?.showTargetLine === true,
-      autoRespawn: true,
+      autoRespawn: value?.autoRespawn !== false,
+      autoMeditate: value?.autoMeditate !== false,
       noRetreat: value?.noRetreat !== false,
       bossDodge: value?.bossDodge !== false,
       bossRetreat: value?.bossRetreat !== false,

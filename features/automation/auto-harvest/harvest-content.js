@@ -8,6 +8,26 @@
   let navigating = false;
   let repairedKey = null;
   let readError = "";
+  let shortcut = "KeyH", shortcutRevision = 0, shortcutBusy = false;
+  const shortcutCode = (value) => typeof value?.code === "string" && /^(Key[A-Z]|Digit[0-9])$/.test(value.code)
+    ? value.code : "KeyH";
+  function editableKeyTarget(event) {
+    return [document.activeElement, ...event.composedPath()].some((node) => node instanceof HTMLElement
+      && (node.isContentEditable || node.matches("input, textarea, select, [role='textbox']")));
+  }
+  window.addEventListener("keydown", (event) => {
+    if (event.code !== shortcut || !event.altKey || event.ctrlKey || event.shiftKey || event.metaKey
+        || event.repeat || event.isComposing || !event.isTrusted || document.hidden || !document.hasFocus()
+        || editableKeyTarget(event) || document.getElementById("gst-game-menu")?.dataset.open === "true") return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    if (shortcutBusy || navigating) return;
+    shortcutBusy = true;
+    navigator.locks.request("gst:harvest-preferences", async () => {
+      const saved = await chrome.storage.local.get("harvestPreferences");
+      const previous = GSTHarvest.normalize(saved.harvestPreferences);
+      await chrome.storage.local.set({ harvestPreferences: { ...saved.harvestPreferences, enabled: !previous.enabled } });
+    }).catch((error) => { failure("shortcut.toggle", error); }).finally(() => { shortcutBusy = false; });
+  }, true);
   let debugEnabled = false;
   const debugRows = [];
   const lastDebug = new Map();
@@ -304,6 +324,10 @@
     return true;
   });
   chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes.harvestShortcut) {
+      shortcutRevision++;
+      shortcut = shortcutCode(changes.harvestShortcut.newValue);
+    }
     if (area === "local" && changes.harvestDebugEnabled) setDebug(changes.harvestDebugEnabled.newValue);
     if (area === "local" && changes.harvestPreferences) {
       revision++; configure(changes.harvestPreferences.newValue);
@@ -321,8 +345,9 @@
     repairedKey = null;
     if (preferences) configure(preferences);
   });
-  const initialRevision = revision;
-  chrome.storage.local.get(["harvestPreferences", "harvestDebugEnabled"]).then((saved) => {
+  const initialRevision = revision, initialShortcutRevision = shortcutRevision;
+  chrome.storage.local.get(["harvestPreferences", "harvestDebugEnabled", "harvestShortcut"]).then((saved) => {
+    if (initialShortcutRevision === shortcutRevision) shortcut = shortcutCode(saved.harvestShortcut);
     setDebug(saved.harvestDebugEnabled);
     record("bridge.start", moduleState());
     if (initialRevision === revision) configure(saved.harvestPreferences);

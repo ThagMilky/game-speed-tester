@@ -28,6 +28,47 @@
   const debugFeedback = byId("harvestDebugFeedback");
   const debugDetails = byId("harvestDebugDetails");
   let debugBusy = false;
+  const shortcutLabel = byId("harvestShortcutLabel");
+  const shortcutFeedback = byId("harvestShortcutFeedback");
+  const shortcutCapture = byId("captureHarvestShortcut");
+  const shortcutReset = byId("resetHarvestShortcut");
+  let capturingShortcut = false;
+  function showShortcut(value) {
+    const code = typeof value?.code === "string" && /^(Key[A-Z]|Digit[0-9])$/.test(value.code) ? value.code : "KeyH";
+    shortcutLabel.textContent = `Alt + ${code.startsWith("Key") ? code.slice(3) : code.slice(5)}${code === "KeyH" && value?.code == null ? " (mặc định)" : ""}`;
+  }
+  async function saveShortcut(code) {
+    shortcutCapture.disabled = shortcutReset.disabled = true;
+    try {
+      await chrome.storage.local.set({ harvestShortcut: { code } });
+      showShortcut({ code });
+      shortcutFeedback.textContent = "Đã lưu phím tắt Thu hoạch.";
+    } catch { shortcutFeedback.textContent = "Không lưu được phím tắt. Thử lại."; }
+    finally { shortcutCapture.disabled = shortcutReset.disabled = false; }
+  }
+  shortcutCapture.addEventListener("click", () => {
+    capturingShortcut = true;
+    shortcutFeedback.textContent = "Giữ Alt rồi bấm chữ hoặc số muốn dùng (Esc để hủy).";
+  });
+  shortcutReset.addEventListener("click", () => {
+    capturingShortcut = false;
+    void saveShortcut(null);
+  });
+  window.addEventListener("keydown", (event) => {
+    if (!capturingShortcut) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    if (event.key === "Escape") {
+      capturingShortcut = false;
+      shortcutFeedback.textContent = "Đã hủy đặt phím.";
+      return;
+    }
+    if (event.repeat || event.isComposing || !event.altKey || event.ctrlKey || event.shiftKey || event.metaKey
+        || !/^(Key[A-Z]|Digit[0-9])$/.test(event.code)) {
+      shortcutFeedback.textContent = "Chỉ hỗ trợ Alt + chữ hoặc số, không kèm Ctrl/Shift."; return;
+    }
+    capturingShortcut = false;
+    void saveShortcut(event.code);
+  }, true);
   async function debugMessage(type, extra = {}) {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) throw new Error("No active tab");
@@ -266,14 +307,17 @@
   }
   globalThis.GSTHarvestPopup = { refresh, flushNumericDrafts };
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== "local" || !changes.harvestPreferences) return;
+    if (area !== "local") return;
+    if (changes.harvestShortcut) showShortcut(changes.harvestShortcut.newValue);
+    if (!changes.harvestPreferences) return;
     storageRevision++;
     if (!loaded) { initialChange = { value: changes.harvestPreferences.newValue }; return; }
     confirmed = GSTHarvest.normalize(changes.harvestPreferences.newValue);
     for (const [key, input] of ranges) if (!dirty.has(key)) input.value = confirmed[key];
     derivePreferences(); renderList(); updateMessage();
   });
-  chrome.storage.local.get(["harvestPreferences", "harvestDebugEnabled"]).then((saved) => {
+  chrome.storage.local.get(["harvestPreferences", "harvestDebugEnabled", "harvestShortcut"]).then((saved) => {
+    showShortcut(saved.harvestShortcut);
     debugToggle.checked = saved.harvestDebugEnabled === true;
     debugDetails.hidden = !debugToggle.checked;
     debugToggle.disabled = false;

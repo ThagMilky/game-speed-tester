@@ -3,7 +3,7 @@
   const origin = "https://nghichthienky.online";
   const channel = "gst:farm:v1";
   globalThis.GSTFarmConfigurationReady = false;
-  let settings = { enabled: false, radius: 22, autoRespawn: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
+  let settings = { enabled: false, radius: 22, autoRespawn: true, autoMeditate: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
     searchScope: "radius", idleMode: "hold", preferLoot: true, excludeBoss: false,
     bossDodge: true, bossRetreat: true };
   let filterBinding = null;
@@ -28,6 +28,7 @@
   GSTHarvest.farmOrigin = (scene) => session?.scene === scene ? { ...session.home } : null;
   // Both features share the same once-per-death request state.
   GSTHarvest.respawn = (scene) => checkRespawn(scene, true);
+  GSTHarvest.autoRespawnEnabled = () => settings.autoRespawn;
   const targetMode = (value) => value === "level" ? "maxLevel" : value === "bossFirst" ? "bossLevel"
     : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(value) ? value : "all";
   const isBoss = (enemy) => enemy?.cls === "boss" || enemy?.wb === true;
@@ -366,7 +367,7 @@
       return;
     }
     if (!death || death.scene !== scene) death = { scene, requested: false };
-    if (!settings.autoRespawn && !harvestRequest) return;
+    if (!settings.autoRespawn) return "Tự hồi sinh đang tắt; bạn có thể hồi sinh bằng tay.";
     if (!harvestRequest && !scene.auto?.on) return;
     if ([...document.querySelectorAll('[role="alertdialog"]')].some((el) =>
       el.getClientRects().length && getComputedStyle(el).visibility !== "hidden")) return "Chờ bạn xử lý hộp kiểm tra người chơi trước khi hồi sinh.";
@@ -723,7 +724,8 @@
         || settings.targetLevel !== data.targetLevel
         || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel
         || settings.excludeBoss !== (data.excludeBoss === true);
-      settings = { enabled: data.enabled, radius: data.radius, autoRespawn: true, noRetreat: data.noRetreat !== false,
+      settings = { enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn !== false,
+        autoMeditate: data.autoMeditate !== false, noRetreat: data.noRetreat !== false,
         bossDodge: data.bossDodge !== false, bossRetreat: data.bossRetreat !== false,
         showTargetLine: data.showTargetLine === true,
         searchScope: data.searchScope === "map" ? "map" : "radius",
@@ -733,6 +735,7 @@
         targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20,
         idleMode: ["home", "seek"].includes(data.idleMode) ? data.idleMode : "hold",
         preferLoot: data.preferLoot !== false, selfDefense: data.selfDefense === true, autoEncounter: data.autoEncounter === true, excludeBoss: data.excludeBoss === true };
+      globalThis.GSTFarmRevivePolicy?.configure(settings.autoRespawn);
       globalThis.GSTFarmCombat?.configure(sceneNow(), settings.noRetreat);
       globalThis.GSTFarmBossSafety?.configure(sceneNow(), settings);
       globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);

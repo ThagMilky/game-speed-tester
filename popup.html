@@ -88,7 +88,6 @@
             <div><label for="farmRadius">Giới hạn vùng farm <span class="range">1–1.000 ô</span></label><input id="farmRadius" type="number" min="1" max="1000" step="1" value="22" required><small id="farmRadiusError" class="field-error" aria-live="polite"></small></div>
           </div>
           <p class="save-mode">Số ô tính từ điểm bắt đầu farm. Ví dụ 30: tìm quái cách điểm đó tối đa 30 ô.</p>
-          <p class="hint">Tự hồi sinh: luôn BẬT khi đang Auto Farm; tiếp tục farm sau mỗi lần hồi sinh, không giới hạn số lần chết. Vẫn chờ nút game sẵn sàng. Bạn chủ động tắt farm thì giữ TẮT.</p>
           <div class="two-columns separated">
             <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="boss">Chỉ boss</option><option value="bossLevel">Boss trước → tu vi cao đến thấp</option><option value="highLevel">Tu vi cao → thấp (quái thường)</option><option value="lowLevel">Tu vi thấp → cao (quái thường)</option><option value="maxLevel">Tới cảnh giới/tầng chọn</option><option value="minLevel">Từ cảnh giới/tầng chọn</option><option value="range">Trong khoảng cảnh giới/tầng</option></select></div>
             <div id="farmSingleLevel"><label for="farmTargetLevel">Mức tu vi quái</label><select id="farmTargetLevel" required disabled></select></div>
@@ -101,14 +100,18 @@
           <div class="farm-column farm-middle">
           <details class="advanced" open><summary>Khi hết mục tiêu &amp; nhặt đồ</summary><div class="advanced-body">
             <label for="farmIdleMode">Khi không còn mục tiêu</label>
-            <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi thiền khi hết quái</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option><option value="seek">Nhặt đồ rồi chủ động tìm quái mới</option></select>
-            <p class="hint">Khi không còn quái trong vùng tìm (kể cả quái ngoài bộ lọc), nhặt đồ xong sẽ tự thiền theo cơ chế game. Quái xuất hiện sẽ kết thúc phiên thiền tự động; thiền thủ công không bị can thiệp. Chế độ tìm quái vẫn nhường thao tác khác.</p>
+            <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi đứng chờ</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option><option value="seek">Nhặt đồ rồi chủ động tìm quái mới</option></select>
+            <p class="hint">Khi hết quái, Auto Farm sẽ nhặt đồ rồi đứng chờ, quay về hoặc tìm tiếp tùy chế độ. Tự thiền có công tắc riêng ở mục Tự vệ.</p>
             <label class="check-row"><input id="farmPreferLoot" type="checkbox" checked><span>Ưu tiên nhặt đồ sau giao tranh, trước khi chuyển bãi quái</span></label>
             <p class="hint">Ưu tiên đồ gần bãi vừa đánh, kể cả khi không bật Mở rộng vùng tìm quái. Chờ ngắn để vật phẩm xuất hiện; dùng cơ chế nhặt và giới hạn thử của game. Đồ không thể nhặt sẽ được bỏ qua tạm thời.</p>
           </div></details>
-          <details class="advanced separated"><summary id="farmDefenseSummary">Tự vệ khi đứng chờ · tắt</summary><div class="advanced-body">
+          <details class="advanced separated"><summary id="farmDefenseSummary">Tự vệ &amp; tự động</summary><div class="advanced-body">
             <label class="check-row"><input id="farmSelfDefense" type="checkbox"><span>Tự vệ khi đứng chờ</span></label>
             <p class="hint">Khi bị quái thường đánh, thử đánh thường nếu quái ở gần; khi bị boss đánh, chỉ đi lùi. Không tự đuổi theo.</p>
+            <label class="check-row separated"><input id="farmAutoMeditate" type="checkbox" checked><span>Tự thiền khi hết quái</span></label>
+            <p class="hint">Độc lập với Tự vệ; chỉ dùng khi Auto Farm đang bật và đã nhặt đồ. Tắt sẽ ngừng phiên thiền do tool mở, không tắt thiền thủ công.</p>
+            <label class="check-row separated"><input id="farmAutoRespawn" type="checkbox" checked><span>Tự động hồi sinh</span></label>
+            <p class="hint">Tắt: tool không tự yêu cầu hồi sinh và không can thiệp quy tắc dừng sau khi chết của Auto Farm. Nếu game tự hồi sinh độc lập, công tắc này không chặn được game.</p>
           </div></details>
           </div>
         </fieldset>
@@ -197,6 +200,11 @@
             <p id="harvestStatus" class="feature-status" role="status" aria-live="polite">Đang đọc trạng thái thu hoạch…</p>
             <p id="harvestFeedback" class="notice" role="status" aria-live="polite"></p>
           </div>
+          <details class="advanced separated"><summary>Phím tắt Thu hoạch · <span id="harvestShortcutLabel">Alt + H</span></summary><div class="advanced-body">
+            <div class="button-row"><button id="captureHarvestShortcut" type="button">Đổi phím</button><button id="resetHarvestShortcut" type="button" class="quiet">Mặc định (Alt + H)</button></div>
+            <p class="hint">Bật/tắt Thu hoạch ngay trên trang game bằng Alt + chữ hoặc số. Phím mặc định Alt + H; Esc để hủy khi đang đặt phím. Không kích hoạt khi nhập chữ.</p>
+            <p id="harvestShortcutFeedback" class="notice" role="status"></p>
+          </div></details>
           <div class="harvest-grid">
             <div class="harvest-settings">
               <label for="harvestKind">Loại thu hoạch</label>
@@ -218,7 +226,7 @@
                 <label for="harvestReach">Khoảng cách dừng (0.5–1.5 ô)</label><input id="harvestReach" type="number" min="0.5" max="1.5" step="0.1" value="1.2" required>
                 <p class="hint">Khoảng cách dừng trước khi thử hái/đào; không tăng tầm tương tác của game. Rời ô nhập để lưu.</p>
               </div></details>
-              <details class="diagnostic"><summary>Thông tin hoạt động</summary><p>Tự hồi sinh khi Thu hoạch bật. Di chuyển hoặc đánh tay tạm dừng; hộp thoại NPC và kiểm tra người chơi vẫn được ưu tiên. Khi bị đánh, sau 10 giây chưa thu hoạch được sẽ tạm bỏ mục tiêu 60 giây.</p></details>
+              <details class="diagnostic"><summary>Thông tin hoạt động</summary><p>Tự hồi sinh phụ thuộc công tắc trong mục Tự vệ. Di chuyển hoặc đánh tay tạm dừng; hộp thoại NPC và kiểm tra người chơi vẫn được ưu tiên. Khi bị đánh, sau 10 giây chưa thu hoạch được sẽ tạm bỏ mục tiêu 60 giây.</p></details>
             </div>
             <div class="harvest-selection">
               <label for="harvestMode">Tài nguyên muốn thu hoạch</label><select id="harvestMode"><option value="all">Tất cả loại tài nguyên</option><option value="selected">Chỉ loại đã chọn</option></select>

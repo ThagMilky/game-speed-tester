@@ -191,8 +191,8 @@
     if (event.source !== window || event.origin !== origin) return;
     const data = event.data;
     if (data?.channel === "gst:farm:v1" && data.type === "configure") {
-      // autoRespawn marks an installed Auto Farm bridge, unlike 'enabled' (expanded radius).
-      farm = data.autoRespawn === true;
+      // A configure message confirms the Auto Farm bridge; respawn is an independent setting.
+      farm = true;
       configure();
     }
     if (data?.channel !== "gst:flight:v1") return;

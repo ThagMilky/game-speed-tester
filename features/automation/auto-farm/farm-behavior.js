@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const finite = Number.isFinite;
-  let settings = { idleMode: "hold", preferLoot: true, enabled: false, radius: 22 };
+  let settings = { idleMode: "hold", preferLoot: true, autoMeditate: true, enabled: false, radius: 22 };
   let binding = null, configured = false, suspended = false, manualUntil = 0, noteUntil = 0, message = "";
   let lootTickAt = -Infinity, lootAt = -Infinity;
   let observedTarget = null, lootSite = null, lootActive = false, lootLastCount = 0, lootAbandoned = false;
@@ -133,6 +133,11 @@
     }
     if (owner.medOwned && !med && owner.medPending !== "start") owner.medOwned = false;
     if (owner.medManual && !med) owner.medManual = false;
+    if (!settings.autoMeditate) {
+      owner.readySince = null;
+      if (owner.medOwned || owner.medPending === "start") wakeMeditation(scene);
+      return;
+    }
     if (med && !owner.medOwned && owner.medPending !== "start") return;
     // Sampling the game lists every 300ms avoids a full scan on each render frame.
     if (now - owner.lastScanAt >= 300) {
@@ -377,7 +382,7 @@
     configure(scene, value) {
       configured = true;
       const next = { idleMode: ["home", "seek"].includes(value.idleMode) ? value.idleMode : "hold",
-        preferLoot: value.preferLoot !== false,
+        preferLoot: value.preferLoot !== false, autoMeditate: value.autoMeditate !== false,
         enabled: value.enabled === true, radius: value.radius, searchScope: value.searchScope };
       if (binding && binding.scene !== scene) detach();
       if (binding && Object.keys(next).some((key) => settings[key] !== next[key])) binding.readySince = null;

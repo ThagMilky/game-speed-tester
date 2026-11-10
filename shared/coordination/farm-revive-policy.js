@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  let binding = null;
+  let binding = null, enabled = true;
   function detach() {
     if (!binding) return;
     const old = binding; binding = null;
@@ -18,7 +18,7 @@
     const remove = GSTFarmUpdate.add(scene, 0, function () {
       // Preserve the native death history, revive timing, combat and user OFF.
       // Only veto the client-side repeated-death stop before native update runs.
-      if (this === auto && auto.on && auto.stopOnRevive === true
+      if (enabled && this === auto && auto.on && auto.stopOnRevive === true
           && (scene.self?.dead || (Number.isFinite(auto.deadAt) && auto.deadAt > 0))) auto.stopOnRevive = false;
       return false;
     });
@@ -27,6 +27,7 @@
     scene.events.on("destroy", detach);
   }
   globalThis.GSTFarmRevivePolicy = {
+    configure: (value) => { enabled = value === true; },
     attach: (scene) => { try { attach(scene); } catch { detach(); } },
     active: (scene) => !!binding && binding.scene === scene && binding.auto === scene?.auto && GSTFarmUpdate.attached(scene)
   };

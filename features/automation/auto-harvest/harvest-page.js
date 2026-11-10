@@ -290,10 +290,11 @@
       if (scene.self.dead) {
         recovery ??= { scene, home: null, aliveAt: null };
         recovery.aliveAt = null;
-        if (modalOpen(true) || scene.overlay?.dialogOpen || scene.keyCapture) {
+        const autoRespawn = settings.autoRespawn && GSTHarvest.autoRespawnEnabled?.() !== false;
+        if (!autoRespawn) message = "Đã chết; Tự hồi sinh đang tắt, hãy hồi sinh bằng tay.";
+        else if (modalOpen(true) || scene.overlay?.dialogOpen || scene.keyCapture) {
           message = "Đã chết; chờ bạn xử lý hộp thoại trước khi tự hồi sinh.";
-        } else message = settings.autoRespawn ? GSTHarvest.respawn(scene)
-          : "Đã chết; bật Tự hồi sinh rồi tiếp tục hái, hoặc hồi sinh bằng tay.";
+        } else message = GSTHarvest.respawn(scene);
         return;
       }
       if (recovery) {
@@ -697,7 +698,8 @@
   function onKey(event) {
     if (!binding || !event.isTrusted || document.hidden || !document.hasFocus()) return;
     const scene = binding.scene;
-    if (event.isComposing || scene.chat?.typing || scene.inputFieldActive?.() || scene.keyCapture
+    if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey
+        || scene.chat?.typing || scene.inputFieldActive?.() || scene.keyCapture
         || event.target?.closest?.("input,textarea,select,[contenteditable]:not([contenteditable='false'])")) return;
     const keys = ["W", "A", "S", "D", "SPACE", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "Q", "H", "F"];
     if (keys.some((key) => scene.controls?.bindings?.[key] === event.keyCode)
