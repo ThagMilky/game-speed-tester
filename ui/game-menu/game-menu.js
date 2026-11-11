@@ -47,7 +47,7 @@
     catch { if (feedback) feedback.textContent = "Chưa lưu được. Thử Lưu vị trí lại hoặc bấm Hủy."; }
     finally { saving = false; }
   }
-  async function requestFrameSave(target) {
+  async function requestFrameSave(target, { discardInactiveFarmDrafts = false } = {}) {
     if (!frameLoaded) {
       const loaded = await new Promise((resolve) => {
         let timer, settled = false;
@@ -76,7 +76,8 @@
             || event.data?.channel !== "gst:menu-before-close-result:v1" || event.data.id !== id) return;
         const result = event.data.saved === true ? { saved: true } : {
           saved: false,
-          reason: ["invalid", "persistence", "load"].includes(event.data.reason) ? event.data.reason : "timeout",
+          reason: ["invalid", "persistence", "load", "inactive-draft", "policy-changed"].includes(event.data.reason) ? event.data.reason : "timeout",
+          writeFailed: event.data.writeFailed === true,
           field: ["radius", "min", "max", "potionHpPercent", "potionMpPercent",
             "harvestRadius", "harvestReach", "walkingSpeed", "flyingSpeed",
             "farmWalkingSpeed", "farmFlyingSpeed"].includes(event.data.field) ? event.data.field : null
@@ -97,7 +98,7 @@
       window.addEventListener("message", onMessage);
       timer = setTimeout(cancel, 8000);
       try {
-        target.contentWindow.postMessage({ channel: "gst:menu-before-close:v1", id }, extensionOrigin);
+        target.contentWindow.postMessage({ channel: "gst:menu-before-close:v1", id, discardInactiveFarmDrafts }, extensionOrigin);
       } catch { cancel(); }
     });
   }
@@ -112,6 +113,23 @@
       catch { result = { saved: false, reason: "timeout" }; }
       closing = false;
       if (frame !== activeFrame) return true;
+      if (result.reason === "inactive-draft") {
+        const saveMessage = result.writeFailed ? " Lần lưu bản nháp vừa rồi chưa thành công." : "";
+        const discard = window.confirm(`Cài đặt Auto Farm đang không hoạt động và còn bản nháp chưa lưu.${saveMessage} Bấm OK để bỏ bản nháp này và đóng menu; bấm Hủy để tiếp tục chỉnh sửa.`);
+        if (!discard) {
+          if (closeNotice) { closeNotice.textContent = `Chưa đóng menu: bản nháp Auto Farm vẫn được giữ.${saveMessage} Hãy tiếp tục chỉnh sửa hoặc lưu ở chế độ Tool hỗ trợ.`; closeNotice.hidden = false; }
+          return false;
+        }
+        closing = true;
+        try { result = await requestFrameSave(activeFrame, { discardInactiveFarmDrafts: true }); }
+        catch { result = { saved: false, reason: "timeout" }; }
+        closing = false;
+        if (frame !== activeFrame) return true;
+      }
+      if (result.reason === "policy-changed") {
+        if (closeNotice) { closeNotice.textContent = "Chế độ Auto Farm vừa đổi; hãy xem lại bản nháp trước khi đóng menu."; closeNotice.hidden = false; }
+        return false;
+      }
       if (!result.saved) {
         const notice = result.reason === "invalid"
           ? ({

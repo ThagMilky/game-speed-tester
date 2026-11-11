@@ -147,7 +147,7 @@
       if (policyMode !== "extended") {
         suppressSeed = true;
         const target = binding?.scene ?? scene;
-        if (target?.profile?.name === intent?.name) save(target, false);
+        if (typeof target?.profile?.name === "string" && target.profile.name === intent?.name) save(target, false);
         else {
           try {
             const stored = JSON.parse(sessionStorage.getItem(storageKey));

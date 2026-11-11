@@ -192,9 +192,8 @@ window.addEventListener("keydown", (event) => {
 }, true);
 let farmBusy = false;
 let farmSaveQueue = Promise.resolve();
-let farmPendingSaves = 0;
-function updateFarmPreferences(patch) {
-  farmPendingSaves++;
+const farmWrites = new Map();
+function updateFarmPreferences(patch, { draftWrite = false } = {}) {
   const save = farmSaveQueue.catch(() => {}).then(() => navigator.locks.request("gst:farm-preferences", async () => {
     const saved = await chrome.storage.local.get("farmPreferences");
     const current = saved.farmPreferences ?? {};
@@ -215,7 +214,8 @@ function updateFarmPreferences(patch) {
     return farmPreferences;
   }));
   farmSaveQueue = save;
-  void save.then(() => { farmPendingSaves--; }, () => { farmPendingSaves--; });
+  farmWrites.set(save, draftWrite);
+  void save.then(() => { farmWrites.delete(save); }, () => { farmWrites.delete(save); });
   return save;
 }
 
@@ -251,6 +251,8 @@ let farmPolicyHasSavedValue = false;
 let farmPolicyConfirmed = null;
 let farmPolicyPending = 0;
 let farmPolicyRequestRevision = 0;
+let farmPolicyWaiters = [];
+let selectingFarmPolicy = false;
 const farmPolicyLabels = Object.freeze({ extended: "Tool hỗ trợ", native: "Theo game gốc", disabled: "Khóa Auto Farm" });
 const farmPolicyDescriptions = Object.freeze({
   extended: "Đang chọn Tool hỗ trợ: dùng farm gốc với các hỗ trợ đã cài của extension.",
@@ -400,8 +402,16 @@ farmPolicyMode.addEventListener("change", async () => {
       farmPolicyMode.value = farmPolicyConfirmed;
       farmPolicyDescription.textContent = farmPolicyDescriptions[farmPolicyConfirmed];
     }
+    if (farmPolicyPending === 0) {
+      const waiters = farmPolicyWaiters; farmPolicyWaiters = [];
+      for (const resolve of waiters) resolve();
+    }
   }
 });
+farmPolicyMode.addEventListener("pointerdown", () => {
+  selectingFarmPolicy = true;
+  queueMicrotask(() => { selectingFarmPolicy = false; });
+}, true);
 function farmHasDraft() {
   return farmDraftError || farmLevelDraft().dirty
     || farmRadius.value !== String(farmConfirmed.radius)
@@ -427,10 +437,10 @@ function farmSummaries() {
   document.getElementById("farmBossSummary").textContent = `Boss · ${farmConfirmed.excludeBoss ? "không chọn boss" : "cho phép boss"}`;
   document.getElementById("farmRecoverySummary").textContent = `Hồi phục · ${farmConfirmed.noRetreat ? "không rút lui" : "theo game"}`;
 }
-async function saveFarmPatch(patch, rollback) {
+async function saveFarmPatch(patch, rollback, { draftWrite = false } = {}) {
   farmMessage("Đang lưu…");
   try {
-    const written = await updateFarmPreferences(patch);
+    const written = await updateFarmPreferences(patch, { draftWrite });
     let committed = written;
     const revisionAtRead = farmStorageRevision;
     try { committed = (await chrome.storage.local.get("farmPreferences")).farmPreferences ?? written; } catch {}
@@ -529,7 +539,7 @@ function commitFarmSingle(mode = activeFarmTargetMode()) {
   if (value === farmConfirmed.targetLevel) return Promise.resolve(true);
   const save = (async () => {
     row.realm.disabled = row.tier.disabled = true;
-    const saved = await saveFarmPatch({ targetLevel: value });
+    const saved = await saveFarmPatch({ targetLevel: value }, undefined, { draftWrite: true });
     syncFarmLevelInputs();
     if (!saved) {
       row.error.textContent = "Chưa lưu được lựa chọn; mức đã lưu trước đó vẫn được giữ.";
@@ -571,7 +581,7 @@ function commitFarmRange() {
   farmDraftError = false;
   const save = (async () => {
     for (const name of ["min", "max"]) farmTargetRows[name].realm.disabled = farmTargetRows[name].tier.disabled = true;
-    const saved = await saveFarmPatch({ targetMinLevel: min, targetMaxLevel: max });
+    const saved = await saveFarmPatch({ targetMinLevel: min, targetMaxLevel: max }, undefined, { draftWrite: true });
     syncFarmLevelInputs();
     if (!saved) {
       farmTargetMaxLevelError.textContent = "Chưa lưu được khoảng cảnh giới; mức đã lưu trước đó vẫn được giữ.";
@@ -622,7 +632,7 @@ function commitFarmRadius() {
   }
   const save = (async () => {
     farmRadius.disabled = true;
-    const saved = await saveFarmPatch({ enabled: true, radius: value });
+    const saved = await saveFarmPatch({ enabled: true, radius: value }, undefined, { draftWrite: true });
     farmRadius.disabled = false;
     if (!saved) {
       farmRadiusError.textContent = "Chưa lưu được giới hạn vùng farm; cài đặt đã lưu trước đó được giữ.";
@@ -638,31 +648,57 @@ farmRadius.addEventListener("input", () => {
   farmRadiusError.textContent = "";
   farmMessage("Bản nháp chưa lưu.");
 });
-farmRadius.addEventListener("blur", () => { void commitFarmRadius(); });
+farmRadius.addEventListener("blur", (event) => {
+  if (farmConfirmed.policyMode !== "extended" || selectingFarmPolicy
+      || event.relatedTarget === farmPolicyMode || document.activeElement === farmPolicyMode) return;
+  void commitFarmRadius();
+});
 farmRadius.addEventListener("keydown", (event) => {
   if (event.key !== "Enter") return;
   event.preventDefault();
   void commitFarmRadius();
 });
-async function flushFarmNumericDrafts() {
+async function flushFarmNumericDrafts({ discardInactiveDrafts = false } = {}) {
   if (!farmSyncReady) return { saved: false, reason: "load" };
+  const writesAtRequest = [...farmWrites.entries()];
+  if (farmPolicyPending > 0) await new Promise((resolve) => farmPolicyWaiters.push(resolve));
+  const startedWrites = [...new Map([...writesAtRequest, ...farmWrites.entries()]).entries()];
   const pending = [];
+  const active = farmConfirmed.policyMode === "extended";
   const mode = activeFarmTargetMode(), targetDraft = farmLevelDraft();
   if (farmSingleCommit) pending.push(farmSingleCommit);
-  else if (["maxLevel", "minLevel"].includes(mode) && targetDraft.dirty) pending.push(commitFarmSingle(mode));
+  else if (active && ["maxLevel", "minLevel"].includes(mode) && targetDraft.dirty) pending.push(commitFarmSingle(mode));
   if (farmRangeCommit) pending.push(farmRangeCommit);
-  else if (mode === "range" && targetDraft.dirty)
+  else if (active && mode === "range" && targetDraft.dirty)
     pending.push(commitFarmRange());
   if (farmRadiusCommit) pending.push(farmRadiusCommit);
-  else if (farmRadius.value !== String(farmConfirmed.radius)) pending.push(commitFarmRadius());
-  const hadPendingSave = farmPendingSaves > 0;
+  else if (active && farmRadius.value !== String(farmConfirmed.radius)) pending.push(commitFarmRadius());
   const results = await Promise.all(pending);
-  const queueSaved = !hadPendingSave || await farmSaveQueue.then(() => true, () => false);
+  const writes = new Map([...startedWrites, ...farmWrites.entries()]);
+  const writeEntries = [...writes.entries()];
+  const writeResults = await Promise.allSettled(writeEntries.map(([promise]) => promise));
+  const failedWrites = writeResults.flatMap((result, index) => result.status === "rejected"
+    ? [{ draftWrite: writeEntries[index][1] }] : []);
+  const failedDraftWrite = failedWrites.some((write) => write.draftWrite);
+  const failedOtherWrite = failedWrites.some((write) => !write.draftWrite);
+  if (!active) {
+    if (discardInactiveDrafts) {
+      // Re-check in case a newer confirmed policy arrived while writes settled.
+      if (farmConfirmed.policyMode === "extended") return { saved: false, reason: "policy-changed" };
+      if (failedOtherWrite) return { saved: false, reason: "persistence" };
+      if (farmHasDraft()) syncFarmPreferences(latestFarmPreferences ?? farmConfirmed, { preserveDraft: false });
+      else if (failedDraftWrite || !results.every(Boolean)) return { saved: false, reason: "persistence" };
+      return { saved: true };
+    }
+    if (failedOtherWrite) return { saved: false, reason: "persistence" };
+    if (farmHasDraft()) return { saved: false, reason: "inactive-draft", writeFailed: failedDraftWrite || !results.every(Boolean) };
+    return !failedDraftWrite && results.every(Boolean) ? { saved: true } : { saved: false, reason: "persistence" };
+  }
+  if (failedWrites.length || !results.every(Boolean)) return { saved: false, reason: "persistence" };
   if (!farmRadius.value.trim() || !farmRadius.checkValidity()
       || !Number.isSafeInteger(farmRadius.valueAsNumber) || farmRadius.valueAsNumber < 1 || farmRadius.valueAsNumber > 1000)
     return { saved: false, reason: "invalid", field: "radius" };
   if (farmDraftError) return { saved: false, reason: "invalid", field: mode === "range" ? "min" : "target" };
-  if (!results.every(Boolean) || !queueSaved) return { saved: false, reason: "persistence" };
   const saved = !farmLevelDraft().dirty && farmRadius.value === String(farmConfirmed.radius);
   return saved ? { saved: true } : { saved: false, reason: "persistence" };
 }
@@ -673,7 +709,7 @@ window.addEventListener("message", async (event) => {
       || !Number.isSafeInteger(event.data.id) || event.data.id <= 0) return;
   let result;
   try {
-    result = await flushFarmNumericDrafts();
+    result = await flushFarmNumericDrafts({ discardInactiveDrafts: event.data.discardInactiveFarmDrafts === true });
     if (result.saved) {
       const meditation = await globalThis.GSTMeditationPopup?.flushPendingSave?.();
       if (meditation?.saved === false) result = { saved: false, reason: "persistence" };
