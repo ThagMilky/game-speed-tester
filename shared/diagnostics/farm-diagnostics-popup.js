@@ -118,13 +118,25 @@
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab?.id) throw new Error("No tab");
-      const data = await chrome.tabs.sendMessage(tab.id, { type: "gst:farm-diagnostics" });
-      if (data?.build !== "farm-stop-1" || !data.tracking) throw new Error("No tracker");
-      output.value = JSON.stringify(compact(data)); output.hidden = false;
-      if (await GSTClipboard.write(output.value)) {
-        feedback.textContent = "Đã sao chép log một dòng. Dán vào chat để kiểm tra Auto Farm, di chuyển và chạy nền.";
+      let data = null, status = null;
+      try { data = await chrome.tabs.sendMessage(tab.id, { type: "gst:farm-diagnostics" }); } catch {}
+      try { status = await chrome.tabs.sendMessage(tab.id, { type: "gst:farm-status" }); } catch {}
+      const available = data?.build === "farm-stop-1";
+      const report = compact(available ? data : {});
+      report.diagnosticsAvailable = available;
+      report.farmStatus = {
+        autoOn: typeof status?.autoOn === "boolean" ? status.autoOn : null,
+        message: typeof status?.message === "string" ? status.message.slice(0, 240) : "Không nhận được trạng thái farm."
+      };
+      output.value = JSON.stringify(report); output.hidden = false;
+      const notice = !available ? "Chưa nhận được log MAIN; bản xuất chỉ có trạng thái cầu nối. "
+        : !data.tracking ? "Bộ theo dõi farm chưa hoạt động; đã xuất dữ liệu hiện có. " : "";
+      let copied = false;
+      try { copied = await globalThis.GSTClipboard?.write(output.value) === true; } catch {}
+      if (copied) {
+        feedback.textContent = notice + "Đã sao chép log một dòng. Dán vào chat để kiểm tra Auto Farm, di chuyển và chạy nền.";
       } else {
-        output.focus(); output.select(); feedback.textContent = "Đã chọn log một dòng; bấm Ctrl+C rồi dán vào chat.";
+        output.focus(); output.select(); feedback.textContent = notice + "Đã chọn log một dòng; bấm Ctrl+C rồi dán vào chat.";
       }
     } catch { feedback.textContent = "Chưa đọc được chẩn đoán. Mở tab game, tải lại extension và game nếu vừa cập nhật."; }
     finally { button.disabled = false; }

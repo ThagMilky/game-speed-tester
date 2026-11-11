@@ -17,7 +17,8 @@
   let suspended = false;
   let shortcut = null;
   let shortcutMessage = "";
-  let message = "Extended range disabled.";
+  let message = "Chưa nhận được cấu hình Auto Farm từ extension.";
+  let configurationError = "";
   let activationLock = null;
   let activationWatcher = null;
   const finite = (value) => typeof value === "number" && Number.isFinite(value);
@@ -862,6 +863,10 @@
     }
     if (data.type === "configure" && typeof data.enabled === "boolean"
         && finite(data.radius) && data.radius >= 1 && data.radius <= 1000) {
+      let stage = "settings";
+      globalThis.GSTFarmConfigurationReady = false;
+      configurationError = "";
+      try {
       const scopeChanged = settings.searchScope !== (data.searchScope === "map" ? "map" : "radius");
       const filterChanged = settings.searchScope !== data.searchScope || settings.targetMode !== targetMode(data.targetMode)
         || settings.targetLevel !== data.targetLevel
@@ -882,26 +887,40 @@
         targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20,
         idleMode: ["home", "seek"].includes(data.idleMode) ? data.idleMode : "hold",
         preferLoot: data.preferLoot !== false, selfDefense: data.selfDefense === true, autoEncounter: data.autoEncounter === true, excludeBoss: data.excludeBoss === true };
+      stage = "policy";
       globalThis.GSTFarmPolicy?.setMode(settings.policyMode);
       syncFarmKeyGuard();
+      stage = "session";
       globalThis.GSTFarmSession?.setPolicyMode?.(settings.policyMode, sceneNow());
       if (settings.policyMode !== "extended") stopForLockedPolicy();
+      stage = "revive";
       globalThis.GSTFarmRevivePolicy?.configure(settings.autoRespawn);
+      stage = "combat";
       globalThis.GSTFarmCombat?.configure(sceneNow(), settings.noRetreat);
+      stage = "boss-safety";
       globalThis.GSTFarmBossSafety?.configure(sceneNow(), settings);
+      stage = "behavior";
       globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);
+      stage = "defense";
       globalThis.GSTFarmDefense?.configure(sceneNow(), settings);
+      stage = "encounter";
       globalThis.GSTFarmEncounter?.configure(sceneNow(), settings);
+      stage = "map";
       globalThis.GSTFarmMap?.configure(sceneNow(), settings.policyMode !== "extended"
         ? { ...settings, enabled: false, searchScope: "radius", targetMode: "all", excludeBoss: false }
         : settings);
+      stage = "visual";
       globalThis.GSTFarmVisual?.configure(sceneNow(), settings);
+      stage = "routing";
       globalThis.GSTFarmRouting?.configure(sceneNow(), settings);
+      stage = "diagnostics";
       globalThis.GSTMovementDiagnostics?.configure(settings);
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());
+      stage = "activation";
       syncActivationTracking();
       globalThis.GSTFarmCombat?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
+      stage = "filter";
       if (settings.targetMode === "all" && !settings.excludeBoss) clearFilter();
       if (settings.policyMode === "extended") clearExcludedBossTarget(sceneNow());
       if (session) {
@@ -911,6 +930,7 @@
         if (!settings.enabled) restore(session);
       }
       if (!settings.autoRespawn) respawnMessage = "";
+      stage = "start";
       if (settings.policyMode === "native") {
         if (watcher !== null) clearInterval(watcher);
         watcher = null;
@@ -930,6 +950,12 @@
         discover();
       }
       globalThis.GSTFarmConfigurationReady = true;
+      } catch (error) {
+        // Export only a fixed stage and standard error class, never raw messages/stacks.
+        const kind = ["TypeError", "ReferenceError", "RangeError", "SyntaxError"].includes(error?.name)
+          ? error.name : "Error";
+        configurationError = `Chưa áp dụng xong cấu hình Auto Farm: ${stage} (${kind}).`;
+      }
     }
     if (data.type === "status") {
       let autoOn = null;
@@ -944,10 +970,10 @@
       const scene = sceneNow();
       const defense = globalThis.GSTFarmDefense?.status(scene) || "";
       const network = globalThis.GSTConnectionRecovery?.status(scene) || "";
-      const primary = settings.policyMode === "disabled" ? message
+      const primary = configurationError || (settings.policyMode === "disabled" ? message
         : network || defense || globalThis.GSTFarmBossSafety?.status(scene) || waitReason
         || globalThis.GSTFarmMap?.status(scene) || globalThis.GSTFarmBehavior?.status(scene)
-        || globalThis.GSTFarmSession?.status(scene) || globalThis.GSTFarmSeals?.status(scene) || message;
+        || globalThis.GSTFarmSession?.status(scene) || globalThis.GSTFarmSeals?.status(scene) || message);
       const defenseInfo = autoOn === false && !defense ? globalThis.GSTFarmDefense?.status(scene, true) : "";
       const encounterInfo = globalThis.GSTFarmEncounter?.status(scene) || "";
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,

@@ -101,21 +101,26 @@
     const previous = cause; cause = reason;
     try { return scene.toggleAutoFarm(); } finally { cause = previous; }
   }
+  function readSnapshot(name) {
+    try { return globalThis[name]?.snapshot?.(); }
+    catch { return { build: "unavailable" }; }
+  }
   globalThis.GSTFarmDiagnostics = {
     attach: (scene) => { try { attach(scene); } catch { detach(); } },
     toggleByUser: (scene) => toggle(scene, "shortcut"),
     restore: (scene) => toggle(scene, "restore"),
     snapshot: () => ({ build: "farm-stop-1", tracking: binding !== null,
-      background: globalThis.GSTBackgroundDiagnostics?.snapshot(),
-      movement: globalThis.GSTMovementDiagnostics?.snapshot(),
-      bossSafety: globalThis.GSTFarmBossSafety?.snapshot(),
-      flight: globalThis.GSTFlight?.snapshot(),
+      background: readSnapshot("GSTBackgroundDiagnostics"),
+      movement: readSnapshot("GSTMovementDiagnostics"),
+      bossSafety: readSnapshot("GSTFarmBossSafety"),
+      flight: readSnapshot("GSTFlight"),
       current: flags(binding?.scene), lastStop: rows.findLast((row) => row.event === "off") ?? null, events: [...rows] })
   };
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== "https://nghichthienky.online"
         || event.data?.channel !== "gst:farm-debug-request:v1" || typeof event.data.requestId !== "string") return;
-    at = -Infinity; frame();
+    at = -Infinity;
+    try { frame(); } catch { /* A broken tracker must not prevent exporting the remaining logs. */ }
     window.postMessage({ channel: "gst:farm-debug:v1", requestId: event.data.requestId,
       diagnostics: GSTFarmDiagnostics.snapshot() }, "https://nghichthienky.online");
   });
