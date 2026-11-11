@@ -115,31 +115,28 @@
         return original.apply(this, arguments);
       }
       if (!boundary) owner.steer = null;
-      let boundaryDenied = false;
+      let selectedMovementDenied = false;
       if (boundary) {
         const clear = host.clear.bind(host), route = host.route?.bind(host), steer = host.steer?.bind(host);
         host = { ...host,
           clear: (sx, sy, ex, ey) => {
             if (!inCircle(boundary, sx, sy) || !inCircle(boundary, ex, ey)) {
-              boundaryDenied = true;
               boundaryEvent(scene, auto.target, Math.hypot(ex - sx, ey - sy)); return false;
             }
             return clear(sx, sy, ex, ey);
           },
           route: typeof route === "function" ? (sx, sy, ex, ey) => {
             if (!inCircle(boundary, sx, sy) || !inCircle(boundary, ex, ey)) {
-              boundaryDenied = true;
               boundaryEvent(scene, auto.target, Math.hypot(ex - sx, ey - sy)); return null;
             }
             const path = route(sx, sy, ex, ey);
             if (!Array.isArray(path) || path.every((p) => Array.isArray(p) && p.length >= 2
                 && inCircle(boundary, p[0], p[1]))) return path;
-            boundaryDenied = true;
             boundaryEvent(scene, auto.target, Math.hypot(ex - sx, ey - sy)); return null;
           } : undefined,
           steer: (dx, dy) => {
             if (!inCircle(boundary, scene.px + dx * 0.25, scene.py + dy * 0.25)) {
-              boundaryDenied = true;
+              selectedMovementDenied = true;
               boundaryEvent(scene, auto.target, Math.hypot(gx - x, gy - y));
               const result = steer?.(0, 0);
               owner.steer = [scene.autoX, scene.autoY];
@@ -156,7 +153,7 @@
         GSTNavigation.cancel(scene, auto);
         const result = boundary ? original.call(this, host, time, x, y, gx, gy, reach)
           : original.apply(this, arguments);
-        if (boundaryDenied || boundary && result === false) {
+        if (selectedMovementDenied || boundary && result === false) {
           releaseFarmWalk(scene, owner, true);
           return result === false ? false : result;
         }
@@ -208,7 +205,7 @@
       // Skip only a crossed intermediate corner with a collision-clear next segment.
       GSTNavigation.prune(scene, auto, host, true);
       const result = original.call(this, host, time, x, y, gx, gy, reach);
-      if (boundaryDenied || boundary && result === false) {
+      if (selectedMovementDenied || boundary && result === false) {
         releaseFarmWalk(scene, owner, true);
         return result === false ? false : result;
       }
