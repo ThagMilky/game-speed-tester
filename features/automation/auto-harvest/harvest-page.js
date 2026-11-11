@@ -49,12 +49,17 @@
     for (let i = observations.length - 1; i >= 0; i--) {
       const observation = observations[i], row = observation.row;
       if (!recentAttempts.includes(row)) { observations.splice(i, 1); continue; }
+      if (binding?.scene !== observation.scene) {
+        row.followUp = "scene_observation_ended"; observations.splice(i, 1); continue;
+      }
       if (job?.requestedAt !== undefined && job.node.item === row.item) {
         row.followUp = "ambiguous_new_attempt"; observations.splice(i, 1); continue;
       }
+      // Do not attach a later native harvest on this node to an already-released request.
       const count = inventoryCount(scene, row.item);
       row.inventoryAfter = count;
-      if (Number.isFinite(row.inventoryBefore) && count !== null && count > row.inventoryBefore
+      if (row.result === "unconfirmed" && row.acknowledged === true
+          && Number.isFinite(row.inventoryBefore) && count !== null && count > row.inventoryBefore
           && scene.nodes?.[row.node] === observation.node && !observation.node.ready) {
         if (row.result === "canceled") totals.canceled--;
         else if (row.result === "unconfirmed") totals.unconfirmed--;
@@ -234,19 +239,27 @@
   }
   function release(reason, cooldown = 0, code = "yield") {
     if (job) {
-      if (code === "harvest_success") totals.success++;
-      else if (failedCodes.has(code)) totals.failed++;
-      else if (unconfirmedCodes.has(code)) totals.unconfirmed++;
+      const scene = binding?.scene;
+      const requestSent = job.requestedAt !== undefined;
+      if (scene?.harvesting && scene.harvestNode === job.index) job.acknowledged = true;
+      const hasObservationContext = requestSent && scene && scene.nodes?.[job.index] === job.node
+        && finite(job.inventoryBefore) && inventoryCount(scene, job.node.item) !== null;
+      const result = code === "harvest_success" ? "success" : requestSent ? "unconfirmed"
+        : failedCodes.has(code) ? "failed" : unconfirmedCodes.has(code) ? "unconfirmed" : "canceled";
+      if (result === "success") totals.success++;
+      else if (result === "failed") totals.failed++;
+      else if (result === "unconfirmed") totals.unconfirmed++;
       else totals.canceled++;
       const fallback = code === "detach" ? "Rời scene hoặc bộ điều khiển cần gắn lại."
         : "Đã nhường điều khiển hoặc đổi chế độ tự động.";
       lastOutcome = `Lượt ${job.attempt}: ${reason || fallback}`;
-      const scene = binding?.scene;
       recentAttempts.push({ at: new Date().toISOString(), attempt: job.attempt,
         item: String(job.node.item).slice(0, 120), node: job.index, phase: job.phase, code,
-        result: code === "harvest_success" ? "success" : failedCodes.has(code) ? "failed"
-          : unconfirmedCodes.has(code) ? "unconfirmed" : "canceled",
-        reason: reason || fallback, elapsedMs: Math.round(performance.now() - job.startAt),
+        result,
+        reason: requestSent && result === "unconfirmed"
+          ? (reason || fallback) + " Yêu cầu đã gửi nhưng kết quả chưa được xác nhận."
+          : reason || fallback,
+        elapsedMs: Math.round(performance.now() - job.startAt),
         distance: scene ? Math.round(dist({ x: scene.px, y: scene.py }, job.node) * 100) / 100 : null,
         requested: job.requestedAt !== undefined, acknowledged: job.acknowledged === true,
         requests: job.requests ?? 0, attacked: job.attackedAt !== undefined,
@@ -268,14 +281,14 @@
         serverRejectionObserved: false });
       const row = recentAttempts[recentAttempts.length - 1];
       const observationCause = job.observationCause;
-      const manualYield = ["manual_key", "manual_skill", "manual_pointer"].includes(code) && job.acknowledged === true;
-      const watchAfterObservation = observationCause && !manualYield && code !== "harvest_success";
-      if ((manualYield || watchAfterObservation) && scene) {
-        row.endedBy = watchAfterObservation ? observationCause : code;
-        row.followUp = watchAfterObservation
+      const manualYield = ["manual_key", "manual_skill", "manual_pointer"].includes(code) && requestSent;
+      const watchAfterObservation = observationCause && !manualYield && result !== "success";
+      if (hasObservationContext && result !== "success") {
+        row.endedBy = manualYield ? code : watchAfterObservation ? observationCause : "native_request_yield";
+        row.followUp = manualYield ? "watching_after_yield" : watchAfterObservation
           ? observationCause === "allow_farm_revoked" ? "watching_after_permission_revoke" : "watching_after_auto_farm_activated"
-          : "watching_after_yield";
-        observations.push({ row, node: job.node, until: performance.now() + 8000 });
+          : "watching_after_request_yield";
+        observations.push({ row, node: job.node, scene, until: performance.now() + 8000 });
       }
       if (recentAttempts.length > 10) recentAttempts.shift();
     }
