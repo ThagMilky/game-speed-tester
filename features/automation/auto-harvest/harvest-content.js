@@ -244,8 +244,8 @@
           type: notice?.type === "toast" ? "toast" : "note",
           text: typeof notice?.text === "string" ? notice.text.slice(0, 180) : ""
         })),
-        endedBy: ["manual_key", "manual_skill", "manual_pointer"].includes(row?.endedBy) ? row.endedBy : null,
-        followUp: ["watching_after_yield", "success", "unconfirmed_after_8s", "scene_observation_ended", "ambiguous_new_attempt"].includes(row?.followUp) ? row.followUp : null,
+        endedBy: ["manual_key", "manual_skill", "manual_pointer", "allow_farm_revoked"].includes(row?.endedBy) ? row.endedBy : null,
+        followUp: ["watching_after_yield", "watching_after_permission_revoke", "success", "unconfirmed_after_8s", "scene_observation_ended", "ambiguous_new_attempt"].includes(row?.followUp) ? row.followUp : null,
         serverRejectionObserved: false,
         requested: row?.requested === true, acknowledged: row?.acknowledged === true,
         attacked: row?.attacked === true, ready: row?.ready === true, fixChanged: row?.fixChanged === true,
