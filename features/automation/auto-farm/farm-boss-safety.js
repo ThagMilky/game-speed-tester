@@ -97,6 +97,19 @@
     if (owner?.scene === scene && owner.auto === scene.auto && owner.ownsResting
         && scene.auto.resting !== true) scene.auto.resting = true;
   }
+  function eliteActor(actor) {
+    return actor?.k === "m" && !actor.dead && finite(actor.x) && finite(actor.y)
+      && globalThis.GSTFarmMonsterClassification?.isElite?.(actor) === true;
+  }
+  function hasVisibleElite(scene) {
+    if (!settings.eliteDodge || scene?.auto?.on !== true || typeof scene.views?.values !== "function") return false;
+    for (const actor of scene.views.values()) if (eliteActor(actor)) return true;
+    return false;
+  }
+  const hasDodgePreference = () => settings.bossDodge || settings.eliteDodge;
+  function warningEnabled(area) {
+    return area.category === "elite" ? settings.eliteDodge : settings.bossDodge;
+  }
   function enabled(scene = binding?.scene) {
     // Native Auto Farm can select a live boss even in "all" target mode.
     const activeBoss = scene?.auto?.on === true
@@ -106,7 +119,8 @@
     // Seals can be attacked with any farm target filter. Their hazard warnings
     // still need the same safety owner, without enabling routine boss kiting.
     const sealThreat = settings.bossDodge && globalThis.GSTFarmSeals?.pending?.(scene);
-    return (retreating && settings.bossRetreat) || (bossMode && (settings.bossDodge || settings.bossRetreat)) || !!sealThreat;
+    return (retreating && settings.bossRetreat) || (bossMode && (settings.bossDodge || settings.bossRetreat))
+      || !!sealThreat || hasVisibleElite(scene);
   }
   function connected(scene) {
     const d = scene.driver;
@@ -234,13 +248,16 @@
       && area.radius > 0 && area.radius < 20 && area.until >= serverNow - 0.15
       && area.at <= serverNow + 2.2 && area.until > area.at)
       .map((area) => ({ x: area.x, y: area.y, radius: area.radius,
-        at: time + area.at - serverNow, until: time + area.until - serverNow }));
+        at: time + area.at - serverNow, until: time + area.until - serverNow, category: "unknown" }));
     return [...realms, ...visibleWarnings];
   }
+  function activeHazards(scene, time) {
+    return hazardZones(scene, time).filter(warningEnabled);
+  }
   function imminentWarning(scene, time) {
-    return settings.bossDodge && finite(time) && finite(scene?.px) && finite(scene?.py)
+    return hasDodgePreference() && finite(time) && finite(scene?.px) && finite(scene?.py)
       && finite(scene?.selfAt) && time - scene.selfAt <= 3
-      && hazardZones(scene, time).some((area) =>
+      && activeHazards(scene, time).some((area) =>
         distance(area, { x: scene.px, y: scene.py }) <= area.radius + 0.8
         && area.at <= time + 0.42 && area.until >= time);
   }
@@ -262,7 +279,7 @@
     return (retreating && finite(scene?.self?.hp) && finite(scene?.self?.mh)
       && scene.self.mh > 0 && scene.self.hp / scene.self.mh < recoveryThreshold)
       || imminentWarning(scene, time)
-      || (settings.bossDodge && job?.emergency === true && finite(time)
+      || (hasDodgePreference() && job?.emergency === true && finite(time)
         && time - job.startedAt < 6) || criticalRetreat(scene);
   }
   function emergency(scene, time) {
@@ -278,22 +295,23 @@
     if (urgent) return true;
     // Ordinary recovery stays with the native game; future warnings can wait.
     if (globalThis.GSTHarvest?.needsRecovery?.(scene)) return false;
-    return settings.bossDodge && hazardZones(scene, time).some((area) =>
+    return hasDodgePreference() && activeHazards(scene, time).some((area) =>
       distance(area, pos) <= area.radius + 0.8 && area.at <= time + 2.2 && area.until >= time);
   }
-  function rememberWarning(scene, x, y, radius, seconds, source) {
-    if (!settings.bossDodge || !scene?.auto?.on
+  function rememberWarning(scene, x, y, radius, seconds, source, category = "unknown") {
+    if (!(category === "elite" ? settings.eliteDodge : settings.bossDodge) || !scene?.auto?.on
         || ![x, y, radius, seconds].every(finite) || radius <= 0 || radius >= 20
         || seconds <= 0 || seconds > 5) return false;
     const time = scene.now(), pos = { x: scene.px, y: scene.py };
     const boss = nearbyBoss(scene, pos);
     const sealWarning = globalThis.GSTFarmSeals?.pending?.(scene)
       && distance(pos, { x, y }) < 8;
-    if (!finite(time) || !(boss && distance(boss, { x, y }) <= 14) && !sealWarning) return false;
+    const relatedBoss = category !== "elite" && boss && distance(boss, { x, y }) <= 14;
+    if (!finite(time) || category !== "elite" && !relatedBoss && !sealWarning) return false;
     const existing = visibleWarnings.find((area) => distance(area, { x, y }) < 0.3
-      && Math.abs(area.radius - radius) < 0.3 && area.until > time);
+      && Math.abs(area.radius - radius) < 0.3 && area.category === category && area.until > time);
     if (existing) existing.until = Math.max(existing.until, time + seconds);
-    else visibleWarnings.push({ x, y, radius, at: time, until: time + seconds, source });
+    else visibleWarnings.push({ x, y, radius, at: time, until: time + seconds, source, category });
     if (visibleWarnings.length > 16) visibleWarnings.splice(0, visibleWarnings.length - 16);
     return true;
   }
@@ -494,7 +512,7 @@
   function tryDash(scene, host, time, pos, bounds, hazards, target, boss, lowHp) {
     // Q is reserved for an imminent hazard, not ordinary attack cooldowns.
     // Never synthesize key events.
-    if (!settings.bossDodge || typeof scene.useSkill !== "function"
+    if (!hasDodgePreference() || typeof scene.useSkill !== "function"
         || time - lastDashAt < 0.75 || (finite(scene.dashT) && scene.dashT > 0)
         || !finite(scene.faceX) || !finite(scene.faceY)
         || (scene.cdLocal?.Q ?? -Infinity) > time
@@ -641,9 +659,10 @@
       }
       if (retreating && scene.auto.resting) return delegateNativeRecovery(scene, host, time, delta);
       if (retreating && scene.self.med) { release(); return true; }
-      const hazards = settings.bossDodge ? hazardZones(scene, time) : [];
+      const hazards = hasDodgePreference() ? activeHazards(scene, time) : [];
       const danger = hazards.some((area) => distance(area, pos) <= area.radius + 0.8
         && area.at <= time + 0.75 && area.until >= time);
+      const avoidanceBoss = settings.bossDodge || retreating ? boss : null;
       const threats = localThreats(scene, host, pos, time);
       if (job && danger) job.emergency = true;
       // A pending realm seal owns combat before the boss. Keep urgent hazard
@@ -680,9 +699,9 @@
             : `Không còn quái gần; chờ HP đạt ${settings.recoveryHpPercent}%.`);
         return true;
       }
-      if ((danger || cooldownKite) && settings.bossDodge) {
+      if ((danger || cooldownKite) && hasDodgePreference()) {
         const escape = job && inside(bounds, job.point) ? job : null;
-        if (danger && tryDash(scene, host, time, pos, bounds, hazards, escape, boss,
+        if (danger && tryDash(scene, host, time, pos, bounds, hazards, escape, avoidanceBoss,
           retreating)) return true;
       }
       if (job && (!inside(bounds, job.point) || hazards.some((area) => distance(area, job.point) <= area.radius + 0.7)
@@ -690,7 +709,7 @@
           || (retreating && threats.length
             && threatExposure(job.point, threats) >= threatExposure(pos, threats) - 0.05))) release();
       if (!job && time >= retryAt) {
-        const next = destination(scene, host, pos, boss, hazards, retreating, bounds, threats);
+        const next = destination(scene, host, pos, avoidanceBoss, hazards, retreating, bounds, threats);
         if (next) {
           const navigation = Object.assign(Object.create(scene.auto), { path: next.path.slice(),
             goalX: next.point.x, goalY: next.point.y, pathAt: time, lastX: pos.x, lastY: pos.y,
@@ -698,14 +717,14 @@
           job = { ...next, navigation, startedAt: time, progressAt: time,
             steer: null, emergency: danger };
           note(scene, danger ? "hazard" : "kite",
-            danger ? "Đang thoát vòng cảnh báo boss."
+            danger ? "Đang thoát vùng cảnh báo kỹ năng."
               : retreating ? "Đang chọn đường rút lui tránh nhóm quái khi HP thấp."
                 : "Skill tấn công đang hồi; đang giữ khoảng cách chờ hồi.");
         } else {
           retryAt = time + 1.5;
           if (performance.now() > noteUntil) note(scene, "no_route", retreating
             ? "Không có đường rút lui giảm nguy cơ trong vùng farm; đã dừng di chuyển và chờ hồi HP."
-            : "Không có đường né boss an toàn trong vùng farm.");
+            : "Không có đường né cảnh báo kỹ năng an toàn trong vùng farm.");
         }
       }
       if (!job) {
@@ -776,17 +795,18 @@
     // WorldScene skips auto.update while aiming or waiting to cast. Only an
     // imminent boss warning may interrupt that state, from this existing
     // preupdate guard; ordinary dodge/movement still uses GSTFarmUpdate.
-    if ((!scene.aiming && !scene.pendingSkill) || !settings.bossDodge
+    if ((!scene.aiming && !scene.pendingSkill) || !hasDodgePreference()
         || (finite(scene.dashT) && scene.dashT > 0)) return;
     if (!imminent) return;
     const pos = { x: scene.px, y: scene.py }, bounds = zone(scene);
     if (!bounds || !inside(bounds, pos)) return;
-    const hazards = hazardZones(scene, time);
+    const hazards = activeHazards(scene, time);
     const host = scene.autoHost?.();
     if (!host || typeof host.clear !== "function" || typeof host.route !== "function") return;
     const boss = nearbyBoss(scene, pos);
     // Q is the game's native dash and can run before auto.update resumes.
-    if (tryDash(scene, host, time, pos, bounds, hazards, null, boss, false)) {
+    if (tryDash(scene, host, time, pos, bounds, hazards, null,
+        settings.bossDodge || retreating ? boss : null, false)) {
       // Native Q with the no-manual-cancel argument leaves pendingSkill intact.
       // Cancel that queued cast after a successful emergency dash, too.
       if (scene.aiming && typeof scene.cancelAim === "function") scene.cancelAim();
@@ -869,21 +889,29 @@
       const caster = scene.views?.get?.(event.id);
       const playerPos = { x: scene.px, y: scene.py };
       const isBoss = bossActor(caster);
+      const isElite = eliteActor(caster);
+      const sourceClass = globalThis.GSTFarmMonsterClassification?.classify?.(caster) ?? null;
+      const uncertainMonster = settings.bossDodge && event.id !== scene.you
+        && (!caster || caster.k === "m" && !caster.dead && caster.st?.cls !== "pet" && sourceClass === null);
       const sealMonster = globalThis.GSTFarmSeals?.pending?.(scene)
         && caster?.k === "m" && !caster.dead && caster.st?.cls !== "pet"
         && finite(caster.x) && finite(caster.y)
         && distance(caster, playerPos) <= 11
         && event.key !== "Q" && event.key !== "Space";
-      if ((!isBoss && !sealMonster) || (isBoss && !scene.self?.combat
+      if ((!isBoss && !isElite && !sealMonster && !uncertainMonster) || (isBoss && !scene.self?.combat
           && scene.auto?.target !== caster.id && !globalThis.GSTMapTravel?.active?.(scene)
           && !globalThis.GSTFarmSeals?.pending?.(scene))
           || distance(playerPos, { x: event.ax, y: event.ay }) > 7) return;
       // Ordinary monster cast locations are only cautious estimates; real
       // realm.hazards remain the preferred authoritative zone source.
       const radius = isBoss ? 3.5 : 2.3;
-      if (rememberWarning(scene, event.ax, event.ay, radius, 0.9, "cast_estimate")
+      const category = isElite ? "elite" : isBoss ? "boss" : "unknown";
+      if (rememberWarning(scene, event.ax, event.ay, radius, 0.9,
+          isElite ? "elite_cast_estimate" : "cast_estimate", category)
           && performance.now() > noteUntil)
-        note(scene, "boss_cast", "Phát hiện cảnh báo chiêu gần nhân vật; đang ưu tiên thoát vùng nguy hiểm.");
+        note(scene, isElite ? "hazard" : "boss_cast", isElite
+          ? "Phát hiện cảnh báo kỹ năng tinh anh gần nhân vật; đang ưu tiên né."
+          : "Phát hiện cảnh báo chiêu gần nhân vật; đang ưu tiên thoát vùng nguy hiểm.");
     });
   }
   function attach(scene) {
