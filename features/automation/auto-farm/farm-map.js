@@ -59,7 +59,9 @@
     const enemies = typeof host.enemies === "function" ? host.enemies() : [];
     const target = nativeTarget(scene, enemies, area, time);
     const distance = target ? range(target, { x: scene.px, y: scene.py }) : Infinity;
-    const engaged = target && distance <= nativeReach
+    const exclusionPathAllowed = (point) => seekRealmBoss(scene)
+      || globalThis.GSTFarmBossSafety?.allowsSegment?.(scene, { x: scene.px, y: scene.py }, point) !== false;
+    const engaged = target && exclusionPathAllowed(target) && distance <= nativeReach
       && (distance <= 2.2 || host.clear?.(scene.px, scene.py, target.x, target.y));
     // Hand off only for a confirmed recent hit on the player. The game's
     // enemy.aggro flag describes monster type, not the attacker.
@@ -145,21 +147,21 @@
   const range = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
   // Use the same bounded leg selector as seals/chests/realm portals,
   // with farm-area limits and existing boss avoidance preserved.
-  function checkpoint(scene, host, owner, area) {
+  function checkpoint(scene, host, owner, area, respectExclusions = true) {
     const bosses = bossObstacles(scene);
     const safe = {
-      clear: (x, y, gx, gy) => permittedStep(scene, area, { x, y }, { x: gx, y: gy })
+      clear: (x, y, gx, gy) => permittedStep(scene, area, { x, y }, { x: gx, y: gy }, respectExclusions)
         && host.clear(x, y, gx, gy)
         && (!bosses.length || clearOfBoss({ x, y }, { x: gx, y: gy }, bosses)),
       route: (x, y, gx, gy) => {
         const result = bosses.length
           ? safeBossRoute(scene, host, { x, y }, { x: gx, y: gy }, bosses)
           : host.route(x, y, gx, gy);
-        return permittedRoute(scene, area, { x, y }, result) ? result : null;
+        return permittedRoute(scene, area, { x, y }, result, respectExclusions) ? result : null;
       }
     };
     return GSTNavigation.leg(scene, owner, safe, owner.x, owner.y,
-      (point) => permittedStep(scene, area, { x: scene.px, y: scene.py }, point));
+      (point) => permittedStep(scene, area, { x: scene.px, y: scene.py }, point, respectExclusions));
   }
   const segmentDistance = (point, start, end) => {
     const dx = end.x - start.x, dy = end.y - start.y;
@@ -240,23 +242,24 @@
   const withinArea = (area, point) => area && finite(point?.x) && finite(point?.y)
     && point.x >= 0 && point.y >= 0 && point.x < area.maxX && point.y < area.maxY && point.x >= area.minX && point.y >= area.minY
     && (!area.home || range(point, area.home) <= area.radius);
-  function permittedStep(scene, area, from, to) {
+  function permittedStep(scene, area, from, to, respectExclusions = true) {
     const w = scene.map?.w, h = scene.map?.h;
     if (![from?.x, from?.y, to?.x, to?.y, w, h].every(finite)
         || from.x < 0 || from.y < 0 || from.x >= w || from.y >= h
         || to.x < 0 || to.y < 0 || to.x >= w || to.y >= h) return false;
+    if (respectExclusions && globalThis.GSTFarmBossSafety?.allowsSegment?.(scene, from, to) === false) return false;
     if (!area.home || withinArea(area, from)) return withinArea(area, to);
     // A realm/map objective may leave the farm circle. Once back under
     // radius navigation, allow only inward progress until re-entering it.
     return range(to, area.home) <= range(from, area.home) + 1e-6;
   }
-  function permittedRoute(scene, area, from, route) {
+  function permittedRoute(scene, area, from, route, respectExclusions = true) {
     if (!Array.isArray(route) || !route.length) return false;
     let previous = from;
     for (const point of route) {
       if (!Array.isArray(point) || point.length < 2) return false;
       const next = { x: point[0], y: point[1] };
-      if (!permittedStep(scene, area, previous, next)) return false;
+      if (!permittedStep(scene, area, previous, next, respectExclusions)) return false;
       previous = next;
     }
     return true;
@@ -509,6 +512,7 @@
         const pos = { x: scene.px, y: scene.py };
         const blocker = host.enemies().filter((enemy) => !isBoss(enemy) && enemy.id !== target.id
           && !enemy.dead && nativeEligible(enemy) && finite(enemy.x) && finite(enemy.y)
+          && exclusionPathAllowed(enemy)
           && range(enemy, pos) < 3.5 && range(enemy, { x: scene.auto.ax, y: scene.auto.ay })
             < (globalThis.GSTFarmCompatibility?.nativeRadius(scene.auto.radius) ?? -Infinity)
           && segmentDistance(enemy, pos, target) < (finite(enemy.radius) ? enemy.radius : 1) + 0.7)
@@ -530,7 +534,7 @@
       // Merely knowing a distant actor does not mean native pick() can route to it.
       // Its full route grid is bounded; native walk() can also use shorter hop() routes.
       const distance = Math.hypot(scene.px - target.x, scene.py - target.y);
-      if (target.actor && distance <= handoffReach
+      if (target.actor && exclusionPathAllowed(target) && distance <= handoffReach
           && (distance <= 2.2 || host.clear(scene.px, scene.py, target.x, target.y))) {
         yieldToNative(scene, time, target, "near_target");
         return false;
@@ -593,6 +597,9 @@
         return recover(scene, host, time, "no_progress", remaining);
       }
       const owner = job;
+      // Realm objectives are an independent navigation owner. Temporary farm
+      // exclusions constrain farm/scout/home routes, not that Realm journey.
+      const respectExclusions = !seekRealmBoss(scene);
       const bosses = bossObstacles(scene);
       if (bosses.length && owner.navigation.path.length) {
         const point = owner.navigation.path[0];
@@ -610,7 +617,7 @@
       }
       owner.denied = false;
       const next = !waitingForBoss && (owner.checkpoint || distance > 2.2)
-        ? checkpoint(scene, host, owner, area) : { x: owner.x, y: owner.y };
+        ? checkpoint(scene, host, owner, area, respectExclusions) : { x: owner.x, y: owner.y };
       if (owner.legArrived) {
         owner.progressAt = time;
         owner.replans = 0; owner.lastReplanAt = -Infinity;
@@ -619,18 +626,18 @@
       // same blocked 14-unit hop indefinitely.
       if (!next) return recover(scene, host, time, "walk_failed", remaining);
       const walking = { ...host,
-        clear: (x, y, gx, gy) => permittedStep(scene, area, { x, y }, { x: gx, y: gy })
+        clear: (x, y, gx, gy) => permittedStep(scene, area, { x, y }, { x: gx, y: gy }, respectExclusions)
           && host.clear(x, y, gx, gy)
           && (!bosses.length || clearOfBoss({ x, y }, { x: gx, y: gy }, bosses)),
         route: (x, y, gx, gy) => {
           const route = bosses.length
             ? safeBossRoute(scene, host, { x, y }, { x: gx, y: gy }, bosses)
             : host.route(x, y, gx, gy);
-          return permittedRoute(scene, area, { x, y }, route) ? route : null;
+          return permittedRoute(scene, area, { x, y }, route, respectExclusions) ? route : null;
         },
         steer: (x, y) => {
           if (!permittedStep(scene, area, { x: scene.px, y: scene.py },
-            { x: scene.px + x * 0.25, y: scene.py + y * 0.25 })) {
+            { x: scene.px + x * 0.25, y: scene.py + y * 0.25 }, respectExclusions)) {
             owner.denied = true; x = 0; y = 0;
           }
           scene.autoX = x; scene.autoY = y; owner.steer = [x, y];

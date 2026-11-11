@@ -25,6 +25,7 @@
   let retreatThreshold = 0.4, recoveryThreshold = 1;
   let retryAt = 0, message = "", noteUntil = 0, lastDashAt = -Infinity, dashObservation = null;
   let recentDamage = new Map(), threatSample = [], threatSampleAt = -Infinity, threatSampleScene = null;
+  const areaThreatSamples = new Map();
   let visibleWarnings = [], cooldownHolding = false, recoverySteer = null, recoveryMeditation = null;
   const maxThreatScan = 256, maxLocalThreats = 24, maxPrioritizedAttackers = 8;
   const localThreatRadius = 12, threatFalloff = 9;
@@ -142,7 +143,7 @@
     if (unsafeAreas.length && binding?.scene === scene && binding.mapKey != null) {
       const mapKey = currentMapKey(scene);
       if (mapKey != null && mapKey !== binding.mapKey) {
-        cancelRetreat(); recentDamage.clear(); threatSample = [];
+        cancelRetreat(); recentDamage.clear(); threatSample = []; areaThreatSamples.clear();
         binding.mapKey = mapKey;
         note(scene, "resume", "Map đã đổi; đã xóa vùng tránh và return cũ để chờ dữ liệu map mới.");
         return;
@@ -159,6 +160,21 @@
     if (!scene || !finite(point?.x) || !finite(point?.y)) return null;
     pruneUnsafeAreas(scene);
     return unsafeAreas.find((area) => distance(area, point) <= area.radius) ?? null;
+  }
+  function allowsSegment(scene, start, end) {
+    if (![start?.x, start?.y, end?.x, end?.y].every(finite)) return false;
+    pruneUnsafeAreas(scene);
+    return unsafeAreas.every((area) => {
+      const radius = area.radius, current = distance(start, area), destination = distance(end, area);
+      if (current < radius) {
+        // A segment already inside an exclusion may make monotonic outward
+        // progress; it must not turn back toward or through the center.
+        const outward = (start.x - area.x) * (end.x - start.x)
+          + (start.y - area.y) * (end.y - start.y);
+        return outward >= 0 && destination > current + 0.05;
+      }
+      return segmentDistance(area, start, end) >= radius;
+    });
   }
   function hasUnsafeAreas(scene) {
     return scene?.auto?.on === true && globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() === true
@@ -429,6 +445,17 @@
     }
     return true;
   }
+  function pathOutsideExclusions(scene, start, points) {
+    if (!Array.isArray(points) || !points.length || points.length > 40) return false;
+    let prior = start;
+    for (const coords of points) {
+      if (!Array.isArray(coords) || coords.length < 2 || !coords.slice(0, 2).every(finite)) return false;
+      const next = { x: coords[0], y: coords[1] };
+      if (!allowsSegment(scene, prior, next)) return false;
+      prior = next;
+    }
+    return true;
+  }
   function threatExposure(pos, threats) {
     return threats.reduce((sum, threat) => {
       const d = distance(pos, threat.actor);
@@ -500,6 +527,53 @@
     // reserve at most 8 nearest recent attackers beyond it, then fill by distance.
     threatSample = [...selected, ...reserved, ...remaining.slice(0, maxLocalThreats - selected.length - reserved.length)];
     return threatSample;
+  }
+  function threatsAt(scene, host, point, time) {
+    const key = `${point.x.toFixed(1)}:${point.y.toFixed(1)}`;
+    const cached = areaThreatSamples.get(key);
+    if (cached?.scene === scene && time - cached.at < 0.25) return cached;
+    const raw = typeof host.gstRawEnemies === "function" ? host.gstRawEnemies() : host.enemies?.();
+    const candidates = new Map();
+    let covered = Array.isArray(raw) && raw.length < maxThreatScan
+      && typeof scene.views?.get === "function" && finite(scene.selfAt) && time - scene.selfAt <= 3;
+    const add = (entry, actor, attributed) => {
+      if (!actor || actor.k !== "m" || actor.dead || !finite(actor.x) || !finite(actor.y)
+          || !Number.isSafeInteger(actor.id)) return;
+      if (distance(point, actor) > localThreatRadius) return;
+      if (entry?.hostile !== true && !attributed) return;
+      const category = globalThis.GSTFarmMonsterClassification?.classify?.(actor);
+      if (!category) return;
+      const categoryWeight = category === "boss" ? 3 : category === "elite" ? 2 : 1;
+      const previous = candidates.get(actor.id);
+      if (!previous || attributed && !previous.attributed)
+        candidates.set(actor.id, { actor, category, attributed, categoryWeight,
+          weight: categoryWeight + (attributed ? 2 : 0) });
+    };
+    if (Array.isArray(raw)) for (let index = 0; index < Math.min(raw.length, maxThreatScan); index++) {
+      const entry = raw[index], actor = scene.views?.get?.(entry?.id);
+      if (entry?.hostile === true && !actor) covered = false;
+      add(entry, actor, recentDamage.has(entry?.id));
+    }
+    for (const [id, until] of recentDamage) {
+      if (until > time) add(null, scene.views?.get?.(id), true);
+    }
+    const byDistance = (a, b) => distance(point, a.actor) - distance(point, b.actor)
+      || Number(b.attributed) - Number(a.attributed)
+      || b.categoryWeight - a.categoryWeight || a.actor.id - b.actor.id;
+    const nearby = [...candidates.values()].filter((item) => distance(point, item.actor) <= threatFalloff).sort(byDistance);
+    const selected = nearby.slice(0, maxLocalThreats), selectedIds = new Set(selected.map((item) => item.actor.id));
+    const attackers = [...candidates.values()].filter((item) => item.attributed
+      && distance(point, item.actor) > threatFalloff && !selectedIds.has(item.actor.id)).sort(byDistance)
+      .slice(0, Math.min(maxPrioritizedAttackers, maxLocalThreats - selected.length));
+    for (const item of attackers) selectedIds.add(item.actor.id);
+    const remaining = [...candidates.values()].filter((item) => !selectedIds.has(item.actor.id)).sort(byDistance);
+    const threats = [...selected, ...attackers,
+      ...remaining.slice(0, maxLocalThreats - selected.length - attackers.length)];
+    const sample = { scene, at: time, threats, covered };
+    areaThreatSamples.set(key, sample);
+    while (areaThreatSamples.size > maxUnsafeAreas + 1)
+      areaThreatSamples.delete(areaThreatSamples.keys().next().value);
+    return sample;
   }
   function destination(scene, host, pos, boss, hazards, lowHp, zone, threats) {
     const danger = hazards.filter((area) => distance(area, pos) <= area.radius + 1);
@@ -659,14 +733,21 @@
     }
     return maximum;
   }
-  function refreshExpiredUnsafeAreas(scene, time, pos, bounds, hazards, threats) {
-    const now = performance.now(), currentExposure = threatExposure(pos, threats);
+  function refreshExpiredUnsafeAreas(scene, host, time, bounds, hazards) {
+    const now = performance.now();
     for (let i = unsafeAreas.length - 1; i >= 0; i--) {
       const area = unsafeAreas[i];
       if (area.scene !== scene || area.auto !== scene.auto || area.mapKey !== binding?.mapKey
           || now < area.expiresAt) continue;
       const point = { x: area.x, y: area.y };
-      const threatened = threatExposure(point, threats) > Math.max(0.2, currentExposure + 0.12);
+      const sample = threatsAt(scene, host, point, time);
+      if (!sample.covered) {
+        area.expiresAt = now + unsafeAreaTtl;
+        area.reason = "coverage";
+        note(scene, "area_excluded", "Chưa đủ dữ liệu quanh vùng tránh; tiếp tục giữ vùng loại trừ.");
+        continue;
+      }
+      const threatened = threatExposure(point, sample.threats) > 0.2;
       const hazard = hazards.some((zone) => zone.until >= time && zone.at <= time + 2.2
         && distance(zone, point) <= zone.radius + area.radius);
       if (!inside(bounds, point) || threatened || hazard) {
@@ -730,7 +811,16 @@
     if (time < intent.retryAt) { release(); return true; }
     if (!inside(bounds, intent.point)) return deferReturn(scene, host, time, "route");
     const currentExposure = threatExposure(pos, threats);
-    const targetExposure = threatExposure(intent.point, threats);
+    const targetSample = threatsAt(scene, host, intent.point, time);
+    if (!targetSample.covered) {
+      release();
+      note(scene, "return_deferred", "Chưa đủ dữ liệu quanh bãi gốc để xác nhận an toàn; đang chờ snapshot mới.");
+      intent.retryAt = time + unsafeRetrySeconds;
+      return true;
+    }
+    const routeThreats = [...new Map([...threats, ...targetSample.threats]
+      .map((item) => [item.actor.id, item])).values()];
+    const targetExposure = threatExposure(intent.point, targetSample.threats);
     if (targetExposure > Math.max(0.2, currentExposure + 0.12))
       return deferReturn(scene, host, time, "threat");
     if (distance(pos, intent.point) <= 0.8) {
@@ -738,21 +828,25 @@
       note(scene, "return", "Đã về gần tâm farm an toàn; Auto Farm gốc được phép chọn mục tiêu phù hợp.");
       return false;
     }
-    const allowedPoint = (point) => inside(bounds, point) && !excludedArea(scene, point)
+    const allowedPoint = (point) => inside(bounds, point)
+      && (!excludedArea(scene, point) || allowsSegment(scene, pos, point))
       && clearOfHazards(pos, point, hazards)
-      && threatExposure(point, threats) <= currentExposure + 0.12;
+      && threatExposure(point, routeThreats) <= currentExposure + 0.12;
+    const allowedSegment = (start, end) => allowsSegment(scene, start, end);
     const walking = { ...host,
-      clear: (x, y, gx, gy) => allowedPoint({ x: gx, y: gy }) && host.clear(x, y, gx, gy)
+      clear: (x, y, gx, gy) => allowedPoint({ x: gx, y: gy }) && allowedSegment({ x, y }, { x: gx, y: gy })
+        && host.clear(x, y, gx, gy)
         && clearOfHazards({ x, y }, { x: gx, y: gy }, hazards),
       route: (x, y, gx, gy) => {
         if (!allowedPoint({ x: gx, y: gy })) return null;
         const route = host.route(x, y, gx, gy);
         return pathSafe(scene, { x, y }, route, bounds, hazards)
-          && maxPathExposure({ x, y }, route, threats) <= currentExposure + 0.2 ? route : null;
+          && pathOutsideExclusions(scene, { x, y }, route)
+          && maxPathExposure({ x, y }, route, routeThreats) <= currentExposure + 0.2 ? route : null;
       },
       steer: (x, y) => {
         const next = { x: scene.px + x * 0.25, y: scene.py + y * 0.25 };
-        if (!allowedPoint(next) || !clearOfHazards(pos, next, hazards)) {
+        if (!allowedPoint(next) || !allowedSegment(pos, next) || !clearOfHazards(pos, next, hazards)) {
           intent.denied = true; x = 0; y = 0;
         }
         scene.autoX = x; scene.autoY = y;
@@ -812,7 +906,7 @@
       if (binding.mapKey && mapKey == null) return holdForRecoveryData(scene, time,
         "Chưa nhận được mã map hiện tại; đang giữ hồi phục tới khi dữ liệu map ổn định.");
       if (binding.mapKey && mapKey !== binding.mapKey) {
-        cancelRetreat(); recentDamage.clear(); threatSample = [];
+        cancelRetreat(); recentDamage.clear(); threatSample = []; areaThreatSamples.clear();
         binding.mapKey = mapKey;
         note(scene, "resume", "Map đã đổi; hủy trạng thái rút lui và chờ Auto Farm gốc chọn lại.");
         return false;
@@ -891,7 +985,7 @@
         && area.at <= time + 0.75 && area.until >= time);
       const avoidanceBoss = settings.bossDodge || retreating ? boss : null;
       const threats = localThreats(scene, host, pos, time);
-      refreshExpiredUnsafeAreas(scene, time, pos, bounds, hazards, threats);
+      refreshExpiredUnsafeAreas(scene, host, time, bounds, hazards);
       if (job && danger) job.emergency = true;
       if (danger && job?.mode === "return") {
         release(); GSTNavigation.resetLeg(returnIntent?.navigation);
@@ -1072,6 +1166,7 @@
   function detach() {
     cancelRetreat(); retryAt = 0; dashObservation = null;
     recentDamage.clear(); threatSample = []; threatSampleAt = -Infinity; threatSampleScene = null;
+    areaThreatSamples.clear();
     visibleWarnings = []; cooldownHolding = false;
     const old = binding; binding = null;
     if (!old) return;
@@ -1196,6 +1291,7 @@
     retreating: (scene) => !!binding && binding.scene === scene
       && (retreating || !!returnIntent && returnIntent.phase !== "excluded"),
     allowsTarget: (scene, point) => !excludedArea(scene, point),
+    allowsSegment: (scene, from, to) => allowsSegment(scene, from, to),
     hasExclusions: (scene) => hasUnsafeAreas(scene),
     isAreaExcluded: (scene, point) => !!excludedArea(scene, point),
     status(scene) {
