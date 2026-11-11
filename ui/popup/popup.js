@@ -30,6 +30,12 @@ const fontFamily = document.getElementById("fontFamily");
 const fontFeedback = document.getElementById("fontFeedback");
 const farmControls = document.getElementById("farmControls");
 const farmRightControls = document.getElementById("farmRightControls");
+const farmPolicyMode = document.getElementById("farmPolicyMode");
+const farmPolicySavedMode = document.getElementById("farmPolicySavedMode");
+const farmPolicyDescription = document.getElementById("farmPolicyDescription");
+const farmPolicyRuntimeStatus = document.getElementById("farmPolicyRuntimeStatus");
+const farmPolicyFeedback = document.getElementById("farmPolicyFeedback");
+const farmAssistanceAvailability = document.getElementById("farmAssistanceAvailability");
 const farmNoRetreat = document.getElementById("farmNoRetreat");
 const farmReturnDeath = document.getElementById("farmReturnDeath");
 const breakSeals = document.getElementById("breakSeals");
@@ -192,8 +198,10 @@ function updateFarmPreferences(patch) {
   const save = farmSaveQueue.catch(() => {}).then(() => navigator.locks.request("gst:farm-preferences", async () => {
     const saved = await chrome.storage.local.get("farmPreferences");
     const current = saved.farmPreferences ?? {};
+    const policyMode = Object.prototype.hasOwnProperty.call(patch, "policyMode")
+      ? globalThis.GSTFarmPolicy.normalize(patch.policyMode) : globalThis.GSTFarmPolicy.read(current);
     const farmPreferences = globalThis.GSTFarmPolicy.withMode({ ...current, ...patch },
-      globalThis.GSTFarmPolicy.read(current));
+      policyMode);
     if (["boss", "bossLevel"].includes(normalizeFarmTargetMode(patch.targetMode))) farmPreferences.excludeBoss = false;
     else if (patch.excludeBoss === true && ["boss", "bossLevel"].includes(normalizeFarmTargetMode(current.targetMode)))
       farmPreferences.targetMode = "highLevel";
@@ -221,11 +229,13 @@ async function refreshFarm() {
     const farmLabel = status.autoOn === true ? "BẬT" : status.autoOn === false ? "TẮT" : "CHƯA RÕ";
     autoFarmValue.textContent = status.autoOn === true ? "Đang bật" : status.autoOn === false ? "Đã tắt" : "Chưa rõ";
     autoFarmValue.dataset.state = status.autoOn === true ? "on" : status.autoOn === false ? "off" : "unknown";
+    farmPolicyRuntimeStatus.textContent = `Auto Farm gốc trong tab đang mở: ${farmLabel}${status.dead ? " · nhân vật đã chết" : ""}.`;
     farmStatus.textContent = `Auto Farm của game: ${farmLabel}${status.dead ? " · Đã chết" : ""}. ${status.message}`;
     document.getElementById("farmEncounterStatus").textContent = status.encounterStatus || "";
   } catch {
     autoFarmValue.textContent = "Chưa rõ";
     autoFarmValue.dataset.state = "unknown";
+    farmPolicyRuntimeStatus.textContent = "Auto Farm gốc trong tab đang mở: CHƯA RÕ.";
     farmStatus.textContent = "Mở tab game; tải lại tab sau khi cập nhật extension để đọc Auto Farm.";
     document.getElementById("farmEncounterStatus").textContent = "";
   } finally { farmBusy = false; }
@@ -236,6 +246,17 @@ let farmDraftError = false;
 let farmSyncReady = false;
 let farmStorageRevision = 0;
 let latestFarmPreferences;
+let farmPolicyLoaded = false;
+let farmPolicyHasSavedValue = false;
+let farmPolicyConfirmed = null;
+let farmPolicyPending = 0;
+let farmPolicyRequestRevision = 0;
+const farmPolicyLabels = Object.freeze({ extended: "Tool hỗ trợ", native: "Theo game gốc", disabled: "Khóa Auto Farm" });
+const farmPolicyDescriptions = Object.freeze({
+  extended: "Đang chọn Tool hỗ trợ: dùng farm gốc với các hỗ trợ đã cài của extension.",
+  native: "Đang chọn Theo game gốc: farm gốc tự điều khiển, không có hỗ trợ farm riêng của extension.",
+  disabled: "Đang chọn Khóa Auto Farm: dừng farm đang chạy và chặn các đường bật được hỗ trợ."
+});
 function normalizeFarmTargetMode(mode) {
   return mode === "level" ? "maxLevel" : mode === "bossFirst" ? "bossLevel"
     : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(mode) ? mode : "all";
@@ -261,6 +282,28 @@ function normalizedFarmPreferences(raw = {}) {
     autoEncounter: raw.autoEncounter === true, bossDodge: raw.bossDodge !== false,
     bossRetreat: raw.bossRetreat !== false
   };
+}
+function syncFarmPolicyUI(raw = {}) {
+  const confirmedMode = farmConfirmed.policyMode;
+  farmPolicyConfirmed = confirmedMode;
+  farmPolicyHasSavedValue = typeof raw.policyMode === "string" && globalThis.GSTFarmPolicy.modes.includes(raw.policyMode);
+  const pendingSelection = farmPolicyPending > 0 ? farmPolicyMode.value : null;
+  farmPolicyMode.value = confirmedMode;
+  if (pendingSelection && globalThis.GSTFarmPolicy.modes.includes(pendingSelection)) farmPolicyMode.value = pendingSelection;
+  farmPolicyMode.disabled = !farmPolicyLoaded;
+  farmPolicySavedMode.textContent = farmPolicyHasSavedValue
+    ? `Chế độ đã lưu: ${farmPolicyLabels[confirmedMode]}.`
+    : `Chưa có chế độ hợp lệ được lưu; mặc định hiện tại: ${farmPolicyLabels[confirmedMode]}.`;
+  farmPolicyDescription.textContent = farmPolicyDescriptions[farmPolicyMode.value] ?? "Đang đọc chế độ…";
+  const extended = confirmedMode === "extended";
+  farmControls.disabled = !farmSyncReady || !extended;
+  farmRightControls.disabled = !farmSyncReady || !extended;
+  breakSeals.disabled = !farmSyncReady || !extended;
+  shortcutControls.disabled = !farmSyncReady || !extended;
+  farmAssistanceAvailability.hidden = extended || !farmSyncReady;
+  farmAssistanceAvailability.textContent = confirmedMode === "disabled"
+    ? "Tùy chọn hỗ trợ farm đã lưu được giữ nguyên; chúng dùng lại khi bạn mở khóa và chọn chế độ phù hợp."
+    : "Tùy chọn hỗ trợ farm đã lưu được giữ nguyên; chúng chỉ áp dụng ở Tool hỗ trợ.";
 }
 function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {}) {
   const keepDraft = preserveDraft && farmHasDraft();
@@ -307,6 +350,7 @@ function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {})
     clearFarmTargetErrors();
   }
   syncFarmScope(); syncFarmLevelInputs(); farmSummaries();
+  syncFarmPolicyUI(raw);
   farmFeedback.textContent = farmHasDraft() ? "Có bản nháp chưa lưu." : "Đã đồng bộ cài đặt.";
 }
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -314,6 +358,49 @@ chrome.storage.onChanged.addListener((changes, area) => {
   farmStorageRevision++;
   latestFarmPreferences = changes.farmPreferences.newValue ?? {};
   if (farmSyncReady) syncFarmPreferences(latestFarmPreferences);
+});
+farmPolicyMode.addEventListener("change", async () => {
+  const mode = globalThis.GSTFarmPolicy.normalize(farmPolicyMode.value);
+  const requestRevision = ++farmPolicyRequestRevision;
+  if (mode === farmPolicyConfirmed && farmPolicyPending === 0) {
+    farmPolicyMode.value = farmPolicyConfirmed;
+    farmPolicyDescription.textContent = farmPolicyDescriptions[farmPolicyConfirmed];
+    return;
+  }
+  farmPolicyPending++;
+  farmPolicyDescription.textContent = farmPolicyDescriptions[mode];
+  farmPolicyFeedback.textContent = "Đang lưu chế độ Auto Farm…";
+  try {
+    const written = await updateFarmPreferences({ policyMode: mode });
+    let committed = written;
+    const revisionAtRead = farmStorageRevision;
+    try { committed = (await chrome.storage.local.get("farmPreferences")).farmPreferences ?? written; } catch {}
+    if (requestRevision !== farmPolicyRequestRevision) return;
+    if (farmStorageRevision !== revisionAtRead && latestFarmPreferences) committed = latestFarmPreferences;
+    latestFarmPreferences = committed;
+    syncFarmPreferences(committed);
+    farmPolicyFeedback.textContent = committed.policyMode === mode
+      ? `Đã lưu chế độ ${farmPolicyLabels[mode]}. Trạng thái farm được đọc riêng từ game.`
+      : `Đã đồng bộ chế độ ${farmPolicyLabels[committed.policyMode]} từ cài đặt mới nhất.`;
+  } catch {
+    if (requestRevision === farmPolicyRequestRevision) {
+      let rollback = latestFarmPreferences ?? farmConfirmed;
+      const revisionAtRead = farmStorageRevision;
+      try { rollback = (await chrome.storage.local.get("farmPreferences")).farmPreferences ?? rollback; } catch {}
+      if (farmStorageRevision !== revisionAtRead && latestFarmPreferences) rollback = latestFarmPreferences;
+      latestFarmPreferences = rollback;
+      syncFarmPreferences(rollback);
+      farmPolicyMode.value = farmPolicyConfirmed;
+      farmPolicyDescription.textContent = farmPolicyDescriptions[farmPolicyConfirmed];
+      farmPolicyFeedback.textContent = "Chưa lưu được chế độ; đã trả bộ chọn về giá trị đã xác nhận gần nhất.";
+    }
+  } finally {
+    farmPolicyPending--;
+    if (farmPolicyPending === 0 && requestRevision === farmPolicyRequestRevision) {
+      farmPolicyMode.value = farmPolicyConfirmed;
+      farmPolicyDescription.textContent = farmPolicyDescriptions[farmPolicyConfirmed];
+    }
+  }
 });
 function farmHasDraft() {
   return farmDraftError || farmLevelDraft().dirty
@@ -345,7 +432,9 @@ async function saveFarmPatch(patch, rollback) {
   try {
     const written = await updateFarmPreferences(patch);
     let committed = written;
+    const revisionAtRead = farmStorageRevision;
     try { committed = (await chrome.storage.local.get("farmPreferences")).farmPreferences ?? written; } catch {}
+    if (farmStorageRevision !== revisionAtRead && latestFarmPreferences) committed = latestFarmPreferences;
     latestFarmPreferences = committed;
     syncFarmPreferences(committed, { forceKeys: [...Object.keys(patch), "targetMode", "excludeBoss"] });
     farmMessage("Đã lưu cài đặt.");
@@ -804,29 +893,36 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   breakSeals.disabled = false;
   latestFarmPreferences = farmPreferencesWithPolicy;
   farmSyncReady = true;
+  farmPolicyLoaded = true;
+  syncFarmPolicyUI(farmPreferencesWithPolicy);
+  farmPolicyFeedback.textContent = "";
   const migrationNeeded = initialFarmPreferences.excludeBoss && ["boss", "bossLevel"].includes(normalizeFarmTargetMode(initialFarmPreferences.targetMode))
     || ["bossFirst", "level"].includes(initialFarmPreferences.targetMode);
-  if (migrationNeeded) updateFarmPreferences({}).then((committed) => {
-    chrome.storage.local.get("farmPreferences").then(({ farmPreferences: current }) => {
-      latestFarmPreferences = current ?? committed;
-      syncFarmPreferences(latestFarmPreferences);
-    }).catch(() => {
-      latestFarmPreferences = committed;
-      syncFarmPreferences(committed);
-    });
-  }).catch(() => { farmFeedback.textContent = "Chưa đồng bộ được bộ lọc boss; hãy lưu lại."; });
-  farmControls.disabled = false;
-  farmRightControls.disabled = false;
+  if (migrationNeeded) {
+    const migrationPolicyRevision = farmPolicyRequestRevision;
+    updateFarmPreferences({}).then(async (committed) => {
+      let current = committed;
+      const revisionAtRead = farmStorageRevision;
+      try { current = (await chrome.storage.local.get("farmPreferences")).farmPreferences ?? committed; } catch {}
+      if (farmPolicyRequestRevision !== migrationPolicyRevision) return;
+      if (farmStorageRevision !== revisionAtRead && latestFarmPreferences) current = latestFarmPreferences;
+      latestFarmPreferences = current;
+      syncFarmPreferences(current);
+    }).catch(() => { farmFeedback.textContent = "Chưa đồng bộ được bộ lọc boss; hãy lưu lại."; });
+  }
   const shortcutCode = farmShortcut?.code;
   if (Number.isInteger(shortcutCode) && ((shortcutCode >= 48 && shortcutCode <= 57)
       || (shortcutCode >= 65 && shortcutCode <= 90) || (shortcutCode >= 112 && shortcutCode <= 121 && shortcutCode !== 116))) {
     shortcutLabel.textContent = `Phím tùy chỉnh: ${shortcutCode >= 112 ? `F${shortcutCode - 111}` : String.fromCharCode(shortcutCode)}`;
   }
   document.getElementById("farmShortcutSummary").textContent = `Phím tắt · ${shortcutLabel.textContent}`;
-  shortcutControls.disabled = false;
   refresh();
 }).catch(() => {
   statusText.textContent = "Chưa đọc được cài đặt. Hãy mở lại popup.";
+  farmPolicySavedMode.textContent = "Không đọc được chế độ Auto Farm đã lưu.";
+  farmPolicyFeedback.textContent = "Bộ chọn đang khóa để tránh ghi đè cài đặt chưa đọc được. Hãy mở lại cửa sổ cài đặt để thử lại.";
+  farmPolicyMode.disabled = true;
+  farmPolicyRuntimeStatus.textContent = "Auto Farm gốc trong tab đang mở: chưa rõ.";
 });
 const refreshTimer = setInterval(refresh, 1000);
 window.addEventListener("pagehide", () => clearInterval(refreshTimer), { once: true });

@@ -43,6 +43,7 @@
       <button type="button" class="nav-item" data-nav-panel="realm">Bí cảnh</button>
       <button type="button" class="nav-item" data-nav-panel="quest">Auto Quest</button>
       <span class="nav-caption">CÀI ĐẶT</span>
+      <button type="button" class="nav-item" data-nav-panel="management">Quản lý tính năng</button>
       <button type="button" class="nav-item" data-nav-panel="speed">Tốc độ &amp; bay</button>
       <button type="button" class="nav-item" data-nav-panel="fps">Hình ảnh &amp; FPS</button>
       <button type="button" class="nav-item" data-nav-panel="interface">Giao diện</button>
@@ -74,11 +75,33 @@
             <button type="button" class="dashboard-tile" data-open-panel="fps"><strong>Hình ảnh &amp; FPS</strong><span data-summary-for="fps">Đang đọc cài đặt…</span></button>
           </div>
         </section>
+    <details class="card" data-category="settings" data-panel="management">
+      <summary><span><strong>Quản lý tính năng</strong><small>Chọn cách Auto Farm hoạt động</small></span></summary>
+      <div class="card-body">
+        <label for="farmPolicyMode">Chế độ Auto Farm</label>
+        <select id="farmPolicyMode" aria-describedby="farmPolicyExtendedHelp farmPolicyNativeHelp farmPolicyDisabledHelp farmPolicyResume farmPolicySavedMode" disabled>
+          <option value="" selected>Đang đọc cài đặt…</option>
+          <option value="extended">Tool hỗ trợ</option>
+          <option value="native">Theo game gốc</option>
+          <option value="disabled">Khóa Auto Farm</option>
+        </select>
+        <p id="farmPolicyExtendedHelp" class="hint">Tool hỗ trợ: farm gốc với các hỗ trợ đã cài của extension.</p>
+        <p id="farmPolicyNativeHelp" class="hint">Theo game gốc: farm gốc tự điều khiển, không có hỗ trợ farm riêng của extension.</p>
+        <p id="farmPolicyDisabledHelp" class="hint">Khóa Auto Farm: dừng phiên đang chạy và chặn các đường bật được hỗ trợ.</p>
+        <p id="farmPolicyResume" class="hint">Để tiếp tục sau khi mở khóa, chọn Tool hỗ trợ hoặc Theo game gốc, rồi tự bật farm bằng phím/nút tương ứng.</p>
+        <p id="farmPolicySavedMode" class="feature-status" role="status" aria-live="polite">Đang đọc chế độ đã lưu…</p>
+        <p id="farmPolicyDescription" class="hint" aria-live="polite">Đang đọc chế độ…</p>
+        <p id="farmPolicyRuntimeStatus" class="feature-status" role="status" aria-live="polite">Auto Farm gốc trong tab đang mở: chưa rõ.</p>
+        <p class="hint">Trạng thái BẬT/TẮT là trạng thái controller gốc trong tab đang mở. Lưu chế độ không xác nhận game đã nhận cấu hình.</p>
+        <p id="farmPolicyFeedback" class="notice" role="status" aria-live="polite"></p>
+      </div>
+    </details>
     <details class="card" data-category="auto" data-panel="farm">
       <summary><span><strong>Auto Farm</strong><small>Phạm vi, nhặt đồ và tự dùng đan</small></span></summary>
       <div class="card-body">
         <p id="farmStatus" class="feature-status" role="status" aria-live="polite">Đang đọc trạng thái…</p>
         <p class="save-mode">Lựa chọn tự lưu · Bán kính lưu khi rời ô nhập (Enter cũng được)</p>
+        <p id="farmAssistanceAvailability" class="hint" role="status" aria-live="polite" hidden></p>
         <div class="farm-grid">
         <fieldset id="farmControls" disabled aria-label="Tùy chọn Auto Farm">
           <div class="farm-column farm-left">
@@ -163,15 +186,15 @@
             <p class="hint">Sau khi hồi sinh, trở lại gần vị trí chết rồi tiếp tục farm tại đó. Chỉ áp dụng cùng bản đồ, không áp dụng trong bí cảnh; điểm chờ được giữ tối đa 2 phút trong tab. Di chuyển tay hoặc tắt Auto Farm sẽ hủy hành trình.</p>
           </div>
           </div></details>
+          <details class="advanced separated"><summary>Hiển thị đường tới mục tiêu</summary><div class="advanced-body">
+          <label class="check-row"><input id="farmShowTargetLine" type="checkbox"><span>Hiện đường tới mục tiêu</span></label>
+          </div></details>
+          </fieldset>
           <details class="advanced separated"><summary id="farmEncounterSummary">Auto nhận kỳ ngộ · tắt</summary><div class="advanced-body">
           <label class="check-row"><input id="farmAutoEncounter" type="checkbox"><span>Auto nhận kỳ ngộ</span></label>
           <p class="hint">Tự dùng nút Gặp khi kỳ ngộ còn hạn và ở cùng bản đồ.</p>
           <p id="farmEncounterStatus" class="hint" role="status" aria-live="polite"></p>
           </div></details>
-          <details class="advanced separated"><summary>Hiển thị đường tới mục tiêu</summary><div class="advanced-body">
-          <label class="check-row"><input id="farmShowTargetLine" type="checkbox"><span>Hiện đường tới mục tiêu</span></label>
-          </div></details>
-          </fieldset>
         <div class="farm-extra">
           <details class="advanced separated"><summary id="potionSummary">Đan HP/MP · độc lập Auto Farm</summary><div class="advanced-body">
         <fieldset id="potionControls" class="separated" disabled aria-label="Tự dùng đan HP và MP">
@@ -308,6 +331,7 @@
         </fieldset>
         <div class="separated">
           <label class="check-row"><input id="breakSeals" type="checkbox" disabled><span>Tự phá phong ấn khi đánh boss bí cảnh</span></label>
+          <p class="hint">Chỉ dùng ở Tool hỗ trợ; lựa chọn vẫn được lưu khi chuyển chế độ.</p>
           <p class="hint">Ưu tiên phong ấn còn đòn, dùng đường đi/đánh thường gốc rồi quay lại boss. Nếu số đòn không giảm trong 8 giây thì dừng thử mục tiêu đó, không tăng nhịp đánh.</p>
         </div>
         <fieldset id="chestControls" class="separated" disabled>
