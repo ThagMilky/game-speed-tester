@@ -116,7 +116,9 @@
           <label class="check-row"><input id="farmShowRange" type="checkbox"><span>Hiện vòng phạm vi farm trên game</span></label>
           <p class="hint">Vòng xanh là giới hạn từ điểm bắt đầu; vòng xanh lá là vùng quét của Auto Farm gốc; vòng vàng quanh bản thân là vùng dọn quái gần khi bật.</p>
           <div class="separated"><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="boss">Chỉ boss</option><option value="bossLevel">Boss trước → tu vi cao đến thấp</option><option value="highLevel">Tu vi cao → thấp (quái thường)</option><option value="lowLevel">Tu vi thấp → cao (quái thường)</option><option value="maxLevel">≤ Cảnh giới đã chọn</option><option value="minLevel">≥ Cảnh giới đã chọn</option><option value="range">Trong khoảng cảnh giới</option></select></div>
-          <div class="separated"><label for="farmBossFilter">Lọc loại boss</label><select id="farmBossFilter"><option value="all">Tất cả boss</option><option value="world">Chỉ boss thế giới</option></select></div>
+          <div class="separated"><label for="farmBossFilter">Loại boss</label><select id="farmBossFilter"><option value="all">Tất cả boss</option><option value="world">Chỉ boss thế giới</option></select><small id="farmBossFilterHelp" class="hint"></small></div>
+          <label class="check-row"><input id="farmExcludeBoss" type="checkbox"><span>Không chọn boss làm mục tiêu</span></label>
+          <small id="farmExcludeBossHelp" class="hint"></small>
           <div id="farmSingleLevel" class="farm-level-selection" hidden>
             <label id="farmSingleLevelLabel">Cảnh giới và tầng</label>
             <div class="farm-level-pair">
@@ -167,12 +169,10 @@
           </div>
         </fieldset>
           <div class="farm-column farm-right">
-          <fieldset id="farmRightControls" disabled aria-label="Tùy chọn Boss và hồi phục">
-          <details id="farmBossSafetyOptions" class="advanced separated"><summary id="farmBossSummary">Boss</summary><div class="advanced-body">
-          <label class="check-row"><input id="farmExcludeBoss" type="checkbox"><span>Không chọn boss làm mục tiêu</span></label>
-          <p class="hint">Tự lưu. Không chủ động chọn boss trong Auto Farm, tìm boss bí cảnh hoặc dọn quái sát rương khi có boss gần. Kỹ năng đánh lan vẫn có thể trúng boss gần đó; không bảo đảm tránh toàn bộ đường đi gần boss. Bật sẽ chuyển bộ lọc boss sang quái thường.</p>
+          <fieldset id="farmRightControls" disabled aria-label="Tự bảo vệ và hồi phục">
+          <details id="farmBossSafetyOptions" class="advanced separated"><summary id="farmBossSummary">Tự bảo vệ</summary><div class="advanced-body">
             <p class="field-title">Tự bảo vệ khi đánh boss</p>
-            <label class="check-row"><input id="farmBossDodge" type="checkbox" checked><span>Né chiêu boss; giữ khoảng cách khi chờ kỹ năng</span></label>
+            <label class="check-row"><input id="farmBossDodge" type="checkbox" checked><span>Né chiêu boss; tạo khoảng cách khi tất cả kỹ năng đánh đang hồi</span></label>
             <label class="check-row"><input id="farmEliteDodge" type="checkbox"><span>Hỗ trợ né tinh anh</span></label>
             <p class="hint">Khi bật, dùng cảnh báo kỹ năng tinh anh trong bộ né hiện có; chỉ lướt Q khi cảnh báo sắp trúng, Q sẵn sàng theo kiểm tra gốc và có đường né an toàn. Không đổi riêng thiết lập né boss.</p>
             <label class="check-row"><input id="farmBossRetreat" type="checkbox" checked><span>Rút lui và chờ hồi HP gần boss</span></label>
@@ -182,7 +182,7 @@
             </div>
             <small id="farmRetreatThresholdError" class="field-error" aria-live="polite"></small>
             <p class="hint">Tự lưu cùng một lần ghi sau khi cả hai mức hợp lệ (1 ≤ HP rút lui &lt; HP quay lại ≤ 100%).</p>
-            <p class="hint">Khi chờ kỹ năng, nhân vật có thể đi bộ giữ khoảng cách. Q chỉ được xét khi nguy hiểm sắp xảy ra và đủ điều kiện; nếu không dùng được Q, nhân vật có thể đi né. Vùng cảnh báo có thể là ước lượng, không bảo đảm né mọi chiêu.</p>
+            <p class="hint">Chỉ bước tạo khoảng cách ngắn khi boss ở sát và mọi kỹ năng đánh đang hồi. Q chỉ được xét khi nguy hiểm sắp xảy ra và đủ điều kiện; nếu không dùng được Q, nhân vật có thể đi né. Vùng cảnh báo có thể là ước lượng, không bảo đảm né mọi chiêu.</p>
           </div></details>
           <details class="advanced separated"><summary id="farmRecoverySummary">Hồi phục</summary><div class="advanced-body">
           <div class="separated">

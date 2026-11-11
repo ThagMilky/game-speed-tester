@@ -47,6 +47,7 @@ const farmNearbyRadius = document.getElementById("farmNearbyRadius");
 const farmRadius = document.getElementById("farmRadius");
 const farmTargetMode = document.getElementById("farmTargetMode");
 const farmBossFilter = document.getElementById("farmBossFilter");
+const farmBossFilterHelp = document.getElementById("farmBossFilterHelp");
 const farmBossDodge = document.getElementById("farmBossDodge");
 const farmEliteDodge = document.getElementById("farmEliteDodge");
 const farmBossRetreat = document.getElementById("farmBossRetreat");
@@ -54,6 +55,7 @@ const farmRetreatHpPercent = document.getElementById("farmRetreatHpPercent");
 const farmRecoveryHpPercent = document.getElementById("farmRecoveryHpPercent");
 const farmRetreatThresholdError = document.getElementById("farmRetreatThresholdError");
 const farmExcludeBoss = document.getElementById("farmExcludeBoss");
+const farmExcludeBossHelp = document.getElementById("farmExcludeBossHelp");
 const farmTargetRealm = document.getElementById("farmTargetRealm");
 const farmTargetTier = document.getElementById("farmTargetTier");
 const farmTargetMinRealm = document.getElementById("farmTargetMinRealm");
@@ -200,6 +202,7 @@ window.addEventListener("keydown", (event) => {
 let farmBusy = false;
 let farmSaveQueue = Promise.resolve();
 const farmWrites = new Map();
+let farmPreferenceWritesPending = 0;
 function updateFarmPreferences(patch, { draftWrite = false } = {}) {
   const save = farmSaveQueue.catch(() => {}).then(() => navigator.locks.request("gst:farm-preferences", async () => {
     const saved = await chrome.storage.local.get("farmPreferences");
@@ -316,6 +319,7 @@ function syncFarmPolicyUI(raw = {}) {
   const extended = confirmedMode === "extended";
   farmControls.disabled = !farmSyncReady || !extended;
   farmRightControls.disabled = !farmSyncReady || !extended;
+  syncBossTargetControls();
   breakSeals.disabled = !farmSyncReady || !extended;
   shortcutControls.disabled = !farmSyncReady || !extended;
   farmAssistanceAvailability.hidden = extended || !farmSyncReady;
@@ -379,6 +383,7 @@ function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {})
   syncFarmScope(); syncFarmLevelInputs(); farmSummaries();
   syncFarmPolicyUI(raw);
   farmFeedback.textContent = farmHasDraft() ? "Có bản nháp chưa lưu." : "Đã đồng bộ cài đặt.";
+  syncBossTargetControls();
 }
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local" || !changes.farmPreferences) return;
@@ -395,6 +400,7 @@ farmPolicyMode.addEventListener("change", async () => {
     return;
   }
   farmPolicyPending++;
+  syncBossTargetControls();
   farmPolicyDescription.textContent = farmPolicyDescriptions[mode];
   farmPolicyFeedback.textContent = "Đang lưu chế độ Auto Farm…";
   try {
@@ -427,6 +433,7 @@ farmPolicyMode.addEventListener("change", async () => {
       farmPolicyMode.value = farmPolicyConfirmed;
       farmPolicyDescription.textContent = farmPolicyDescriptions[farmPolicyConfirmed];
     }
+    syncBossTargetControls();
     if (farmPolicyPending === 0) {
       const waiters = farmPolicyWaiters; farmPolicyWaiters = [];
       for (const resolve of waiters) resolve();
@@ -460,6 +467,23 @@ function farmMessage(message) {
 function syncFarmScope() {
   farmRadius.closest(".input-action").hidden = farmSearchScope.value !== "radius";
 }
+function syncBossTargetControls() {
+  const mode = farmTargetMode.value || farmConfirmed.targetMode || "all";
+  const excluded = farmExcludeBoss.checked;
+  const ordinaryOnly = ["highLevel", "lowLevel"].includes(mode);
+  const unavailable = !farmSyncReady || farmConfirmed.policyMode !== "extended"
+    || farmPreferenceWritesPending > 0 || farmPolicyPending > 0;
+  farmBossFilter.disabled = unavailable || excluded || ordinaryOnly;
+  farmExcludeBoss.disabled = unavailable;
+  farmBossFilterHelp.textContent = excluded ? "Đang bỏ qua tất cả boss."
+    : ordinaryOnly ? "Chế độ này chỉ chọn quái thường; boss bị loại trừ."
+    : mode === "boss" ? "Chỉ đánh boss thuộc loại đã chọn."
+      : mode === "bossLevel" ? "Ưu tiên boss phù hợp, sau đó đánh quái thường."
+        : "Bộ lọc này chỉ giới hạn loại boss, không loại quái thường.";
+  farmExcludeBossHelp.textContent = farmConfirmed.excludeBoss
+    ? "Tự lưu · không chọn boss làm mục tiêu."
+    : "Tự lưu · tắt để cho phép các boss phù hợp với bộ lọc.";
+}
 function farmSummaries() {
   const prefs = farmConfirmed, compatibility = farmCompatibility;
   const targetSummary = prefs.targetMode === "maxLevel" ? `Chỉ farm ≤ ${compatibility.describe(prefs.targetLevel, "max")}`
@@ -471,11 +495,12 @@ function farmSummaries() {
   document.getElementById("farmTargetSummary").textContent = targetSummary;
   document.getElementById("farmEncounterSummary").textContent = `Auto nhận kỳ ngộ · ${farmConfirmed.autoEncounter ? "bật" : "tắt"}`;
   document.getElementById("farmDefenseSummary").textContent = `Tự vệ ${farmConfirmed.selfDefense ? "bật" : "tắt"} · Dọn gần ${farmConfirmed.nearbyClear ? "bật" : "tắt"} · Thiền ${farmConfirmed.autoMeditate ? "bật" : "tắt"} · Hồi sinh ${farmConfirmed.autoRespawn ? "bật" : "tắt"}`;
-  const bossFilterLabel = prefs.bossFilter === "world" ? "chỉ boss thế giới" : "tất cả boss";
-  document.getElementById("farmBossSummary").textContent = `Boss · ${farmConfirmed.excludeBoss ? "không chọn boss" : bossFilterLabel}`;
+  document.getElementById("farmBossSummary").textContent = `Tự bảo vệ · ${farmConfirmed.bossDodge ? "né boss" : "né boss tắt"} · ${farmConfirmed.eliteDodge ? "né tinh anh" : "né tinh anh tắt"}`;
   document.getElementById("farmRecoverySummary").textContent = `Hồi phục · ${farmConfirmed.noRetreat ? "không rút lui" : "theo game"}`;
 }
-async function saveFarmPatch(patch, rollback, { draftWrite = false, preserveDraftKeys = [] } = {}) {
+async function saveFarmPatch(patch, rollback, { draftWrite = false, preserveDraftKeys = [], successMessage } = {}) {
+  farmPreferenceWritesPending++;
+  syncBossTargetControls();
   farmMessage("Đang lưu…");
   try {
     const written = await updateFarmPreferences(patch, { draftWrite });
@@ -486,12 +511,15 @@ async function saveFarmPatch(patch, rollback, { draftWrite = false, preserveDraf
     latestFarmPreferences = committed;
     syncFarmPreferences(committed, { forceKeys: [...Object.keys(patch), "targetMode", "excludeBoss"]
       .filter((key) => !preserveDraftKeys.includes(key)) });
-    farmMessage("Đã lưu cài đặt.");
+    farmMessage(typeof successMessage === "function" ? successMessage(committed) : "Đã lưu cài đặt.");
     return true;
   } catch {
     rollback?.();
     farmMessage("Chưa lưu được lựa chọn; cài đặt cũ được giữ.");
     return false;
+  } finally {
+    farmPreferenceWritesPending--;
+    syncBossTargetControls();
   }
 }
 for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmShowRange, "showRange"],
@@ -527,21 +555,21 @@ farmExcludeBoss.addEventListener("change", async () => {
   const next = farmExcludeBoss.checked;
   const patch = { excludeBoss: next };
   if (next && ["boss", "bossLevel"].includes(farmConfirmed.targetMode)) patch.targetMode = "highLevel";
-  farmExcludeBoss.disabled = farmTargetMode.disabled = true;
   if (patch.targetMode) { farmTargetMode.value = patch.targetMode; syncFarmLevelInputs(); }
+  syncBossTargetControls();
   await saveFarmPatch(patch, () => { farmExcludeBoss.checked = farmConfirmed.excludeBoss; farmTargetMode.value = farmConfirmed.targetMode; syncFarmLevelInputs(); });
-  farmExcludeBoss.disabled = farmTargetMode.disabled = false;
 });
 farmTargetMode.addEventListener("change", async () => {
   const mode = farmTargetMode.value;
   const previousMode = farmConfirmed.targetMode;
-  farmTargetMode.disabled = farmExcludeBoss.disabled = true;
+  farmTargetMode.disabled = true;
   farmTargetMode.value = previousMode;
   const targetSaved = await commitFarmTargetDraft(previousMode);
   if (!targetSaved) {
     farmTargetMode.value = previousMode;
     syncFarmLevelInputs();
-    farmTargetMode.disabled = farmExcludeBoss.disabled = false;
+    farmTargetMode.disabled = false;
+    syncBossTargetControls();
     farmMessage("Hoàn tất lựa chọn cảnh giới/tầng hiện tại trước khi đổi chế độ.");
     return;
   }
@@ -549,20 +577,26 @@ farmTargetMode.addEventListener("change", async () => {
   const patch = { targetMode: mode };
   if (["boss", "bossLevel"].includes(mode)) patch.excludeBoss = false;
   if (patch.excludeBoss === false) farmExcludeBoss.checked = false;
-  await saveFarmPatch(patch, () => { farmTargetMode.value = farmConfirmed.targetMode; farmExcludeBoss.checked = farmConfirmed.excludeBoss; syncFarmLevelInputs(); });
-  farmTargetMode.disabled = farmExcludeBoss.disabled = false;
+  const disabledBossesBefore = farmConfirmed.excludeBoss;
+  await saveFarmPatch(patch, () => { farmTargetMode.value = farmConfirmed.targetMode; farmExcludeBoss.checked = farmConfirmed.excludeBoss; syncFarmLevelInputs(); }, {
+    successMessage: (committed) => disabledBossesBefore && committed.excludeBoss === false
+      ? "Đã tắt ‘Không chọn boss’ theo lựa chọn của bạn." : "Đã lưu cài đặt."
+  });
+  farmTargetMode.disabled = false;
+  syncBossTargetControls();
 });
 farmBossFilter.addEventListener("change", async () => {
   const next = farmBossFilter.value === "world" ? "world" : "all";
+  const disabledBossesBefore = farmConfirmed.excludeBoss;
   const patch = { bossFilter: next };
   if (next === "world") patch.excludeBoss = false;
-  farmBossFilter.disabled = farmExcludeBoss.disabled = true;
   if (patch.excludeBoss === false) farmExcludeBoss.checked = false;
+  syncBossTargetControls();
   await saveFarmPatch(patch, () => {
     farmBossFilter.value = farmConfirmed.bossFilter;
     farmExcludeBoss.checked = farmConfirmed.excludeBoss;
-  });
-  farmBossFilter.disabled = farmExcludeBoss.disabled = false;
+  }, { successMessage: (committed) => disabledBossesBefore && next === "world" && committed.excludeBoss === false
+    ? "Đã tắt ‘Không chọn boss’ theo lựa chọn của bạn." : "Đã lưu cài đặt." });
 });
 for (const [input, key] of [[farmSearchScope, "searchScope"], [farmIdleMode, "idleMode"]]) {
   input.addEventListener("change", async () => {
