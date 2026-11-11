@@ -205,18 +205,17 @@
     }
     if (scene && scene.map === map) remember(scene);
     if (scene && scene.map === map && scene.auto?.on && valid(scene.px) && valid(scene.py)) {
-      const job = globalThis.GSTFarmMap?.journey?.(scene);
-      const live = scene.views?.get?.(scene.auto.target);
-      const goal = job ?? (!live?.dead ? live : null);
+      const navigation = globalThis.GSTFarmVisual?.navigationSnapshot?.(scene);
+      const goal = navigation?.destination;
       if (inside(map, goal)) {
-        const path = job ? (job.moving ? job.path : []) : scene.auto.path;
-        const points = Array.isArray(path) ? path.filter((p) => Array.isArray(p) && p.length === 2
-          && p.every(valid)).slice(0, 80) : [];
-        if (points.length && !job?.waiting && (!job || job.moving)) {
-          ctx.strokeStyle = "#6af1d2"; ctx.lineWidth = 2; ctx.beginPath();
+        const points = navigation.path;
+        if (points.length) {
+          ctx.strokeStyle = "#77baff"; ctx.lineWidth = 2; ctx.beginPath();
           ctx.moveTo(sx(scene.px), sy(scene.py));
           for (const p of points) ctx.lineTo(sx(p[0]), sy(p[1]));
           ctx.stroke();
+          ctx.fillStyle = "#77baff"; ctx.beginPath();
+          ctx.arc(sx(points[0][0]), sy(points[0][1]), 4, 0, Math.PI * 2); ctx.fill();
         }
         ctx.strokeStyle = "#6af1d2"; ctx.beginPath();
         ctx.arc(sx(goal.x), sy(goal.y), 7, 0, Math.PI * 2); ctx.stroke();

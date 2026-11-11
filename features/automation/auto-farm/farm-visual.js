@@ -50,6 +50,24 @@
     if (distance < 0.35 || (scene.autoX * dx + scene.autoY * dy) / (vectorLength * distance) < 0.65) return null;
     return points;
   }
+  function navigationSnapshot(scene) {
+    if (!scene?.auto || !scene.self || scene.self.dead || scene.leaving) return null;
+    const journey = globalThis.GSTFarmMap?.journey(scene);
+    const actor = journey ? null : scene.views?.get(scene.auto.target);
+    const target = journey ?? (actor && !actor.dead ? actor : null);
+    if (!target || ![scene.px, scene.py, target.x, target.y].every(Number.isFinite)) return null;
+    const blockedByOwner = otherMovementOwner(scene, !journey);
+    const active = journey ? journey.moving && !journey.waiting && !blockedByOwner
+      : !blockedByOwner && !scene.auto.resting && !scene.self?.med && !scene.self?.fish
+        && !scene.auto.moved && !scene.harvesting && !scene.pendingSkill && !scene.aiming
+        && !scene.heldAttack && scene.now() >= scene.auto.pauseUntil
+        && Math.hypot(scene.autoX, scene.autoY) >= 0.05;
+    const path = journey
+      ? verifiedPath(scene, journey.path, journey.pathAt, active)
+      : verifiedPath(scene, scene.auto.path, scene.auto.pathAt, active);
+    return { destination: { x: target.x, y: target.y, scout: journey?.scout === true,
+      waiting: journey?.waiting === true }, path: path?.map((point) => [...point]) ?? [] };
+  }
   function draw() {
     const owner = binding;
     if (!owner) return;
@@ -61,27 +79,17 @@
     try {
       drawRange(scene, graphics);
       if (!preferences.showTargetLine) return;
-      const journey = globalThis.GSTFarmMap?.journey(scene);
-      const actor = journey ? null : scene.views?.get(scene.auto.target);
-      const target = journey ?? (actor && !actor.dead ? actor : null);
-      if (!target || ![scene.px, scene.py, target.x, target.y].every(Number.isFinite)) return;
-      const start = scene.toPx(scene.px, scene.py), end = scene.toPx(target.x, target.y);
+      const snapshot = navigationSnapshot(scene);
+      if (!snapshot) return;
+      const { destination, path } = snapshot;
+      const start = scene.toPx(scene.px, scene.py), end = scene.toPx(destination.x, destination.y);
       const width = 2 / (scene.cameras?.main?.zoom || 1);
-      const color = journey?.scout ? 0xf5c86a : 0x5ce6bd;
-      const blockedByOwner = otherMovementOwner(scene, !journey);
-      const active = journey ? journey.moving && !journey.waiting && !blockedByOwner
-        : !blockedByOwner && !scene.auto.resting && !scene.self?.med && !scene.self?.fish
-          && !scene.auto.moved && !scene.harvesting && !scene.pendingSkill && !scene.aiming
-          && !scene.heldAttack && scene.now() >= scene.auto.pauseUntil
-          && Math.hypot(scene.autoX, scene.autoY) >= 0.05;
-      const path = journey
-        ? verifiedPath(scene, journey.path, journey.pathAt, active)
-        : verifiedPath(scene, scene.auto.path, scene.auto.pathAt, active);
+      const color = destination.scout ? 0xf5c86a : 0x5ce6bd;
       // Destination uses the feature color; only controller-confirmed path legs
       // use blue, with a separate marker for the active first waypoint.
-      graphics.lineStyle(width, color, journey?.waiting ? 0.4 : 0.9);
+      graphics.lineStyle(width, color, destination.waiting ? 0.4 : 0.9);
       graphics.strokeCircle(end[0], end[1], width * 3);
-      if (!path) return;
+      if (!path.length) return;
       graphics.lineStyle(width, 0x77baff, 0.8);
       let last = start;
       for (const point of path) {
@@ -109,7 +117,7 @@
       preferences = value;
       enabled = value.showTargetLine === true || value.showRange === true;
       safeAttach(scene);
-    }, attach: safeAttach
+    }, attach: safeAttach, navigationSnapshot
   };
   window.addEventListener("pagehide", () => { suspended = true; detach(); });
   window.addEventListener("pageshow", () => {
