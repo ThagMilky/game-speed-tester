@@ -209,11 +209,10 @@
       const live = scene.views?.get?.(scene.auto.target);
       const goal = job ?? (!live?.dead ? live : null);
       if (inside(map, goal)) {
-        const path = Array.isArray(job?.path) ? job.path : scene.auto.path;
+        const path = job ? (job.moving ? job.path : []) : scene.auto.path;
         const points = Array.isArray(path) ? path.filter((p) => Array.isArray(p) && p.length === 2
           && p.every(valid)).slice(0, 80) : [];
-        if (!points.length && inside(map, job?.next)) points.push([job.next.x, job.next.y]);
-        if (points.length && !job?.waiting) {
+        if (points.length && !job?.waiting && (!job || job.moving)) {
           ctx.strokeStyle = "#6af1d2"; ctx.lineWidth = 2; ctx.beginPath();
           ctx.moveTo(sx(scene.px), sy(scene.py));
           for (const p of points) ctx.lineTo(sx(p[0]), sy(p[1]));

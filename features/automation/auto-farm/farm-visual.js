@@ -31,6 +31,25 @@
     if (preferences.nearbyClear)
       circle({ x: scene.px, y: scene.py }, preferences.nearbyRadius, 0xffd27d, 0.85);
   }
+  function otherMovementOwner(scene, includeFarmMap = false) {
+    try {
+      if (globalThis.GSTFarmInput?.movement?.(scene) || globalThis.GSTMapTravel?.active?.(scene)) return true;
+      const owners = ["GSTHarvest", "GSTFarmSeals", "GSTRealm", "GSTChest", "GSTQuest",
+        "GSTFarmDefense", "GSTFarmBossSafety"].some((name) => globalThis[name]?.controls?.(scene));
+      return owners || includeFarmMap && globalThis.GSTFarmMap?.controls?.(scene) === true;
+    } catch { return true; }
+  }
+  function verifiedPath(scene, path, pathAt, moving) {
+    const points = Array.isArray(path) ? path.slice(0, 64) : null;
+    const time = scene.now?.(), vectorLength = Math.hypot(scene.autoX, scene.autoY);
+    if (!moving || !points?.length
+        || !Number.isFinite(time) || !Number.isFinite(pathAt) || time < pathAt || time - pathAt > 2.5
+        || ![scene.px, scene.py, scene.autoX, scene.autoY].every(Number.isFinite) || vectorLength < 0.05
+        || points.some((point) => !Array.isArray(point) || point.length !== 2 || !point.every(Number.isFinite))) return null;
+    const first = points[0], dx = first[0] - scene.px, dy = first[1] - scene.py, distance = Math.hypot(dx, dy);
+    if (distance < 0.35 || (scene.autoX * dx + scene.autoY * dy) / (vectorLength * distance) < 0.65) return null;
+    return points;
+  }
   function draw() {
     const owner = binding;
     if (!owner) return;
@@ -47,31 +66,31 @@
       const target = journey ?? (actor && !actor.dead ? actor : null);
       if (!target || ![scene.px, scene.py, target.x, target.y].every(Number.isFinite)) return;
       const start = scene.toPx(scene.px, scene.py), end = scene.toPx(target.x, target.y);
-      const steeringTarget = journey?.next ?? target;
-      const steerEnd = scene.toPx(steeringTarget.x, steeringTarget.y);
       const width = 2 / (scene.cameras?.main?.zoom || 1);
-      graphics.lineStyle(width, journey?.scout ? 0xf5c86a : 0x5ce6bd, journey?.waiting ? 0.25 : 0.9);
-      if (journey?.scout) {
-        const count = Math.min(256, Math.ceil(Math.hypot(end[0] - start[0], end[1] - start[1]) / 16));
-        for (let i = 0; i < count; i += 2) {
-          const a = i / count, b = Math.min(1, (i + 1) / count);
-          graphics.lineBetween(start[0] + (end[0] - start[0]) * a, start[1] + (end[1] - start[1]) * a,
-            start[0] + (end[0] - start[0]) * b, start[1] + (end[1] - start[1]) * b);
-        }
-      } else if (!journey?.waiting) graphics.lineBetween(...start, ...steerEnd);
-      // The ring marks the final camp; the line ends at the current
-      // navigable checkpoint, not an unverified straight path through walls.
+      const color = journey?.scout ? 0xf5c86a : 0x5ce6bd;
+      const blockedByOwner = otherMovementOwner(scene, !journey);
+      const active = journey ? journey.moving && !journey.waiting && !blockedByOwner
+        : !blockedByOwner && !scene.auto.resting && !scene.self?.med && !scene.self?.fish
+          && !scene.auto.moved && !scene.harvesting && !scene.pendingSkill && !scene.aiming
+          && !scene.heldAttack && scene.now() >= scene.auto.pauseUntil
+          && Math.hypot(scene.autoX, scene.autoY) >= 0.05;
+      const path = journey
+        ? verifiedPath(scene, journey.path, journey.pathAt, active)
+        : verifiedPath(scene, scene.auto.path, scene.auto.pathAt, active);
+      // Destination uses the feature color; only controller-confirmed path legs
+      // use blue, with a separate marker for the active first waypoint.
+      graphics.lineStyle(width, color, journey?.waiting ? 0.4 : 0.9);
       graphics.strokeCircle(end[0], end[1], width * 3);
-      if (journey?.next) graphics.strokeCircle(steerEnd[0], steerEnd[1], width * 2);
-      const path = journey?.path ?? scene.auto.path;
-      if (!Array.isArray(path)) return;
+      if (!path) return;
       graphics.lineStyle(width, 0x77baff, 0.8);
       let last = start;
-      for (const point of path.slice(0, 64)) {
-        if (!Array.isArray(point) || point.length !== 2 || !point.every(Number.isFinite)) break;
+      for (const point of path) {
         const next = scene.toPx(...point);
         graphics.lineBetween(...last, ...next); last = next;
       }
+      const waypoint = scene.toPx(...path[0]);
+      graphics.fillStyle(0x77baff, 0.9).fillCircle(waypoint[0], waypoint[1], width * 1.6);
+      graphics.lineStyle(width, 0x77baff, 0.95).strokeCircle(waypoint[0], waypoint[1], width * 2.5);
     } catch { detach(); }
   }
   function attach(scene) {

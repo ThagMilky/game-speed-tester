@@ -774,11 +774,14 @@
       if (job?.actor) resumeReason = "loot_priority";
       release(); endHandoff("loot_priority"); retryAt = scene.now() + 0.3;
     },
-    journey: (scene) => binding?.scene === scene && job ? {
-      id: job.id, x: job.x, y: job.y, scout: job.scout, path: job.navigation.path,
-      next: job.checkpoint ? { ...job.checkpoint } : null,
-      waiting: scene.now() < retryAt || scene.now() < job.retryUntil
-    } : null,
+    journey: (scene) => binding?.scene === scene && job ? (() => {
+      const waiting = scene.now() < retryAt || scene.now() < job.retryUntil;
+      const moving = !waiting && Array.isArray(job.steer) && job.steer.some((value) => value !== 0)
+        && scene.autoX === job.steer[0] && scene.autoY === job.steer[1];
+      return { id: job.id, x: job.x, y: job.y, scout: job.scout,
+        path: moving ? job.navigation.path : [], pathAt: job.navigation.pathAt,
+        next: job.checkpoint ? { ...job.checkpoint } : null, waiting, moving };
+    })() : null,
     status: (scene) => binding && binding.scene === scene && scene.auto.on ? message : ""
   };
   window.addEventListener("pagehide", () => { suspended = true; detach(); });
