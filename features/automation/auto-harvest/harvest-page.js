@@ -135,8 +135,7 @@
     if (scene.leaving) return "Đang chuyển map.";
     if (globalThis.GSTMapTravel?.active(scene)) return "Nhường di chuyển cho bản đồ.";
     if (globalThis.GSTQuest?.active(scene)) return "Nhường cho Auto Quest đang chạy.";
-    if (!preserveNativeHarvest && (globalThis.GSTFarmBossSafety?.retreating?.(scene)
-        || globalThis.GSTFarmBossSafety?.emergency?.(scene, scene.now()) === true))
+    if (!preserveNativeHarvest && safetyPreemptsMovement(scene))
       return "Nhường di chuyển cho Tự vệ boss.";
     if (globalThis.GSTChest?.controls(scene)) return "Nhường di chuyển để nhặt rương bí cảnh.";
     if (globalThis.GSTFarmMap?.controls(scene)) return "Nhường di chuyển để tiếp cận mục tiêu farm.";
@@ -158,6 +157,8 @@
   }
   const blocked = (scene, fresh = false) => blockedReason(scene, fresh) !== null;
   GSTHarvest.needsRecovery = needsRecovery;
+  const nativeHarvestOutstanding = () => ["request", "harvesting", "confirming"].includes(job?.phase);
+  const safetyPreemptsMovement = (scene) => globalThis.GSTFarmBossSafety?.preemptsHarvest?.(scene) === true;
   function fighting(scene) {
     if (!scene.auto.on || !scene.auto.target) return false;
     const target = scene.views.get(scene.auto.target);
@@ -320,9 +321,11 @@
       const handler = function () {
         // Native update remains responsible for combat/death/respawn whenever we yield.
         if (binding?.auto === this && job) {
+          const preserveNativeHarvest = nativeHarvestOutstanding();
+          if (preserveNativeHarvest && safetyPreemptsMovement(scene)) return false;
           let reason = "Interface game thay đổi; tạm nhường điều khiển.";
           try {
-            reason = blockedReason(scene)
+            reason = blockedReason(scene, false, preserveNativeHarvest)
               || (!farmAllowed(scene) ? "Chưa cho phép thu hoạch cùng Auto Farm." : null)
               || (fighting(scene) ? "Nhường Auto Farm đánh mục tiêu hiện tại." : null);
             if (!reason) return true;
@@ -382,7 +385,8 @@
         }
       });
       globalThis.GSTHarvestVisual?.configure(scene, settings.showTargetLine);
-      GSTHarvest.controls = (current) => binding?.scene === current && job !== null;
+      GSTHarvest.controls = (current) => binding?.scene === current && job !== null
+        && !safetyPreemptsMovement(current);
       scene.events.on("preupdate", onFrame);
       scene.events.on("shutdown", onShutdown);
       scene.events.on("destroy", onShutdown);
@@ -414,7 +418,8 @@
       && host.clear(pos.x, pos.y, next[0], next[1]);
   }
   function step(scene, now) {
-    const preserveNativeHarvest = ["request", "harvesting", "confirming"].includes(job?.phase);
+    const preserveNativeHarvest = nativeHarvestOutstanding();
+    const safetyOwnsMovement = preserveNativeHarvest && safetyPreemptsMovement(scene);
     const reason = blockedReason(scene, false, preserveNativeHarvest)
       || (!farmAllowed(scene) ? "Tạm dừng: chưa cho phép hái khi Auto Farm bật." : null)
       || (fighting(scene) ? "Chờ Auto Farm kết thúc mục tiêu chiến đấu hiện tại." : null)
@@ -430,7 +435,7 @@
       }
     }
     if (["request", "harvesting", "confirming"].includes(job?.phase)) {
-      steer(scene, 0, 0);
+      if (!safetyOwnsMovement) steer(scene, 0, 0);
       if (scene.harvesting && scene.harvestNode === job.index) {
         if (job.phase !== "harvesting") {
           job.phase = "harvesting"; job.acknowledged = true;

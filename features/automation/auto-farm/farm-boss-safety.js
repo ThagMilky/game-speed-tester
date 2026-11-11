@@ -211,8 +211,7 @@
         && globalThis.GSTHarvest?.needsRecovery?.(scene))
       || globalThis.GSTQuest?.active?.(scene)
       || ["GSTRealm", "GSTChest"].some((name) => globalThis[name]?.controls?.(scene))
-      || (globalThis.GSTHarvest?.controls?.(scene) && !imminent && !retreating
-        && !(returnIntent?.scene === scene && returnIntent.phase !== "excluded"))
+      || (globalThis.GSTHarvest?.controls?.(scene) && !preemptsHarvest(scene))
       || (scene.self.realm?.inside?.protection ?? 0) > 0;
   }
   function retreatOwnerValid(scene) {
@@ -246,11 +245,13 @@
   }
   function delegateNativeRecovery(scene, host, time, delta) {
     const owner = recoveryMeditation;
+    const inCombat = typeof host.inCombat !== "function" || host.inCombat() !== false;
     if (retreating && owner?.scene === scene && owner.auto === scene.auto
         && owner.phase === "stop-pending" && scene.self.med === false
         && finite(scene.selfAt) && scene.selfAt > owner.snapshotAtRequest
         && finite(owner.requestedAt) && time - owner.requestedAt >= 2
-        && scene.self.hp / scene.self.mh < recoveryThreshold && typeof host.meditate === "function") {
+        && scene.self.hp / scene.self.mh < recoveryThreshold && !inCombat
+        && typeof host.meditate === "function") {
       // Native rest() stops meditation at 95%; restart it only after a newer
       // snapshot confirms the stop, then keep waiting for the configured HP.
       owner.phase = "pending";
@@ -262,6 +263,13 @@
         note(scene, "unsupported", "Không thể tiếp tục thiền hồi phục; đang chờ trạng thái game mới.");
       }
       return true;
+    }
+    if (retreating && owner?.scene === scene && owner.auto === scene.auto
+        && ["pending", "active", "stop-pending"].includes(owner.phase) && scene.self.med === true
+        && scene.self.hp / scene.self.mh < recoveryThreshold && !inCombat) {
+      // Do not re-enter native rest() while its 95% completion rule would
+      // immediately cancel this configured-threshold recovery meditation.
+      release(); keepRecoveryResting(scene); return true;
     }
     // Keep an unchanged native vector between controller decision ticks.
     releaseJob();
@@ -383,6 +391,14 @@
       || imminentWarning(scene, time)
       || (hasDodgePreference() && job?.emergency === true && finite(time)
         && time - job.startedAt < 6) || criticalRetreat(scene);
+  }
+  function preemptsHarvest(scene) {
+    if (!binding || binding.scene !== scene || binding.auto !== scene?.auto) return false;
+    try {
+      const time = scene.now();
+      return finite(time) && (retreating || returnIntent?.scene === scene
+        && returnIntent.phase !== "excluded" || urgentEscape(scene, time));
+    } catch { return false; }
   }
   function emergency(scene, time) {
     const urgent = urgentEscape(scene, time);
@@ -1313,6 +1329,7 @@
     },
     attach(scene) { try { attach(scene); } catch { detach(); } },
     emergency,
+    preemptsHarvest,
     controls: (scene) => !!binding && binding.scene === scene
       && (job !== null || retreating || !!returnIntent && returnIntent.phase !== "excluded" || cooldownHolding),
     retreating: (scene) => !!binding && binding.scene === scene
