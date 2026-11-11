@@ -209,7 +209,7 @@
       // Let the native Auto Farm drink pills before considering boss movement.
       || (!imminent && globalThis.GSTMapTravel?.active?.(scene)
         && globalThis.GSTHarvest?.needsRecovery?.(scene))
-      || globalThis.GSTQuest?.active?.(scene)
+      || globalThis.GSTQuest?.controls?.(scene)
       || ["GSTRealm", "GSTChest"].some((name) => globalThis[name]?.controls?.(scene))
       || (globalThis.GSTHarvest?.controls?.(scene) && !preemptsHarvest(scene))
       || (scene.self.realm?.inside?.protection ?? 0) > 0;

@@ -16,16 +16,24 @@
     if (event.data.ready) { configure(); return; }
     const item = pending.get(event.data.requestId); if (!item) return;
     pending.delete(event.data.requestId); clearTimeout(item.timer);
-    const quests = Array.isArray(event.data.quests) ? event.data.quests.slice(0, 200).map((q) => ({
+    const quests = Array.isArray(event.data.quests) ? event.data.quests.slice(0, 400).map((q) => ({
       id: typeof q.id === "string" ? q.id.slice(0, 150) : "", title: String(q.title ?? "").slice(0, 500),
       done: q.done === true, supported: q.supported === true, support: String(q.support ?? "").slice(0, 500),
+      accepted: q.accepted === true, repeatable: q.repeatable === true, npc: String(q.npc ?? "").slice(0, 300),
+      map: String(q.map ?? "").slice(0, 200), goals: String(q.goals ?? "").slice(0, 500),
       progress: String(q.progress ?? "").slice(0, 2000), reward: String(q.reward ?? "").slice(0, 500),
       xp: Number.isFinite(q.xp) ? q.xp : null, coins: Number.isFinite(q.coins) ? q.coins : null
     })) : [];
-    item.respond({ running: event.data.running === true, message: String(event.data.message ?? "").slice(0, 500), quests });
+    item.respond({ running: event.data.running === true, message: String(event.data.message ?? "").slice(0, 500), quests,
+      logs: Array.isArray(event.data.logs) ? event.data.logs.slice(-300).map((row) => ({
+        at: String(row.at ?? "").slice(0, 40), kind: String(row.kind ?? "").slice(0, 60), cycle: Number(row.cycle) || 0,
+        action: String(row.action ?? "").slice(0, 60), questId: String(row.questId ?? "").slice(0, 150), title: String(row.title ?? "").slice(0, 300),
+        phase: String(row.phase ?? "").slice(0, 60), map: String(row.map ?? "").slice(0, 200), npc: String(row.npc ?? "").slice(0, 200),
+        progress: String(row.progress ?? "").slice(0, 300), detail: String(row.detail ?? "").slice(0, 300)
+      })) : [], cycles: Number(event.data.cycles) || 0 });
   });
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
-    if (sender.id !== chrome.runtime.id || message?.type !== "gst:quest" || !["status", "start", "stop"].includes(message.command)) return;
+    if (sender.id !== chrome.runtime.id || message?.type !== "gst:quest" || !["status", "start", "stop", "clear-log"].includes(message.command)) return;
     const requestId = `quest:${++sequence}`;
     const timer = setTimeout(() => { pending.delete(requestId); respond({ message: "Reload extension rồi tải lại game với tham số timer để đọc quest.", unavailable: true }); }, 1200);
     pending.set(requestId, { respond, timer });

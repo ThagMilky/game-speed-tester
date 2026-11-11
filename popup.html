@@ -375,17 +375,21 @@
         <fieldset id="questControls" disabled>
           <p class="save-mode">Lựa chọn tự lưu · Bấm Bắt đầu để chạy</p>
           <div class="wide-groups"><div class="wide-group">
-          <label for="questSearch">Tìm quest đã nhận</label><input id="questSearch" type="search" placeholder="Gõ tên quest…">
+          <label for="questSearch">Tìm quest, NPC, map hoặc mục tiêu</label><input id="questSearch" type="search" placeholder="Tên, NPC, map, loại mục tiêu…">
           <label for="questSort">Sắp xếp</label><select id="questSort"><option value="xp">Tu vi cao trước</option><option value="coins">Linh thạch cao trước</option><option value="name">Tên quest</option></select>
           </div><div class="wide-group">
           <div class="harvest-toolbar"><span id="questCount">Đang đọc quest…</span><button id="questClear" type="button">Bỏ chọn tất cả</button></div>
-          <div id="questList" class="harvest-list" aria-label="Quest đã nhận"></div>
+          <div id="questList" class="harvest-list" aria-label="Quest đã nhận và offer lặp đủ điều kiện"></div>
           <div class="two-columns"><button id="questStart" type="button" class="primary">Bắt đầu Auto Quest</button><button id="questStop" type="button">Dừng Auto Quest</button></div>
+          <details><summary>Log Auto Quest · chu kỳ đã xác nhận: <span id="questCycles">0</span></summary>
+            <div class="harvest-toolbar"><button id="questLogCopy" type="button">Sao chép log</button><button id="questLogClear" type="button">Xóa log</button></div>
+            <textarea id="questLog" class="history-output" readonly rows="8" aria-label="Log Auto Quest"></textarea>
+          </details>
           </div></div>
         </fieldset>
         <p id="questStatus" class="hint" role="status">Đang đọc dữ liệu quest…</p>
-        <p class="hint">Chọn quest đã nhận rồi bấm Bắt đầu. Hỗ trợ đánh quái và trả quest trong map hiện tại; chưa hỗ trợ đổi map, hái hoặc chế tạo. Trước khi chạy: tắt Auto Farm, chọn Tất cả quái. Mở N một lần để đọc thưởng. Các chế độ tự động khác sẽ tạm nhường.</p>
-        <p class="hint">Mở game với tham số timer. Bản thử dừng khi chết, đổi map, mất kết nối hoặc Auto Farm bị tắt; bạn bấm Bắt đầu lại để tiếp tục. Giai đoạn về NPC cần giữ tab hoạt động; chưa hỗ trợ chạy nền khi Auto Farm đã tắt.</p>
+        <p class="hint">Chọn quest đang nhận hoặc offer lặp đủ điều kiện rồi bấm Bắt đầu. Hỗ trợ mục tiêu đánh quái trong map hiện tại và dùng đường đi NPC gốc cho nơi nhận/trả quest; chưa hỗ trợ hái, chế tạo hoặc mục tiêu cần tự farm ở map khác.</p>
+        <p class="hint">Mở game với tham số timer. Đường đi gốc đã yêu cầu có thể chuyển map; đổi map ngoài hành trình đó, chết, mất kết nối hoặc tắt Auto Farm sẽ dừng. Dừng tay hoặc tải lại không tự tiếp tục; cần bấm Bắt đầu để ra lệnh mới.</p>
       </div>
     </details>
     <details class="card" data-category="settings" data-panel="speed">
