@@ -2,7 +2,7 @@
   "use strict";
   const origin = "https://nghichthienky.online", channel = "gst:quest:v1";
   let binding = null, watcher = null, suspended = false, run = null;
-  let selected = [], message = "Auto Quest đang tắt. Chọn quest rồi bấm Bắt đầu.";
+  let selected = [], configured = false, message = "Auto Quest đang tắt. Chọn quest rồi bấm Bắt đầu.";
   const logKey = "gst:quest-log:v1", cycleKey = "gst:quest-cycles:v1", logLimit = 300;
   const finite = Number.isFinite, text = (v) => typeof v === "string" ? v.slice(0, 500) : "";
   const sceneNow = () => window.game?.scene?.getScene?.("world") ?? window.__ntkScene;
@@ -41,6 +41,8 @@
     if (owner?.nativeNav && s?.nav === owner.nativeNav && typeof s.stopNav === "function") {
       try { s.stopNav(); } catch { /* The game may already have released its navigation state. */ }
     }
+    try { owner?.manualClickOff?.(); } catch { /* Input observer was already removed. */ }
+    if (owner?.nativeRouteTarget) globalThis.GSTQuestHandoff?.clearNavigation(owner.nativeRouteTarget);
     if (owner?.nativeRouteValue) {
       try { if (sessionStorage.getItem("kt-nav") === owner.nativeRouteValue) sessionStorage.removeItem("kt-nav"); }
       catch { /* The game's navigation record may already have expired. */ }
@@ -53,14 +55,161 @@
     } catch { return null; }
   }
   function ownsNativeNavigation(s, owner) {
+    const current = globalThis.GSTQuestHandoff?.route?.();
+    if (owner?.nativeRouteTarget && current && globalThis.GSTQuestHandoff?.sameTarget(current.target, owner.nativeRouteTarget)) return true;
     try { if (owner?.nativeRouteValue && sessionStorage.getItem("kt-nav") === owner.nativeRouteValue) return true; }
     catch { /* Check the in-memory native navigation object below. */ }
     return !!owner?.nativeNav && s?.nav === owner.nativeNav;
+  }
+  function nativeNavMatchesRoute(s, nav, target) {
+    if (!nav || !target || nav.scene !== target.scene || nav.label !== target.label) return false;
+    if (nav.x === target.x && nav.y === target.y) return true;
+    const gate = Number.isInteger(nav.gate) && nav.gate >= 0 ? s.map?.gates?.[nav.gate] : null;
+    return !!gate && gate.x === nav.x && gate.y === nav.y;
+  }
+  function ownsNativeClickOrder(s) {
+    const nav = run?.nativeNav ?? s?.nav, order = s?.clickOrder;
+    const targetMatches = nativeNavMatchesRoute(s, nav, run?.nativeRouteTarget);
+    const owned = run?.nativeRouteTarget ? targetMatches && ownsNativeNavigation(s, run) : nav === run?.nativeNav;
+    if (!nav || s?.nav !== nav || !owned || !order || order.target !== 0) return false;
+    const leg = nav.legs?.[0] ?? [nav.gx, nav.gy];
+    return Array.isArray(leg) && Number.isFinite(order.x) && Number.isFinite(order.y)
+      && Math.hypot(order.x - leg[0], order.y - leg[1]) < .06;
+  }
+  function observeManualClicks(s, owner) {
+    if (owner?.manualClickOff || typeof GSTFarmInput?.add !== "function") return;
+    try {
+      owner.manualClickOff = GSTFarmInput.add(s, (accepted) => {
+        if (accepted && run === owner && (owner.nativeTravel || ownsNativeNavigation(s, owner))) owner.manualCanvasUntil = performance.now() + 750;
+      });
+    } catch { /* The click order check below remains available as a fallback. */ }
+  }
+  function manual(s) {
+    const typing = s.chat?.typing || s.inputFieldActive?.() || s.keyCapture;
+    const keyboard = !typing && ["W", "A", "S", "D", "UP", "DOWN", "LEFT", "RIGHT"]
+      .some((key) => s.keys?.[key]?.isDown);
+    return !!keyboard || !!s.joyX || !!s.joyY || !!s.pendingSkill || !!s.aiming || !!s.heldAttack
+      || !!run?.manualCanvasUntil && performance.now() < run.manualCanvasUntil || !!s.clickOrder && !ownsNativeClickOrder(s);
+  }
+  function clearPendingAction(owner) {
+    for (const key of ["requestedAt", "snapshotAt", "requestQuestRevision", "requestBody", "requestButton", "awaitingLogged"]) delete owner[key];
+  }
+  function resetNavigation(owner) {
+    try { owner.manualClickOff?.(); } catch { /* Input observer was already removed. */ }
+    owner.manualClickOff = null;
+    owner.nativeTravel = false; owner.expectedMap = ""; owner.nativeTravelAt = undefined;
+    owner.nativeNav = null; owner.nativeRouteValue = null; owner.nativeRouteTarget = null;
+    owner.nativeRouteAttempted = false; owner.nativeLeaveObserved = null; owner.arrivalWaitAt = undefined;
+    owner.manualCanvasUntil = 0;
+  }
+  function closeRequestedDialogue(s, owner) {
+    if (owner.requestBody && owner.body === owner.requestBody && owner.button === owner.requestButton
+        && owner.requestBody.isConnected && owner.requestBody.contains(owner.requestButton)
+        && owner.requestButton.isConnected && owner.requestButton.textContent === (owner.action === "accept" ? "Nhận nhiệm vụ" : "Nhận thưởng")
+        && s.panels.open && s.panels.title === owner.npc?.info?.name) {
+      try { s.panels.close(); } catch { /* A native panel may already have closed itself. */ }
+    }
+  }
+  function clearStoredHandoff(owner) {
+    const handoff = globalThis.GSTQuestHandoff;
+    if (!handoff) return;
+    const state = handoff.inspect();
+    if (state.record) handoff.clear(state.record, state.record.route);
+    else { handoff.discard?.(); handoff.clearNavigation(owner?.nativeRouteTarget); }
+  }
+  function writeHandoff(s) {
+    const handoff = globalThis.GSTQuestHandoff, leave = run?.nativeLeaveObserved;
+    if (!handoff || !run || !s?.leaving || !leave?.connected || leave.dead
+        || leave.name !== run.name || leave.classId !== run.classId || leave.classId !== s.profile?.classId
+        || leave.characterId !== run.characterId || leave.characterId !== s.you || run.phase !== "return"
+        || run.requestedAt !== undefined || manual(s)
+        || !run.nativeTravel || !leave || leave.scene !== run.expectedMap && !leave.intermediate
+        || Date.now() - leave.at > 15000 || !ownsNativeNavigation(s, run) || !run.nativeRouteTarget) return false;
+    const quest = definition(s, run.nativeId);
+    if (!quest || !selected.includes(run.id)) return false;
+    if (run.action === "accept") {
+      if (active(s).some((item) => String(item.id) === run.id)
+          || !eligibleOffers(s).some((item) => String(item.id) === run.id)) return false;
+    } else if (run.action === "claim") {
+      const current = active(s).find((item) => String(item.id) === run.id);
+      if (!current || !complete(s, current)) return false;
+    } else return false;
+    const record = handoff.write({ expectedMap: run.expectedMap, hopMap: leave.scene, route: run.nativeRouteTarget,
+      online: leave.online, expectedSearch: leave.expectedSearch, name: run.name, classId: s.profile.classId,
+      characterId: s.you, selected: [...selected],
+      run: { id: run.id, nativeId: run.nativeId, title: run.title, action: run.action,
+        phase: run.phase, cycles: run.cycles, finished: [...run.finished] } });
+    if (!record) return false;
+    log("handoff-written", { detail: `${leave.scene} → ${run.expectedMap}` });
+    return true;
+  }
+  function observeLeave(s, owner, destination, x, y) {
+    const nav = s.nav, route = nativeRouteRecord();
+    const navMatchesRoute = nativeNavMatchesRoute(s, nav, owner?.nativeRouteTarget);
+    if (!owner?.nativeTravel || !nav || !navMatchesRoute || !route
+        || !globalThis.GSTQuestHandoff?.sameTarget(route.target, owner.nativeRouteTarget)) return;
+    const intermediate = nav.scene === owner.expectedMap && Number.isInteger(nav.gate) && nav.gate >= 0
+      && s.map?.gates?.[nav.gate]?.to === destination;
+    if (destination !== owner.expectedMap && !intermediate) return;
+    const online = s.driver?.online === true, params = new URLSearchParams(location.search);
+    if (online) { params.delete("map"); params.delete("at"); }
+    else { params.set("map", destination); params.set("at", `${x},${y}`); }
+    params.delete("level");
+    owner.nativeLeaveObserved = { scene: destination, x, y, online, expectedSearch: params.toString() ? `?${params}` : "",
+      connected: connected(s), dead: !!s.self?.dead, name: s.profile?.name, classId: s.profile?.classId, characterId: s.you,
+      at: Date.now(), intermediate };
+  }
+  function restoreHandoff(s) {
+    if (!binding || binding.handoffChecked || !configured) return false;
+    binding.handoffChecked = true;
+    const handoff = globalThis.GSTQuestHandoff;
+    if (!handoff) return false;
+    const state = handoff.inspect();
+    if (state.none) return false;
+    const invalidate = (reason) => {
+      if (state.record) handoff.clear(state.record, state.record.route); else handoff.discard?.();
+      log("handoff-invalid", { detail: reason }); message = `Quest chưa tiếp tục: ${reason}`; return false;
+    };
+    if (state.invalid) return invalidate(state.reason);
+    const saved = state.record, details = saved.run;
+    const sameSelection = Array.isArray(saved.selected) && [...saved.selected].sort().join("\0") === [...selected].sort().join("\0");
+    if (!details || details.phase !== "return" || !["accept", "claim"].includes(details.action)
+        || typeof details.id !== "string" || !Number.isFinite(saved.classId) || !sameSelection
+        || saved.name !== s.profile?.name || saved.classId !== s.profile?.classId || saved.characterId !== s.you
+        || saved.hopMap !== s.map?.scene || !connected(s) || s.self?.dead || s.leaving
+        || !selected.includes(details.id)) return invalidate("The destination map, character, selection, or run state did not match.");
+    const quest = definition(s, details.nativeId), current = active(s).find((item) => String(item.id) === details.id);
+    if (details.action === "accept" && (!quest || current || !eligibleOffers(s).some((item) => String(item.id) === details.id)))
+      return invalidate("The selected offer is no longer eligible or has already been accepted.");
+    if (details.action === "claim" && (!current || !complete(s, current)))
+      return invalidate("The accepted quest is no longer complete at the destination.");
+    const route = handoff.route();
+    if (!route || !handoff.sameTarget(route.target, saved.route) || route.target.scene !== saved.expectedMap)
+      return invalidate("The native destination record no longer matches this quest.");
+    const qInfo = details.action === "accept" ? npcInfo(s, quest, true) : npcInfo(s, quest);
+    if (!qInfo) return invalidate("The exact giver or recipient is unavailable in the native quest data.");
+    run = { map: s.map.scene, name: saved.name, classId: saved.classId, characterId: saved.characterId,
+      phase: "return", id: details.id, nativeId: details.nativeId,
+      title: text(details.title), action: details.action, at: -Infinity, cycles: Number(details.cycles) || 0,
+      finished: new Set(Array.isArray(details.finished) ? details.finished.filter((id) => typeof id === "string").slice(0, 200) : []),
+      ownedAuto: false, manualUntil: 0, steer: null, npc: s.npcs?.find((n) => n.info?.id === qInfo.id) ?? null,
+      nav: Object.assign(Object.create(s.auto), { path: [], pathAt: -Infinity, lastX: s.px, lastY: s.py, stillSince: s.now(), stuckCount: 0, sideUntil: 0 }),
+      nativeTravel: s.map.scene !== saved.expectedMap, expectedMap: saved.expectedMap,
+      nativeTravelAt: performance.now(), nativeRouteTarget: { ...saved.route }, nativeRouteValue: route.value,
+      nativeNav: nativeNavMatchesRoute(s, s.nav, saved.route) ? s.nav : null,
+      nativeRouteAttempted: true, arrivalWaitAt: performance.now(), nativeLeaveObserved: null };
+    observeManualClicks(s, run);
+    handoff.consume(saved);
+    globalThis.GSTFarmSession?.forget(s);
+    log("handoff-resumed", { detail: `Arrived at ${s.map.scene}; returning to selected NPC.` });
+    message = `Đã xác nhận tới map ${s.map.scene}; tiếp tục quest ${run.title}.`;
+    return true;
   }
   function stop(reason, preserveAutoFarm = false) {
     const s = binding?.scene, old = run;
     if (old && reason) log("stopped", { detail: reason });
     stopOwnedNativeNavigation(s, old);
+    clearStoredHandoff(old);
     zero(); run = null;
     if (old?.ownedAuto && !preserveAutoFarm && s?.auto === binding?.auto) {
       try { if (s.auto.on) s.toggleAutoFarm(); }
@@ -86,6 +235,7 @@
       });
     }
     if (run?.phase === "dialog" && title === run.npc?.info?.name) {
+      if (run.requestedAt !== undefined) return;
       run.body = body;
       const native = s.quests.forNpc(run.npc.info.id) ?? {}, rows = run.action === "accept" ? native.offers ?? [] : native.handIn ?? [];
       const label = run.action === "accept" ? "Nhận nhiệm vụ" : "Nhận thưởng";
@@ -119,7 +269,6 @@
     });
     return { running: !!run, message, quests, logs: logs(), cycles: confirmedCycles() };
   }
-  function manual(s) { return GSTFarmInput.movement(s) || s.pendingSkill || s.aiming || s.heldAttack; }
   function pause(time) { if (run.pausedAt === undefined) log("paused", { detail: message }); run.pausedAt ??= time; zero(); }
   function tick(host, time) {
     const s = binding?.scene;
@@ -154,9 +303,7 @@
           el.getClientRects().length && getComputedStyle(el).visibility !== "hidden");
       }
       if (manual(s)) {
-        stopOwnedNativeNavigation(s, run); run.nativeNav = null; run.nativeRouteValue = null;
-        if (run.nativeTravel) { run.nativeTravel = false; run.expectedMap = ""; }
-        run.nativeRouteAttempted = false;
+        stopOwnedNativeNavigation(s, run); resetNavigation(run);
         run.manualUntil = now + 3000; message = "Auto Quest nhường thao tác tay; chờ ổn định 3 giây."; pause(time); return true;
       }
       const ownedDialog = run.phase === "dialog" && run.body?.isConnected && s.panels.open;
@@ -179,7 +326,7 @@
       run.at = now;
       const q = active(s).find((item) => String(item.id) === run.id)
         ?? (run.action === "accept" ? eligibleOffers(s).find((item) => String(item.id) === run.id) : null);
-      if (run.requestedAt !== undefined && finite(s.selfAt) && s.selfAt > run.snapshotAt && now - run.requestedAt > 2000) {
+      if (run.requestedAt !== undefined && binding.questRevision > run.requestQuestRevision && now - run.requestedAt > 2000) {
         if (run.action === "claim" && q && complete(s, q)) { log("rejected", { detail: "Quest remains active and complete after fresh state." }); stop("Game chưa xác nhận trả thưởng; quest vẫn đang nhận. Đã dừng mà không bấm lại."); return false; }
         if (run.action === "accept" && !active(s).some((item) => String(item.id) === run.id)
             && eligibleOffers(s).some((item) => String(item.id) === run.id)) {
@@ -187,16 +334,16 @@
           stop("Game chưa xác nhận nhận quest; offer vẫn còn đủ điều kiện. Đã dừng mà không bấm lại."); return false;
         }
       }
-      if (run.action === "claim" && run.requestedAt !== undefined && finite(s.selfAt) && s.selfAt > run.snapshotAt) {
+      if (run.action === "claim" && run.requestedAt !== undefined && binding.questRevision > run.requestQuestRevision) {
         const def = definition(s, run.nativeId);
         if (s.quests.claimed(run.nativeId) || (def?.repeatable === true && !s.quests.rec?.(run.nativeId)
             && s.quests.available?.(def) === true)) {
-          if (run.body?.isConnected && s.panels.open) s.panels.close();
+          closeRequestedDialogue(s, run);
           run.cycles = confirmedCycles() + 1;
           try { sessionStorage.setItem(cycleKey, String(run.cycles)); } catch { /* Keep controller operation independent of storage. */ }
           log("cycle-confirmed", { detail: `Confirmed claim; completed cycles ${run.cycles}` });
           message = `Đã xác nhận chu kỳ ${run.cycles}: ${run.title}.`;
-          run.requestedAt = undefined; run.action = null; run.phase = "choose"; run.npc = null;
+          clearPendingAction(run); resetNavigation(run); run.action = null; run.phase = "choose"; run.npc = null;
           delete run.body; delete run.button;
           if (def?.repeatable !== true) run.finished.add(run.id);
           run.id = null;
@@ -215,11 +362,16 @@
         delete run.requestedAt; delete run.body; delete run.button;
         return true;
       }
-      if (run.action === "accept" && q && finite(s.selfAt) && s.selfAt > (run.snapshotAt ?? Infinity)) {
+      const acceptedQuest = run.action === "accept" && binding.questRevision > run.requestQuestRevision
+        ? active(s).find((item) => String(item.id) === run.id) : null;
+      if (acceptedQuest) {
+        closeRequestedDialogue(s, run); clearPendingAction(run); resetNavigation(run);
         run.action = null; run.phase = "choose"; run.startedAt = time; run.progressAt = time;
-        message = `Đã xác nhận nhận quest: ${run.title}.`; log("accept-confirmed", { progress: counts(s, q)?.join("/") });
+        message = `Đã xác nhận nhận quest: ${run.title}.`; log("accept-confirmed", { progress: counts(s, acceptedQuest)?.join("/") });
+        run.lastProgress = undefined;
       }
-      if (run.action === "accept" && !q && run.requestedAt !== undefined) {
+      if (run.action === "accept" && run.requestedAt !== undefined && !acceptedQuest) {
+        if (!run.awaitingLogged) { log("waiting", { detail: "Waiting for fresh accepted quest records." }); run.awaitingLogged = true; }
         if (now - run.requestedAt > 8000) { log("timeout", { detail: "accept confirmation timed out." }); stop("Hết thời gian chờ xác nhận nhận quest; dừng, không tự bấm lại."); return false; }
         return true;
       }
@@ -255,6 +407,7 @@
         s.toggleAutoFarm(); run.ownedAuto = false;
       }
       if (run.phase === "farm" || run.phase === "choose") {
+        clearPendingAction(run); resetNavigation(run);
         if (!run.action) run.action = "claim";
         run.phase = "return"; run.npc = run.action === "accept" ? s.npcs?.find((n) => n.info?.id === (q.giver ?? "dan-dao-su")) : npcFor(s, q); run.nav = Object.assign(Object.create(s.auto), {
           path: [], pathAt: -Infinity, lastX: s.px, lastY: s.py, stillSince: time, stuckCount: 0, sideUntil: 0 });
@@ -283,6 +436,8 @@
             }
             run.nativeTravel = expectedMap !== s.map.scene; run.expectedMap = run.nativeTravel ? expectedMap : ""; run.nativeTravelAt = now;
             run.nativeNav = nativeNav ?? null; run.nativeRouteValue = route?.value ?? null;
+            run.nativeRouteTarget = route?.target ? { scene: route.target.scene, x: route.target.x, y: route.target.y, label: route.target.label } : null;
+            observeManualClicks(s, run);
             run.nativeRouteAttempted = true; run.arrivalWaitAt = now;
             run.nav = null; log("navigation-requested", { detail: `${expectedMap} / ${target.name ?? run.title}` });
           }
@@ -310,7 +465,9 @@
             || run.button.textContent !== buttonLabel) {
           stop("Hội thoại hoặc điều kiện quest thay đổi; đã dừng."); return false;
         }
-        run.requestedAt = now; run.snapshotAt = s.selfAt; run.button.click(); log(`${run.action}-requested`);
+        run.requestedAt = now; run.snapshotAt = s.selfAt; run.requestQuestRevision = binding.questRevision;
+        run.requestBody = run.body; run.requestButton = run.button;
+        run.button.click(); log(`${run.action}-requested`);
         message = `Đã gửi thao tác ${run.action === "accept" ? "nhận quest" : "nhận thưởng"} cho ${q.title}; đang chờ game xác nhận.`;
         return true;
       }
@@ -334,24 +491,35 @@
       return true;
     } catch { stop("Interface Auto Quest chưa tương thích; đã dừng, không tự thử lặp."); return false; }
   }
-  function detach() {
-    stop("Auto Quest dừng khi rời scene/trang; lựa chọn quest vẫn được giữ.");
-    const old = binding; binding = null;
-    if (!old) return;
+  function detach(allowHandoff = false) {
+    const old = binding, s = old?.scene;
+    if (!old) { if (run) stop("Auto Quest dừng khi rời scene/trang; lựa chọn quest vẫn được giữ."); return; }
+    const handedOff = !!(allowHandoff && run && writeHandoff(s));
+    if (handedOff) { try { run?.manualClickOff?.(); } catch { /* Scene is leaving. */ } run = null; }
+    else stop("Auto Quest dừng khi rời scene/trang; lựa chọn quest vẫn được giữ.");
+    binding = null;
     old.remove(); old.scene.events.off("preupdate", guard); old.scene.events.off("shutdown", shutdown); old.scene.events.off("destroy", shutdown);
+    if (old.scene.leave === old.leaveWrapper) {
+      if (old.leaveDescriptor) Object.defineProperty(old.scene, "leave", old.leaveDescriptor); else delete old.scene.leave;
+    }
+    if (old.scene.quests.load === old.questLoadWrapper) {
+      if (old.questLoadDescriptor) Object.defineProperty(old.scene.quests, "load", old.questLoadDescriptor); else delete old.scene.quests.load;
+    }
     if (old.scene.panels.show === old.wrapper) {
       if (old.descriptor) Object.defineProperty(old.scene.panels, "show", old.descriptor); else delete old.scene.panels.show;
     }
   }
-  function shutdown() { detach(); watch(); }
+  function shutdown() { detach(true); watch(); }
   function guard() {
     if (!run || !binding) return;
     const s = binding.scene;
     try {
       const mapChanged = s.map?.scene !== run.map;
-      if (sceneNow() !== s || s.auto !== binding.auto || !s.sys?.isActive?.() || !connected(s) || s.leaving
+      if (s.leaving) { detach(true); watch(); return; }
+      if (sceneNow() !== s || s.auto !== binding.auto || !s.sys?.isActive?.() || !connected(s)
           || !s.self || !s.profile || s.self.dead || (mapChanged && (!run.nativeTravel || !ownsNativeNavigation(s, run)
-            || performance.now() - run.nativeTravelAt > 180000)) || s.profile.name !== run.name) {
+            || performance.now() - run.nativeTravelAt > 180000)) || s.profile.name !== run.name || s.profile.classId !== run.classId
+          || s.you !== run.characterId) {
         stop("Auto Quest dừng do nhân vật, map hoặc kết nối thay đổi; không tự bật lại.");
       } else if (globalThis.GSTMapTravel?.active(s)) {
         run.pausedAt ??= s.now();
@@ -359,17 +527,28 @@
     } catch { stop("Interface quest thay đổi; đã dừng Auto Quest."); }
   }
   function discover() {
-    if (binding && (sceneNow() !== binding.scene || binding.scene.auto !== binding.auto || !binding.scene.sys?.isActive?.())) detach();
+    if (binding && (sceneNow() !== binding.scene || binding.scene.auto !== binding.auto || !binding.scene.sys?.isActive?.())) detach(true);
     if (binding || suspended) return;
     try {
       const s = sceneNow();
-      if (!s?.sys?.isActive?.() || !s.self || !s.profile || !s.map || !s.auto || !s.panels
+      if (!s?.sys?.isActive?.() || s.leaving || !s.self || !s.profile || !s.map || !s.auto || !s.panels
           || !["active", "progress", "claimed", "forNpc"].every((key) => typeof s.quests?.[key] === "function")
           || !["now", "autoHost", "toggleAutoFarm", "interact", "pickTarget"].every((key) => typeof s[key] === "function")
-          || typeof s.auto.walk !== "function" || typeof s.auto.update !== "function" || typeof s.panels.show !== "function") return;
+          || typeof s.auto.walk !== "function" || typeof s.auto.update !== "function" || typeof s.panels.show !== "function"
+          || typeof s.quests.load !== "function" || typeof s.leave !== "function") return;
       const original = s.panels.show;
-      const owner = { scene: s, auto: s.auto, rewards: new Map(), modalAt: -Infinity, modal: false,
-        descriptor: Object.getOwnPropertyDescriptor(s.panels, "show") };
+      const owner = { scene: s, auto: s.auto, rewards: new Map(), modalAt: -Infinity, modal: false, questRevision: 0,
+        descriptor: Object.getOwnPropertyDescriptor(s.panels, "show"),
+        questLoadDescriptor: Object.getOwnPropertyDescriptor(s.quests, "load"), leaveDescriptor: Object.getOwnPropertyDescriptor(s, "leave") };
+      const originalLoad = s.quests.load;
+      owner.questLoadWrapper = function (...args) { const result = originalLoad.apply(this, args); owner.questRevision++; return result; };
+      s.quests.load = owner.questLoadWrapper;
+      const originalLeave = s.leave;
+      owner.leaveWrapper = function (scene, x, y, ...rest) {
+        observeLeave(s, run, scene, x, y);
+        return originalLeave.call(this, scene, x, y, ...rest);
+      };
+      s.leave = owner.leaveWrapper;
       owner.wrapper = function (title, subtitle, body, ...rest) {
         const result = original.call(this, title, subtitle, body, ...rest);
         try { capture(title, body); } catch { /* Reading a reward must not break the game's panel. */ }
@@ -377,10 +556,11 @@
       };
       owner.remove = GSTFarmUpdate.add(s, 3, tick); binding = owner; s.panels.show = owner.wrapper;
       s.events.on("preupdate", guard); s.events.on("shutdown", shutdown); s.events.on("destroy", shutdown);
+      restoreHandoff(s);
       clearInterval(watcher); watcher = null;
     } catch { detach(); }
   }
-  function watch() { if (!binding && !suspended && watcher === null) watcher = setInterval(discover, 1000); }
+  function watch() { if (!binding && !suspended && watcher === null) watcher = setInterval(discover, 100); }
   globalThis.GSTQuest = {
     active: owns,
     controls: (s) => owns(s) && run.phase !== "farm"
@@ -394,6 +574,8 @@
         const ids = Array.isArray(data.selected) ? data.selected.filter((id) => typeof id === "string" && id.length <= 150).slice(0, 200) : [];
         if (run && JSON.stringify(ids) !== JSON.stringify(selected)) stop("Đã đổi lựa chọn quest; bấm Bắt đầu để chạy danh sách mới.");
         selected = [...new Set(ids)];
+        configured = true;
+        if (binding) restoreHandoff(binding.scene);
       }
       if (data.type === "clear-log") { try { sessionStorage.removeItem(logKey); } catch { /* Optional per-tab storage. */ } }
       if (data.type === "stop") stop("Bạn đã dừng Auto Quest.");
@@ -414,13 +596,14 @@
             ? (npcFor(s, q) || npcInfo(s, q)) : localKill(s, q)))
             && !eligibleOffers(s).some((q) => selected.includes(String(q.id)) && localKill(s, q)
               && (giverFor(s, q) || npcInfo(s, q, true)))) message = "Chưa có quest đã chọn đủ điều kiện native và có mục tiêu được hỗ trợ trong map này.";
-        else { globalThis.GSTFarmSession?.forget(s); run = { map: s.map.scene, name: s.profile.name, phase: "choose", id: null, at: -Infinity,
+        else { globalThis.GSTFarmSession?.forget(s); run = { map: s.map.scene, name: s.profile.name, classId: s.profile.classId,
+          characterId: s.you, phase: "choose", id: null, at: -Infinity,
           ownedAuto: false, manualUntil: 0, finished: new Set(), steer: null, cycles: confirmedCycles() }; log("started"); message = "Auto Quest đã bắt đầu; chỉ xử lý quest đã tick."; }
       }
       window.postMessage({ channel: "gst:quest-status:v1", requestId: data.requestId, ...snapshot() }, origin);
     } catch { stop("Không đọc được quest; đã dừng để kiểm tra interface game."); }
   });
-  window.addEventListener("pagehide", () => { suspended = true; detach(); clearInterval(watcher); watcher = null; });
+  window.addEventListener("pagehide", () => { suspended = true; detach(true); clearInterval(watcher); watcher = null; });
   window.addEventListener("pageshow", () => { suspended = false; watch(); discover(); });
   watch();
   window.postMessage({ channel: "gst:quest-status:v1", ready: true }, origin);

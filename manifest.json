@@ -68,6 +68,7 @@
         "features/automation/auto-realm/realm-time-page.js",
         "features/automation/auto-chest/chest-page.js",
         "features/visual/background/background-page.js",
+        "features/automation/auto-quest/quest-handoff.js",
         "features/automation/auto-quest/quest-page.js"
       ],
       "run_at": "document_start",
