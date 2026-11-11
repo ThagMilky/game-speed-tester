@@ -210,7 +210,9 @@
       || (!imminent && globalThis.GSTMapTravel?.active?.(scene)
         && globalThis.GSTHarvest?.needsRecovery?.(scene))
       || globalThis.GSTQuest?.active?.(scene)
-      || ["GSTRealm", "GSTChest", "GSTHarvest"].some((name) => globalThis[name]?.controls?.(scene))
+      || ["GSTRealm", "GSTChest"].some((name) => globalThis[name]?.controls?.(scene))
+      || (globalThis.GSTHarvest?.controls?.(scene) && !imminent && !retreating
+        && !(returnIntent?.scene === scene && returnIntent.phase !== "excluded"))
       || (scene.self.realm?.inside?.protection ?? 0) > 0;
   }
   function retreatOwnerValid(scene) {
@@ -243,6 +245,24 @@
     return true;
   }
   function delegateNativeRecovery(scene, host, time, delta) {
+    const owner = recoveryMeditation;
+    if (retreating && owner?.scene === scene && owner.auto === scene.auto
+        && owner.phase === "stop-pending" && scene.self.med === false
+        && finite(scene.selfAt) && scene.selfAt > owner.snapshotAtRequest
+        && finite(owner.requestedAt) && time - owner.requestedAt >= 2
+        && scene.self.hp / scene.self.mh < recoveryThreshold && typeof host.meditate === "function") {
+      // Native rest() stops meditation at 95%; restart it only after a newer
+      // snapshot confirms the stop, then keep waiting for the configured HP.
+      owner.phase = "pending";
+      owner.snapshotAtRequest = scene.selfAt;
+      owner.requestedAt = time;
+      try { host.meditate(); keepRecoveryResting(scene); }
+      catch {
+        owner.phase = "stop-pending";
+        note(scene, "unsupported", "Không thể tiếp tục thiền hồi phục; đang chờ trạng thái game mới.");
+      }
+      return true;
+    }
     // Keep an unchanged native vector between controller decision ticks.
     releaseJob();
     if (recoverySteer && (recoverySteer.scene !== scene || recoverySteer.auto !== scene.auto
@@ -263,6 +283,8 @@
         keepRecoveryResting(scene);
       } else if (result.meditation === "stop" && recoveryMeditation?.scene === scene) {
         recoveryMeditation.phase = "stop-pending";
+        recoveryMeditation.snapshotAtRequest = scene.selfAt;
+        recoveryMeditation.requestedAt = time;
       } else keepRecoveryResting(scene);
       if ([scene.autoX, scene.autoY].every(finite)
           && (scene.autoX !== before[0] || scene.autoY !== before[1])) {
@@ -928,6 +950,7 @@
           && scene.self.med === true) recoveryMeditation.phase = "active";
       if (recoveryMeditation?.scene === scene && scene.self.med === true) keepRecoveryResting(scene);
       if (recoveryMeditation?.scene === scene && recoveryMeditation.phase !== "returning" && scene.self.med === false
+          && !(recoveryMeditation.phase === "stop-pending" && hp < recoveryThreshold)
           && (recoveryMeditation.phase !== "pending"
             || finite(scene.selfAt) && scene.selfAt > recoveryMeditation.snapshotAtRequest))
         clearRecoveryMeditation();

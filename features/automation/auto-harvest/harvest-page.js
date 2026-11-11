@@ -126,7 +126,7 @@
       || (host.pills("hp") ?? []).some((count) => count > 0))) || (host.mp?.() < mp
       && (host.pills?.("mp") ?? []).some((count) => count > 0));
   }
-  function blockedReason(scene, fresh = false) {
+  function blockedReason(scene, fresh = false, preserveNativeHarvest = false) {
     if (!settings.enabled) return "Thu hoạch đang tắt.";
     if (suspended) return "Tạm dừng vì trang đang rời đi.";
     if (!compatible(scene)) return "Chưa đọc đủ interface thu hoạch của game.";
@@ -135,6 +135,9 @@
     if (scene.leaving) return "Đang chuyển map.";
     if (globalThis.GSTMapTravel?.active(scene)) return "Nhường di chuyển cho bản đồ.";
     if (globalThis.GSTQuest?.active(scene)) return "Nhường cho Auto Quest đang chạy.";
+    if (!preserveNativeHarvest && (globalThis.GSTFarmBossSafety?.retreating?.(scene)
+        || globalThis.GSTFarmBossSafety?.emergency?.(scene, scene.now()) === true))
+      return "Nhường di chuyển cho Tự vệ boss.";
     if (globalThis.GSTChest?.controls(scene)) return "Nhường di chuyển để nhặt rương bí cảnh.";
     if (globalThis.GSTFarmMap?.controls(scene)) return "Nhường di chuyển để tiếp cận mục tiêu farm.";
     if (modalOpen(fresh)) return "Chờ bạn xử lý hộp kiểm tra người chơi.";
@@ -411,7 +414,8 @@
       && host.clear(pos.x, pos.y, next[0], next[1]);
   }
   function step(scene, now) {
-    const reason = blockedReason(scene)
+    const preserveNativeHarvest = ["request", "harvesting", "confirming"].includes(job?.phase);
+    const reason = blockedReason(scene, false, preserveNativeHarvest)
       || (!farmAllowed(scene) ? "Tạm dừng: chưa cho phép hái khi Auto Farm bật." : null)
       || (fighting(scene) ? "Chờ Auto Farm kết thúc mục tiêu chiến đấu hiện tại." : null)
       || (!finite(scene.px) || !finite(scene.py) ? "Chờ tọa độ nhân vật hợp lệ." : null);

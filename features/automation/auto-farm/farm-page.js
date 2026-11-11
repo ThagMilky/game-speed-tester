@@ -585,10 +585,14 @@
       globalThis.GSTFarmRouting?.attach(scene);
       globalThis.GSTFarmDiagnostics?.attach(scene);
       checkRespawn(scene);
-      if (!settings.enabled && settings.targetMode === "all" && !settings.excludeBoss) return;
-      if (compatible(scene) && scene.self && !scene.leaving
-          && connected(scene) && scene.auto !== blockedAuto) syncFilter(scene);
+      const exclusionFilterNeeded = globalThis.GSTFarmBossSafety?.hasExclusions?.(scene) === true;
+      if (compatible(scene) && scene.self && !scene.leaving && connected(scene)
+          && scene.auto !== blockedAuto
+          && (settings.enabled || settings.targetMode !== "all" || settings.excludeBoss || exclusionFilterNeeded))
+        syncFilter(scene);
       else clearFilter();
+      if (!settings.enabled && settings.targetMode === "all" && !settings.excludeBoss && !exclusionFilterNeeded) return;
+      if (exclusionFilterNeeded) clearUnsafeFarmTarget(scene);
       if (revival && (revival.scene !== scene || revival.auto !== scene?.auto)) revival = null;
       if (!scene?.auto?.on) {
         revival = null;
