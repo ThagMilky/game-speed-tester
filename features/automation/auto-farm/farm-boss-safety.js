@@ -954,6 +954,10 @@
         return false;
       }
       if (settings.bossRetreat && !retreating && boss && hp < retreatThreshold) {
+        // A completed return marker is not a pending meditation owner. Retire
+        // it before a new retreat, while preserving any real active meditation.
+        if (recoveryMeditation?.scene === scene && recoveryMeditation.phase === "returning"
+            && scene.self.med !== true) clearRecoveryMeditation();
         retreating = true;
         const home = globalThis.GSTHarvest?.farmOrigin?.(scene) ?? { x: scene.auto.ax, y: scene.auto.ay };
         returnIntent = [home?.x, home?.y].every(finite)
@@ -994,7 +998,7 @@
       // A pending realm seal owns combat before the boss. Keep urgent hazard
       // dodging and low-HP retreat, but do not kite/spam Q solely for the boss
       // while the seal handler is trying to approach and break seals.
-      const cooling = !globalThis.GSTFarmSeals?.pending?.(scene)
+      const cooling = settings.bossDodge && !globalThis.GSTFarmSeals?.pending?.(scene)
         && !!boss && offensiveCooldownGap(scene, host, time);
       const gapDistance = boss ? distance(pos, boss) : Infinity;
       // Only make a short spacing adjustment if the boss is almost touching us.
