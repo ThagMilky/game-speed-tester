@@ -59,9 +59,7 @@
     const enemies = typeof host.enemies === "function" ? host.enemies() : [];
     const target = nativeTarget(scene, enemies, area, time);
     const distance = target ? range(target, { x: scene.px, y: scene.py }) : Infinity;
-    const exclusionPathAllowed = (point) => seekRealmBoss(scene)
-      || globalThis.GSTFarmBossSafety?.allowsSegment?.(scene, { x: scene.px, y: scene.py }, point) !== false;
-    const engaged = target && exclusionPathAllowed(target) && distance <= nativeReach
+    const engaged = target && exclusionPathAllowed(scene, target) && distance <= nativeReach
       && (distance <= 2.2 || host.clear?.(scene.px, scene.py, target.x, target.y));
     // Hand off only for a confirmed recent hit on the player. The game's
     // enemy.aggro flag describes monster type, not the attacker.
@@ -226,6 +224,8 @@
     || (preferences.excludeBoss !== true && !["highLevel", "lowLevel"].includes(preferences.targetMode)))
     && globalThis.GSTFarmPriority?.realmBossEligible?.(scene) !== false
     && globalThis.GSTRealm?.seekBoss?.(scene) === true;
+  const exclusionPathAllowed = (scene, point) => seekRealmBoss(scene)
+    || globalThis.GSTFarmBossSafety?.allowsSegment?.(scene, { x: scene.px, y: scene.py }, point) !== false;
   // Known targets inside a configured radius also need long-distance navigation.
   // Idle policy only decides what to do AFTER all eligible targets are exhausted.
   const wanted = (scene) => preferences.enabled === true || seekRealmBoss(scene);
@@ -512,7 +512,7 @@
         const pos = { x: scene.px, y: scene.py };
         const blocker = host.enemies().filter((enemy) => !isBoss(enemy) && enemy.id !== target.id
           && !enemy.dead && nativeEligible(enemy) && finite(enemy.x) && finite(enemy.y)
-          && exclusionPathAllowed(enemy)
+          && exclusionPathAllowed(scene, enemy)
           && range(enemy, pos) < 3.5 && range(enemy, { x: scene.auto.ax, y: scene.auto.ay })
             < (globalThis.GSTFarmCompatibility?.nativeRadius(scene.auto.radius) ?? -Infinity)
           && segmentDistance(enemy, pos, target) < (finite(enemy.radius) ? enemy.radius : 1) + 0.7)
@@ -534,7 +534,7 @@
       // Merely knowing a distant actor does not mean native pick() can route to it.
       // Its full route grid is bounded; native walk() can also use shorter hop() routes.
       const distance = Math.hypot(scene.px - target.x, scene.py - target.y);
-      if (target.actor && exclusionPathAllowed(target) && distance <= handoffReach
+      if (target.actor && exclusionPathAllowed(scene, target) && distance <= handoffReach
           && (distance <= 2.2 || host.clear(scene.px, scene.py, target.x, target.y))) {
         yieldToNative(scene, time, target, "near_target");
         return false;
