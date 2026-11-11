@@ -208,7 +208,8 @@ function updateFarmPreferences(patch, { draftWrite = false } = {}) {
       ? globalThis.GSTFarmPolicy.normalize(patch.policyMode) : globalThis.GSTFarmPolicy.read(current);
     const farmPreferences = globalThis.GSTFarmPolicy.withMode({ ...current, ...patch },
       policyMode);
-    if (["boss", "bossLevel"].includes(normalizeFarmTargetMode(patch.targetMode))) farmPreferences.excludeBoss = false;
+    if (patch.bossFilter === "world"
+        || ["boss", "bossLevel"].includes(normalizeFarmTargetMode(patch.targetMode))) farmPreferences.excludeBoss = false;
     else if (patch.excludeBoss === true && ["boss", "bossLevel"].includes(normalizeFarmTargetMode(current.targetMode)))
       farmPreferences.targetMode = "highLevel";
     else if (Object.keys(patch).length === 0) {
@@ -553,9 +554,15 @@ farmTargetMode.addEventListener("change", async () => {
 });
 farmBossFilter.addEventListener("change", async () => {
   const next = farmBossFilter.value === "world" ? "world" : "all";
-  farmBossFilter.disabled = true;
-  await saveFarmPatch({ bossFilter: next }, () => { farmBossFilter.value = farmConfirmed.bossFilter; });
-  farmBossFilter.disabled = false;
+  const patch = { bossFilter: next };
+  if (next === "world") patch.excludeBoss = false;
+  farmBossFilter.disabled = farmExcludeBoss.disabled = true;
+  if (patch.excludeBoss === false) farmExcludeBoss.checked = false;
+  await saveFarmPatch(patch, () => {
+    farmBossFilter.value = farmConfirmed.bossFilter;
+    farmExcludeBoss.checked = farmConfirmed.excludeBoss;
+  });
+  farmBossFilter.disabled = farmExcludeBoss.disabled = false;
 });
 for (const [input, key] of [[farmSearchScope, "searchScope"], [farmIdleMode, "idleMode"]]) {
   input.addEventListener("change", async () => {
