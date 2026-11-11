@@ -350,7 +350,9 @@
     const returnHome = () => {
       if (scouting || preferences.idleMode !== "home" || seekRealmBoss(scene)) return null;
       const home = globalThis.GSTHarvest?.farmOrigin?.(scene);
-      return home && withinArea(area, home) && range(home, { x: scene.px, y: scene.py }) > 1.2
+      return home && withinArea(area, home)
+        && globalThis.GSTFarmBossSafety?.isAreaExcluded?.(scene, home) !== true
+        && range(home, { x: scene.px, y: scene.py }) > 1.2
         ? { id: "farm:home", x: home.x, y: home.y, actor: false, home: true } : null;
     };
     if (preferences.targetMode !== "boss")
@@ -371,7 +373,9 @@
   function scout(scene, time) {
     const area = searchArea(scene);
     if (!area) { message = "Chưa xác định được phạm vi tìm quái an toàn."; return null; }
-    if (job?.scout && withinArea(area, job) && Math.hypot(scene.px - job.x, scene.py - job.y) > 1.2) {
+    if (job?.scout && withinArea(area, job)
+        && globalThis.GSTFarmBossSafety?.isAreaExcluded?.(scene, job) !== true
+        && Math.hypot(scene.px - job.x, scene.py - job.y) > 1.2) {
       return { id: job.id, x: job.x, y: job.y, actor: false, scout: true };
     }
     if (job?.scout) { explored.set(job.id, Infinity); release(); }
@@ -388,7 +392,9 @@
           lv: item.level, cls: item.boss ? "boss" : "mob", wb: item.boss === true
         }) !== false;
       })
-      .filter((item) => withinArea(area, item) && range(item, { x: scene.px, y: scene.py }) > 2
+       .filter((item) => withinArea(area, item)
+         && globalThis.GSTFarmBossSafety?.isAreaExcluded?.(scene, item) !== true
+         && range(item, { x: scene.px, y: scene.py }) > 2
         && !(explored.get(`camp:${item.x.toFixed(1)}:${item.y.toFixed(1)}`) > time))
       .sort((a, b) => range(a, { x: scene.px, y: scene.py }) - range(b, { x: scene.px, y: scene.py }))[0];
     if (camp) return { id: `camp:${camp.x.toFixed(1)}:${camp.y.toFixed(1)}`,
@@ -406,7 +412,9 @@
       for (let col = 0; col < columns; col++) {
         const x = area.minX + (col + 0.5) * width / columns;
         const id = `scout:${x}:${y}`, d = Math.hypot(x - scene.px, y - scene.py);
-        if (!withinArea(area, { x, y }) || d < 2 || explored.get(id) > time
+        if (!withinArea(area, { x, y })
+            || globalThis.GSTFarmBossSafety?.isAreaExcluded?.(scene, { x, y }) === true
+            || d < 2 || explored.get(id) > time
             || scene.collision.blockedCell(x, y)) continue;
         if (d < distance) { best = { id, x, y, actor: false, scout: true }; distance = d; }
       }
@@ -414,7 +422,9 @@
     if (!best) {
       for (const [id, until] of explored) if (until === Infinity) explored.delete(id);
       scanAt = time + 10; exhaustedUntil = scanAt;
-      message = "Đã dò các điểm hiện có; chờ trước khi dò lại.";
+      message = globalThis.GSTFarmBossSafety?.hasExclusions?.(scene) === true
+        ? "Không còn điểm farm an toàn trong vùng hiện tại; giữ vị trí và chờ exclusion được đánh giá lại."
+        : "Đã dò các điểm hiện có; chờ trước khi dò lại.";
     }
     return best;
   }

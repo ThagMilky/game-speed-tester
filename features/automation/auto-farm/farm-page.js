@@ -329,6 +329,15 @@
     scene.auto.think = 0;
     if (session?.scene === scene) session.rankTarget = null;
   }
+  function clearUnsafeFarmTarget(scene) {
+    if (!scene?.auto?.on || scene.auto.moved || GSTFarmInput.movement(scene)) return;
+    const actor = scene.views?.get?.(scene.auto.target);
+    if (!actor || globalThis.GSTFarmBossSafety?.allowsTarget?.(scene, actor) !== false) return;
+    scene.auto.target = 0;
+    if (Array.isArray(scene.auto.path)) scene.auto.path = [];
+    scene.auto.think = 0;
+    if (session?.scene === scene) session.rankTarget = null;
+  }
   function restoreExcludedBossTarget(scene) {
     const change = excludedBossChange;
     excludedBossChange = null;
@@ -358,9 +367,10 @@
     owner.auto.think = 0;
   }
   function syncFilter(scene) {
-    const filteringActive = () => settings.targetMode !== "all" || settings.excludeBoss;
+    const filteringActive = (ownerScene) => settings.targetMode !== "all" || settings.excludeBoss
+      || globalThis.GSTFarmBossSafety?.hasExclusions?.(ownerScene) === true;
     const boundaryActive = () => settings.enabled && settings.searchScope === "radius";
-    if (!filteringActive() && !boundaryActive()) { clearFilter(); return; }
+    if (!filteringActive(scene) && !boundaryActive()) { clearFilter(); return; }
     clearExcludedBossTarget(scene);
     if (filterBinding?.scene === scene && scene.autoHost === filterBinding.wrapper) return;
     clearFilter();
@@ -370,9 +380,10 @@
     const descriptor = Object.getOwnPropertyDescriptor(scene, "autoHost");
     const wrapper = function (...args) {
       const host = original.apply(this, args);
-      if ((!filteringActive() && !boundaryActive()) || !this.auto?.on) return host;
+      if ((!filteringActive(this) && !boundaryActive()) || !this.auto?.on) return host;
       // Keep the wrapper through recovery; the enemy getter exposes raw threats while resting.
-      const eligible = (enemy) => nativeEligible(enemy) && (
+      const eligible = (enemy) => nativeEligible(enemy)
+        && globalThis.GSTFarmBossSafety?.allowsTarget?.(this, enemy) !== false && (
         insideFarmBoundary(this, enemy) && matchesTarget(enemy)
         // Only a validated, opt-in nearby group may temporarily join native
         // combat. This never includes an excluded boss or a distant actor.
@@ -388,7 +399,8 @@
           const enemies = typeof host?.enemies === "function" ? host.enemies() : [];
           if (!Array.isArray(enemies)) return [];
           // Native update can enter recovery after this host wrapper is created.
-          if (this.auto?.resting) return enemies;
+          if (this.auto?.resting) return enemies.filter((enemy) =>
+            globalThis.GSTFarmBossSafety?.allowsTarget?.(this, enemy) !== false);
           const filtered = enemies.filter(eligible);
           return ranked() && !this.auto?.resting ? filtered.sort(comparePriority) : filtered;
         }, loot: () => {
@@ -659,6 +671,7 @@
         s.mapKey = mapKey;
         s.home = { x: s.auto.ax, y: s.auto.ay };
         s.center = { ...s.home };
+        s.unsafeHoldCenter = null;
         s.rankTarget = null;
         s.reanchor = false;
       }
@@ -685,6 +698,12 @@
         message = globalThis.GSTFarmBossSafety.status(s.scene)
           || `Đang rút lui; chờ HP đạt ${settings.recoveryHpPercent}% trước khi tiếp tục chọn mục tiêu.`;
         return;
+      }
+      if (s.unsafeHoldCenter) {
+        const homeExcluded = globalThis.GSTFarmBossSafety?.isAreaExcluded?.(s.scene, s.home) === true;
+        if (!homeExcluded && s.auto.ax === s.unsafeHoldCenter.x && s.auto.ay === s.unsafeHoldCenter.y)
+          center(s, s.home);
+        s.unsafeHoldCenter = null;
       }
       // A native handoff moves the game's search center to the remote camp.
       // It is not a manual relocation of the user's configured farm origin.
@@ -725,6 +744,7 @@
       }
       if (!finite(time) || time - s.at < 0.5) return;
       s.at = time;
+      clearUnsafeFarmTarget(s.scene);
       if (!settings.enabled) {
         if (s.auto.moved || time < s.auto.pauseUntil || GSTFarmInput.movement(s.scene)) s.rankTarget = null;
         if (ranked() && !s.auto.moved && time >= s.auto.pauseUntil && !s.auto.resting
@@ -739,6 +759,20 @@
                 && distance(enemy, centerPoint) < searchRadius), false, searchRadius);
           }
         }
+        if (globalThis.GSTFarmBossSafety?.isAreaExcluded?.(s.scene, s.home) === true) {
+          const enemies = host.allEligibleEnemies ? host.allEligibleEnemies() : host.enemies();
+          const centerPoint = { x: s.auto.ax, y: s.auto.ay };
+          const safeLocal = Array.isArray(enemies) && enemies.some((enemy) => finite(enemy?.x) && finite(enemy.y)
+            && distance(enemy, centerPoint) < searchRadius);
+          if (!safeLocal) {
+            const point = host.pos();
+            if (Array.isArray(point) && point.length === 2 && point.every(finite)) {
+              center(s, { x: point[0], y: point[1] }); s.unsafeHoldCenter = { ...s.center };
+            }
+            message = "Bãi gốc đang bị loại tạm; không có mục tiêu an toàn gần nên giữ vị trí hiện tại.";
+            return;
+          }
+        }
         message = `${filterLabel()}; dùng bán kính gốc của game.`;
         return;
       }
@@ -749,6 +783,7 @@
       }
       if (s.auto.moved || time < s.auto.pauseUntil) {
         restore(s);
+        s.unsafeHoldCenter = null;
         s.reanchor = true;
         s.rankTarget = null;
         message = "Paused for manual movement.";
@@ -757,6 +792,7 @@
       if (s.reanchor || !owned(s)) {
         s.home = { x: s.auto.ax, y: s.auto.ay };
         s.center = { ...s.home };
+        s.unsafeHoldCenter = null;
         s.reanchor = false;
         s.rankTarget = null;
       }
@@ -777,7 +813,9 @@
         return;
       }
       const eligible = enemies.filter((enemy) => finite(enemy?.id) && finite(enemy.x) && finite(enemy.y)
-        && !enemy.dead && nativeEligible(enemy) && (settings.searchScope === "map" ? finite(s.scene.map?.w) && finite(s.scene.map?.h)
+        && !enemy.dead && nativeEligible(enemy)
+        && globalThis.GSTFarmBossSafety?.allowsTarget?.(s.scene, enemy) !== false
+        && (settings.searchScope === "map" ? finite(s.scene.map?.w) && finite(s.scene.map?.h)
           && enemy.x >= 0 && enemy.y >= 0 && enemy.x < s.scene.map.w && enemy.y < s.scene.map.h
           : distance(enemy, s.home) < settings.radius)
         && !(s.auto.skipped.has(enemy.id) && s.auto.skipped.get(enemy.id) > time));
@@ -824,8 +862,11 @@
         shiftToward(s, next, searchRadius);
         message = "Search center extended; built-in Auto Farm will choose/pursue a target.";
       } else {
-        center(s, s.home);
-        message = settings.idleMode === "hold" ? "Không có quái phù hợp; nhặt đồ rồi đứng chờ trong vùng farm."
+        const homeExcluded = globalThis.GSTFarmBossSafety?.isAreaExcluded?.(s.scene, s.home) === true;
+        center(s, homeExcluded ? pos : s.home);
+        if (homeExcluded) s.unsafeHoldCenter = { ...s.center };
+        message = homeExcluded ? "Các bãi phù hợp đang bị loại tạm vì nguy hiểm; đứng chờ tại vị trí hiện tại."
+          : settings.idleMode === "hold" ? "Không có quái phù hợp; nhặt đồ rồi đứng chờ trong vùng farm."
           : settings.idleMode === "seek" ? (globalThis.GSTFarmMap?.status(s.scene) || "Đang dò vùng tìm quái mới sau khi nhặt đồ.")
           : "Không có quái phù hợp; Auto Farm quay về tâm farm gốc.";
       }

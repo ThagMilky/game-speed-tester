@@ -7,7 +7,8 @@
   try {
     const rows = JSON.parse(sessionStorage.getItem(logKey) ?? "[]");
     const allowed = ["pill", "retreat", "resume", "hazard", "kite", "no_route", "unsupported",
-      "dash", "dash_result", "flight_drop", "cooldown_wait", "boss_cast"];
+      "dash", "dash_result", "flight_drop", "cooldown_wait", "boss_cast", "return",
+      "return_deferred", "area_excluded", "area_expired", "no_destination"];
     if (Array.isArray(rows)) log.push(...rows.slice(-30).filter((row) => allowed.includes(row?.type)
       && typeof row.at === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.at))
       .map((row) => ({ at: row.at, type: row.type,
@@ -20,13 +21,15 @@
         distance: finite(row.distance) ? Math.max(0, Math.min(1000, row.distance)) : null,
         flying: row.flying === true })));
   } catch { /* Optional log, never influence Auto Farm. */ }
-  let settings = {}, binding = null, job = null, retreating = false, suspended = false;
+  let settings = {}, binding = null, job = null, retreating = false, returnIntent = null, suspended = false;
   let retreatThreshold = 0.4, recoveryThreshold = 1;
   let retryAt = 0, message = "", noteUntil = 0, lastDashAt = -Infinity, dashObservation = null;
   let recentDamage = new Map(), threatSample = [], threatSampleAt = -Infinity, threatSampleScene = null;
   let visibleWarnings = [], cooldownHolding = false, recoverySteer = null, recoveryMeditation = null;
   const maxThreatScan = 256, maxLocalThreats = 24, maxPrioritizedAttackers = 8;
   const localThreatRadius = 12, threatFalloff = 9;
+  const unsafeAreas = [], maxUnsafeAreas = 8, unsafeAreaTtl = 90_000;
+  const unsafeAreaRadius = 8, unsafeRetrySeconds = 3, unsafeRepeatWindowMs = 30_000;
   const warningHooks = new WeakMap();
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
@@ -77,9 +80,12 @@
       if (!handoff || (med !== true && med !== undefined && old.phase !== "pending")) old.auto.resting = false;
     }
   }
+  function clearUnsafeAreas() { unsafeAreas.length = 0; }
+  function clearReturnIntent() { returnIntent = null; }
   function cancelRetreat(handoff = true) {
     const scene = recoveryMeditation?.scene ?? binding?.scene;
     clearRecoveryMeditation(handoff); release(); retreating = false; cooldownHolding = false;
+    clearReturnIntent(); clearUnsafeAreas();
     return scene;
   }
   function manualMeditationInput(event) {
@@ -119,13 +125,62 @@
     // Seals can be attacked with any farm target filter. Their hazard warnings
     // still need the same safety owner, without enabling routine boss kiting.
     const sealThreat = settings.bossDodge && globalThis.GSTFarmSeals?.pending?.(scene);
-    return (retreating && settings.bossRetreat) || (bossMode && (settings.bossDodge || settings.bossRetreat))
-      || !!sealThreat || hasVisibleElite(scene);
+    return (retreating && settings.bossRetreat) || (!!returnIntent && returnIntent.scene === scene)
+      || (bossMode && (settings.bossDodge || settings.bossRetreat))
+      || !!sealThreat || hasVisibleElite(scene) || hasUnsafeAreas(scene);
   }
   function connected(scene) {
     const d = scene.driver;
     return !!d && !d.closing && !d.reconnecting && !d.displaced
       && (d.online === false || d.link?.open?.() === true);
+  }
+  function currentMapKey(scene) {
+    try { return scene?.autoHost?.()?.mapKey?.() ?? null; }
+    catch { return null; }
+  }
+  function pruneUnsafeAreas(scene) {
+    if (unsafeAreas.length && binding?.scene === scene && binding.mapKey != null) {
+      const mapKey = currentMapKey(scene);
+      if (mapKey != null && mapKey !== binding.mapKey) {
+        cancelRetreat(); recentDamage.clear(); threatSample = [];
+        binding.mapKey = mapKey;
+        note(scene, "resume", "Map đã đổi; đã xóa vùng tránh và return cũ để chờ dữ liệu map mới.");
+        return;
+      }
+    }
+    for (let i = unsafeAreas.length - 1; i >= 0; i--) {
+      const area = unsafeAreas[i];
+      if (area.scene !== scene || area.auto !== scene?.auto || area.mapKey !== binding?.mapKey) {
+        unsafeAreas.splice(i, 1);
+      }
+    }
+  }
+  function excludedArea(scene, point) {
+    if (!scene || !finite(point?.x) || !finite(point?.y)) return null;
+    pruneUnsafeAreas(scene);
+    return unsafeAreas.find((area) => distance(area, point) <= area.radius) ?? null;
+  }
+  function hasUnsafeAreas(scene) {
+    return scene?.auto?.on === true && globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() === true
+      && (pruneUnsafeAreas(scene), unsafeAreas.length > 0);
+  }
+  function excludeUnsafeArea(scene, intent, reason) {
+    const mapKey = binding?.mapKey;
+    if (mapKey == null || intent?.scene !== scene || intent.auto !== scene.auto) return false;
+    const existing = unsafeAreas.find((area) => area.scene === scene && area.auto === scene.auto
+      && area.mapKey === mapKey && distance(area, intent.point) <= unsafeAreaRadius);
+    const entry = existing ?? { scene, auto: scene.auto, mapKey, x: intent.point.x, y: intent.point.y,
+      radius: unsafeAreaRadius, expiresAt: 0 };
+    entry.expiresAt = performance.now() + unsafeAreaTtl;
+    entry.reason = reason;
+    if (!existing) {
+      if (unsafeAreas.length >= maxUnsafeAreas) unsafeAreas.shift();
+      unsafeAreas.push(entry);
+    }
+    intent.excludedUntil = entry.expiresAt;
+    intent.unsafeChecks = 0;
+    note(scene, "area_excluded", `Tạm tránh khu farm trong ${Math.round(unsafeAreaTtl / 1000)} giây sau nhiều lần return không an toàn.`);
+    return true;
   }
   function blocked(scene, imminent = false) {
     return suspended || (!imminent && globalThis.GSTFarmDefense?.controls?.(scene)) || !scene?.auto?.on || !scene.self || scene.self.dead || scene.leaving
@@ -155,6 +210,15 @@
   }
   function holdForRecoveryData(scene, time, text) {
     release();
+    if (!retreating && !returnIntent && unsafeAreas.length) {
+      if (message !== text || performance.now() > noteUntil) note(scene, "unsupported", text);
+      return true;
+    }
+    if (returnIntent && !retreating) {
+      if (!retreatOwnerValid(scene)) { cancelRetreat(); return false; }
+      if (message !== text || performance.now() > noteUntil) note(scene, "unsupported", text);
+      return true;
+    }
     if (!retreating || !retreatOwnerValid(scene)) {
       cancelRetreat(); return false;
     }
@@ -583,6 +647,143 @@
     note(scene, "pill", "Đang dùng đan HP bằng cơ chế gốc.");
     return true;
   }
+  function maxPathExposure(start, path, threats) {
+    let maximum = threatExposure(start, threats), prior = start;
+    for (const coords of path) {
+      const end = { x: coords[0], y: coords[1] };
+      for (const fraction of [0.5, 1]) maximum = Math.max(maximum, threatExposure({
+        x: prior.x + (end.x - prior.x) * fraction,
+        y: prior.y + (end.y - prior.y) * fraction
+      }, threats));
+      prior = end;
+    }
+    return maximum;
+  }
+  function refreshExpiredUnsafeAreas(scene, time, pos, bounds, hazards, threats) {
+    const now = performance.now(), currentExposure = threatExposure(pos, threats);
+    for (let i = unsafeAreas.length - 1; i >= 0; i--) {
+      const area = unsafeAreas[i];
+      if (area.scene !== scene || area.auto !== scene.auto || area.mapKey !== binding?.mapKey
+          || now < area.expiresAt) continue;
+      const point = { x: area.x, y: area.y };
+      const threatened = threatExposure(point, threats) > Math.max(0.2, currentExposure + 0.12);
+      const hazard = hazards.some((zone) => zone.until >= time && zone.at <= time + 2.2
+        && distance(zone, point) <= zone.radius + area.radius);
+      if (!inside(bounds, point) || threatened || hazard) {
+        area.expiresAt = now + unsafeAreaTtl;
+        area.reason = threatened ? "threat" : "route";
+        note(scene, "area_excluded", "Khu farm vẫn có threat hoặc cảnh báo; gia hạn tránh tạm sau khi đánh giá lại.");
+      } else {
+        unsafeAreas.splice(i, 1);
+        note(scene, "area_expired", "Hết hạn vùng tránh tạm sau khi threat/cảnh báo tại khu đã an toàn hơn.");
+      }
+    }
+  }
+  function deferReturn(scene, host, time, reason) {
+    const intent = returnIntent;
+    if (!intent || time < intent.retryAt) {
+      release();
+      return true;
+    }
+    const now = performance.now();
+    if (intent.lastUnsafeReason !== reason || now - intent.lastUnsafeAt > unsafeRepeatWindowMs) {
+      intent.unsafeChecks = 1;
+    } else intent.unsafeChecks++;
+    intent.lastUnsafeReason = reason;
+    intent.lastUnsafeAt = now;
+    intent.retryAt = time + unsafeRetrySeconds;
+    release();
+    GSTNavigation.resetLeg(intent.navigation, true);
+    if (intent.navigation) { intent.navigation.path = []; intent.navigation.pathAt = -Infinity; }
+    if (intent.unsafeChecks >= 2) {
+      if (!excludeUnsafeArea(scene, intent, reason)) {
+        if (intent.lastNoDestinationReason !== reason) {
+          intent.lastNoDestinationReason = reason;
+          note(scene, "no_destination", "Tuyến về bãi gốc chưa an toàn; đang đứng chờ dữ liệu hoặc tuyến phù hợp.");
+        }
+      } else intent.phase = "excluded";
+    } else {
+      note(scene, "return_deferred", reason === "threat"
+        ? "Chưa quay về bãi gốc: mức đe dọa tại bãi vẫn cao hơn vị trí hiện tại."
+        : "Chưa quay về bãi gốc: tuyến đang vướng cảnh báo kỹ năng hoặc vật cản.");
+    }
+    return true;
+  }
+  function runReturn(scene, host, time, pos, bounds, hazards, threats) {
+    const intent = returnIntent;
+    if (!intent || intent.scene !== scene || intent.auto !== scene.auto) return false;
+    const excluded = excludedArea(scene, intent.point);
+    if (excluded) {
+      release();
+      intent.phase = "excluded";
+      if (intent.lastExcludedUntil !== excluded.expiresAt) {
+        intent.lastExcludedUntil = excluded.expiresAt;
+        note(scene, "no_destination", "Bãi gốc đang bị loại tạm vì các lần quay về trước không an toàn; chờ hết hạn để đánh giá lại.");
+      }
+      return null;
+    }
+    if (intent.phase === "excluded") {
+      intent.phase = "returning"; intent.retryAt = time; intent.navigation = null;
+      intent.unsafeChecks = 0; intent.lastDecision = "";
+      note(scene, "return", "Vùng tránh tạm đã hết hạn; đang đánh giá lại threat và tuyến trước khi quay về.");
+    }
+    if (time < intent.retryAt) { release(); return true; }
+    if (!inside(bounds, intent.point)) return deferReturn(scene, host, time, "route");
+    const currentExposure = threatExposure(pos, threats);
+    const targetExposure = threatExposure(intent.point, threats);
+    if (targetExposure > Math.max(0.2, currentExposure + 0.12))
+      return deferReturn(scene, host, time, "threat");
+    if (distance(pos, intent.point) <= 0.8) {
+      release(); returnIntent = null; clearRecoveryMeditation();
+      note(scene, "return", "Đã về gần tâm farm an toàn; Auto Farm gốc được phép chọn mục tiêu phù hợp.");
+      return false;
+    }
+    const allowedPoint = (point) => inside(bounds, point) && !excludedArea(scene, point)
+      && clearOfHazards(pos, point, hazards)
+      && threatExposure(point, threats) <= currentExposure + 0.12;
+    const walking = { ...host,
+      clear: (x, y, gx, gy) => allowedPoint({ x: gx, y: gy }) && host.clear(x, y, gx, gy)
+        && clearOfHazards({ x, y }, { x: gx, y: gy }, hazards),
+      route: (x, y, gx, gy) => {
+        if (!allowedPoint({ x: gx, y: gy })) return null;
+        const route = host.route(x, y, gx, gy);
+        return pathSafe(scene, { x, y }, route, bounds, hazards)
+          && maxPathExposure({ x, y }, route, threats) <= currentExposure + 0.2 ? route : null;
+      },
+      steer: (x, y) => {
+        const next = { x: scene.px + x * 0.25, y: scene.py + y * 0.25 };
+        if (!allowedPoint(next) || !clearOfHazards(pos, next, hazards)) {
+          intent.denied = true; x = 0; y = 0;
+        }
+        scene.autoX = x; scene.autoY = y;
+        if (job?.navigation === intent.navigation) job.steer = [x, y];
+      }
+    };
+    if (!intent.navigation) intent.navigation = Object.assign(Object.create(scene.auto), {
+      path: [], lastX: pos.x, lastY: pos.y, stillSince: time, pathAt: -Infinity,
+      stuckCount: 0, sideUntil: 0, sideX: 0, sideY: 0
+    });
+    const navigation = intent.navigation;
+    const next = GSTNavigation.leg(scene, navigation, walking, intent.point.x, intent.point.y, allowedPoint);
+    if (!next) return deferReturn(scene, host, time, "route");
+    if (!job || job.navigation !== navigation) {
+      release();
+      job = { navigation, point: { ...intent.point }, startedAt: time, progressAt: time,
+        steer: null, emergency: false, mode: "return" };
+    }
+    intent.denied = false;
+    if (GSTNavigation.progressed(scene, navigation, navigation.path, intent.point.x, intent.point.y, 0.3))
+      job.progressAt = time;
+    if (time - job.startedAt > 120 || time - job.progressAt > 12)
+      return deferReturn(scene, host, time, "route");
+    if (!GSTNavigation.walk(scene, navigation, walking, time, pos.x, pos.y, next.x, next.y, 0.8)
+        || intent.denied) return deferReturn(scene, host, time, "route");
+    if (intent.lastDecision !== "returning") {
+      intent.lastDecision = "returning";
+      note(scene, "return", "Đường về bãi gốc đang an toàn; quay lại bằng navigation Auto Farm hiện có.");
+    }
+    return true;
+  }
   function update(host, time, delta) {
     const scene = binding?.scene;
     try {
@@ -598,6 +799,15 @@
           "Thiếu dữ liệu Auto Farm để điều hướng; đang chờ dữ liệu hợp lệ trước khi tiếp tục.");
       if (!scene.self) return holdForRecoveryData(scene, time,
         "Chưa có dữ liệu nhân vật; đang giữ hồi phục và chờ snapshot mới.");
+      if (unsafeAreas.length && (scene.self.dead || !connected(scene))) {
+        cancelRetreat(); return false;
+      }
+      if (GSTFarmInput.movement(scene) || scene.auto.moved) {
+        cancelRetreat(); return false;
+      }
+      if ((retreating || returnIntent) && !retreatOwnerValid(scene)) {
+        cancelRetreat(); return false;
+      }
       const mapKey = host.mapKey?.();
       if (binding.mapKey && mapKey == null) return holdForRecoveryData(scene, time,
         "Chưa nhận được mã map hiện tại; đang giữ hồi phục tới khi dữ liệu map ổn định.");
@@ -606,6 +816,10 @@
         binding.mapKey = mapKey;
         note(scene, "resume", "Map đã đổi; hủy trạng thái rút lui và chờ Auto Farm gốc chọn lại.");
         return false;
+      }
+      if (!binding.mapKey && mapKey != null) {
+        binding.mapKey = mapKey;
+        if (returnIntent) returnIntent.mapKey = mapKey;
       }
       const pos = { x: scene.px, y: scene.py }, bounds = zone(scene);
       if (!bounds || !inside(bounds, pos) || !finite(scene.self.hp) || !finite(scene.self.mh) || scene.self.mh <= 0
@@ -619,7 +833,7 @@
       if (recoveryMeditation?.scene === scene && recoveryMeditation.phase === "pending"
           && scene.self.med === true) recoveryMeditation.phase = "active";
       if (recoveryMeditation?.scene === scene && scene.self.med === true) keepRecoveryResting(scene);
-      if (recoveryMeditation?.scene === scene && scene.self.med === false
+      if (recoveryMeditation?.scene === scene && recoveryMeditation.phase !== "returning" && scene.self.med === false
           && (recoveryMeditation.phase !== "pending"
             || finite(scene.selfAt) && scene.selfAt > recoveryMeditation.snapshotAtRequest))
         clearRecoveryMeditation();
@@ -634,12 +848,24 @@
           }
           return true; // Wait for the next game snapshot to confirm the native toggle.
         }
-        cancelRetreat();
+        release(); retreating = false; cooldownHolding = false;
+        if (returnIntent?.scene === scene && returnIntent.auto === scene.auto) {
+          returnIntent.phase = "returning"; returnIntent.retryAt = time;
+          returnIntent.navigation = null; returnIntent.lastDecision = "";
+          setRecoveryMeditation({ scene, auto: scene.auto, ownsResting: false, phase: "returning" });
+          note(scene, "return", "Đã đạt ngưỡng hồi HP và kết thúc thiền; đang kiểm tra đường về bãi farm.");
+          return true;
+        }
         note(scene, "resume", "Đã đạt ngưỡng hồi HP; Auto Farm gốc tiếp tục tự chọn mục tiêu.");
         return false;
       }
       if (settings.bossRetreat && !retreating && boss && hp < retreatThreshold) {
         retreating = true;
+        const home = globalThis.GSTHarvest?.farmOrigin?.(scene) ?? { x: scene.auto.ax, y: scene.auto.ay };
+        returnIntent = [home?.x, home?.y].every(finite)
+          ? { scene, auto: scene.auto, mapKey: binding.mapKey, point: { x: home.x, y: home.y },
+            phase: "recovering", unsafeChecks: 0, retryAt: time }
+          : null;
         note(scene, "retreat", `HP dưới ${settings.retreatHpPercent}%; đang rút khỏi nhóm quái và chờ hồi HP.`,
           { cooldown: typeof host.pillWait === "function" ? host.pillWait("hp") : null });
       }
@@ -647,6 +873,7 @@
       if (blocked(scene, currentUrgent)) {
         if (retreating && !retreatOwnerValid(scene)) { cancelRetreat(); return false; }
         release();
+        if (returnIntent && !retreating && returnIntent.phase !== "excluded") return true;
         if (retreating && retreatContextValid(scene, scene.now())) {
           if (scene.auto.resting) return delegateNativeRecovery(scene, host, time, delta);
           if (scene.self.med) return true;
@@ -664,7 +891,12 @@
         && area.at <= time + 0.75 && area.until >= time);
       const avoidanceBoss = settings.bossDodge || retreating ? boss : null;
       const threats = localThreats(scene, host, pos, time);
+      refreshExpiredUnsafeAreas(scene, time, pos, bounds, hazards, threats);
       if (job && danger) job.emergency = true;
+      if (danger && job?.mode === "return") {
+        release(); GSTNavigation.resetLeg(returnIntent?.navigation);
+        if (returnIntent?.navigation) returnIntent.navigation.path = [];
+      }
       // A pending realm seal owns combat before the boss. Keep urgent hazard
       // dodging and low-HP retreat, but do not kite/spam Q solely for the boss
       // while the seal handler is trying to approach and break seals.
@@ -679,11 +911,15 @@
       // critical low-HP retreat, over continuing that cast in place.
       if ((scene.pendingSkill || scene.aiming) && !danger && !retreating) {
         release();
-        return false;
+        return returnIntent?.phase !== "excluded" ? !!returnIntent : false;
       }
       // When even one attack skill is available, immediately hand combat
       // back to native castSkills(). Do not add a second skill-spam engine.
-      if (!danger && !retreating && !cooldownKite) { release(); return false; }
+      if (returnIntent && !retreating && !danger && !job?.emergency) {
+        const returned = runReturn(scene, host, time, pos, bounds, hazards, threats);
+        if (returned !== null) return returned;
+      }
+      if (!danger && !retreating && !cooldownKite && !job?.emergency) { release(); return false; }
       if (retreating && host.pills("hp")?.every((n) => n === 0) && settings.noRetreat === false) {
         return delegateNativeRecovery(scene, host, time, delta);
       }
@@ -760,10 +996,10 @@
       }
       return true;
     } catch {
-      const holdRecovery = retreating && holdForRecoveryData(scene, time,
+      const holdRecovery = (retreating || returnIntent) && holdForRecoveryData(scene, time,
         "Dữ liệu rút lui không phù hợp; đang giữ trạng thái và chờ dữ liệu mới.");
       if (!holdRecovery) {
-        release(); retreating = false;
+        cancelRetreat();
         note(scene, "unsupported", "Dữ liệu né boss không phù hợp; đã nhường Auto Farm.");
       }
       return holdRecovery;
@@ -774,16 +1010,23 @@
     if (!scene) return;
     if (sceneNow() !== scene || binding.auto !== scene.auto || !scene.sys?.isActive?.()
         || globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() !== true) { detach(); return; }
-    if (retreating && !scene.self) {
+    if ((retreating || returnIntent) && !scene.self) {
       holdForRecoveryData(scene, NaN, "Chưa có dữ liệu nhân vật; đang giữ hồi phục và chờ snapshot mới.");
       return;
     }
+    if (unsafeAreas.length && !scene.self) {
+      holdForRecoveryData(scene, NaN, "Chưa có dữ liệu nhân vật; đang giữ vùng tránh tạm tới khi có snapshot mới.");
+      return;
+    }
+    if (unsafeAreas.length && (scene.self?.dead || !connected(scene)
+        || GSTFarmInput.movement(scene) || scene.auto?.moved)) { cancelRetreat(); return; }
     let time;
     try { time = scene.now(); } catch { time = NaN; }
     if (retreating && !finite(time)) {
       holdForRecoveryData(scene, time, "Dữ liệu thời gian tạm thời không hợp lệ; đang giữ trạng thái hồi phục.");
       return;
     }
+    if ((retreating || returnIntent) && !retreatOwnerValid(scene)) { cancelRetreat(); return; }
     const imminent = imminentWarning(scene, time);
     if (blocked(scene, imminent || criticalRetreat(scene))) {
       release(); cooldownHolding = false;
@@ -930,7 +1173,8 @@
   }
   globalThis.GSTFarmBossSafety = {
     configure(scene, value) {
-      const stopRetreat = settings.bossRetreat === true && value.bossRetreat === false && retreating;
+      const stopRetreat = settings.bossRetreat === true && value.bossRetreat === false
+        && (retreating || returnIntent);
       const retreatHpPercent = value.retreatHpPercent, recoveryHpPercent = value.recoveryHpPercent;
       const hpThresholds = Number.isSafeInteger(retreatHpPercent) && retreatHpPercent >= 1
         && Number.isSafeInteger(recoveryHpPercent) && retreatHpPercent < recoveryHpPercent && recoveryHpPercent <= 100
@@ -948,12 +1192,18 @@
     attach(scene) { try { attach(scene); } catch { detach(); } },
     emergency,
     controls: (scene) => !!binding && binding.scene === scene
-      && (job !== null || retreating || cooldownHolding),
-    retreating: (scene) => !!binding && binding.scene === scene && retreating,
+      && (job !== null || retreating || !!returnIntent && returnIntent.phase !== "excluded" || cooldownHolding),
+    retreating: (scene) => !!binding && binding.scene === scene
+      && (retreating || !!returnIntent && returnIntent.phase !== "excluded"),
+    allowsTarget: (scene, point) => !excludedArea(scene, point),
+    hasExclusions: (scene) => hasUnsafeAreas(scene),
+    isAreaExcluded: (scene, point) => !!excludedArea(scene, point),
     status(scene) {
       if (binding?.scene !== scene || !scene?.auto?.on) return "";
       if (performance.now() < noteUntil) return message;
       if (retreating) return `HP thấp: đang rút lui khỏi nhóm quái; chờ đạt ${settings.recoveryHpPercent}% rồi mới tiếp tục farm.`;
+      if (returnIntent?.scene === scene && returnIntent.phase !== "excluded")
+        return "Đang giữ chọn mục tiêu; đánh giá đường an toàn để về tâm farm sau hồi phục.";
       if (cooldownHolding) return "Đang giữ khoảng cách với boss và chờ skill tấn công hồi.";
       return job ? "Đang di chuyển tránh vòng cảnh báo hoặc giữ khoảng cách với boss." : "";
     },
