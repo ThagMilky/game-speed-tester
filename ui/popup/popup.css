@@ -307,15 +307,28 @@ body.embedded {
 .farm-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 #farmControls { display: contents; }
 .farm-column, .farm-extra { min-width: 0; }
+.farm-group-title { margin: 0 0 16px; font-size: 18px; line-height: 1.4; color: var(--text); }
 #farmControls .input-action { grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 760px) {
-  body.embedded[data-orientation="horizontal"] .farm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.embedded[data-orientation="horizontal"] .farm-grid { align-items: start; gap: 16px; }
+  body.embedded[data-orientation="horizontal"] .farm-column {
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--subtle);
+  }
+  body.embedded[data-orientation="horizontal"] .farm-column > .advanced:first-of-type {
+    margin-top: 0; padding-top: 0; border-top: 0;
+  }
+  body.embedded[data-orientation="horizontal"] .farm-column .check-row { align-items: flex-start; padding: 8px 0; }
+  body.embedded[data-orientation="horizontal"] .farm-column .check-row input { flex-shrink: 0; }
+  body.embedded[data-orientation="horizontal"] .farm-column small.hint { display: block; }
 }
 @media (min-width: 900px) {
   body.embedded[data-orientation="horizontal"] .harvest-grid { grid-template-columns: minmax(230px, 1fr) minmax(0, 2fr); }
 }
-@media (min-width: 1050px) {
-  body.embedded[data-orientation="horizontal"] .farm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 1000px) {
+  body.embedded[data-orientation="horizontal"] .farm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 759px) {
   body.embedded .wide-groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }

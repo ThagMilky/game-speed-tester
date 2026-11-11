@@ -106,6 +106,7 @@
         <div class="farm-grid">
         <fieldset id="farmControls" disabled aria-label="Tùy chọn Auto Farm">
           <div class="farm-column farm-left">
+          <h3 class="farm-group-title">Phạm vi farm</h3>
           <label for="farmSearchScope">Vùng tìm quái</label>
           <select id="farmSearchScope"><option value="radius">Tự chọn số ô</option><option value="map">Toàn map hiện tại</option></select>
           <details class="diagnostic"><summary>Giải thích vùng tìm</summary><p>Tìm quanh điểm bắt đầu hoặc tìm trên toàn map. Toàn map chỉ dựa vào dữ liệu game cung cấp và không bảo đảm tìm hết quái.</p></details>
@@ -115,7 +116,10 @@
           <p class="save-mode">Số ô tính từ điểm bắt đầu farm. Ví dụ 30: tìm quái cách điểm đó tối đa 30 ô.</p>
           <label class="check-row"><input id="farmShowRange" type="checkbox"><span>Hiện vòng phạm vi farm trên game</span></label>
           <p class="hint">Vòng xanh là giới hạn từ điểm bắt đầu; vòng xanh lá là vùng quét của Auto Farm gốc; vòng vàng quanh bản thân là vùng dọn quái gần khi bật.</p>
-          <div class="separated"><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="boss">Chỉ boss</option><option value="bossLevel">Boss trước → tu vi cao đến thấp</option><option value="highLevel">Tu vi cao → thấp (quái thường)</option><option value="lowLevel">Tu vi thấp → cao (quái thường)</option><option value="maxLevel">≤ Cảnh giới đã chọn</option><option value="minLevel">≥ Cảnh giới đã chọn</option><option value="range">Trong khoảng cảnh giới</option></select></div>
+          </div>
+          <div class="farm-column farm-target">
+          <h3 class="farm-group-title">Mục tiêu &amp; boss</h3>
+          <div><label for="farmTargetMode">Quái muốn farm</label><select id="farmTargetMode"><option value="all">Tất cả quái</option><option value="boss">Chỉ boss</option><option value="bossLevel">Boss trước → tu vi cao đến thấp</option><option value="highLevel">Tu vi cao → thấp (quái thường)</option><option value="lowLevel">Tu vi thấp → cao (quái thường)</option><option value="maxLevel">≤ Cảnh giới đã chọn</option><option value="minLevel">≥ Cảnh giới đã chọn</option><option value="range">Trong khoảng cảnh giới</option></select></div>
           <div class="separated"><label for="farmBossFilter">Loại boss</label><select id="farmBossFilter"><option value="all">Tất cả boss</option><option value="world">Chỉ boss thế giới</option></select><small id="farmBossFilterHelp" class="hint"></small></div>
           <label class="check-row"><input id="farmExcludeBoss" type="checkbox"><span>Không chọn boss làm mục tiêu</span></label>
           <small id="farmExcludeBossHelp" class="hint"></small>
@@ -148,6 +152,7 @@
           <p id="farmTargetSummary" class="hint" role="status" aria-live="polite"></p>
           </div>
           <div class="farm-column farm-middle">
+          <h3 class="farm-group-title">Nhặt đồ &amp; tự động</h3>
           <details class="advanced" open><summary>Khi hết mục tiêu &amp; nhặt đồ</summary><div class="advanced-body">
             <label for="farmIdleMode">Khi không còn mục tiêu</label>
             <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi đứng chờ</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option><option value="seek">Nhặt đồ rồi chủ động tìm quái mới</option></select>
@@ -169,6 +174,7 @@
           </div>
         </fieldset>
           <div class="farm-column farm-right">
+          <h3 class="farm-group-title">Bảo vệ &amp; hồi phục</h3>
           <fieldset id="farmRightControls" disabled aria-label="Tự bảo vệ và hồi phục">
           <details id="farmBossSafetyOptions" class="advanced separated"><summary id="farmBossSummary">Tự bảo vệ</summary><div class="advanced-body">
             <p class="field-title">Tự bảo vệ khi đánh boss</p>
