@@ -32,11 +32,13 @@
 </head>
 <body>
   <header class="app-header">
-    <div><p class="eyebrow">NGHICHTHIENKY.ONLINE</p><h1>Game Speed Tester</h1></div>
+    <div><p class="eyebrow">NGHICHTHIENKY.ONLINE</p><div class="app-title-row"><h1>Game Speed Tester</h1><button id="themeToggle" type="button" aria-label="Đổi giao diện sáng tối" title="Đổi giao diện sáng tối">◐</button></div></div>
     <button id="openGameMenu" type="button">Mở menu trong game</button>
   </header>
   <div class="app-workspace">
     <nav class="feature-navigation" aria-label="Chọn trang chức năng">
+      <button id="navigationToggle" type="button" aria-expanded="true" aria-controls="navigationItems">Chọn chức năng ▾</button>
+      <div id="navigationItems">
       <button type="button" class="nav-item" data-nav-panel="overview" aria-current="page">Tổng quan</button>
       <span class="nav-caption">TỰ ĐỘNG</span>
       <button type="button" class="nav-item" data-nav-panel="farm">Auto Farm</button>
@@ -49,6 +51,7 @@
       <button type="button" class="nav-item" data-nav-panel="fps">Hình ảnh &amp; FPS</button>
       <button type="button" class="nav-item" data-nav-panel="interface">Giao diện</button>
       <button type="button" class="nav-item" data-nav-panel="diagnostics">Chẩn đoán</button>
+      </div>
     </nav>
     <div class="app-content">
       <main id="featurePanels">

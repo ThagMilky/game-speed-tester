@@ -92,3 +92,96 @@
   }
   void restorePage();
 })();
+
+// Presentation preferences are independent of automation settings.
+(() => {
+  const themeButton = document.getElementById("themeToggle");
+  const root = document.documentElement;
+  const systemTheme = matchMedia("(prefers-color-scheme: dark)");
+  const themeKey = "popupTheme";
+  let themeRevision = 0;
+  function applyTheme(value) {
+    if (value === "light" || value === "dark") root.dataset.theme = value;
+    else delete root.dataset.theme;
+    const dark = root.dataset.theme ? root.dataset.theme === "dark" : systemTheme.matches;
+    themeButton.textContent = dark ? "☀" : "☾";
+    themeButton.title = themeButton.ariaLabel = dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối";
+  }
+  applyTheme();
+  const initialRevision = themeRevision;
+  chrome.storage.local.get(themeKey).then((saved) => {
+    if (themeRevision === initialRevision) applyTheme(saved[themeKey]);
+  }).catch(() => {});
+  themeButton.addEventListener("click", async () => {
+    const previous = root.dataset.theme;
+    const revision = ++themeRevision;
+    const dark = previous ? previous === "dark" : systemTheme.matches;
+    const next = dark ? "light" : "dark";
+    themeButton.disabled = true;
+    applyTheme(next);
+    try { await chrome.storage.local.set({ [themeKey]: next }); }
+    catch {
+      if (revision === themeRevision) applyTheme(previous);
+      themeButton.title = "Chưa lưu được giao diện. Bấm để thử lại.";
+    } finally { themeButton.disabled = false; }
+  });
+  systemTheme.addEventListener("change", () => applyTheme(root.dataset.theme));
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes[themeKey]) {
+      themeRevision++;
+      applyTheme(changes[themeKey].newValue);
+    }
+  });
+
+  const nav = document.querySelector(".feature-navigation");
+  const toggle = document.getElementById("navigationToggle");
+  const items = document.getElementById("navigationItems");
+  const wide = matchMedia("(min-width: 760px)");
+  let pinned = false, hovered = false, closeTimer;
+  function expanded(value) {
+    nav.classList.toggle("nav-expanded", value);
+    toggle.setAttribute("aria-expanded", String(value));
+  }
+  function label() {
+    const active = items.querySelector('[aria-current="page"]');
+    toggle.textContent = `${active?.textContent ?? "Chọn chức năng"} · Chọn mục ▾`;
+  }
+  function orientation() {
+    const horizontal = document.body.classList.contains("embedded")
+      && document.body.dataset.orientation === "horizontal" && wide.matches;
+    nav.classList.toggle("nav-collapsible", !horizontal);
+    pinned = false;
+    expanded(horizontal || hovered || items.contains(document.activeElement));
+  }
+  function closeLater() {
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => {
+      if (!pinned && !hovered && !nav.contains(document.activeElement)) expanded(false);
+    }, 250);
+  }
+  nav.addEventListener("pointerenter", (event) => {
+    if (event.pointerType !== "mouse") return;
+    hovered = true;
+    clearTimeout(closeTimer);
+    expanded(true);
+  });
+  nav.addEventListener("pointerleave", () => { hovered = false; closeLater(); });
+  nav.addEventListener("focusin", (event) => { if (event.target !== toggle) expanded(true); });
+  nav.addEventListener("focusout", closeLater);
+  toggle.addEventListener("click", () => {
+    pinned = !pinned;
+    expanded(pinned);
+  });
+  nav.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !nav.classList.contains("nav-collapsible")) return;
+    pinned = false;
+    toggle.focus();
+    expanded(false);
+    event.preventDefault();
+  });
+  new MutationObserver(label).observe(items, { subtree: true, attributes: true, attributeFilter: ["aria-current"] });
+  new MutationObserver(orientation).observe(document.body, { attributes: true, attributeFilter: ["class", "data-orientation"] });
+  wide.addEventListener("change", orientation);
+  label();
+  orientation();
+})();
