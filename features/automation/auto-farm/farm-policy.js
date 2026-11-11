@@ -14,6 +14,8 @@
     mode: () => activeMode,
     isNative: () => activeMode === "native",
     isExtended: () => activeMode === "extended",
+    isDisabled: () => activeMode === "disabled",
+    hasExtensionAssistance: () => activeMode === "extended",
     setMode(value) { activeMode = normalize(value); return activeMode; },
     read(preferences) { return normalize(preferences?.policyMode); },
     withMode(preferences, mode) { return { ...(preferences ?? {}), policyMode: normalize(mode) }; },

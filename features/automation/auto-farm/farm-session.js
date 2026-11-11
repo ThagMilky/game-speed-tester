@@ -22,7 +22,7 @@
     monitorResume();
   }
   function monitorResume() {
-    const needed = configured && policyMode !== "native" && !suppressSeed && !suspended && binding && keep && intent?.on && !binding.scene.auto.on && !attempted;
+    const needed = configured && policyMode === "extended" && !suppressSeed && !suspended && binding && keep && intent?.on && !binding.scene.auto.on && !attempted;
     if (!needed && resumeTimer !== null) { clearInterval(resumeTimer); resumeTimer = null; }
     // Native background stepping only runs while auto.on. This timer only
     // waits to restore an OFF scene and stops as soon as native farming resumes.
@@ -46,7 +46,7 @@
     try {
       const scene = binding?.scene;
       if (!scene) return;
-      if (policyMode === "native" || sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto) { detach(); watch(); return; }
+      if (policyMode !== "extended" || sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto) { detach(); watch(); return; }
       const now = performance.now();
       if (now - at < 200) return;
       at = now;
@@ -93,7 +93,7 @@
     } catch { detach(); watch(); }
   }
   function discover() {
-    if (!configured || policyMode === "native" || !keep || suspended || binding) return;
+    if (!configured || policyMode !== "extended" || !keep || suspended || binding) return;
     try {
       const scene = sceneNow();
       if (!scene?.sys?.isActive?.() || !scene.self || typeof scene.profile?.name !== "string"
@@ -140,11 +140,11 @@
       monitorResume();
     } catch { detach(); watch(); }
   }
-  function watch() { if (configured && policyMode !== "native" && keep && !suspended && !binding && watcher === null) watcher = setInterval(discover, 1000); }
+  function watch() { if (configured && policyMode === "extended" && keep && !suspended && !binding && watcher === null) watcher = setInterval(discover, 1000); }
   globalThis.GSTFarmSession = {
     setPolicyMode(mode, scene) {
       policyMode = globalThis.GSTFarmPolicy?.normalize(mode) ?? "extended";
-      if (policyMode === "native") {
+      if (policyMode !== "extended") {
         suppressSeed = true;
         const target = binding?.scene ?? scene;
         if (target?.profile?.name === intent?.name) save(target, false);
@@ -168,13 +168,13 @@
       watch(); discover(); monitorResume();
     },
     forget: (scene) => {
-      if (policyMode === "native") return;
+      if (policyMode !== "extended") return;
       if (binding?.scene === scene) { save(scene, false); binding.seenOn = false; stableAt = null; }
     },
-    remember: (scene) => { if (policyMode !== "native" && keep && scene?.auto?.on) save(scene, true); },
-    waiting: (scene) => policyMode !== "native" && !!binding && binding.scene === scene && keep && intent?.on && !scene.auto.on,
+    remember: (scene) => { if (policyMode === "extended" && keep && scene?.auto?.on) save(scene, true); },
+    waiting: (scene) => policyMode === "extended" && !!binding && binding.scene === scene && keep && intent?.on && !scene.auto.on,
     status: (scene) => binding && binding.scene === scene && keep && intent?.on && !scene.auto.on
-      && policyMode !== "native"
+      && policyMode === "extended"
       ? (globalThis.GSTFarmConfigurationReady !== true ? "Chờ đọc cài đặt Auto Farm trước khi khôi phục."
         : attempted ? "Chưa bật lại được Auto Farm; kiểm tra game hoặc bấm V bằng tay."
         : "Đang giữ ý định Auto Farm; chờ nhân vật ổn định để bật lại.") : ""

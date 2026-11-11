@@ -18,6 +18,8 @@
   let shortcut = null;
   let shortcutMessage = "";
   let message = "Extended range disabled.";
+  let activationLock = null;
+  let activationWatcher = null;
   const finite = (value) => typeof value === "number" && Number.isFinite(value);
   const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
   const nativeEligible = (enemy) => enemy?.hostile === true || enemy?.aggro === false;
@@ -53,7 +55,7 @@
       ? "level_priority" : "";
   }
   function realmBossEligible(scene) {
-    if (settings.policyMode === "native") return true;
+    if (settings.policyMode !== "extended") return true;
     if (settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode)) return false;
     const levelRequired = ["maxLevel", "minLevel", "range"].includes(settings.targetMode);
     if (!levelRequired) return true;
@@ -66,13 +68,13 @@
     return actors.some((actor) => matchesTarget(actor.st))
       || (finite(level) && matchesTarget({ cls: "boss", lv: level }));
   }
-  globalThis.GSTFarmPriority = { compare: (a, b) => settings.policyMode === "native" ? 0 : comparePriority(a, b),
-    ranked: () => settings.policyMode !== "native" && ranked(),
-    switchReason: (...args) => settings.policyMode === "native" ? "" : switchReason(...args),
-    matches: (enemy) => settings.policyMode === "native" || matchesTarget(enemy),
-    excludesBoss: () => settings.policyMode !== "native" && (settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode)),
+  globalThis.GSTFarmPriority = { compare: (a, b) => settings.policyMode !== "extended" ? 0 : comparePriority(a, b),
+    ranked: () => settings.policyMode === "extended" && ranked(),
+    switchReason: (...args) => settings.policyMode !== "extended" ? "" : switchReason(...args),
+    matches: (enemy) => settings.policyMode !== "extended" || matchesTarget(enemy),
+    excludesBoss: () => settings.policyMode === "extended" && (settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode)),
     realmBossEligible,
-    bossFocus: (scene) => settings.policyMode !== "native" && ["boss", "bossLevel"].includes(settings.targetMode)
+    bossFocus: (scene) => settings.policyMode === "extended" && ["boss", "bossLevel"].includes(settings.targetMode)
       && realmBossEligible(scene) };
   function filterLabel() {
     if (settings.targetMode === "bossLevel") return "Ưu tiên boss, rồi quái tu vi cao đến thấp";
@@ -87,7 +89,7 @@
     return "Farm tất cả quái";
   }
   function matchesTarget(enemy) {
-    if (settings.policyMode === "native") return true;
+    if (settings.policyMode !== "extended") return true;
     if ((settings.excludeBoss || settings.targetMode === "highLevel" || settings.targetMode === "lowLevel") && isBoss(enemy)) return false;
     if (settings.targetMode === "boss") return enemy?.cls === "boss" || enemy?.wb === true;
     if (["all", "bossLevel", "highLevel", "lowLevel"].includes(settings.targetMode)) return true;
@@ -99,6 +101,46 @@
   function sceneNow() {
     return window.game?.scene?.getScene?.("world")
       ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
+  }
+
+  function clearActivationLock() {
+    const old = activationLock; activationLock = null;
+    if (old?.auto.toggle === old.wrapper) {
+      if (old.descriptor) Object.defineProperty(old.auto, "toggle", old.descriptor);
+      else delete old.auto.toggle;
+    }
+  }
+  function maintainActivationLock() {
+    if (settings.policyMode !== "disabled") { clearActivationLock(); return; }
+    const scene = sceneNow();
+    if (!scene?.sys?.isActive?.() || typeof scene.auto?.on !== "boolean"
+        || typeof scene.auto?.toggle !== "function" || typeof scene.toggleAutoFarm !== "function") return;
+    if (activationLock?.scene !== scene || activationLock.auto !== scene.auto
+        || scene.auto.toggle !== activationLock.wrapper) {
+      clearActivationLock();
+      const original = scene.auto.toggle;
+      const descriptor = Object.getOwnPropertyDescriptor(scene.auto, "toggle");
+      const owner = { scene, auto: scene.auto, original, descriptor, stopRequested: false };
+      owner.wrapper = function (...args) {
+        if (settings.policyMode === "disabled" && this.on === false) {
+          message = "Auto Farm đang bị khóa bởi chế độ Disabled. Hãy đổi chế độ rồi bật lại bằng tay.";
+          return undefined;
+        }
+        return original.apply(this, args);
+      };
+      try { scene.auto.toggle = owner.wrapper; }
+      catch {
+        message = "Không nhận diện được controller Auto Farm để áp khóa Disabled.";
+        return;
+      }
+      activationLock = owner;
+    }
+    const owner = activationLock;
+    if (scene.auto.on && !owner.stopRequested) {
+      owner.stopRequested = true;
+      // The lock is installed first; this is the single native OFF request.
+      scene.toggleAutoFarm();
+    }
   }
 
   function guardFarmKey(event) {
@@ -132,11 +174,12 @@
     // With no exposed scene, keep the game's focused native binding usable.
     // Otherwise handle the native binding here too, so Phaser cannot queue a
     // toggle for a later update after the tab loses focus.
-    if (shortcut === null && typeof scene?.toggleAutoFarm !== "function") return;
+    if (shortcut === null && typeof scene?.toggleAutoFarm !== "function"
+        && settings.policyMode !== "disabled") return;
     event.stopImmediatePropagation();
-    if (shortcut !== null && !customKey) return;
+    if (shortcut !== null && !customKey && settings.policyMode !== "disabled") return;
     event.preventDefault();
-    const conflict = Object.entries(scene?.controls?.bindings ?? {})
+    const conflict = customKey && Object.entries(scene?.controls?.bindings ?? {})
       .some(([action, binding]) => action !== "V" && binding === shortcut);
     if (conflict) {
       shortcutMessage = "Phím tùy chỉnh trùng thao tác khác trong game. Hãy chọn phím khác (ví dụ F6).";
@@ -144,6 +187,11 @@
     }
     if (!scene?.sys?.isActive?.() || typeof scene.toggleAutoFarm !== "function" || !scene.self) {
       shortcutMessage = "Chưa truy cập được Auto Farm; cần tải game với tham số timer.";
+      return;
+    }
+    if (settings.policyMode === "disabled" && scene.auto?.on === false) {
+      shortcutMessage = "Auto Farm đang bị khóa bởi chế độ Disabled.";
+      message = `${shortcutMessage} Hãy đổi chế độ rồi bật lại bằng tay.`;
       return;
     }
     if (scene.chat?.typing || scene.keyCapture || (!scene.auto?.on
@@ -415,7 +463,7 @@
     watch();
   }
 
-  function stopForNativePolicy() {
+  function stopForLockedPolicy() {
     if (watcher !== null) clearInterval(watcher);
     watcher = null;
     const oldSession = session;
@@ -481,13 +529,13 @@
   function watch() {
     // Independent defense/meditation helpers still need a scene watcher when
     // the user disables respawn and expanded filtering.
-    if (settings.policyMode !== "native" && !suspended && !session && watcher === null) {
+    if (settings.policyMode === "extended" && !suspended && !session && watcher === null) {
       watcher = setInterval(discover, 1000);
     }
   }
 
   function discover() {
-    if (settings.policyMode === "native" || suspended || session) return;
+    if (settings.policyMode !== "extended" || suspended || session) return;
     try {
       const scene = sceneNow();
       globalThis.GSTFarmCombat?.attach(scene);
@@ -771,7 +819,7 @@
 
   globalThis.GSTFarmQuest = {
     ready: () => globalThis.GSTFarmConfigurationReady === true
-      && settings.policyMode !== "native" && settings.targetMode === "all",
+      && settings.policyMode === "extended" && settings.targetMode === "all",
     prepare(scene) {
       if (!this.ready() || !compatible(scene)) throw new Error("Farm configuration unavailable");
       blockedAuto = null; revival = null;
@@ -816,25 +864,30 @@
         preferLoot: data.preferLoot !== false, selfDefense: data.selfDefense === true, autoEncounter: data.autoEncounter === true, excludeBoss: data.excludeBoss === true };
       globalThis.GSTFarmPolicy?.setMode(settings.policyMode);
       syncFarmKeyGuard();
-      if (settings.policyMode === "native") stopForNativePolicy();
       globalThis.GSTFarmSession?.setPolicyMode?.(settings.policyMode, sceneNow());
+      if (settings.policyMode !== "extended") stopForLockedPolicy();
+      if (settings.policyMode !== "disabled") { clearActivationLock(); clearInterval(activationWatcher); activationWatcher = null; }
       globalThis.GSTFarmRevivePolicy?.configure(settings.autoRespawn);
       globalThis.GSTFarmCombat?.configure(sceneNow(), settings.noRetreat);
       globalThis.GSTFarmBossSafety?.configure(sceneNow(), settings);
       globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);
       globalThis.GSTFarmDefense?.configure(sceneNow(), settings);
       globalThis.GSTFarmEncounter?.configure(sceneNow(), settings);
-      globalThis.GSTFarmMap?.configure(sceneNow(), settings.policyMode === "native"
+      globalThis.GSTFarmMap?.configure(sceneNow(), settings.policyMode !== "extended"
         ? { ...settings, enabled: false, searchScope: "radius", targetMode: "all", excludeBoss: false }
         : settings);
       globalThis.GSTFarmVisual?.configure(sceneNow(), settings);
       globalThis.GSTFarmRouting?.configure(sceneNow(), settings);
       globalThis.GSTMovementDiagnostics?.configure(settings);
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());
+      if (settings.policyMode === "disabled") {
+        maintainActivationLock();
+        if (activationWatcher === null) activationWatcher = setInterval(() => maintainActivationLock(), 500);
+      }
       globalThis.GSTFarmCombat?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
       if (settings.targetMode === "all" && !settings.excludeBoss) clearFilter();
-      if (settings.policyMode !== "native") clearExcludedBossTarget(sceneNow());
+      if (settings.policyMode === "extended") clearExcludedBossTarget(sceneNow());
       if (session) {
         if (scopeChanged) { restore(session); session.at = -Infinity; }
         syncFilter(session.scene);
@@ -847,6 +900,9 @@
         watcher = null;
         shortcutMessage = "";
         message = "Chế độ Native: Auto Farm do game điều khiển; hỗ trợ farm của extension đang tắt.";
+      } else if (settings.policyMode === "disabled") {
+        shortcutMessage = "";
+        message = "Auto Farm đang bị khóa bởi chế độ Disabled; tùy chọn đã lưu vẫn được giữ.";
       } else if (!settings.enabled && settings.targetMode === "all" && !settings.excludeBoss) {
         if (watcher !== null) clearInterval(watcher);
         watcher = null;
@@ -872,13 +928,14 @@
       const scene = sceneNow();
       const defense = globalThis.GSTFarmDefense?.status(scene) || "";
       const network = globalThis.GSTConnectionRecovery?.status(scene) || "";
-      const primary = network || defense || globalThis.GSTFarmBossSafety?.status(scene) || waitReason
+      const primary = settings.policyMode === "disabled" ? message
+        : network || defense || globalThis.GSTFarmBossSafety?.status(scene) || waitReason
         || globalThis.GSTFarmMap?.status(scene) || globalThis.GSTFarmBehavior?.status(scene)
         || globalThis.GSTFarmSession?.status(scene) || globalThis.GSTFarmSeals?.status(scene) || message;
       const defenseInfo = autoOn === false && !defense ? globalThis.GSTFarmDefense?.status(scene, true) : "";
       const encounterInfo = globalThis.GSTFarmEncounter?.status(scene) || "";
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
-        message: (settings.policyMode !== "native" && settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage
+        message: (settings.policyMode === "extended" && settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage
           || (dead && respawnMessage ? respawnMessage : primary)) + (defenseInfo ? ` · ${defenseInfo}` : ""),
         encounterStatus: encounterInfo,
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);
@@ -887,6 +944,7 @@
   window.addEventListener("pagehide", () => {
     window.removeEventListener("keydown", guardFarmKey, true);
     suspended = true;
+    clearActivationLock(); clearInterval(activationWatcher); activationWatcher = null;
     death = null;
     revival = null;
     respawnMessage = "";
@@ -900,6 +958,10 @@
   window.addEventListener("pageshow", () => {
     syncFarmKeyGuard();
     suspended = false;
+    if (settings.policyMode === "disabled") {
+      maintainActivationLock();
+      if (activationWatcher === null) activationWatcher = setInterval(() => maintainActivationLock(), 500);
+    }
     watch();
     discover();
   });

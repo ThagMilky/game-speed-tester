@@ -18,7 +18,7 @@
     old.scene.events.off("destroy", detach);
   }
   function attach(scene) {
-    if (globalThis.GSTFarmPolicy?.isNative?.()) { detach(); return; }
+    if (!globalThis.GSTFarmPolicy?.hasExtensionAssistance?.()) { detach(); return; }
     if (binding?.scene === scene && binding?.auto === scene?.auto && scene && GSTFarmUpdate.attached(scene)) return;
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.update !== "function"
         || typeof scene.auto.on !== "boolean" || typeof scene.auto.stopOnRevive !== "boolean"
@@ -41,7 +41,7 @@
   }
   globalThis.GSTFarmRevivePolicy = {
     configure: (value) => {
-      enabled = value === true && !globalThis.GSTFarmPolicy?.isNative?.();
+      enabled = value === true && globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() === true;
       if (!enabled) detach();
     },
     attach: (scene) => { try { if (!enabled) { detach(); return; } attach(scene); } catch { detach(); } },
