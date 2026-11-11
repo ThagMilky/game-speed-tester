@@ -24,7 +24,7 @@
   let retreatThreshold = 0.4, recoveryThreshold = 1;
   let retryAt = 0, message = "", noteUntil = 0, lastDashAt = -Infinity, dashObservation = null;
   let recentDamage = new Map(), threatSample = [], threatSampleAt = -Infinity, threatSampleScene = null;
-  let visibleWarnings = [], cooldownHolding = false, recoverySteer = null;
+  let visibleWarnings = [], cooldownHolding = false, recoverySteer = null, recoveryMeditation = null;
   const maxThreatScan = 256, maxLocalThreats = 24, maxPrioritizedAttackers = 8;
   const localThreatRadius = 12, threatFalloff = 9;
   const warningHooks = new WeakMap();
@@ -44,7 +44,7 @@
     if (log.length > 30) log.shift();
     try { sessionStorage.setItem(logKey, JSON.stringify(log)); } catch { /* Optional diagnostics. */ }
   }
-  function release() {
+  function releaseJob() {
     const old = job; job = null;
     if (old && binding) {
       GSTNavigation.cancel(binding.scene, old.navigation);
@@ -52,12 +52,50 @@
         binding.scene.autoX = 0; binding.scene.autoY = 0;
       }
     }
+  }
+  function releaseRecoverySteer(scene = null) {
     // Clear only the last delegated native-recovery vector while it is still unchanged.
     const recovery = recoverySteer; recoverySteer = null;
-    if (recovery && recovery.scene.auto === recovery.auto
+    if (recovery && (!scene || recovery.scene === scene) && recovery.scene.auto === recovery.auto
         && recovery.scene.autoX === recovery.x && recovery.scene.autoY === recovery.y) {
       recovery.scene.autoX = 0; recovery.scene.autoY = 0;
     }
+  }
+  function release() { releaseJob(); releaseRecoverySteer(); }
+  function setRecoveryMeditation(owner) {
+    if (recoveryMeditation === owner) return;
+    if (recoveryMeditation) window.removeEventListener("keydown", manualMeditationInput, true);
+    recoveryMeditation = owner;
+    if (owner) window.addEventListener("keydown", manualMeditationInput, true);
+  }
+  function clearRecoveryMeditation(handoff = true) {
+    const old = recoveryMeditation;
+    setRecoveryMeditation(null);
+    if (old?.ownsResting && old.auto.resting === true) {
+      const med = old.scene.self?.med;
+      // Keep native recovery callable while a requested meditation is active or unconfirmed.
+      if (!handoff || (med !== true && med !== undefined && old.phase !== "pending")) old.auto.resting = false;
+    }
+  }
+  function cancelRetreat(handoff = true) {
+    const scene = recoveryMeditation?.scene ?? binding?.scene;
+    clearRecoveryMeditation(handoff); release(); retreating = false; cooldownHolding = false;
+    return scene;
+  }
+  function manualMeditationInput(event) {
+    const owner = recoveryMeditation;
+    if (!owner || event.isTrusted !== true || event.repeat
+        || (event.code !== "KeyT" && String(event.key).toLowerCase() !== "t")) return;
+    const target = event.target;
+    if (target?.isContentEditable || target?.matches?.("input, textarea, select")
+        || owner.scene.chat?.typing || owner.scene.keyCapture) return;
+    const scene = cancelRetreat(false);
+    note(scene, null, "Đã nhường hồi phục cho thao tác thiền thủ công.");
+  }
+  function keepRecoveryResting(scene) {
+    const owner = recoveryMeditation;
+    if (owner?.scene === scene && owner.auto === scene.auto && owner.ownsResting
+        && scene.auto.resting !== true) scene.auto.resting = true;
   }
   function enabled(scene = binding?.scene) {
     // Native Auto Farm can select a live boss even in "all" target mode.
@@ -103,23 +141,42 @@
   }
   function holdForRecoveryData(scene, time, text) {
     release();
-    let now = time;
-    if (!finite(now)) { try { now = scene?.now?.(); } catch { now = NaN; } }
-    if (!retreating || !retreatOwnerValid(scene)
-        || finite(now) && finite(scene.auto.pauseUntil) && now < scene.auto.pauseUntil) {
-      retreating = false; return false;
+    if (!retreating || !retreatOwnerValid(scene)) {
+      cancelRetreat(); return false;
     }
+    keepRecoveryResting(scene);
     if (message !== text || performance.now() > noteUntil) note(scene, "unsupported", text);
     return true;
   }
   function delegateNativeRecovery(scene, host, time, delta) {
-    release();
+    // Keep an unchanged native vector between controller decision ticks.
+    releaseJob();
+    if (recoverySteer && (recoverySteer.scene !== scene || recoverySteer.auto !== scene.auto
+        || scene.autoX !== recoverySteer.x || scene.autoY !== recoverySteer.y)) recoverySteer = null;
     const before = [scene.autoX, scene.autoY];
-    if (!GSTFarmUpdate.runRecovery(scene, host, time, delta))
+    const result = GSTFarmUpdate.runRecovery(scene, host, time, delta);
+    if (!result?.ran) {
+      releaseRecoverySteer(scene);
       note(scene, "unsupported", "Không thể gọi nhánh hồi phục gốc; đang giữ Auto Farm khỏi chọn mục tiêu.");
-    else if ([scene.autoX, scene.autoY].every(finite) && (scene.autoX !== before[0] || scene.autoY !== before[1])
-        && (scene.autoX !== 0 || scene.autoY !== 0))
-      recoverySteer = { scene, auto: scene.auto, x: scene.autoX, y: scene.autoY };
+    } else {
+      if (result.meditation === "start") {
+        const owner = recoveryMeditation?.scene === scene && recoveryMeditation.auto === scene.auto
+          ? recoveryMeditation : { scene, auto: scene.auto, ownsResting: result.restingBefore === false };
+        owner.phase = "pending";
+        owner.snapshotAtRequest = scene.selfAt;
+        owner.requestedAt = time;
+        setRecoveryMeditation(owner);
+        keepRecoveryResting(scene);
+      } else if (result.meditation === "stop" && recoveryMeditation?.scene === scene) {
+        recoveryMeditation.phase = "stop-pending";
+      } else keepRecoveryResting(scene);
+      if ([scene.autoX, scene.autoY].every(finite)
+          && (scene.autoX !== before[0] || scene.autoY !== before[1])) {
+        if (scene.autoX !== 0 || scene.autoY !== 0)
+          recoverySteer = { scene, auto: scene.auto, x: scene.autoX, y: scene.autoY };
+        else if (recoverySteer?.scene === scene) recoverySteer = null;
+      }
+    }
     return true;
   }
   const bossActor = (actor) => (globalThis.GSTFarmMonsterClassification
@@ -514,18 +571,20 @@
       cooldownHolding = false;
       if (!scene || sceneNow() !== scene || binding?.auto !== scene.auto
           || globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() !== true || !enabled()) {
-        release(); retreating = false; return false;
+        cancelRetreat(); return false;
       }
       if (!finite(time)) return holdForRecoveryData(scene, time,
         "Dữ liệu thời gian tạm thời không hợp lệ; đang giữ trạng thái hồi phục.");
       if (!["steer", "route", "clear", "hp", "pills"].every((key) => typeof host?.[key] === "function"))
         return holdForRecoveryData(scene, time,
           "Thiếu dữ liệu Auto Farm để điều hướng; đang chờ dữ liệu hợp lệ trước khi tiếp tục.");
+      if (!scene.self) return holdForRecoveryData(scene, time,
+        "Chưa có dữ liệu nhân vật; đang giữ hồi phục và chờ snapshot mới.");
       const mapKey = host.mapKey?.();
       if (binding.mapKey && mapKey == null) return holdForRecoveryData(scene, time,
         "Chưa nhận được mã map hiện tại; đang giữ hồi phục tới khi dữ liệu map ổn định.");
       if (binding.mapKey && mapKey !== binding.mapKey) {
-        release(); retreating = false; recentDamage.clear(); threatSample = [];
+        cancelRetreat(); recentDamage.clear(); threatSample = [];
         binding.mapKey = mapKey;
         note(scene, "resume", "Map đã đổi; hủy trạng thái rút lui và chờ Auto Farm gốc chọn lại.");
         return false;
@@ -539,8 +598,25 @@
       observeDash(scene, time);
       if (finite(scene.dashT) && scene.dashT > 0) return true; // Let native Q finish before choosing another movement.
       const boss = nearbyBoss(scene, pos), hp = scene.self.hp / scene.self.mh;
+      if (recoveryMeditation?.scene === scene && recoveryMeditation.phase === "pending"
+          && scene.self.med === true) recoveryMeditation.phase = "active";
+      if (recoveryMeditation?.scene === scene && scene.self.med === true) keepRecoveryResting(scene);
+      if (recoveryMeditation?.scene === scene && scene.self.med === false
+          && (recoveryMeditation.phase !== "pending"
+            || finite(scene.selfAt) && scene.selfAt > recoveryMeditation.snapshotAtRequest))
+        clearRecoveryMeditation();
       if (retreating && hp >= recoveryThreshold) {
-        retreating = false; release();
+        const owner = recoveryMeditation?.scene === scene ? recoveryMeditation : null;
+        if (owner && scene.self.med !== true) return true; // Await pending/unknown meditation confirmation.
+        if (owner && scene.self.med === true) {
+          if (owner.phase !== "stop-pending" && typeof host.meditate === "function") {
+            owner.phase = "stop-pending";
+            try { host.meditate(); }
+            catch { note(scene, "unsupported", "Không gửi được yêu cầu dừng thiền; đang giữ hồi phục và chờ trạng thái game."); }
+          }
+          return true; // Wait for the next game snapshot to confirm the native toggle.
+        }
+        cancelRetreat();
         note(scene, "resume", "Đã đạt ngưỡng hồi HP; Auto Farm gốc tiếp tục tự chọn mục tiêu.");
         return false;
       }
@@ -551,6 +627,7 @@
       }
       const currentUrgent = urgentEscape(scene, time);
       if (blocked(scene, currentUrgent)) {
+        if (retreating && !retreatOwnerValid(scene)) { cancelRetreat(); return false; }
         release();
         if (retreating && retreatContextValid(scene, scene.now())) {
           if (scene.auto.resting) return delegateNativeRecovery(scene, host, time, delta);
@@ -558,7 +635,9 @@
           host.steer(0, 0);
           return true;
         }
-        retreating = false; cooldownHolding = false; return false;
+        if (retreating) return holdForRecoveryData(scene, time,
+          "Đang chờ trạng thái hồi phục hợp lệ trước khi điều khiển tiếp.");
+        cooldownHolding = false; return false;
       }
       if (retreating && scene.auto.resting) return delegateNativeRecovery(scene, host, time, delta);
       if (retreating && scene.self.med) { release(); return true; }
@@ -674,11 +753,24 @@
   function guard() {
     const scene = binding?.scene;
     if (!scene) return;
-    if (sceneNow() !== scene || binding.auto !== scene.auto || !scene.sys?.isActive?.()) { detach(); return; }
-    const time = scene.now(), imminent = imminentWarning(scene, time);
+    if (sceneNow() !== scene || binding.auto !== scene.auto || !scene.sys?.isActive?.()
+        || globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() !== true) { detach(); return; }
+    if (retreating && !scene.self) {
+      holdForRecoveryData(scene, NaN, "Chưa có dữ liệu nhân vật; đang giữ hồi phục và chờ snapshot mới.");
+      return;
+    }
+    let time;
+    try { time = scene.now(); } catch { time = NaN; }
+    if (retreating && !finite(time)) {
+      holdForRecoveryData(scene, time, "Dữ liệu thời gian tạm thời không hợp lệ; đang giữ trạng thái hồi phục.");
+      return;
+    }
+    const imminent = imminentWarning(scene, time);
     if (blocked(scene, imminent || criticalRetreat(scene))) {
       release(); cooldownHolding = false;
-      if (!retreating || !retreatContextValid(scene, scene.now())) retreating = false;
+      if (retreating && !retreatOwnerValid(scene)) cancelRetreat();
+      else if (retreating && !retreatContextValid(scene, time))
+        holdForRecoveryData(scene, time, "Đang chờ trạng thái hồi phục hợp lệ trước khi điều khiển tiếp.");
       return;
     }
     // WorldScene skips auto.update while aiming or waiting to cast. Only an
@@ -715,7 +807,7 @@
     }
   }
   function detach() {
-    release(); retreating = false; retryAt = 0; dashObservation = null;
+    cancelRetreat(); retryAt = 0; dashObservation = null;
     recentDamage.clear(); threatSample = []; threatSampleAt = -Infinity; threatSampleScene = null;
     visibleWarnings = []; cooldownHolding = false;
     const old = binding; binding = null;
@@ -820,7 +912,7 @@
         ...hpThresholds };
       retreatThreshold = settings.retreatHpPercent / 100;
       recoveryThreshold = settings.recoveryHpPercent / 100;
-      detach(); this.attach(scene);
+      this.attach(scene);
     },
     attach(scene) { try { attach(scene); } catch { detach(); } },
     emergency,

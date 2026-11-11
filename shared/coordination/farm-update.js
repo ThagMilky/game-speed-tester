@@ -8,15 +8,29 @@
       const entry = bindings.get(scene.auto);
       return !!entry && scene.auto.update === entry.wrapper;
     },
-    // Let a recovery owner invoke the saved native rest branch without resuming target selection.
-    runRecovery(scene, ...args) {
+    // Let a recovery owner invoke native rest and report its meditation toggle.
+    runRecovery(scene, host, ...args) {
       const auto = scene?.auto;
       const entry = auto && bindings.get(auto);
       if (!entry || auto.update !== entry.wrapper || !auto.on || typeof auto.resting !== "boolean"
-          || typeof entry.original !== "function") return false;
+          || typeof entry.original !== "function" || !host || typeof host !== "object") return { ran: false };
       const wasResting = auto.resting;
+      let meditation = null;
+      const recoveryHost = new Proxy(host, {
+        get(target, key, receiver) {
+          const value = Reflect.get(target, key, receiver);
+          if (key !== "meditate" || typeof value !== "function") return value;
+          return function (...callArgs) {
+            const before = typeof target.meditating === "function" ? target.meditating() : null;
+            const result = Reflect.apply(value, target, callArgs);
+            if (before === false) meditation = "start";
+            else if (before === true) meditation = "stop";
+            return result;
+          };
+        }
+      });
       auto.resting = true;
-      try { entry.original.apply(auto, args); return true; }
+      try { entry.original.apply(auto, [recoveryHost, ...args]); return { ran: true, meditation, restingBefore: wasResting }; }
       finally { auto.resting = wasResting; }
     },
     add(scene, priority, callback) {
