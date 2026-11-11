@@ -105,7 +105,8 @@
 
   function clearActivationLock() {
     const old = activationLock; activationLock = null;
-    if (old?.auto.toggle === old.wrapper) {
+    if (!old) return;
+    if (old.auto.toggle === old.wrapper) {
       if (old.descriptor) Object.defineProperty(old.auto, "toggle", old.descriptor);
       else delete old.auto.toggle;
     }
