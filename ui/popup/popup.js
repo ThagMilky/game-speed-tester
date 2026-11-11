@@ -252,6 +252,8 @@ let farmDraftError = false;
 let farmSyncReady = false;
 let farmStorageRevision = 0;
 let latestFarmPreferences;
+let farmHpEditRevision = 0, farmHpSyncedEditRevision = 0;
+let farmHpThresholdOperation = null, farmHpThresholdFollowupCount = 0, farmHpThresholdFollowupRequested = false;
 let farmPolicyLoaded = false;
 let farmPolicyHasSavedValue = false;
 let farmPolicyConfirmed = null;
@@ -321,6 +323,7 @@ function syncFarmPolicyUI(raw = {}) {
 function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {}) {
   const keepDraft = preserveDraft && farmHasDraft();
   const oldMode = activeFarmTargetMode(), levelDraft = keepDraft ? farmLevelDraft() : { dirty: false };
+  const preserveHpDraft = farmHpEditRevision > farmHpSyncedEditRevision;
   const hpThresholdDraft = keepDraft ? farmHpThresholdDraft() : { dirty: false };
   const draftSingleValue = ["maxLevel", "minLevel"].includes(oldMode)
     ? farmSelectionValue(farmTargetRows.single, oldMode === "minLevel" ? "min" : "max") : null;
@@ -359,7 +362,7 @@ function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {})
     preserveRange && draftMaxValue === null);
   if (!keepDraft || forceKeys.includes("radius")) farmRadius.value = String(next.radius);
   if (!keepDraft || forceKeys.includes("nearbyRadius")) farmNearbyRadius.value = String(next.nearbyRadius);
-  if (!keepDraft || forceKeys.includes("retreatHpPercent") || forceKeys.includes("recoveryHpPercent")) {
+  if (!preserveHpDraft && (!keepDraft || forceKeys.includes("retreatHpPercent") || forceKeys.includes("recoveryHpPercent"))) {
     farmRetreatHpPercent.value = String(next.retreatHpPercent);
     farmRecoveryHpPercent.value = String(next.recoveryHpPercent);
     farmRetreatThresholdError.textContent = "";
@@ -441,7 +444,8 @@ function farmHpThresholdDraft() {
   const recovery = farmRecoveryHpPercent.value.trim() === "" ? NaN : Number(farmRecoveryHpPercent.value);
   const valid = validFarmHpThresholds(retreat, recovery);
   return { retreat, recovery, valid,
-    dirty: !valid || retreat !== farmConfirmed.retreatHpPercent || recovery !== farmConfirmed.recoveryHpPercent,
+    dirty: farmHpEditRevision > farmHpSyncedEditRevision
+      || !valid || retreat !== farmConfirmed.retreatHpPercent || recovery !== farmConfirmed.recoveryHpPercent,
     error: valid ? "" : "Nhập số nguyên: 1 ≤ HP rút lui < HP quay lại ≤ 100%.",
   };
 }
@@ -466,7 +470,7 @@ function farmSummaries() {
   document.getElementById("farmBossSummary").textContent = `Boss · ${farmConfirmed.excludeBoss ? "không chọn boss" : "cho phép boss"}`;
   document.getElementById("farmRecoverySummary").textContent = `Hồi phục · ${farmConfirmed.noRetreat ? "không rút lui" : "theo game"}`;
 }
-async function saveFarmPatch(patch, rollback, { draftWrite = false } = {}) {
+async function saveFarmPatch(patch, rollback, { draftWrite = false, preserveDraftKeys = [] } = {}) {
   farmMessage("Đang lưu…");
   try {
     const written = await updateFarmPreferences(patch, { draftWrite });
@@ -475,7 +479,8 @@ async function saveFarmPatch(patch, rollback, { draftWrite = false } = {}) {
     try { committed = (await chrome.storage.local.get("farmPreferences")).farmPreferences ?? written; } catch {}
     if (farmStorageRevision !== revisionAtRead && latestFarmPreferences) committed = latestFarmPreferences;
     latestFarmPreferences = committed;
-    syncFarmPreferences(committed, { forceKeys: [...Object.keys(patch), "targetMode", "excludeBoss"] });
+    syncFarmPreferences(committed, { forceKeys: [...Object.keys(patch), "targetMode", "excludeBoss"]
+      .filter((key) => !preserveDraftKeys.includes(key)) });
     farmMessage("Đã lưu cài đặt.");
     return true;
   } catch {
@@ -675,7 +680,10 @@ function commitFarmRadius() {
   return save;
 }
 function commitFarmHpThresholds() {
-  if (farmHpThresholdCommit) return farmHpThresholdCommit;
+  if (farmHpThresholdCommit) {
+    if (farmHpThresholdFollowupCount < 2) farmHpThresholdFollowupRequested = true;
+    return farmHpThresholdCommit;
+  }
   const draft = farmHpThresholdDraft();
   if (!draft.valid) {
     farmRetreatThresholdError.textContent = draft.error;
@@ -684,21 +692,50 @@ function commitFarmHpThresholds() {
   }
   farmRetreatThresholdError.textContent = "";
   if (!draft.dirty) return Promise.resolve(true);
+  const revision = farmHpEditRevision;
+  const pair = { retreatHpPercent: draft.retreat, recoveryHpPercent: draft.recovery };
+  const operation = { revision, pair };
+  farmHpThresholdOperation = operation;
   const rollback = () => {
+    if (farmHpEditRevision !== revision) return;
+    farmHpSyncedEditRevision = revision;
     farmRetreatHpPercent.value = String(farmConfirmed.retreatHpPercent);
     farmRecoveryHpPercent.value = String(farmConfirmed.recoveryHpPercent);
   };
-  const save = saveFarmPatch({ retreatHpPercent: draft.retreat, recoveryHpPercent: draft.recovery }, rollback, { draftWrite: true })
+  const save = saveFarmPatch(pair, rollback, { draftWrite: true, preserveDraftKeys: Object.keys(pair) })
     .then((saved) => {
+      if (farmHpThresholdOperation === operation) farmHpThresholdOperation = null;
+      if (saved && farmHpEditRevision === revision) {
+        farmHpSyncedEditRevision = revision;
+        syncFarmPreferences(latestFarmPreferences ?? farmConfirmed, { forceKeys: Object.keys(pair) });
+      }
       if (!saved) farmRetreatThresholdError.textContent = "Chưa lưu được cặp ngưỡng HP; cài đặt đã lưu trước đó được giữ.";
+      if (farmHpThresholdFollowupRequested && farmHpThresholdFollowupCount < 2
+          && farmConfirmed.policyMode === "extended") {
+        farmHpThresholdFollowupRequested = false;
+        farmHpThresholdFollowupCount++;
+        farmHpThresholdCommit = null;
+        return commitFarmHpThresholds();
+      }
       return saved;
     });
   farmHpThresholdCommit = save;
-  save.finally(() => { if (farmHpThresholdCommit === save) farmHpThresholdCommit = null; });
+  save.finally(() => {
+    if (farmHpThresholdCommit === save) farmHpThresholdCommit = null;
+    if (!farmHpThresholdCommit) {
+      farmHpThresholdFollowupCount = 0;
+      farmHpThresholdFollowupRequested = false;
+    }
+  });
   return save;
 }
 for (const input of [farmRetreatHpPercent, farmRecoveryHpPercent]) {
-  input.addEventListener("input", () => { farmRetreatThresholdError.textContent = ""; });
+  input.addEventListener("input", () => {
+    farmHpEditRevision++;
+    if (farmHpThresholdCommit && farmHpThresholdFollowupCount < 2
+        && farmConfirmed.policyMode === "extended") farmHpThresholdFollowupRequested = true;
+    farmRetreatThresholdError.textContent = "";
+  });
   input.addEventListener("blur", (event) => {
     if (farmConfirmed.policyMode !== "extended" || selectingFarmPolicy
         || event.relatedTarget === farmPolicyMode || document.activeElement === farmPolicyMode) return;
@@ -740,7 +777,18 @@ async function flushFarmNumericDrafts({ discardInactiveDrafts = false } = {}) {
   else if (active && farmRadius.value !== String(farmConfirmed.radius)) pending.push(commitFarmRadius());
   if (farmHpThresholdCommit) pending.push(farmHpThresholdCommit);
   else if (active && farmHpThresholdDraft().dirty) pending.push(commitFarmHpThresholds());
-  const results = await Promise.all(pending);
+  let results = await Promise.all(pending);
+  if (active) {
+    // A write may finish while the user is still editing. Drain a small,
+    // bounded number of latest complete pairs; leave any newer draft visible.
+    for (let attempt = 0; attempt < 3 && farmHpThresholdDraft().dirty; attempt++) {
+      if (farmConfirmed.policyMode !== "extended") break;
+      if (!farmHpThresholdDraft().valid) break;
+      results = [...results, await commitFarmHpThresholds()];
+    }
+  }
+  if (active && farmConfirmed.policyMode !== "extended")
+    return { saved: false, reason: "policy-changed" };
   const writes = new Map([...startedWrites, ...farmWrites.entries()]);
   const writeEntries = [...writes.entries()];
   const writeResults = await Promise.allSettled(writeEntries.map(([promise]) => promise));
@@ -753,7 +801,10 @@ async function flushFarmNumericDrafts({ discardInactiveDrafts = false } = {}) {
       // Re-check in case a newer confirmed policy arrived while writes settled.
       if (farmConfirmed.policyMode === "extended") return { saved: false, reason: "policy-changed" };
       if (failedOtherWrite) return { saved: false, reason: "persistence" };
-      if (farmHasDraft()) syncFarmPreferences(latestFarmPreferences ?? farmConfirmed, { preserveDraft: false });
+      if (farmHasDraft()) {
+        farmHpSyncedEditRevision = farmHpEditRevision;
+        syncFarmPreferences(latestFarmPreferences ?? farmConfirmed, { preserveDraft: false });
+      }
       else if (failedDraftWrite || !results.every(Boolean)) return { saved: false, reason: "persistence" };
       return { saved: true };
     }
@@ -763,6 +814,8 @@ async function flushFarmNumericDrafts({ discardInactiveDrafts = false } = {}) {
   }
   if (!farmHpThresholdDraft().valid)
     return { saved: false, reason: "invalid", field: "retreatHpPercent" };
+  if (farmHpThresholdDraft().dirty)
+    return { saved: false, reason: "persistence" };
   if (failedWrites.length || !results.every(Boolean)) return { saved: false, reason: "persistence" };
   if (!farmRadius.value.trim() || !farmRadius.checkValidity()
       || !Number.isSafeInteger(farmRadius.valueAsNumber) || farmRadius.valueAsNumber < 1 || farmRadius.valueAsNumber > 1000)
