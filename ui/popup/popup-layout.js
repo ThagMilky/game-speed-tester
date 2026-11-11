@@ -9,6 +9,31 @@
   const navigation = [...document.querySelectorAll("[data-nav-panel]")];
   const pageKey = "popupActivePage";
   let navigationRevision = 0;
+  let contextExpired = false;
+  function contextAlive() {
+    if (contextExpired) return false;
+    try { if (chrome.runtime.id) return true; } catch {}
+    showExpiredContext();
+    return false;
+  }
+  function showExpiredContext() {
+    if (contextExpired) return;
+    contextExpired = true;
+    const notice = document.createElement("p");
+    notice.className = "notice";
+    notice.setAttribute("role", "status");
+    notice.textContent = "Extension đã được tải lại. Hãy tải lại trang game hoặc mở lại popup để tiếp tục dùng tool.";
+    document.body.prepend(notice);
+  }
+  function storageFailed(error) {
+    if (/extension context invalidated/i.test(String(error?.message ?? ""))) showExpiredContext();
+    else contextAlive();
+  }
+  async function savePage(page) {
+    if (!contextAlive()) return;
+    try { await chrome.storage.local.set({ [pageKey]: page }); }
+    catch (error) { storageFailed(error); }
+  }
 
   // Move the original log controls (not copies), preserving their IDs and
   // handlers attached by other popup scripts.
@@ -46,7 +71,7 @@
     container.scrollTop = 0;
     if (save) {
       navigationRevision++;
-      chrome.storage.local.set({ [pageKey]: page }).catch(() => {});
+      void savePage(page);
     }
   }
 
@@ -58,7 +83,12 @@
   document.body.classList.add("layout-ready");
   selectPage("overview", false);
   const initialRevision = navigationRevision;
-  chrome.storage.local.get(pageKey).then((saved) => {
-    if (navigationRevision === initialRevision) selectPage(saved[pageKey] ?? "overview", false);
-  }).catch(() => {});
+  async function restorePage() {
+    if (!contextAlive()) return;
+    try {
+      const saved = await chrome.storage.local.get(pageKey);
+      if (!contextExpired && navigationRevision === initialRevision) selectPage(saved[pageKey] ?? "overview", false);
+    } catch (error) { storageFailed(error); }
+  }
+  void restorePage();
 })();
