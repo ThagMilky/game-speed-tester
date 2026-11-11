@@ -172,7 +172,15 @@
           <p class="hint">Tự lưu. Không chủ động chọn boss trong Auto Farm, tìm boss bí cảnh hoặc dọn quái sát rương khi có boss gần. Kỹ năng đánh lan vẫn có thể trúng boss gần đó; không bảo đảm tránh toàn bộ đường đi gần boss. Bật sẽ chuyển bộ lọc boss sang quái thường.</p>
             <p class="field-title">Tự bảo vệ khi đánh boss</p>
             <label class="check-row"><input id="farmBossDodge" type="checkbox" checked><span>Né chiêu boss; giữ khoảng cách khi chờ kỹ năng</span></label>
-            <label class="check-row"><input id="farmBossRetreat" type="checkbox" checked><span>HP dưới 30%: lùi giữ khoảng cách, chờ dùng đan (đánh lại khi HP ≥ 40%)</span></label>
+            <label class="check-row"><input id="farmEliteDodge" type="checkbox"><span>Hỗ trợ né tinh anh</span></label>
+            <p class="hint">Tùy chọn được lưu để giữ sở thích của bạn; né tinh anh chưa được kích hoạt và sẽ được triển khai ở Phase 3.</p>
+            <label class="check-row"><input id="farmBossRetreat" type="checkbox" checked><span>Rút lui và chờ hồi HP gần boss</span></label>
+            <div class="two-columns farm-level-selection">
+              <div><label for="farmRetreatHpPercent">Rút lui khi HP dưới (%)</label><input id="farmRetreatHpPercent" type="number" min="1" max="99" step="1" value="40" required></div>
+              <div><label for="farmRecoveryHpPercent">Quay lại khi HP đạt (%)</label><input id="farmRecoveryHpPercent" type="number" min="2" max="100" step="1" value="100" required></div>
+            </div>
+            <small id="farmRetreatThresholdError" class="field-error" aria-live="polite"></small>
+            <p class="hint">Tự lưu cùng một lần ghi sau khi cả hai mức hợp lệ (1 ≤ HP rút lui &lt; HP quay lại ≤ 100%).</p>
             <p class="hint">Khi chờ kỹ năng, nhân vật có thể đi bộ giữ khoảng cách. Q chỉ được xét khi nguy hiểm sắp xảy ra và đủ điều kiện; nếu không dùng được Q, nhân vật có thể đi né. Vùng cảnh báo có thể là ước lượng, không bảo đảm né mọi chiêu.</p>
           </div></details>
           <details class="advanced separated"><summary id="farmRecoverySummary">Hồi phục</summary><div class="advanced-body">

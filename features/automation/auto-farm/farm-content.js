@@ -38,6 +38,10 @@
     const policyMode = typeof globalThis.GSTFarmPolicy?.read === "function"
       ? globalThis.GSTFarmPolicy.read(value)
       : ["native", "disabled"].includes(value?.policyMode) ? value.policyMode : "extended";
+    const retreatHpPercent = value?.retreatHpPercent, recoveryHpPercent = value?.recoveryHpPercent;
+    const hpThresholds = Number.isSafeInteger(retreatHpPercent) && retreatHpPercent >= 1
+      && Number.isSafeInteger(recoveryHpPercent) && retreatHpPercent < recoveryHpPercent && recoveryHpPercent <= 100
+      ? { retreatHpPercent, recoveryHpPercent } : { retreatHpPercent: 40, recoveryHpPercent: 100 };
     settings = {
       policyMode,
       enabled: value?.enabled === true,
@@ -50,7 +54,9 @@
       autoMeditate: value?.autoMeditate !== false,
       noRetreat: value?.noRetreat !== false,
       bossDodge: value?.bossDodge !== false,
+      eliteDodge: value?.eliteDodge === true,
       bossRetreat: value?.bossRetreat !== false,
+      ...hpThresholds,
       searchScope: value?.searchScope === "map" ? "map" : "radius",
       breakSeals: value?.breakSeals === true,
       idleMode: ["home", "seek"].includes(value?.idleMode) ? value.idleMode : "hold",

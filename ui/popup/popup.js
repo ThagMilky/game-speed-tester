@@ -47,7 +47,11 @@ const farmNearbyRadius = document.getElementById("farmNearbyRadius");
 const farmRadius = document.getElementById("farmRadius");
 const farmTargetMode = document.getElementById("farmTargetMode");
 const farmBossDodge = document.getElementById("farmBossDodge");
+const farmEliteDodge = document.getElementById("farmEliteDodge");
 const farmBossRetreat = document.getElementById("farmBossRetreat");
+const farmRetreatHpPercent = document.getElementById("farmRetreatHpPercent");
+const farmRecoveryHpPercent = document.getElementById("farmRecoveryHpPercent");
+const farmRetreatThresholdError = document.getElementById("farmRetreatThresholdError");
 const farmExcludeBoss = document.getElementById("farmExcludeBoss");
 const farmTargetRealm = document.getElementById("farmTargetRealm");
 const farmTargetTier = document.getElementById("farmTargetTier");
@@ -66,6 +70,8 @@ const farmAutoMeditate = document.getElementById("farmAutoMeditate");
 const farmAutoRespawn = document.getElementById("farmAutoRespawn");
 const farmAutoEncounter = document.getElementById("farmAutoEncounter");
 const positiveLevel = (value, fallback) => Number.isSafeInteger(value) && value > 0 ? value : fallback;
+const validFarmHpThresholds = (retreat, recovery) => Number.isSafeInteger(retreat) && retreat >= 1 && retreat < recovery
+  && Number.isSafeInteger(recovery) && recovery <= 100;
 const farmCompatibility = globalThis.GSTFarmCompatibility;
 const farmTargetRows = {
   single: { realm: farmTargetRealm, tier: farmTargetTier, error: farmTargetLevelError },
@@ -265,6 +271,10 @@ function normalizeFarmTargetMode(mode) {
 }
 function normalizedFarmPreferences(raw = {}) {
   const mode = normalizeFarmTargetMode(raw.targetMode);
+  const retreatHpPercent = Number.isSafeInteger(raw.retreatHpPercent) ? raw.retreatHpPercent : 40;
+  const recoveryHpPercent = Number.isSafeInteger(raw.recoveryHpPercent) ? raw.recoveryHpPercent : 100;
+  const hpThresholds = validFarmHpThresholds(retreatHpPercent, recoveryHpPercent)
+    ? { retreatHpPercent, recoveryHpPercent } : { retreatHpPercent: 40, recoveryHpPercent: 100 };
   const radius = Number.isSafeInteger(raw.radius)
     ? Math.max(1, Math.min(1000, raw.radius)) : 22;
   return {
@@ -282,7 +292,8 @@ function normalizedFarmPreferences(raw = {}) {
     preferLoot: raw.preferLoot !== false, selfDefense: raw.selfDefense === true,
     autoMeditate: raw.autoMeditate !== false, autoRespawn: raw.autoRespawn !== false,
     autoEncounter: raw.autoEncounter === true, bossDodge: raw.bossDodge !== false,
-    bossRetreat: raw.bossRetreat !== false
+    eliteDodge: raw.eliteDodge === true, bossRetreat: raw.bossRetreat !== false,
+    ...hpThresholds
   };
 }
 function syncFarmPolicyUI(raw = {}) {
@@ -310,6 +321,7 @@ function syncFarmPolicyUI(raw = {}) {
 function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {}) {
   const keepDraft = preserveDraft && farmHasDraft();
   const oldMode = activeFarmTargetMode(), levelDraft = keepDraft ? farmLevelDraft() : { dirty: false };
+  const hpThresholdDraft = keepDraft ? farmHpThresholdDraft() : { dirty: false };
   const draftSingleValue = ["maxLevel", "minLevel"].includes(oldMode)
     ? farmSelectionValue(farmTargetRows.single, oldMode === "minLevel" ? "min" : "max") : null;
   const draftMinValue = oldMode === "range" ? farmSelectionValue(farmTargetRows.min, "min") : null;
@@ -319,6 +331,7 @@ function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {})
   farmSearchScope.value = next.searchScope;
   farmNoRetreat.checked = next.noRetreat;
   farmBossDodge.checked = next.bossDodge;
+  farmEliteDodge.checked = next.eliteDodge;
   farmBossRetreat.checked = next.bossRetreat;
   farmShowTargetLine.checked = next.showTargetLine;
   farmShowRange.checked = next.showRange;
@@ -346,6 +359,11 @@ function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {})
     preserveRange && draftMaxValue === null);
   if (!keepDraft || forceKeys.includes("radius")) farmRadius.value = String(next.radius);
   if (!keepDraft || forceKeys.includes("nearbyRadius")) farmNearbyRadius.value = String(next.nearbyRadius);
+  if (!keepDraft || forceKeys.includes("retreatHpPercent") || forceKeys.includes("recoveryHpPercent")) {
+    farmRetreatHpPercent.value = String(next.retreatHpPercent);
+    farmRecoveryHpPercent.value = String(next.recoveryHpPercent);
+    farmRetreatThresholdError.textContent = "";
+  } else if (hpThresholdDraft.error) farmRetreatThresholdError.textContent = hpThresholdDraft.error;
   if (!keepDraft || forceKeys.includes("targetLevel")
       || forceKeys.includes("targetMinLevel") && forceKeys.includes("targetMaxLevel")) {
     farmDraftError = false;
@@ -415,10 +433,21 @@ farmPolicyMode.addEventListener("pointerdown", () => {
 function farmHasDraft() {
   return farmDraftError || farmLevelDraft().dirty
     || farmRadius.value !== String(farmConfirmed.radius)
-    || farmNearbyRadius.value !== String(farmConfirmed.nearbyRadius);
+    || farmNearbyRadius.value !== String(farmConfirmed.nearbyRadius)
+    || farmHpThresholdDraft().dirty;
+}
+function farmHpThresholdDraft() {
+  const retreat = farmRetreatHpPercent.value.trim() === "" ? NaN : Number(farmRetreatHpPercent.value);
+  const recovery = farmRecoveryHpPercent.value.trim() === "" ? NaN : Number(farmRecoveryHpPercent.value);
+  const valid = validFarmHpThresholds(retreat, recovery);
+  return { retreat, recovery, valid,
+    dirty: !valid || retreat !== farmConfirmed.retreatHpPercent || recovery !== farmConfirmed.recoveryHpPercent,
+    error: valid ? "" : "Nhập số nguyên: 1 ≤ HP rút lui < HP quay lại ≤ 100%.",
+  };
 }
 function farmMessage(message) {
-  farmFeedback.textContent = message + (farmDraftError ? " · Cảnh giới/tầng chưa hợp lệ, chưa lưu." : farmHasDraft() ? " · Có bản nháp chưa lưu." : "");
+  farmFeedback.textContent = message + (farmDraftError ? " · Cảnh giới/tầng chưa hợp lệ, chưa lưu."
+    : farmHpThresholdDraft().error ? ` · ${farmHpThresholdDraft().error}` : farmHasDraft() ? " · Có bản nháp chưa lưu." : "");
 }
 function syncFarmScope() {
   farmRadius.closest(".input-action").hidden = farmSearchScope.value !== "radius";
@@ -459,6 +488,7 @@ for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmShowRan
   [farmNearbyClear, "nearbyClear"], [farmNoRetreat, "noRetreat"],
   [breakSeals, "breakSeals"], [farmPreferLoot, "preferLoot"], [farmSelfDefense, "selfDefense"],
   [farmAutoMeditate, "autoMeditate"], [farmAutoRespawn, "autoRespawn"], [farmAutoEncounter, "autoEncounter"], [farmBossDodge, "bossDodge"],
+  [farmEliteDodge, "eliteDodge"],
   [farmBossRetreat, "bossRetreat"]]) {
   input.addEventListener("change", async () => {
     const next = input.checked;
@@ -522,7 +552,7 @@ for (const [input, key] of [[farmSearchScope, "searchScope"], [farmIdleMode, "id
     input.disabled = false;
   });
 }
-let farmSingleCommit = null, farmRangeCommit = null, farmRadiusCommit = null;
+let farmSingleCommit = null, farmRangeCommit = null, farmRadiusCommit = null, farmHpThresholdCommit = null;
 function commitFarmSingle(mode = activeFarmTargetMode()) {
   if (farmSingleCommit) return farmSingleCommit;
   if (!["maxLevel", "minLevel"].includes(mode)) return Promise.resolve(true);
@@ -644,6 +674,41 @@ function commitFarmRadius() {
   save.finally(() => { if (farmRadiusCommit === save) farmRadiusCommit = null; });
   return save;
 }
+function commitFarmHpThresholds() {
+  if (farmHpThresholdCommit) return farmHpThresholdCommit;
+  const draft = farmHpThresholdDraft();
+  if (!draft.valid) {
+    farmRetreatThresholdError.textContent = draft.error;
+    farmFeedback.textContent = draft.error;
+    return Promise.resolve(false);
+  }
+  farmRetreatThresholdError.textContent = "";
+  if (!draft.dirty) return Promise.resolve(true);
+  const rollback = () => {
+    farmRetreatHpPercent.value = String(farmConfirmed.retreatHpPercent);
+    farmRecoveryHpPercent.value = String(farmConfirmed.recoveryHpPercent);
+  };
+  const save = saveFarmPatch({ retreatHpPercent: draft.retreat, recoveryHpPercent: draft.recovery }, rollback, { draftWrite: true })
+    .then((saved) => {
+      if (!saved) farmRetreatThresholdError.textContent = "Chưa lưu được cặp ngưỡng HP; cài đặt đã lưu trước đó được giữ.";
+      return saved;
+    });
+  farmHpThresholdCommit = save;
+  save.finally(() => { if (farmHpThresholdCommit === save) farmHpThresholdCommit = null; });
+  return save;
+}
+for (const input of [farmRetreatHpPercent, farmRecoveryHpPercent]) {
+  input.addEventListener("input", () => { farmRetreatThresholdError.textContent = ""; });
+  input.addEventListener("blur", (event) => {
+    if (farmConfirmed.policyMode !== "extended" || selectingFarmPolicy
+        || event.relatedTarget === farmPolicyMode || document.activeElement === farmPolicyMode) return;
+    void commitFarmHpThresholds();
+  });
+  input.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault(); void commitFarmHpThresholds();
+  });
+}
 farmRadius.addEventListener("input", () => {
   farmRadiusError.textContent = "";
   farmMessage("Bản nháp chưa lưu.");
@@ -673,6 +738,8 @@ async function flushFarmNumericDrafts({ discardInactiveDrafts = false } = {}) {
     pending.push(commitFarmRange());
   if (farmRadiusCommit) pending.push(farmRadiusCommit);
   else if (active && farmRadius.value !== String(farmConfirmed.radius)) pending.push(commitFarmRadius());
+  if (farmHpThresholdCommit) pending.push(farmHpThresholdCommit);
+  else if (active && farmHpThresholdDraft().dirty) pending.push(commitFarmHpThresholds());
   const results = await Promise.all(pending);
   const writes = new Map([...startedWrites, ...farmWrites.entries()]);
   const writeEntries = [...writes.entries()];
@@ -694,6 +761,8 @@ async function flushFarmNumericDrafts({ discardInactiveDrafts = false } = {}) {
     if (farmHasDraft()) return { saved: false, reason: "inactive-draft", writeFailed: failedDraftWrite || !results.every(Boolean) };
     return !failedDraftWrite && results.every(Boolean) ? { saved: true } : { saved: false, reason: "persistence" };
   }
+  if (!farmHpThresholdDraft().valid)
+    return { saved: false, reason: "invalid", field: "retreatHpPercent" };
   if (failedWrites.length || !results.every(Boolean)) return { saved: false, reason: "persistence" };
   if (!farmRadius.value.trim() || !farmRadius.checkValidity()
       || !Number.isSafeInteger(farmRadius.valueAsNumber) || farmRadius.valueAsNumber < 1 || farmRadius.valueAsNumber > 1000)

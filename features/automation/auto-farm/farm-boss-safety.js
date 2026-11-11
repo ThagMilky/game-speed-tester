@@ -2,7 +2,7 @@
   "use strict";
   // Boss-only safety. Native Auto Farm remains responsible for combat, pills and paths.
   const finite = Number.isFinite, distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-  const log = [], logKey = "gst:boss-safety:v1", threshold = 0.3, recovered = 0.4;
+  const log = [], logKey = "gst:boss-safety:v1";
   // Keep a bounded record through same-tab reloads (no packet, URL or account data).
   try {
     const rows = JSON.parse(sessionStorage.getItem(logKey) ?? "[]");
@@ -21,6 +21,7 @@
         flying: row.flying === true })));
   } catch { /* Optional log, never influence Auto Farm. */ }
   let settings = {}, binding = null, job = null, retreating = false, suspended = false;
+  let retreatThreshold = 0.4, recoveryThreshold = 1;
   let retryAt = 0, message = "", noteUntil = 0, lastDashAt = -Infinity, dashObservation = null;
   let visibleWarnings = [], cooldownHolding = false;
   const warningHooks = new WeakMap();
@@ -79,8 +80,9 @@
       || ["GSTRealm", "GSTChest", "GSTHarvest"].some((name) => globalThis[name]?.controls?.(scene))
       || (scene.self.realm?.inside?.protection ?? 0) > 0;
   }
-  const bossActor = (actor) => actor?.k === "m" && !actor.dead
-    && (actor.st?.cls === "boss" || actor.st?.wb === true)
+  const bossActor = (actor) => (globalThis.GSTFarmMonsterClassification
+    ? globalThis.GSTFarmMonsterClassification.isBoss(actor) === true
+    : actor?.k === "m" && !actor.dead && (actor.st?.cls === "boss" || actor.st?.wb === true))
     && finite(actor.x) && finite(actor.y);
   function nearbyBoss(scene, pos) {
     const current = scene.views?.get?.(scene.auto.target);
@@ -146,7 +148,7 @@
   function criticalRetreat(scene) {
     if (!settings.bossRetreat || !scene?.self || !finite(scene.px) || !finite(scene.py)
         || !finite(scene.self.hp) || !finite(scene.self.mh) || scene.self.mh <= 0
-        || scene.self.hp / scene.self.mh >= (retreating ? recovered : threshold)
+        || scene.self.hp / scene.self.mh >= (retreating ? recoveryThreshold : retreatThreshold)
         || !nearbyBoss(scene, { x: scene.px, y: scene.py })) return false;
     // When native meditation is intentionally enabled and no pills remain,
     // let the game's own resting logic handle the situation instead.
@@ -405,13 +407,13 @@
       // Only make a short spacing adjustment if the boss is almost touching us.
       // Waiting for attack cooldown alone must not trigger a long kite/Q dash.
       const cooldownKite = cooling && gapDistance < 4;
-      if (settings.bossRetreat && !retreating && boss && hp < threshold) {
+      if (settings.bossRetreat && !retreating && boss && hp < retreatThreshold) {
         retreating = true;
-        note(scene, "retreat", "HP dưới 30%; ưu tiên giữ khoảng cách và chờ đan HP.",
+        note(scene, "retreat", `HP dưới ${settings.retreatHpPercent}%; ưu tiên giữ khoảng cách và chờ đan HP.`,
           { cooldown: typeof host.pillWait === "function" ? host.pillWait("hp") : null });
       }
-      if (retreating && (hp >= recovered || !boss)) {
-        retreating = false; release(); note(scene, "resume", "HP đã hồi an toàn hoặc boss không còn; tiếp tục Auto Farm.");
+      if (retreating && (hp >= recoveryThreshold || !boss)) {
+        retreating = false; release(); note(scene, "resume", "Đã rời trạng thái rút lui; Auto Farm tiếp tục theo trạng thái hiện tại.");
         return false;
       }
       // Do not interfere with normal native casting/aiming, but prioritize
@@ -620,9 +622,16 @@
   }
   globalThis.GSTFarmBossSafety = {
     configure(scene, value) {
+      const retreatHpPercent = value.retreatHpPercent, recoveryHpPercent = value.recoveryHpPercent;
+      const hpThresholds = Number.isSafeInteger(retreatHpPercent) && retreatHpPercent >= 1
+        && Number.isSafeInteger(recoveryHpPercent) && retreatHpPercent < recoveryHpPercent && recoveryHpPercent <= 100
+        ? { retreatHpPercent, recoveryHpPercent } : { retreatHpPercent: 40, recoveryHpPercent: 100 };
       settings = { targetMode: value.targetMode, bossDodge: value.bossDodge !== false,
         bossRetreat: value.bossRetreat !== false, enabled: value.enabled === true,
-        radius: value.radius, searchScope: value.searchScope, noRetreat: value.noRetreat !== false };
+        radius: value.radius, searchScope: value.searchScope, noRetreat: value.noRetreat !== false,
+        ...hpThresholds };
+      retreatThreshold = settings.retreatHpPercent / 100;
+      recoveryThreshold = settings.recoveryHpPercent / 100;
       detach(); this.attach(scene);
     },
     attach(scene) { try { attach(scene); } catch { detach(); } },
@@ -632,7 +641,7 @@
     status(scene) {
       if (binding?.scene !== scene || !scene?.auto?.on) return "";
       if (performance.now() < noteUntil) return message;
-      if (retreating) return "HP thấp: đang né boss và chờ đan HP, chưa tiếp tục đánh.";
+      if (retreating) return `HP thấp: đang lùi gần boss; chờ đạt ${settings.recoveryHpPercent}% rồi mới tiếp tục farm.`;
       if (cooldownHolding) return "Đang giữ khoảng cách với boss và chờ skill tấn công hồi.";
       return job ? "Đang di chuyển tránh vòng cảnh báo hoặc giữ khoảng cách với boss." : "";
     },

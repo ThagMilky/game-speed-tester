@@ -80,7 +80,7 @@
           writeFailed: event.data.writeFailed === true,
           field: ["radius", "min", "max", "potionHpPercent", "potionMpPercent",
             "harvestRadius", "harvestReach", "walkingSpeed", "flyingSpeed",
-            "farmWalkingSpeed", "farmFlyingSpeed"].includes(event.data.field) ? event.data.field : null
+            "farmWalkingSpeed", "farmFlyingSpeed", "retreatHpPercent"].includes(event.data.field) ? event.data.field : null
         };
         finish(result);
       };
@@ -134,6 +134,7 @@
         const notice = result.reason === "invalid"
           ? ({
             radius: "Giới hạn vùng farm",
+            retreatHpPercent: "Cặp ngưỡng rút lui/quay lại HP",
             min: "Tu vi tối thiểu",
             max: "Tu vi tối đa / khoảng tu vi",
             potionHpPercent: "Ngưỡng HP dùng đan",

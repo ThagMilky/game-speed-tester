@@ -5,7 +5,7 @@
   globalThis.GSTFarmConfigurationReady = false;
   let settings = { policyMode: "native", enabled: false, radius: 22, autoRespawn: true, autoMeditate: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
     searchScope: "radius", idleMode: "hold", preferLoot: true, excludeBoss: false,
-    bossDodge: true, bossRetreat: true };
+    bossDodge: true, eliteDodge: false, bossRetreat: true, retreatHpPercent: 40, recoveryHpPercent: 100 };
   let filterBinding = null;
   let excludedBossChange = null;
   let death = null;
@@ -36,7 +36,9 @@
   GSTHarvest.autoRespawnEnabled = () => settings.autoRespawn;
   const targetMode = (value) => value === "level" ? "maxLevel" : value === "bossFirst" ? "bossLevel"
     : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(value) ? value : "all";
-  const isBoss = (enemy) => enemy?.cls === "boss" || enemy?.wb === true;
+  const isBoss = (enemy) => globalThis.GSTFarmMonsterClassification
+    ? globalThis.GSTFarmMonsterClassification.isBoss(enemy) === true
+    : enemy?.cls === "boss" || enemy?.wb === true;
   const ranked = () => ["bossLevel", "highLevel", "lowLevel"].includes(settings.targetMode);
   function comparePriority(a, b) {
     if (settings.targetMode === "bossLevel" && isBoss(a) !== isBoss(b)) return isBoss(a) ? -1 : 1;
@@ -93,7 +95,7 @@
   function matchesTarget(enemy) {
     if (settings.policyMode !== "extended") return true;
     if ((settings.excludeBoss || settings.targetMode === "highLevel" || settings.targetMode === "lowLevel") && isBoss(enemy)) return false;
-    if (settings.targetMode === "boss") return enemy?.cls === "boss" || enemy?.wb === true;
+    if (settings.targetMode === "boss") return isBoss(enemy);
     if (["all", "bossLevel", "highLevel", "lowLevel"].includes(settings.targetMode)) return true;
     if (!finite(enemy?.lv)) return false;
     if (settings.targetMode === "range") return enemy.lv >= settings.targetMinLevel && enemy.lv <= settings.targetMaxLevel;
@@ -874,10 +876,15 @@
         || settings.targetLevel !== data.targetLevel
         || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel
         || settings.excludeBoss !== (data.excludeBoss === true);
+      const retreatHpPercent = data.retreatHpPercent, recoveryHpPercent = data.recoveryHpPercent;
+      const hpThresholds = Number.isSafeInteger(retreatHpPercent) && retreatHpPercent >= 1
+        && Number.isSafeInteger(recoveryHpPercent) && retreatHpPercent < recoveryHpPercent && recoveryHpPercent <= 100
+        ? { retreatHpPercent, recoveryHpPercent } : { retreatHpPercent: 40, recoveryHpPercent: 100 };
       settings = { policyMode: globalThis.GSTFarmPolicy?.normalize(data.policyMode) ?? "extended",
         enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn !== false,
         autoMeditate: data.autoMeditate !== false, noRetreat: data.noRetreat !== false,
-        bossDodge: data.bossDodge !== false, bossRetreat: data.bossRetreat !== false,
+        bossDodge: data.bossDodge !== false, eliteDodge: data.eliteDodge === true, bossRetreat: data.bossRetreat !== false,
+        ...hpThresholds,
         showTargetLine: data.showTargetLine === true, showRange: data.showRange === true,
         nearbyClear: data.nearbyClear === true,
         nearbyRadius: Number.isSafeInteger(data.nearbyRadius)
