@@ -431,12 +431,12 @@
           <label class="switch-row"><span>Bật tối ưu FPS</span><input id="fpsEnabled" class="switch" type="checkbox"></label>
           <div class="wide-groups"><div class="wide-group">
           <p class="field-title separated">Nhân vật &amp; hiệu ứng</p>
-          <label class="check-row"><input type="checkbox" data-fps-field="hidePlayers"><span>Ẩn hình người chơi khác, vũ khí, thú cưỡi và bóng</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hidePlayers"><span>Ẩn hình, danh hiệu và huy hiệu người chơi khác (giữ tên)</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hidePlayerEffects"><span>Giảm hiệu ứng người chơi khác</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideOwnEffects"><span>Giảm hiệu ứng của bạn (giữ dấu ngắm)</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideOwnCharacter"><span>Ẩn nhân vật của tôi (giữ tên)</span></label>
-          <label class="check-row"><input type="checkbox" data-fps-field="hideDisciples"><span>Ẩn hình và bóng đệ tử</span></label>
-          <label class="check-row"><input type="checkbox" data-fps-field="hidePets"><span>Ẩn hình và bóng linh thú</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideOwnDisciples"><span>Ẩn đệ tử &amp; linh thú của tôi (cả tên)</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideOtherDisciples"><span>Ẩn đệ tử &amp; linh thú người khác (cả tên)</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideCompanionEffects"><span>Giảm hiệu ứng đệ tử, linh thú xác định được nguồn</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideBasicEffects"><span>Giảm hiệu ứng đánh thường và vũ khí</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideMonsterEffects"><span>Giảm hiệu ứng quái thường xác định được nguồn</span></label>
@@ -450,6 +450,9 @@
           <label class="check-row"><input type="checkbox" data-fps-field="reduceEnvironment"><span>Giảm thời tiết, sương bụi và hạt trang trí nền</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="reduceScreen"><span>Giảm rung và chớp màn hình</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="simpleMap"><span>Bản đồ tối giản dạng ô vuông</span></label>
+          <p class="field-title separated">Giới hạn khung hình</p>
+          <label class="check-row"><input type="checkbox" data-fps-field="limit30Fps"><span>Giới hạn FPS tối đa 30</span></label>
+          <p class="hint">Giới hạn khung hình thực tế bằng cơ chế vòng lặp game; FPS đo từ số khung hình được vẽ. Tắt để khôi phục giới hạn gốc.</p>
           <p class="field-title separated">Minimap</p>
           <label class="check-row"><input type="checkbox" data-fps-field="simpleMinimap"><span>Minimap dạng ô vuông</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="minimapColors"><span>Màu dấu trên minimap</span></label>
@@ -465,7 +468,7 @@
           <p class="hint">Mỗi ô vuông là 1 ô game: tối = đi được, xám sáng = phần bị chặn, gần đen = ngoài map. Giữ hình dạng vật cản trong từng ô, chưa tính độ rộng nhân vật. Giữ tài nguyên, NPC, cổng và cảnh báo. Lớp chưa nhận diện có thể còn hiện. Chọn tất cả chỉ tick lựa chọn, vẫn cần bật công tắc tối ưu.</p>
           <div class="button-row"><button id="fpsSelectAll" type="button">Chọn tất cả</button><button id="fpsSelectNone" type="button">Bỏ chọn tất cả</button></div>
           <button id="fpsReset" type="button" class="secondary full">Khôi phục hình ảnh gốc</button>
-          <p class="hint">Tự lưu và giữ qua đổi map. Tắt công tắc để trả hình ảnh; nút khôi phục bỏ tất cả lựa chọn tối ưu. Tên/thanh máu vẫn theo khoảng cách và điều kiện gốc của game. Không ẩn cổng, NPC, cây hái, phong ấn hoặc vùng cảnh báo nguy hiểm.</p>
+          <p class="hint">Tự lưu và giữ qua đổi map. Tắt công tắc để khôi phục hình ảnh và FPS gốc; nút khôi phục bỏ tất cả lựa chọn tối ưu. Tên/thanh máu còn hiển thị theo điều kiện gốc trừ đối tượng đã chọn ẩn. Không thay đổi dữ liệu game hoặc cảnh báo nguy hiểm.</p>
           <p class="hint">Chỉ giảm các lớp xác định được; hiệu ứng đang chạy có thể cần kết thúc. Không giảm lag mạng/server. Tick FPS trong Bảng trạng thái để theo dõi. Chưa đo hiệu quả trong game thật.</p>
           </div></div>
         </fieldset>

@@ -2,25 +2,26 @@
   "use strict";
   const origin = "https://nghichthienky.online";
   const fields = ["hidePlayers", "hidePlayerEffects", "hideOwnEffects", "hideOwnCharacter", "hideResourceVisuals", "hideGameUI", "hideNPCVisuals", "hideMonsterEffects",
-    "hideDisciples", "hidePets", "hideCompanionEffects", "hideBasicEffects",
-    "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings", "hideBosses", "hideBossEffects", "simpleMinimap", "minimapColors"];
+    "hideOwnDisciples", "hideOtherDisciples", "hideCompanionEffects", "hideBasicEffects",
+    "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings", "hideBosses", "hideBossEffects", "simpleMinimap", "minimapColors", "limit30Fps"];
   let settings = {}, measure = false, suspended = false, watcher = null, binding = null;
-  let failure = "";
+  let failure = "", fpsMeter = null;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const wanted = () => settings.enabled && (settings.minimapRange > 1 || fields.some((key) => settings[key]));
   const on = (key) => settings.enabled && settings[key];
 
   const boss = (actor) => actor?.st?.cls === "boss" || actor?.st?.wb === true;
-  const disciple = (actor) => actor?.k === "m" && actor.st?.cls === "pet"
-    && typeof actor.st.set === "string" && actor.st.set.startsWith("@p:detu_");
+  const companion = (actor) => actor?.k === "m" && actor.st?.cls === "pet";
+  const hiddenCompanion = (scene, actor) => companion(actor) && actor.st.ow != null
+    && scene.you != null && (actor.st.ow === scene.you
+      ? on("hideOwnDisciples") : on("hideOtherDisciples"));
   function suppress(scene, id) {
     if (id === scene.you) return on("hideOwnEffects");
     const actor = scene.views.get(id);
     if (actor?.k === "p") return on("hidePlayers") || on("hidePlayerEffects");
     if (actor?.k !== "m") return false;
-    if (actor.st?.cls === "pet") return on("hideCompanionEffects")
-      || (disciple(actor) ? on("hideDisciples") : on("hidePets"));
+    if (companion(actor)) return on("hideCompanionEffects") || hiddenCompanion(scene, actor);
     return boss(actor) ? on("hideBossEffects") : on("hideMonsterEffects");
   }
 
@@ -144,6 +145,26 @@
       owner.points.delete(node);
     }
   }
+  function filteredPlate(scene, plate) {
+    const id = String(plate?.id ?? "");
+    if (/^e\d+$/.test(id)) {
+      const actor = scene.views.get(Number(id.slice(1)));
+      if (hiddenCompanion(scene, actor)) return null;
+      if (on("hidePlayers") && actor?.k === "p" && actor.id !== scene.you && actor.st?.gt) {
+        const prefix = `〔${actor.st.gt}〕 `;
+        if (typeof plate.text === "string" && plate.text.startsWith(prefix))
+          return { ...plate, text: plate.text.slice(prefix.length) };
+      }
+    }
+    if (on("hidePlayers")) {
+      const match = /^(?:at|donor)(\d+)$/.exec(id);
+      if (match) {
+        const actor = scene.views.get(Number(match[1]));
+        if (actor?.k === "p" && actor.id !== scene.you) return null;
+      }
+    }
+    return plate;
+  }
   function wrap(owner, object, key, handler) {
     if (typeof object?.[key] !== "function") return;
     const original = object[key], descriptor = Object.getOwnPropertyDescriptor(object, key);
@@ -156,6 +177,80 @@
     });
   }
 
+  function applyFrameCap(owner) {
+    if (!on("limit30Fps")) return;
+    const loop = owner.scene.game?.loop, raf = loop?.raf;
+    if (typeof loop?.stepLimitFPS !== "function" || typeof loop?.step !== "function"
+        || typeof loop?.wake !== "function" || typeof raf?.callback !== "function"
+        || typeof loop.hasFpsLimit !== "boolean" || !Number.isFinite(loop.fpsLimit)
+        || !Number.isFinite(loop._limitRate)) {
+      owner.capUnavailable = true;
+      return;
+    }
+    const native = { fpsLimit: loop.fpsLimit, hasFpsLimit: loop.hasFpsLimit,
+      limitRate: loop._limitRate, callback: raf.callback };
+    const appliedCallback = loop.stepLimitFPS.bind(loop);
+    const state = { loop, raf, native, appliedCallback };
+    owner.frameCap = state;
+    loop.fpsLimit = 30;
+    loop.hasFpsLimit = true;
+    loop._limitRate = 1000 / 30;
+    raf.callback = appliedCallback;
+    // Phaser rebinds its RAF callback when waking from a hidden tab.
+    wrap(owner, loop, "wake", function (original, args) {
+      const previous = raf.callback;
+      const result = original.apply(this, args);
+      if (owner.frameCap === state && raf.callback !== previous)
+        state.appliedCallback = raf.callback;
+      return result;
+    });
+  }
+  function restoreFrameCap(owner) {
+    const state = owner.frameCap;
+    if (!state) return;
+    owner.frameCap = null;
+    const { loop, raf, native } = state;
+    if (loop.raf !== raf || loop.fpsLimit !== 30 || loop.hasFpsLimit !== true
+        || loop._limitRate !== 1000 / 30) return;
+    if (raf.callback === state.appliedCallback) raf.callback = native.callback;
+    loop.fpsLimit = native.fpsLimit;
+    loop.hasFpsLimit = native.hasFpsLimit;
+    loop._limitRate = native.limitRate;
+  }
+  function stopFpsMeter() {
+    if (!fpsMeter) return;
+    const current = fpsMeter;
+    fpsMeter = null;
+    current.game.events.off("postrender", current.record);
+    current.game.events.off("destroy", current.destroy);
+  }
+  function syncFpsMeter(scene) {
+    const game = scene?.sys?.isActive?.() ? scene.game : null;
+    if ((!wanted() && !measure) || !game?.events?.on || !game.events.off) {
+      stopFpsMeter();
+      return;
+    }
+    if (fpsMeter?.game === game) return;
+    stopFpsMeter();
+    const current = { game, frames: [], since: performance.now() };
+    current.record = (renderer) => {
+      if (!renderer || document.hidden) return;
+      const now = performance.now();
+      current.frames.push(now);
+      while (current.frames[0] < now - 1000) current.frames.shift();
+    };
+    current.destroy = () => { if (fpsMeter === current) stopFpsMeter(); };
+    game.events.on("postrender", current.record);
+    game.events.on("destroy", current.destroy);
+    fpsMeter = current;
+  }
+  function measuredFps(scene) {
+    if (document.hidden || !scene?.sys?.isActive?.() || fpsMeter?.game !== scene.game) return null;
+    const now = performance.now();
+    if (now - fpsMeter.since < 1000) return null;
+    while (fpsMeter.frames[0] < now - 1000) fpsMeter.frames.shift();
+    return fpsMeter.frames.length;
+  }
   function before() {
     if (!binding) return;
     if (sceneNow() !== binding.scene || !binding.scene.sys?.isActive?.()) { detach(); return; }
@@ -169,12 +264,12 @@
       updateGameUi(owner, performance.now());
       owner.mapReady = GSTFpsMap.update(scene, settings, (value) => mask(owner, value));
       if (on("hidePlayers") || on("hideMonsters") || on("hideBosses") || on("hideBossEffects") || on("hidePlayerEffects")
-          || on("hideMonsterEffects") || on("hideDisciples") || on("hidePets") || on("hideCompanionEffects")) {
+          || on("hideMonsterEffects") || on("hideOwnDisciples") || on("hideOtherDisciples") || on("hideCompanionEffects")) {
         for (const actor of scene.views.values()) {
           const player = actor.k === "p" && actor.id !== scene.you;
-          const companion = actor.k === "m" && actor.st?.cls === "pet";
-          const monster = actor.k === "m" && !companion;
-          const hideCompanion = companion && (disciple(actor) ? on("hideDisciples") : on("hidePets"));
+          const isCompanion = companion(actor);
+          const monster = actor.k === "m" && !isCompanion;
+          const hideCompanion = hiddenCompanion(scene, actor);
           if ((player && on("hidePlayers")) || hideCompanion
               || (monster && (boss(actor) ? on("hideBosses") : on("hideMonsters")))) {
             mask(owner, actor.ch);
@@ -239,6 +334,7 @@
     owner.scene.events.off("postupdate", after);
     owner.scene.events.off("shutdown", detach);
     owner.scene.events.off("destroy", detach);
+    restoreFrameCap(owner);
     restoreMasks(owner);
     restoreDom(owner);
     for (const label of owner.labels.values()) if (label.scene) label.destroy();
@@ -255,6 +351,13 @@
     const owner = { scene, masks: new Map(), dom: new Map(), labels: new Map(), points: new Map(),
       hooks: [], epoch: 0, uiSyncAt: 0, resourceSyncAt: 0 };
     binding = owner;
+    applyFrameCap(owner);
+    wrap(owner, scene.overlay, "plate", function (original, args) {
+      const selected = filteredPlate(scene, args[0]);
+      if (!selected) { this.hide?.(args[0]?.id); return; }
+      if (selected !== args[0]) args[0] = selected;
+      return original.apply(this, args);
+    });
     const minimapRange = () => settings.enabled ? settings.minimapRange : 1;
     wrap(owner, scene.minimap, "draw", GSTFpsMinimap.handler(scene, () => on("simpleMinimap"), minimapRange));
     wrap(owner, scene.minimap, "draw", GSTFpsMinimapZoom.handler(minimapRange));
@@ -286,7 +389,7 @@
       // Only pet:* is a companion effect. pas:* belongs to player passives
       // and has no caster ID, so do not blanket-hide it.
       if (typeof args[0] === "string" && args[0].startsWith("pet:")
-          && (on("hideCompanionEffects") || on("hidePets"))) return;
+          && on("hideCompanionEffects")) return;
       return original.apply(this, args);
     });
     wrap(owner, scene.juice, "number", function (original, args) {
@@ -299,7 +402,7 @@
     });
     wrap(owner, scene, "afterImage", function (original, args) {
       if (!on("hidePlayers") && !on("hidePlayerEffects") && !on("hideOwnEffects") && !on("hideMonsterEffects")
-          && !on("hideBossEffects") && !on("hideDisciples") && !on("hidePets") && !on("hideCompanionEffects")) {
+          && !on("hideBossEffects") && !on("hideOwnDisciples") && !on("hideOtherDisciples") && !on("hideCompanionEffects")) {
         return original.apply(this, args);
       }
       const character = args[0] ?? scene.player;
@@ -340,16 +443,18 @@
   }
   function publish(requestId) {
     const scene = sceneNow();
-    const fps = !document.hidden && scene?.sys?.isActive?.() ? scene.game?.loop?.actualFps : null;
+    const fps = measuredFps(scene);
     window.postMessage({ channel: "gst:fps-status:v1", requestId, enabled: settings.enabled === true,
       active: !!binding, fps: Number.isFinite(fps) && fps > 0 ? Math.round(fps) : null,
       message: failure || (!settings.enabled ? "Tối ưu FPS đang tắt."
+        : binding?.capUnavailable && on("limit30Fps") ? "Game không hỗ trợ khóa 30 FPS an toàn; các tùy chọn hình ảnh khác vẫn hoạt động."
         : !wanted() ? "Đã bật; hãy chọn phần hình ảnh cần giảm."
         : binding && settings.simpleMap && !binding.mapReady ? "Đang chuẩn bị bản đồ tối giản hoặc dữ liệu va chạm chưa tương thích; giữ nền gốc."
         : binding ? "Đang giảm hình ảnh đã chọn; giữ dữ liệu và điều khiển game."
         : "Đang chờ scene game tương thích; chưa thay đổi hình ảnh.") }, origin);
   }
   function tick() {
+    syncFpsMeter(sceneNow());
     if (!suspended && wanted() && !failure) {
       try { attach(sceneNow()); }
       catch { failure = "Không gắn được tối ưu FPS; tắt rồi bật lại để thử."; detach(); }
@@ -359,7 +464,7 @@
   function monitor() {
     if (watcher !== null) clearInterval(watcher);
     watcher = null;
-    if (suspended) { detach(); return; }
+    if (suspended) { detach(); stopFpsMeter(); return; }
     tick();
     if (wanted() || measure) watcher = setInterval(tick, 1000);
   }
