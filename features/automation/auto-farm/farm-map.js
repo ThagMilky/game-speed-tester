@@ -355,14 +355,21 @@
     if (!nearby || nearbyCandidate?.id !== nearby.id) nearbyCandidate = nearby ? { id: nearby.id, at: time } : null;
     const nearbyStable = nearby && nearbyCandidate && time - nearbyCandidate.at >= 0.75;
     const retained = pursuing ?? returning ?? current ?? nearbyAggro ?? challenger;
+    const ranked = priority?.ranked?.() === true;
+    const retainedAge = pursuing && retained?.id === pursuing.id ? time - job.startedAt : 3;
+    const nearbyPriority = ranked && nearby && retained && nearby.id !== retained.id
+      ? priority.switchReason?.(retained, nearby, position, retainedAge) : "";
+    const sameRank = ranked && nearby && retained && priority.compare(nearby, retained) === 0;
     const preferNearby = !better && !localPriority && nearbyStable && retained
-      && range(retained, position) > nativeReach && nearby.id !== retained.id;
+      && range(retained, position) > nativeReach && nearby.id !== retained.id
+      && (!ranked || sameRank || !!nearbyPriority);
     const target = engaged ? current : better || localPriority ? challenger
       : preferNearby ? nearby : retained;
     let decisionReason = "";
     if (preferNearby || engaged || better || localPriority) {
       decisionReason = engaged ? "active_close_fight" : better === "boss_priority" || localPriority === "boss_priority"
-        ? "boss_priority" : better || localPriority ? "level_priority" : "nearby_actionable";
+        || nearbyPriority === "boss_priority" ? "boss_priority"
+        : better || localPriority || nearbyPriority ? "level_priority" : "nearby_actionable";
       routeLog(scene, "target_decision", { fromId: current?.id ?? retained?.id, toId: target?.id,
         switchSource: "map", switchReason: decisionReason });
     } else if (retained && range(retained, position) > nativeReach && nearby === null) {
