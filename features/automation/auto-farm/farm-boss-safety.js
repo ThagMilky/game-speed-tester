@@ -936,6 +936,7 @@
         && Number.isSafeInteger(recoveryHpPercent) && retreatHpPercent < recoveryHpPercent && recoveryHpPercent <= 100
         ? { retreatHpPercent, recoveryHpPercent } : { retreatHpPercent: 40, recoveryHpPercent: 100 };
       settings = { targetMode: value.targetMode, bossDodge: value.bossDodge !== false,
+        eliteDodge: value.eliteDodge === true,
         bossRetreat: value.bossRetreat !== false, enabled: value.enabled === true,
         radius: value.radius, searchScope: value.searchScope, noRetreat: value.noRetreat !== false,
         ...hpThresholds };
