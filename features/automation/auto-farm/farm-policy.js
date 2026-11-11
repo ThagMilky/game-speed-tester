@@ -1,3 +1,5 @@
+// Canonical helper for popup/ISOLATED. Keep the MAIN copy byte-identical with:
+// Copy-Item -LiteralPath .\features\automation\auto-farm\farm-policy.js -Destination .\features\automation\auto-farm\farm-policy-main.js
 (() => {
   "use strict";
   const modes = Object.freeze(["extended", "native", "disabled"]);
