@@ -24,8 +24,9 @@
   let retreatThreshold = 0.4, recoveryThreshold = 1;
   let retryAt = 0, message = "", noteUntil = 0, lastDashAt = -Infinity, dashObservation = null;
   let recentDamage = new Map(), threatSample = [], threatSampleAt = -Infinity, threatSampleScene = null;
-  let visibleWarnings = [], cooldownHolding = false;
-  const maxThreatScan = 256, maxLocalThreats = 24, localThreatRadius = 12, threatFalloff = 9;
+  let visibleWarnings = [], cooldownHolding = false, recoverySteer = null;
+  const maxThreatScan = 256, maxLocalThreats = 24, maxPrioritizedAttackers = 8;
+  const localThreatRadius = 12, threatFalloff = 9;
   const warningHooks = new WeakMap();
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
@@ -45,10 +46,17 @@
   }
   function release() {
     const old = job; job = null;
-    if (!old || !binding) return;
-    GSTNavigation.cancel(binding.scene, old.navigation);
-    if (old.steer && binding.scene.autoX === old.steer[0] && binding.scene.autoY === old.steer[1]) {
-      binding.scene.autoX = 0; binding.scene.autoY = 0;
+    if (old && binding) {
+      GSTNavigation.cancel(binding.scene, old.navigation);
+      if (old.steer && binding.scene.autoX === old.steer[0] && binding.scene.autoY === old.steer[1]) {
+        binding.scene.autoX = 0; binding.scene.autoY = 0;
+      }
+    }
+    // Clear only the last delegated native-recovery vector while it is still unchanged.
+    const recovery = recoverySteer; recoverySteer = null;
+    if (recovery && recovery.scene.auto === recovery.auto
+        && recovery.scene.autoX === recovery.x && recovery.scene.autoY === recovery.y) {
+      recovery.scene.autoX = 0; recovery.scene.autoY = 0;
     }
   }
   function enabled(scene = binding?.scene) {
@@ -82,11 +90,37 @@
       || ["GSTRealm", "GSTChest", "GSTHarvest"].some((name) => globalThis[name]?.controls?.(scene))
       || (scene.self.realm?.inside?.protection ?? 0) > 0;
   }
-  function retreatContextValid(scene, time) {
+  function retreatOwnerValid(scene) {
     return !!scene && sceneNow() === scene && binding?.scene === scene && binding.auto === scene.auto
-      && scene.auto?.on === true && scene.self && !scene.self.dead && !scene.leaving
+      && settings.bossRetreat && globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() === true
+      && scene.auto?.on === true && scene.self?.dead !== true && !scene.leaving
       && scene.sys?.isActive?.() && connected(scene) && !GSTFarmInput.movement(scene)
-      && !scene.auto.moved && finite(time) && time >= scene.auto.pauseUntil;
+      && !scene.auto.moved;
+  }
+  function retreatContextValid(scene, time) {
+    return retreatOwnerValid(scene) && !!scene.self && finite(time)
+      && finite(scene.auto.pauseUntil) && time >= scene.auto.pauseUntil;
+  }
+  function holdForRecoveryData(scene, time, text) {
+    release();
+    let now = time;
+    if (!finite(now)) { try { now = scene?.now?.(); } catch { now = NaN; } }
+    if (!retreating || !retreatOwnerValid(scene)
+        || finite(now) && finite(scene.auto.pauseUntil) && now < scene.auto.pauseUntil) {
+      retreating = false; return false;
+    }
+    if (message !== text || performance.now() > noteUntil) note(scene, "unsupported", text);
+    return true;
+  }
+  function delegateNativeRecovery(scene, host, time, delta) {
+    release();
+    const before = [scene.autoX, scene.autoY];
+    if (!GSTFarmUpdate.runRecovery(scene, host, time, delta))
+      note(scene, "unsupported", "Không thể gọi nhánh hồi phục gốc; đang giữ Auto Farm khỏi chọn mục tiêu.");
+    else if ([scene.autoX, scene.autoY].every(finite) && (scene.autoX !== before[0] || scene.autoY !== before[1])
+        && (scene.autoX !== 0 || scene.autoY !== 0))
+      recoverySteer = { scene, auto: scene.auto, x: scene.autoX, y: scene.autoY };
+    return true;
   }
   const bossActor = (actor) => (globalThis.GSTFarmMonsterClassification
     ? globalThis.GSTFarmMonsterClassification.isBoss(actor) === true
@@ -290,28 +324,42 @@
     threatSampleScene = scene; threatSampleAt = time; threatSample = [];
     for (const [id, until] of recentDamage) if (until <= time || !scene.views?.get?.(id)) recentDamage.delete(id);
     const raw = typeof host.gstRawEnemies === "function" ? host.gstRawEnemies() : host.enemies?.();
-    if (!Array.isArray(raw)) return [];
-    const seen = new Set();
+    const candidates = new Map();
     const add = (entry, actor, attributed) => {
       if (!actor || actor.k !== "m" || actor.dead || !finite(actor.x) || !finite(actor.y)
-          || !Number.isSafeInteger(actor.id) || seen.has(actor.id)
+          || !Number.isSafeInteger(actor.id)
           || (entry?.hostile !== true && !attributed)) return;
       const category = globalThis.GSTFarmMonsterClassification?.classify?.(actor);
       if (!category || distance(pos, actor) > localThreatRadius) return;
-      seen.add(actor.id);
       const categoryWeight = category === "boss" ? 3 : category === "elite" ? 2 : 1;
-      threatSample.push({ actor, category, attributed, weight: categoryWeight + (attributed ? 2 : 0) });
+      const previous = candidates.get(actor.id);
+      if (!previous || attributed && !previous.attributed)
+        candidates.set(actor.id, { actor, category, attributed, categoryWeight,
+          weight: categoryWeight + (attributed ? 2 : 0) });
     };
-    for (let index = 0; index < Math.min(raw.length, maxThreatScan)
-        && threatSample.length < maxLocalThreats; index++) {
-      const entry = raw[index];
-      add(entry, scene.views?.get?.(entry?.id), recentDamage.has(entry?.id));
+    if (Array.isArray(raw)) {
+      for (let index = 0; index < Math.min(raw.length, maxThreatScan); index++) {
+        const entry = raw[index];
+        add(entry, scene.views?.get?.(entry?.id), recentDamage.has(entry?.id));
+      }
     }
-    for (const [id] of recentDamage) {
-      if (threatSample.length >= maxLocalThreats) break;
-      if (!seen.has(id)) add(null, scene.views?.get?.(id), true);
+    for (const [id, until] of recentDamage) {
+      if (until > time) add(null, scene.views?.get?.(id), true);
     }
-    threatSample.sort((a, b) => distance(pos, a.actor) - distance(pos, b.actor));
+    const byDistance = (a, b) => distance(pos, a.actor) - distance(pos, b.actor)
+      || Number(b.attributed) - Number(a.attributed)
+      || b.categoryWeight - a.categoryWeight || a.actor.id - b.actor.id;
+    const nearby = [...candidates.values()].filter((item) => distance(pos, item.actor) <= threatFalloff).sort(byDistance);
+    const selected = nearby.slice(0, maxLocalThreats);
+    const selectedIds = new Set(selected.map((item) => item.actor.id));
+    const distantAttackers = [...candidates.values()].filter((item) => item.attributed
+      && distance(pos, item.actor) > threatFalloff && !selectedIds.has(item.actor.id)).sort(byDistance);
+    const reserved = distantAttackers.slice(0, Math.min(maxPrioritizedAttackers, maxLocalThreats - selected.length));
+    for (const item of reserved) selectedIds.add(item.actor.id);
+    const remaining = [...candidates.values()].filter((item) => !selectedIds.has(item.actor.id)).sort(byDistance);
+    // Keep every available threat inside the active 9-cell exposure radius first;
+    // reserve at most 8 nearest recent attackers beyond it, then fill by distance.
+    threatSample = [...selected, ...reserved, ...remaining.slice(0, maxLocalThreats - selected.length - reserved.length)];
     return threatSample;
   }
   function destination(scene, host, pos, boss, hazards, lowHp, zone, threats) {
@@ -460,17 +508,22 @@
     note(scene, "pill", "Đang dùng đan HP bằng cơ chế gốc.");
     return true;
   }
-  function update(host, time) {
+  function update(host, time, delta) {
     const scene = binding?.scene;
     try {
       cooldownHolding = false;
-      if (scene && finite(time)) observeDash(scene, time);
-      const urgent = scene && urgentEscape(scene, time);
-      if (!scene || !enabled() || !finite(time)
-          || !["steer", "route", "clear", "hp", "pills"].every((key) => typeof host?.[key] === "function")) {
+      if (!scene || sceneNow() !== scene || binding?.auto !== scene.auto
+          || globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() !== true || !enabled()) {
         release(); retreating = false; return false;
       }
+      if (!finite(time)) return holdForRecoveryData(scene, time,
+        "Dữ liệu thời gian tạm thời không hợp lệ; đang giữ trạng thái hồi phục.");
+      if (!["steer", "route", "clear", "hp", "pills"].every((key) => typeof host?.[key] === "function"))
+        return holdForRecoveryData(scene, time,
+          "Thiếu dữ liệu Auto Farm để điều hướng; đang chờ dữ liệu hợp lệ trước khi tiếp tục.");
       const mapKey = host.mapKey?.();
+      if (binding.mapKey && mapKey == null) return holdForRecoveryData(scene, time,
+        "Chưa nhận được mã map hiện tại; đang giữ hồi phục tới khi dữ liệu map ổn định.");
       if (binding.mapKey && mapKey !== binding.mapKey) {
         release(); retreating = false; recentDamage.clear(); threatSample = [];
         binding.mapKey = mapKey;
@@ -480,8 +533,10 @@
       const pos = { x: scene.px, y: scene.py }, bounds = zone(scene);
       if (!bounds || !inside(bounds, pos) || !finite(scene.self.hp) || !finite(scene.self.mh) || scene.self.mh <= 0
           || !finite(scene.selfAt) || scene.now() - scene.selfAt > 3) {
-        release(); retreating = false; return false;
+        return holdForRecoveryData(scene, time,
+          "Vị trí hoặc trạng thái nhân vật chưa cập nhật; đang giữ hồi phục và chờ dữ liệu mới.");
       }
+      observeDash(scene, time);
       if (finite(scene.dashT) && scene.dashT > 0) return true; // Let native Q finish before choosing another movement.
       const boss = nearbyBoss(scene, pos), hp = scene.self.hp / scene.self.mh;
       if (retreating && hp >= recoveryThreshold) {
@@ -498,13 +553,15 @@
       if (blocked(scene, currentUrgent)) {
         release();
         if (retreating && retreatContextValid(scene, scene.now())) {
-          if (scene.auto.resting || scene.self.med) return false;
+          if (scene.auto.resting) return delegateNativeRecovery(scene, host, time, delta);
+          if (scene.self.med) return true;
           host.steer(0, 0);
           return true;
         }
         retreating = false; cooldownHolding = false; return false;
       }
-      if (retreating && (scene.auto.resting || scene.self.med)) { release(); return false; }
+      if (retreating && scene.auto.resting) return delegateNativeRecovery(scene, host, time, delta);
+      if (retreating && scene.self.med) { release(); return true; }
       const hazards = settings.bossDodge ? hazardZones(scene, time) : [];
       const danger = hazards.some((area) => distance(area, pos) <= area.radius + 0.8
         && area.at <= time + 0.75 && area.until >= time);
@@ -530,7 +587,7 @@
       // back to native castSkills(). Do not add a second skill-spam engine.
       if (!danger && !retreating && !cooldownKite) { release(); return false; }
       if (retreating && host.pills("hp")?.every((n) => n === 0) && settings.noRetreat === false) {
-        release(); return false; // Preserve recovery state while native resting handles empty pills.
+        return delegateNativeRecovery(scene, host, time, delta);
       }
       if (retreating) drinkIfReady(scene, host, time, hp);
       if (retreating && !danger && !threats.length) {
@@ -605,12 +662,12 @@
       }
       return true;
     } catch {
-      release();
-      const holdRecovery = retreating && retreatContextValid(scene, time);
-      if (!holdRecovery) retreating = false;
-      note(scene, "unsupported", holdRecovery
-        ? "Dữ liệu rút lui không phù hợp; đã dừng chọn mục tiêu và chờ hồi HP."
-        : "Dữ liệu né boss không phù hợp; đã nhường Auto Farm.");
+      const holdRecovery = retreating && holdForRecoveryData(scene, time,
+        "Dữ liệu rút lui không phù hợp; đang giữ trạng thái và chờ dữ liệu mới.");
+      if (!holdRecovery) {
+        release(); retreating = false;
+        note(scene, "unsupported", "Dữ liệu né boss không phù hợp; đã nhường Auto Farm.");
+      }
       return holdRecovery;
     }
   }

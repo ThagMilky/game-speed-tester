@@ -8,6 +8,17 @@
       const entry = bindings.get(scene.auto);
       return !!entry && scene.auto.update === entry.wrapper;
     },
+    // Let a recovery owner invoke the saved native rest branch without resuming target selection.
+    runRecovery(scene, ...args) {
+      const auto = scene?.auto;
+      const entry = auto && bindings.get(auto);
+      if (!entry || auto.update !== entry.wrapper || !auto.on || typeof auto.resting !== "boolean"
+          || typeof entry.original !== "function") return false;
+      const wasResting = auto.resting;
+      auto.resting = true;
+      try { entry.original.apply(auto, args); return true; }
+      finally { auto.resting = wasResting; }
+    },
     add(scene, priority, callback) {
       const auto = scene.auto;
       let entry = bindings.get(auto);
