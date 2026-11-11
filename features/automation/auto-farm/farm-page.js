@@ -681,6 +681,11 @@
         globalThis.GSTFarmBossSafety?.attach?.(s.scene);
       }
       syncFilter(s.scene);
+      if (globalThis.GSTFarmBossSafety?.retreating?.(s.scene)) {
+        message = globalThis.GSTFarmBossSafety.status(s.scene)
+          || `Đang rút lui; chờ HP đạt ${settings.recoveryHpPercent}% trước khi tiếp tục chọn mục tiêu.`;
+        return;
+      }
       // A native handoff moves the game's search center to the remote camp.
       // It is not a manual relocation of the user's configured farm origin.
       const aligned = globalThis.GSTFarmMap?.consumeCenter?.(s.scene);

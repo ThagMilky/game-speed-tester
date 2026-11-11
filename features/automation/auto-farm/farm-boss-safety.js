@@ -23,7 +23,9 @@
   let settings = {}, binding = null, job = null, retreating = false, suspended = false;
   let retreatThreshold = 0.4, recoveryThreshold = 1;
   let retryAt = 0, message = "", noteUntil = 0, lastDashAt = -Infinity, dashObservation = null;
+  let recentDamage = new Map(), threatSample = [], threatSampleAt = -Infinity, threatSampleScene = null;
   let visibleWarnings = [], cooldownHolding = false;
+  const maxThreatScan = 256, maxLocalThreats = 24, localThreatRadius = 12, threatFalloff = 9;
   const warningHooks = new WeakMap();
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
@@ -58,7 +60,7 @@
     // Seals can be attacked with any farm target filter. Their hazard warnings
     // still need the same safety owner, without enabling routine boss kiting.
     const sealThreat = settings.bossDodge && globalThis.GSTFarmSeals?.pending?.(scene);
-    return (bossMode && (settings.bossDodge || settings.bossRetreat)) || !!sealThreat;
+    return (retreating && settings.bossRetreat) || (bossMode && (settings.bossDodge || settings.bossRetreat)) || !!sealThreat;
   }
   function connected(scene) {
     const d = scene.driver;
@@ -72,13 +74,19 @@
       // Pending native casts/aim are handled after reading danger zones in
       // update(): an imminent boss hit must not be silently ignored.
       || scene.heldAttack || scene.harvesting
-      || scene.auto.resting || scene.self.med || scene.self.fish || scene.keyCapture
+      || (!retreating && (scene.auto.resting || scene.self.med)) || scene.self.fish || scene.keyCapture
       // Let the native Auto Farm drink pills before considering boss movement.
       || (!imminent && globalThis.GSTMapTravel?.active?.(scene)
         && globalThis.GSTHarvest?.needsRecovery?.(scene))
       || globalThis.GSTQuest?.active?.(scene)
       || ["GSTRealm", "GSTChest", "GSTHarvest"].some((name) => globalThis[name]?.controls?.(scene))
       || (scene.self.realm?.inside?.protection ?? 0) > 0;
+  }
+  function retreatContextValid(scene, time) {
+    return !!scene && sceneNow() === scene && binding?.scene === scene && binding.auto === scene.auto
+      && scene.auto?.on === true && scene.self && !scene.self.dead && !scene.leaving
+      && scene.sys?.isActive?.() && connected(scene) && !GSTFarmInput.movement(scene)
+      && !scene.auto.moved && finite(time) && time >= scene.auto.pauseUntil;
   }
   const bossActor = (actor) => (globalThis.GSTFarmMonsterClassification
     ? globalThis.GSTFarmMonsterClassification.isBoss(actor) === true
@@ -147,19 +155,22 @@
   }
   function criticalRetreat(scene) {
     if (!settings.bossRetreat || !scene?.self || !finite(scene.px) || !finite(scene.py)
-        || !finite(scene.self.hp) || !finite(scene.self.mh) || scene.self.mh <= 0
-        || scene.self.hp / scene.self.mh >= (retreating ? recoveryThreshold : retreatThreshold)
-        || !nearbyBoss(scene, { x: scene.px, y: scene.py })) return false;
+        || !finite(scene.self.hp) || !finite(scene.self.mh) || scene.self.mh <= 0) return false;
+    const hp = scene.self.hp / scene.self.mh;
+    if (retreating) return hp < recoveryThreshold;
+    if (hp >= retreatThreshold || !nearbyBoss(scene, { x: scene.px, y: scene.py })) return false;
     // When native meditation is intentionally enabled and no pills remain,
     // let the game's own resting logic handle the situation instead.
-    if (settings.noRetreat === false) {
+    if (!retreating && settings.noRetreat === false) {
       const pills = scene.autoHost?.()?.pills?.("hp");
       if (Array.isArray(pills) && pills.every((count) => count === 0)) return false;
     }
     return true;
   }
   function urgentEscape(scene, time) {
-    return imminentWarning(scene, time)
+    return (retreating && finite(scene?.self?.hp) && finite(scene?.self?.mh)
+      && scene.self.mh > 0 && scene.self.hp / scene.self.mh < recoveryThreshold)
+      || imminentWarning(scene, time)
       || (settings.bossDodge && job?.emergency === true && finite(time)
         && time - job.startedAt < 6) || criticalRetreat(scene);
   }
@@ -245,10 +256,75 @@
     }
     return true;
   }
-  function destination(scene, host, pos, boss, hazards, lowHp, zone) {
+  function threatExposure(pos, threats) {
+    return threats.reduce((sum, threat) => {
+      const d = distance(pos, threat.actor);
+      return sum + threat.weight * Math.max(0, (threatFalloff - d) / threatFalloff);
+    }, 0);
+  }
+  function pathThreatExposure(start, path, threats) {
+    let total = 0, prior = start;
+    for (const coords of path) {
+      const end = { x: coords[0], y: coords[1] };
+      for (const fraction of [0.5, 1]) total += threatExposure({
+        x: prior.x + (end.x - prior.x) * fraction,
+        y: prior.y + (end.y - prior.y) * fraction
+      }, threats);
+      prior = end;
+    }
+    return total;
+  }
+  function safeExits(host, point, bounds, hazards) {
+    let exits = 0;
+    for (let index = 0; index < 8; index++) {
+      const angle = index * Math.PI / 4;
+      const next = { x: point.x + Math.cos(angle) * 2, y: point.y + Math.sin(angle) * 2 };
+      if (inside(bounds, next) && host.clear(point.x, point.y, next.x, next.y)
+          && hazards.every((area) => distance(area, next) > area.radius + 0.7)) exits++;
+    }
+    return exits;
+  }
+  function localThreats(scene, host, pos, time) {
+    if (threatSampleScene === scene && time - threatSampleAt < 0.25)
+      return threatSample.filter((item) => !item.actor.dead && distance(pos, item.actor) <= localThreatRadius);
+    threatSampleScene = scene; threatSampleAt = time; threatSample = [];
+    for (const [id, until] of recentDamage) if (until <= time || !scene.views?.get?.(id)) recentDamage.delete(id);
+    const raw = typeof host.gstRawEnemies === "function" ? host.gstRawEnemies() : host.enemies?.();
+    if (!Array.isArray(raw)) return [];
+    const seen = new Set();
+    const add = (entry, actor, attributed) => {
+      if (!actor || actor.k !== "m" || actor.dead || !finite(actor.x) || !finite(actor.y)
+          || !Number.isSafeInteger(actor.id) || seen.has(actor.id)
+          || (entry?.hostile !== true && !attributed)) return;
+      const category = globalThis.GSTFarmMonsterClassification?.classify?.(actor);
+      if (!category || distance(pos, actor) > localThreatRadius) return;
+      seen.add(actor.id);
+      const categoryWeight = category === "boss" ? 3 : category === "elite" ? 2 : 1;
+      threatSample.push({ actor, category, attributed, weight: categoryWeight + (attributed ? 2 : 0) });
+    };
+    for (let index = 0; index < Math.min(raw.length, maxThreatScan)
+        && threatSample.length < maxLocalThreats; index++) {
+      const entry = raw[index];
+      add(entry, scene.views?.get?.(entry?.id), recentDamage.has(entry?.id));
+    }
+    for (const [id] of recentDamage) {
+      if (threatSample.length >= maxLocalThreats) break;
+      if (!seen.has(id)) add(null, scene.views?.get?.(id), true);
+    }
+    threatSample.sort((a, b) => distance(pos, a.actor) - distance(pos, b.actor));
+    return threatSample;
+  }
+  function destination(scene, host, pos, boss, hazards, lowHp, zone, threats) {
     const danger = hazards.filter((area) => distance(area, pos) <= area.radius + 1);
     const origin = danger[0] ?? boss;
-    const baseAngle = origin ? Math.atan2(pos.y - origin.y, pos.x - origin.x) : 0;
+    const away = lowHp ? threats.reduce((sum, threat) => {
+      const dx = pos.x - threat.actor.x, dy = pos.y - threat.actor.y;
+      const length = Math.hypot(dx, dy) || 1, weight = threat.weight / Math.max(1, length);
+      return { x: sum.x + dx / length * weight, y: sum.y + dy / length * weight };
+    }, { x: 0, y: 0 }) : null;
+    const baseAngle = danger.length ? Math.atan2(pos.y - danger[0].y, pos.x - danger[0].x)
+      : away && Math.hypot(away.x, away.y) > 0.05 ? Math.atan2(away.y, away.x)
+        : origin ? Math.atan2(pos.y - origin.y, pos.x - origin.x) : 0;
     const steps = lowHp ? [3, 5, 7, 9] : [1.5, 2.5, 3.5, 5, 7];
     const candidates = [];
     const bossRange = boss ? distance(pos, boss) : 0;
@@ -272,6 +348,7 @@
       }, orbit: false });
     }
     let best = null, score = Infinity;
+    const currentExposure = threatExposure(pos, threats);
     for (const candidate of candidates) {
       const point = candidate.point;
       if (!inside(zone, point) || hazards.some((area) => distance(area, point) <= area.radius + 0.7)) continue;
@@ -284,8 +361,14 @@
         const before = index ? { x: route[index - 1][0], y: route[index - 1][1] } : pos;
         return total + distance(before, { x: waypoint[0], y: waypoint[1] });
       }, 0);
+      const routeExposure = pathThreatExposure(pos, route, threats);
+      const destinationExposure = threatExposure(point, threats);
+      if (lowHp && threats.length && destinationExposure >= currentExposure - 0.05) continue;
+      const exits = safeExits(host, point, zone, hazards);
       const radialDrift = !lowHp && boss ? Math.abs(distance(point, boss) - bossRange) : 0;
-      const value = length + radialDrift * 1.2 + (candidate.orbit ? 0 : 0.35);
+      const value = length + routeExposure * 1.2 + destinationExposure * 3.5
+        + (exits === 0 ? 8 : exits === 1 ? 3 : 0)
+        + radialDrift * 1.2 + (candidate.orbit ? 0 : 0.35);
       if (value < score) { score = value; best = { point, path: route }; }
     }
     return best;
@@ -383,9 +466,16 @@
       cooldownHolding = false;
       if (scene && finite(time)) observeDash(scene, time);
       const urgent = scene && urgentEscape(scene, time);
-      if (!scene || !enabled() || blocked(scene, urgent) || !finite(time)
+      if (!scene || !enabled() || !finite(time)
           || !["steer", "route", "clear", "hp", "pills"].every((key) => typeof host?.[key] === "function")) {
         release(); retreating = false; return false;
+      }
+      const mapKey = host.mapKey?.();
+      if (binding.mapKey && mapKey !== binding.mapKey) {
+        release(); retreating = false; recentDamage.clear(); threatSample = [];
+        binding.mapKey = mapKey;
+        note(scene, "resume", "Map đã đổi; hủy trạng thái rút lui và chờ Auto Farm gốc chọn lại.");
+        return false;
       }
       const pos = { x: scene.px, y: scene.py }, bounds = zone(scene);
       if (!bounds || !inside(bounds, pos) || !finite(scene.self.hp) || !finite(scene.self.mh) || scene.self.mh <= 0
@@ -394,9 +484,31 @@
       }
       if (finite(scene.dashT) && scene.dashT > 0) return true; // Let native Q finish before choosing another movement.
       const boss = nearbyBoss(scene, pos), hp = scene.self.hp / scene.self.mh;
+      if (retreating && hp >= recoveryThreshold) {
+        retreating = false; release();
+        note(scene, "resume", "Đã đạt ngưỡng hồi HP; Auto Farm gốc tiếp tục tự chọn mục tiêu.");
+        return false;
+      }
+      if (settings.bossRetreat && !retreating && boss && hp < retreatThreshold) {
+        retreating = true;
+        note(scene, "retreat", `HP dưới ${settings.retreatHpPercent}%; đang rút khỏi nhóm quái và chờ hồi HP.`,
+          { cooldown: typeof host.pillWait === "function" ? host.pillWait("hp") : null });
+      }
+      const currentUrgent = urgentEscape(scene, time);
+      if (blocked(scene, currentUrgent)) {
+        release();
+        if (retreating && retreatContextValid(scene, scene.now())) {
+          if (scene.auto.resting || scene.self.med) return false;
+          host.steer(0, 0);
+          return true;
+        }
+        retreating = false; cooldownHolding = false; return false;
+      }
+      if (retreating && (scene.auto.resting || scene.self.med)) { release(); return false; }
       const hazards = settings.bossDodge ? hazardZones(scene, time) : [];
       const danger = hazards.some((area) => distance(area, pos) <= area.radius + 0.8
         && area.at <= time + 0.75 && area.until >= time);
+      const threats = localThreats(scene, host, pos, time);
       if (job && danger) job.emergency = true;
       // A pending realm seal owns combat before the boss. Keep urgent hazard
       // dodging and low-HP retreat, but do not kite/spam Q solely for the boss
@@ -407,15 +519,6 @@
       // Only make a short spacing adjustment if the boss is almost touching us.
       // Waiting for attack cooldown alone must not trigger a long kite/Q dash.
       const cooldownKite = cooling && gapDistance < 4;
-      if (settings.bossRetreat && !retreating && boss && hp < retreatThreshold) {
-        retreating = true;
-        note(scene, "retreat", `HP dưới ${settings.retreatHpPercent}%; ưu tiên giữ khoảng cách và chờ đan HP.`,
-          { cooldown: typeof host.pillWait === "function" ? host.pillWait("hp") : null });
-      }
-      if (retreating && (hp >= recoveryThreshold || !boss)) {
-        retreating = false; release(); note(scene, "resume", "Đã rời trạng thái rút lui; Auto Farm tiếp tục theo trạng thái hiện tại.");
-        return false;
-      }
       // Do not interfere with normal native casting/aiming, but prioritize
       // movement out of a confirmed/estimated imminent warning, or a
       // critical low-HP retreat, over continuing that cast in place.
@@ -427,18 +530,18 @@
       // back to native castSkills(). Do not add a second skill-spam engine.
       if (!danger && !retreating && !cooldownKite) { release(); return false; }
       if (retreating && host.pills("hp")?.every((n) => n === 0) && settings.noRetreat === false) {
-        release(); retreating = false; return false; // Hand back native resting when pills are exhausted.
+        release(); return false; // Preserve recovery state while native resting handles empty pills.
       }
       if (retreating) drinkIfReady(scene, host, time, hp);
-      if (retreating && !danger && boss && distance(pos, boss) >= 8) {
+      if (retreating && !danger && !threats.length) {
         release(); host.steer(0, 0);
         const cd = typeof host.pillWait === "function" ? host.pillWait("hp") : null;
         const pills = host.pills("hp");
         const empty = Array.isArray(pills) && pills.slice(0, 2).every((n) => n === 0);
         if (performance.now() > noteUntil) note(scene, null, empty
-          ? "Hết đan HP; đang cố giữ khoảng cách với boss."
-          : finite(cd) && cd > 0 ? `Đang giữ khoảng cách; đan HP còn hồi ${cd.toFixed(1)} giây.`
-            : "Đang giữ khoảng cách với boss để hồi HP.");
+          ? `Không còn quái gần; hết đan HP, vẫn chờ đạt ${settings.recoveryHpPercent}%.`
+          : finite(cd) && cd > 0 ? `Không còn quái gần; đan HP còn hồi ${cd.toFixed(1)} giây.`
+            : `Không còn quái gần; chờ HP đạt ${settings.recoveryHpPercent}%.`);
         return true;
       }
       if ((danger || cooldownKite) && settings.bossDodge) {
@@ -448,9 +551,10 @@
       }
       if (job && (!inside(bounds, job.point) || hazards.some((area) => distance(area, job.point) <= area.radius + 0.7)
           || !pathSafe(scene, pos, job.navigation.path.length ? job.navigation.path : [[job.point.x, job.point.y]], bounds, hazards)
-          || (retreating && boss && distance(job.point, boss) < 7))) release();
+          || (retreating && threats.length
+            && threatExposure(job.point, threats) >= threatExposure(pos, threats) - 0.05))) release();
       if (!job && time >= retryAt) {
-        const next = destination(scene, host, pos, boss, hazards, retreating, bounds);
+        const next = destination(scene, host, pos, boss, hazards, retreating, bounds, threats);
         if (next) {
           const navigation = Object.assign(Object.create(scene.auto), { path: next.path.slice(),
             goalX: next.point.x, goalY: next.point.y, pathAt: time, lastX: pos.x, lastY: pos.y,
@@ -459,11 +563,13 @@
             steer: null, emergency: danger };
           note(scene, danger ? "hazard" : "kite",
             danger ? "Đang thoát vòng cảnh báo boss."
-              : retreating ? "Đang lùi xa boss khi HP thấp."
+              : retreating ? "Đang chọn đường rút lui tránh nhóm quái khi HP thấp."
                 : "Skill tấn công đang hồi; đang giữ khoảng cách chờ hồi.");
         } else {
           retryAt = time + 1.5;
-          if (performance.now() > noteUntil) note(scene, "no_route", "Không có đường né boss an toàn trong vùng farm.");
+          if (performance.now() > noteUntil) note(scene, "no_route", retreating
+            ? "Không có đường rút lui giảm nguy cơ trong vùng farm; đã dừng di chuyển và chờ hồi HP."
+            : "Không có đường né boss an toàn trong vùng farm.");
         }
       }
       if (!job) {
@@ -499,8 +605,13 @@
       }
       return true;
     } catch {
-      release(); retreating = false; note(scene, "unsupported", "Dữ liệu né boss không phù hợp; đã nhường Auto Farm.");
-      return false;
+      release();
+      const holdRecovery = retreating && retreatContextValid(scene, time);
+      if (!holdRecovery) retreating = false;
+      note(scene, "unsupported", holdRecovery
+        ? "Dữ liệu rút lui không phù hợp; đã dừng chọn mục tiêu và chờ hồi HP."
+        : "Dữ liệu né boss không phù hợp; đã nhường Auto Farm.");
+      return holdRecovery;
     }
   }
   function guard() {
@@ -508,7 +619,11 @@
     if (!scene) return;
     if (sceneNow() !== scene || binding.auto !== scene.auto || !scene.sys?.isActive?.()) { detach(); return; }
     const time = scene.now(), imminent = imminentWarning(scene, time);
-    if (blocked(scene, imminent || criticalRetreat(scene))) { release(); retreating = false; cooldownHolding = false; return; }
+    if (blocked(scene, imminent || criticalRetreat(scene))) {
+      release(); cooldownHolding = false;
+      if (!retreating || !retreatContextValid(scene, scene.now())) retreating = false;
+      return;
+    }
     // WorldScene skips auto.update while aiming or waiting to cast. Only an
     // imminent boss warning may interrupt that state, from this existing
     // preupdate guard; ordinary dodge/movement still uses GSTFarmUpdate.
@@ -544,6 +659,7 @@
   }
   function detach() {
     release(); retreating = false; retryAt = 0; dashObservation = null;
+    recentDamage.clear(); threatSample = []; threatSampleAt = -Infinity; threatSampleScene = null;
     visibleWarnings = []; cooldownHolding = false;
     const old = binding; binding = null;
     if (!old) return;
@@ -586,6 +702,20 @@
     // with explicit aim coordinates, treat a small radius as a *cautious
     // estimate*, not an exact server-declared hit area.
     observe("onEvent", ([event]) => {
+      if (event?.e === "dmg" && event.kind === "p" && event.id === scene.you
+          && Number.isSafeInteger(event.by)) {
+        const attacker = scene.views?.get?.(event.by);
+        if (attacker?.k === "m" && !attacker.dead
+            && globalThis.GSTFarmMonsterClassification?.classify?.(attacker)) {
+          const time = scene.now();
+          if (finite(time)) {
+            recentDamage.set(attacker.id, time + 8);
+            while (recentDamage.size > 16) recentDamage.delete(recentDamage.keys().next().value);
+            threatSampleAt = -Infinity;
+          }
+        }
+        return;
+      }
       if (event?.e !== "cast" || !finite(event.ax) || !finite(event.ay)) return;
       const caster = scene.views?.get?.(event.id);
       const playerPos = { x: scene.px, y: scene.py };
@@ -614,7 +744,8 @@
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.update !== "function" || !scene.events?.on
         || !scene.events.off || typeof scene.auto?.walk !== "function") return;
     // Urgent boss avoidance must be evaluated before optional close-range combat.
-    const owner = { scene, auto: scene.auto, remove: GSTFarmUpdate.add(scene, 1, update) };
+    const owner = { scene, auto: scene.auto, mapKey: scene.autoHost?.()?.mapKey?.(),
+      remove: GSTFarmUpdate.add(scene, 1, update) };
     binding = owner;
     watchWarnings(owner);
     scene.events.on("preupdate", guard);
@@ -638,10 +769,11 @@
     emergency,
     controls: (scene) => !!binding && binding.scene === scene
       && (job !== null || retreating || cooldownHolding),
+    retreating: (scene) => !!binding && binding.scene === scene && retreating,
     status(scene) {
       if (binding?.scene !== scene || !scene?.auto?.on) return "";
       if (performance.now() < noteUntil) return message;
-      if (retreating) return `HP thấp: đang lùi gần boss; chờ đạt ${settings.recoveryHpPercent}% rồi mới tiếp tục farm.`;
+      if (retreating) return `HP thấp: đang rút lui khỏi nhóm quái; chờ đạt ${settings.recoveryHpPercent}% rồi mới tiếp tục farm.`;
       if (cooldownHolding) return "Đang giữ khoảng cách với boss và chờ skill tấn công hồi.";
       return job ? "Đang di chuyển tránh vòng cảnh báo hoặc giữ khoảng cách với boss." : "";
     },
