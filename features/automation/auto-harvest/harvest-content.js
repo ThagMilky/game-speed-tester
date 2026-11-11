@@ -9,6 +9,7 @@
   let repairedKey = null;
   let readError = "";
   let shortcut = "KeyH", shortcutRevision = 0, shortcutBusy = false;
+  let accountProfileReady = false, accountProfileVerified = false;
   const shortcutCode = (value) => typeof value?.code === "string" && /^(Key[A-Z]|Digit[0-9])$/.test(value.code)
     ? value.code : "KeyH";
   function editableKeyTarget(event) {
@@ -22,10 +23,15 @@
     event.preventDefault(); event.stopImmediatePropagation();
     if (shortcutBusy || navigating) return;
     shortcutBusy = true;
-    navigator.locks.request("gst:harvest-preferences", async () => {
-      const saved = await chrome.storage.local.get("harvestPreferences");
-      const previous = GSTHarvest.normalize(saved.harvestPreferences);
-      await chrome.storage.local.set({ harvestPreferences: { ...saved.harvestPreferences, enabled: !previous.enabled } });
+    const state = GSTAccountProfiles.context();
+    const context = state.ready ? state.context : null;
+    if (!state.ready || !accountProfileReady || !accountProfileVerified || context?.verified !== true) {
+      shortcutBusy = false;
+      return;
+    }
+    GSTAccountProfiles.updateFeature(context, "harvest", (saved) => {
+      const previous = GSTHarvest.normalize(saved);
+      return { enabled: !previous.enabled };
     }).catch((error) => { failure("shortcut.toggle", error); }).finally(() => { shortcutBusy = false; });
   }, true);
   let debugEnabled = false;
@@ -125,10 +131,12 @@
     return true;
   }
   async function readPreferences() {
+    const state = GSTAccountProfiles.context();
+    if (!accountProfileReady || !accountProfileVerified || !state.ready || state.context?.verified !== true) return false;
     const before = revision;
     let saved;
     try {
-      saved = await chrome.storage.local.get("harvestPreferences");
+      saved = await chrome.storage.local.get(["harvestPreferences", GSTAccountProfiles.profilesKey]);
     } catch (error) {
       failure("storage.read", error);
       readError = /context invalidated/i.test(String(error?.message)) ? "HS-CONTEXT" : "HS-STORAGE";
@@ -136,7 +144,7 @@
     }
     try {
       if (before === revision) {
-        const next = GSTHarvest.normalize(saved.harvestPreferences);
+        const next = GSTHarvest.normalize(GSTAccountProfiles.currentProfile(state.context, "harvest", saved));
         if (JSON.stringify(next) !== JSON.stringify(preferences)) configure(next);
       }
       readError = "";
@@ -148,6 +156,20 @@
     }
   }
   window.addEventListener("message", (event) => {
+    if (event.source === window && event.origin === origin && event.data?.channel === "gst:account-profile:v1"
+        && event.data.type === "profile") {
+      const state = GSTAccountProfiles.context();
+      if (!state.ready || state.context?.verified !== (event.data.verified === true)
+          || (event.data.verified === true && state.context?.profileKey !== event.data.profileKey)) return;
+      accountProfileReady = true;
+      accountProfileVerified = event.data.verified === true;
+      revision++;
+      const value = accountProfileVerified ? event.data.harvestPreferences
+        : { ...(event.data.harvestPreferences ?? {}), enabled: false };
+      try { configure(value); }
+      catch (error) { failure("account-profile.configure", error); }
+      return;
+    }
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:harvest-status:v1") return;
     if (event.data.ready) {
       window.postMessage({ channel: "gst:harvest:v1", type: "debug-configure", enabled: debugEnabled }, origin);
@@ -282,6 +304,10 @@
       return true;
     }
     if (message?.type === "gst:harvest-configure") {
+      if (!accountProfileReady || !accountProfileVerified) {
+        respond({ accepted: false, applied: false, reason: "account_identity_unconfirmed" });
+        return;
+      }
       revision++;
       try { configure(message.preferences, respond); }
       catch (error) {
@@ -329,9 +355,7 @@
       shortcut = shortcutCode(changes.harvestShortcut.newValue);
     }
     if (area === "local" && changes.harvestDebugEnabled) setDebug(changes.harvestDebugEnabled.newValue);
-    if (area === "local" && changes.harvestPreferences) {
-      revision++; configure(changes.harvestPreferences.newValue);
-    }
+    // Profile-scoped configuration is delivered by account-content after identity confirmation.
   });
   window.addEventListener("pagehide", () => {
     for (const { timer, respond, kind } of pending.values()) {
@@ -345,12 +369,13 @@
     repairedKey = null;
     if (preferences) configure(preferences);
   });
+  window.postMessage({ channel: "gst:account-profile:v1", type: "ready" }, origin);
   const initialRevision = revision, initialShortcutRevision = shortcutRevision;
   chrome.storage.local.get(["harvestPreferences", "harvestDebugEnabled", "harvestShortcut"]).then((saved) => {
     if (initialShortcutRevision === shortcutRevision) shortcut = shortcutCode(saved.harvestShortcut);
     setDebug(saved.harvestDebugEnabled);
     record("bridge.start", moduleState());
-    if (initialRevision === revision) configure(saved.harvestPreferences);
+    if (initialRevision === revision && accountProfileReady) readPreferences();
   }).catch((error) => {
     failure("bridge.start", error);
     // MAIN starts disabled already. A failed read must not send guessed OFF

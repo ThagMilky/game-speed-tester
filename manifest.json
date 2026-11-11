@@ -7,6 +7,9 @@
   "permissions": [
     "storage"
   ],
+  "background": {
+    "service_worker": "shared/accounts/account-background.js"
+  },
   "web_accessible_resources": [
     {
       "resources": [
@@ -69,7 +72,8 @@
         "features/automation/auto-chest/chest-page.js",
         "features/visual/background/background-page.js",
         "features/automation/auto-quest/quest-handoff.js",
-        "features/automation/auto-quest/quest-page.js"
+        "features/automation/auto-quest/quest-page.js",
+        "shared/accounts/account-page.js"
       ],
       "run_at": "document_start",
       "world": "MAIN"
@@ -79,6 +83,8 @@
         "https://nghichthienky.online/*"
       ],
       "js": [
+        "shared/accounts/account-profiles.js",
+        "shared/accounts/account-content.js",
         "features/automation/auto-harvest/harvest-options.js",
         "core/content.js",
         "ui/interface/game-panel-scroll.js",

@@ -620,7 +620,11 @@
   function watch() { if (!binding && !suspended && watcher === null) watcher = setInterval(discover, 100); }
   globalThis.GSTQuest = {
     active: owns,
-    controls: (s) => owns(s) && run.phase !== "farm"
+    controls: (s) => owns(s) && run.phase !== "farm",
+    stopForAccountSwitch() {
+      if (run) stop("Auto Quest đã dừng trước khi đổi tài khoản.");
+      return run === null;
+    }
   };
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== channel) return;

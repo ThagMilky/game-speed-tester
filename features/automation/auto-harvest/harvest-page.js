@@ -28,6 +28,23 @@
   GSTHarvest.journey = (scene) => binding?.scene === scene && job && !job.observingOutstanding
     ? { x: job.node.x, y: job.node.y, path: job.path } : null;
   GSTHarvest.isEnabled = () => settings.enabled;
+  GSTHarvest.canSwitchAccount = (scene) => {
+    if (!scene) return !binding && !job && observations.length === 0;
+    if (binding?.scene !== scene) return !binding && !scene.harvesting && observations.length === 0;
+    return !scene?.harvesting && job?.requestedAt === undefined
+      && !observations.some((observation) => observation.scene === scene);
+  };
+  GSTHarvest.prepareAccountSwitch = (scene) => {
+    if (!scene && binding) return false;
+    if (binding?.scene === scene
+        && (scene.harvesting || job?.requestedAt !== undefined
+          || observations.some((observation) => observation.scene === scene))) return false;
+    if (job && binding?.scene === scene) {
+      release("Đã dừng điều khiển trước khi đổi tài khoản.", 0, "yield");
+    }
+    if (settings.enabled) applyPreferences({ ...settings, enabled: false });
+    return GSTHarvest.canSwitchAccount(scene);
+  };
   const skipped = new Map();
   const finite = Number.isFinite;
   function inRange(scene, node) {

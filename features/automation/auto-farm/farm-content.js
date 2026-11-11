@@ -9,6 +9,7 @@
   let navigating = false;
   let suspended = false, loadTimer = null, loadAttempts = 0, loading = false;
   let configurationSent = false, loadError = "";
+  let accountProfileReady = false, accountProfileVerified = false;
   const pending = new Map();
 
   function configureShortcut(value) {
@@ -126,6 +127,10 @@
       return;
     }
     if (message?.type === "gst:farm-configure") {
+      if (!accountProfileReady || !accountProfileVerified) {
+        respond({ accepted: false, reason: "account_identity_unconfirmed" });
+        return;
+      }
       revision++;
       configure(message.preferences);
       respond({ accepted: true });
@@ -141,15 +146,26 @@
     window.postMessage({ channel: "gst:farm:v1", type: "status", requestId }, origin);
     return true;
   });
+  window.addEventListener("message", (event) => {
+    if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:account-profile:v1"
+        || event.data.type !== "profile") return;
+    const state = GSTAccountProfiles.context();
+    if (!state.ready || state.context?.verified !== (event.data.verified === true)
+        || (event.data.verified === true && state.context?.profileKey !== event.data.profileKey)) return;
+    accountProfileReady = true;
+    accountProfileVerified = event.data.verified === true;
+    revision++;
+    const preferences = accountProfileVerified
+      ? event.data.farmPreferences
+      : { ...(event.data.farmPreferences ?? {}), enabled: false, autoRespawn: false, breakSeals: false, policyMode: "disabled" };
+    configure(preferences);
+  });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes.farmShortcut) {
       shortcutRevision++;
       configureShortcut(changes.farmShortcut.newValue);
     }
-    if (area === "local" && changes.farmPreferences) {
-      revision++;
-      configure(changes.farmPreferences.newValue);
-    }
+    // Farm preferences are routed by account-content after native identity confirmation.
   });
   window.addEventListener("pageshow", () => {
     suspended = false;
@@ -168,20 +184,20 @@
     if (suspended || loading) return;
     loading = true;
     clearTimeout(loadTimer); loadTimer = null;
-    const initialRevision = revision, initialShortcutRevision = shortcutRevision;
+    const initialShortcutRevision = shortcutRevision;
     loadAttempts++;
     try {
-      const { farmPreferences, farmShortcut } = await chrome.storage.local.get(["farmPreferences", "farmShortcut"]);
+      const { farmShortcut } = await chrome.storage.local.get(["farmShortcut"]);
       if (suspended) return;
-      if (revision === initialRevision) configure(farmPreferences);
       if (shortcutRevision === initialShortcutRevision) configureShortcut(farmShortcut);
     } catch (error) {
-      if (suspended || revision !== initialRevision) return;
+      if (suspended) return;
       const kind = ["TypeError", "ReferenceError", "RangeError"].includes(error?.name) ? error.name : "Error";
       loadError = `Chưa đọc/gửi được cấu hình Auto Farm (${kind}); đã thử ${loadAttempts}/3 lần.`;
       // Retry saved configuration only; never authorize automation using guessed settings.
       if (loadAttempts < 3) loadTimer = setTimeout(loadPreferences, loadAttempts * 1000);
     } finally { loading = false; }
   }
+  window.postMessage({ channel: "gst:account-profile:v1", type: "ready" }, origin);
   void loadPreferences();
 })();

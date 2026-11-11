@@ -6,6 +6,7 @@
   <title>Game Speed Tester</title>
   <link rel="stylesheet" href="ui/popup/popup.css">
   <script src="ui/interface/font-options.js" defer></script>
+  <script src="shared/accounts/account-profiles.js" defer></script>
   <script src="features/automation/auto-farm/farm-compatibility.js" defer></script>
   <script src="features/automation/auto-farm/farm-policy.js" defer></script>
   <script src="ui/popup/popup.js" defer></script>
@@ -21,6 +22,7 @@
   <script src="features/automation/auto-realm/realm-time-popup.js" defer></script>
   <script src="features/automation/auto-chest/chest-popup.js" defer></script>
   <script src="features/automation/auto-quest/quest-popup.js" defer></script>
+  <script src="shared/accounts/accounts-popup.js" defer></script>
   <script src="features/movement/flight/flight-popup.js" defer></script>
   <script src="features/movement/meditation/meditation-popup.js" defer></script>
   <script src="ui/game-menu/menu-position.js" defer></script>
@@ -46,6 +48,7 @@
       <button type="button" class="nav-item" data-nav-panel="realm">Bí cảnh</button>
       <button type="button" class="nav-item" data-nav-panel="quest">Auto Quest</button>
       <span class="nav-caption">CÀI ĐẶT</span>
+      <button type="button" class="nav-item" data-nav-panel="accounts">Tài khoản</button>
       <button type="button" class="nav-item" data-nav-panel="management">Quản lý tính năng</button>
       <button type="button" class="nav-item" data-nav-panel="speed">Tốc độ &amp; bay</button>
       <button type="button" class="nav-item" data-nav-panel="fps">Hình ảnh &amp; FPS</button>
@@ -561,6 +564,31 @@
         <section class="diagnostics-group"><h3>Auto Farm</h3><div id="diagnosticsFarm"></div></section>
         <section class="diagnostics-group"><h3>Thu hoạch</h3><div id="diagnosticsHarvest"></div></section>
         <section class="diagnostics-group"><h3>Bí cảnh &amp; rương</h3><div id="diagnosticsRealm"></div></section>
+      </div>
+    </section>
+    <section class="card account-page" data-panel="accounts" hidden aria-labelledby="accountsTitle">
+      <div class="page-heading"><h2 id="accountsTitle">Tài khoản</h2><p>Quản lý nick và mở từng nick trong tab riêng.</p></div>
+      <div class="card-body">
+        <p class="hint">Tên đăng nhập và mật khẩu được lưu trên trình duyệt này, không mã hóa. Chỉ thêm tài khoản trên máy bạn tin cậy.</p>
+        <p id="accountActiveStatus" class="feature-status" role="status" aria-live="polite">Đang xác nhận tài khoản trong tab hiện tại…</p>
+        <div id="accountList" class="account-list" aria-label="Tài khoản đã lưu"></div>
+        <form id="accountForm" class="account-form">
+          <h3 id="accountFormTitle">Thêm tài khoản</h3>
+          <label for="accountLabel">Tên gợi nhớ</label>
+          <input id="accountLabel" type="text" maxlength="80" autocomplete="off" required>
+          <label for="accountUsername">Tên đăng nhập</label>
+          <input id="accountUsername" type="text" maxlength="254" autocomplete="username" required>
+          <label for="accountPassword">Mật khẩu</label>
+          <div class="account-password-row">
+            <input id="accountPassword" type="password" maxlength="64" autocomplete="new-password" required>
+            <button id="accountPasswordToggle" type="button" class="quiet" aria-pressed="false">Hiện</button>
+          </div>
+          <div class="button-row">
+            <button id="accountSave" type="submit" class="primary">Lưu tài khoản</button>
+            <button id="accountCancel" type="button" class="quiet" hidden>Hủy sửa</button>
+          </div>
+          <p id="accountFeedback" class="notice" role="status" aria-live="polite"></p>
+        </form>
       </div>
     </section>
   </main>

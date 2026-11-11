@@ -1,10 +1,20 @@
 (() => {
   "use strict";
   const keys = ["preferences", "farmPreferences", "harvestPreferences", "realmPreferences",
-    "chestPreferences", "flightPreferences", "fpsPreferences", "displayPreferences", "fontPreferences", "realmNotices"];
+    "chestPreferences", "flightPreferences", "fpsPreferences", "displayPreferences", "fontPreferences", "realmNotices",
+    GSTAccountProfiles.profilesKey];
   const values = {}, changed = new Set();
   const output = document.getElementById("activeFeatures");
   let loaded = false;
+  let refreshRevision = 0;
+  async function loadScopedPreferences(saved) {
+    const revision = ++refreshRevision;
+    const context = await GSTAccountProfiles.activeContext();
+    if (revision !== refreshRevision) return;
+    values.farmPreferences = GSTAccountProfiles.currentProfile(context, "farm", saved);
+    values.harvestPreferences = GSTAccountProfiles.currentProfile(context, "harvest", saved);
+    render();
+  }
   function renderSummary() {
     const farm = document.getElementById("autoFarmValue").dataset.state;
     const quest = document.getElementById("questStatus").dataset.running;
@@ -53,12 +63,19 @@
   }
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local") return;
-    for (const key of keys) if (changes[key]) { changed.add(key); values[key] = changes[key].newValue; }
-    render();
+    let preferencesChanged = false;
+    for (const key of keys) if (changes[key]) {
+      changed.add(key); values[key] = changes[key].newValue;
+      if (["farmPreferences", "harvestPreferences", GSTAccountProfiles.profilesKey].includes(key)) preferencesChanged = true;
+    }
+    if (preferencesChanged) void chrome.storage.local.get(["farmPreferences", "harvestPreferences", GSTAccountProfiles.profilesKey])
+      .then(loadScopedPreferences).catch(() => {});
+    else render();
   });
   chrome.storage.local.get(keys).then((saved) => {
     for (const key of keys) if (!changed.has(key)) values[key] = saved[key];
-    loaded = true; render();
+    loaded = true;
+    return loadScopedPreferences(saved);
   }).catch(() => { output.textContent = "Chưa đọc được cài đặt. Mở lại menu để thử."; });
   for (const [id, attribute] of [["autoFarmValue", "data-state"], ["questStatus", "data-running"]]) {
     new MutationObserver(render).observe(document.getElementById(id), { attributes: true, attributeFilter: [attribute] });

@@ -15,13 +15,22 @@
   let catalog = [];
   let available = false;
   let confirmed = GSTHarvest.normalize(null);
-  let queue = Promise.resolve(), pending = [], storageRevision = 0, initialChange = null;
+  let queue = Promise.resolve(), pending = [], storageRevision = 0;
   let mapAvailable = false, saveMessage = "";
   const rangeErrors = new Map();
   const dirty = new Set(), editVersions = new Map(), failedFields = new Set();
   const rangeWrites = new Map();
   let busy = false;
   let loaded = false;
+  let harvestAccountContext = null;
+  const harvestAccountContextPromise = globalThis.GSTPopupAccountContextPromise
+    ?? GSTAccountProfiles.activeContext().catch(() => null);
+  void harvestAccountContextPromise.then((context) => {
+    harvestAccountContext = context;
+    if (loaded) controls.disabled = !!context && context.verified !== true;
+    if (context && context.verified !== true)
+      status.textContent = "Chưa xác nhận nick trong tab hiện tại; cài đặt Thu hoạch bị khóa.";
+  });
   const debugPanel = byId("harvestDebugPanel");
   const debugToggle = byId("harvestDebugEnabled");
   const debugOutput = byId("harvestDebugOutput");
@@ -176,15 +185,18 @@
     list.scrollTop = scroll;
   }
   function save(action, field) {
+    if (harvestAccountContext && harvestAccountContext.verified !== true) {
+      saveMessage = "Chưa xác nhận nick trong tab game; chưa lưu cài đặt.";
+      updateMessage();
+      return Promise.resolve(false);
+    }
     pending.push(action); derivePreferences(); renderList();
     saveMessage = "Đang lưu…"; updateMessage();
-    const operation = queue.catch(() => {}).then(() => navigator.locks.request("gst:harvest-preferences", async () => {
-      const saved = await chrome.storage.local.get("harvestPreferences");
-      const current = GSTHarvest.normalize(saved.harvestPreferences);
-      const patch = action(current);
-      const merged = { ...saved.harvestPreferences, ...patch };
-      await chrome.storage.local.set({ harvestPreferences: merged });
-      const applied = GSTHarvest.normalize(merged);
+    const operation = queue.catch(() => {}).then(async () => {
+      const context = await harvestAccountContextPromise;
+      if (context && context.verified !== true) throw new Error("Account identity is not confirmed.");
+      const applied = GSTHarvest.normalize(await GSTAccountProfiles.updateFeature(context, "harvest",
+        (saved) => action(GSTHarvest.normalize(saved))));
       let resultMessage = "Đã lưu cài đặt trên máy.";
       try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -195,7 +207,7 @@
         else resultMessage = "Đã lưu; game chưa xác nhận áp dụng.";
       } catch { resultMessage = "Đã lưu; chưa liên hệ được game để xác nhận áp dụng."; }
       return { applied, resultMessage, revision: storageRevision };
-    }));
+    });
     queue = operation;
     operation.then(({ applied, resultMessage, revision }) => {
       if (storageRevision === revision) confirmed = applied;
@@ -309,26 +321,42 @@
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local") return;
     if (changes.harvestShortcut) showShortcut(changes.harvestShortcut.newValue);
-    if (!changes.harvestPreferences) return;
+    if (!changes.harvestPreferences && !changes[GSTAccountProfiles.profilesKey]) return;
     storageRevision++;
-    if (!loaded) { initialChange = { value: changes.harvestPreferences.newValue }; return; }
-    confirmed = GSTHarvest.normalize(changes.harvestPreferences.newValue);
+    if (!loaded) return;
+    void reloadPreferences();
+  });
+  async function reloadPreferences() {
+    const [context, saved] = await Promise.all([
+      harvestAccountContextPromise,
+      chrome.storage.local.get(["harvestPreferences", GSTAccountProfiles.profilesKey])
+    ]);
+    harvestAccountContext = context;
+    controls.disabled = !!context && context.verified !== true;
+    if (context && context.verified !== true)
+      status.textContent = "Chưa xác nhận nick trong tab hiện tại; cài đặt Thu hoạch bị khóa.";
+    confirmed = GSTHarvest.normalize(GSTAccountProfiles.currentProfile(context, "harvest", saved));
     for (const [key, input] of ranges) if (!dirty.has(key)) input.value = confirmed[key];
     derivePreferences(); renderList(); updateMessage();
-  });
-  chrome.storage.local.get(["harvestPreferences", "harvestDebugEnabled", "harvestShortcut"]).then((saved) => {
+  }
+  chrome.storage.local.get(["harvestPreferences", GSTAccountProfiles.profilesKey,
+    "harvestDebugEnabled", "harvestShortcut"]).then(async (saved) => {
     showShortcut(saved.harvestShortcut);
     debugToggle.checked = saved.harvestDebugEnabled === true;
     debugDetails.hidden = !debugToggle.checked;
     debugToggle.disabled = false;
-    confirmed = GSTHarvest.normalize(initialChange ? initialChange.value : saved.harvestPreferences);
+    harvestAccountContext = await harvestAccountContextPromise;
+    confirmed = GSTHarvest.normalize(GSTAccountProfiles.currentProfile(harvestAccountContext, "harvest", saved));
     preferences = confirmed;
     enabled.checked = preferences.enabled;
     allowFarm.checked = preferences.allowFarm;
     mode.value = preferences.mode;
     for (const [key, input] of ranges) input.value = preferences[key];
     loaded = true;
-    renderList(); controls.disabled = false; refresh();
+    renderList(); controls.disabled = !!harvestAccountContext && harvestAccountContext.verified !== true;
+    if (harvestAccountContext && harvestAccountContext.verified !== true)
+      status.textContent = "Chưa xác nhận nick trong tab hiện tại; cài đặt Thu hoạch bị khóa.";
+    refresh();
   }).catch(() => {
     debugToggle.disabled = false;
     feedback.textContent = "Chưa đọc được cài đặt Thu hoạch; hãy mở lại popup.";

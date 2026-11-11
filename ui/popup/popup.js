@@ -203,10 +203,27 @@ let farmBusy = false;
 let farmSaveQueue = Promise.resolve();
 const farmWrites = new Map();
 let farmPreferenceWritesPending = 0;
+let popupAccountContext = null;
+let accountContextLoaded = false;
+const accountContextPromise = GSTAccountProfiles.activeContext().catch(() => null).then((context) => {
+  popupAccountContext = context;
+  accountContextLoaded = true;
+  globalThis.GSTPopupAccountContext = context;
+  const status = document.getElementById("accountActiveStatus");
+  if (status && context) {
+    status.textContent = context.verified
+      ? "Tab hiện tại: " + (context.accountLabel || "Nick hiện tại") + " · " + context.character + "."
+      : "Chưa xác nhận được nick trong tab hiện tại; cài đặt Farm/Thu hoạch bị khóa.";
+  }
+  syncFarmPolicyUI(farmConfirmed);
+  return context;
+});
+globalThis.GSTPopupAccountContextPromise = accountContextPromise;
 function updateFarmPreferences(patch, { draftWrite = false } = {}) {
-  const save = farmSaveQueue.catch(() => {}).then(() => navigator.locks.request("gst:farm-preferences", async () => {
-    const saved = await chrome.storage.local.get("farmPreferences");
-    const current = saved.farmPreferences ?? {};
+  const save = farmSaveQueue.catch(() => {}).then(async () => {
+    const context = await accountContextPromise;
+    if (context && context.verified !== true) throw new Error("Account identity is not confirmed.");
+    return GSTAccountProfiles.updateFeature(context, "farm", (current) => {
     const policyMode = Object.prototype.hasOwnProperty.call(patch, "policyMode")
       ? globalThis.GSTFarmPolicy.normalize(patch.policyMode) : globalThis.GSTFarmPolicy.read(current);
     const farmPreferences = globalThis.GSTFarmPolicy.withMode({ ...current, ...patch },
@@ -221,13 +238,18 @@ function updateFarmPreferences(patch, { draftWrite = false } = {}) {
       else if (current.targetMode === "bossFirst") farmPreferences.targetMode = "bossLevel";
       else if (current.targetMode === "level") farmPreferences.targetMode = "maxLevel";
     }
-    await chrome.storage.local.set({ farmPreferences });
     return farmPreferences;
-  }));
+    });
+  });
   farmSaveQueue = save;
   farmWrites.set(save, draftWrite);
   void save.then(() => { farmWrites.delete(save); }, () => { farmWrites.delete(save); });
   return save;
+}
+async function readCurrentFarmPreferences() {
+  const context = await accountContextPromise;
+  const stored = await chrome.storage.local.get(["farmPreferences", GSTAccountProfiles.profilesKey]);
+  return GSTAccountProfiles.currentProfile(context, "farm", stored);
 }
 
 async function refreshFarm() {
@@ -311,19 +333,22 @@ function syncFarmPolicyUI(raw = {}) {
   const pendingSelection = farmPolicyPending > 0 ? farmPolicyMode.value : null;
   farmPolicyMode.value = confirmedMode;
   if (pendingSelection && globalThis.GSTFarmPolicy.modes.includes(pendingSelection)) farmPolicyMode.value = pendingSelection;
-  farmPolicyMode.disabled = !farmPolicyLoaded;
+  const accountAllowed = !accountContextLoaded || !popupAccountContext || popupAccountContext.verified === true;
+  farmPolicyMode.disabled = !farmPolicyLoaded || !accountAllowed;
   farmPolicySavedMode.textContent = farmPolicyHasSavedValue
     ? `Chế độ đã lưu: ${farmPolicyLabels[confirmedMode]}.`
     : `Chưa có chế độ hợp lệ được lưu; mặc định hiện tại: ${farmPolicyLabels[confirmedMode]}.`;
   farmPolicyDescription.textContent = farmPolicyDescriptions[farmPolicyMode.value] ?? "Đang đọc chế độ…";
   const extended = confirmedMode === "extended";
-  farmControls.disabled = !farmSyncReady || !extended;
-  farmRightControls.disabled = !farmSyncReady || !extended;
+  farmControls.disabled = !farmSyncReady || !extended || !accountAllowed;
+  farmRightControls.disabled = !farmSyncReady || !extended || !accountAllowed;
   syncBossTargetControls();
-  breakSeals.disabled = !farmSyncReady || !extended;
-  shortcutControls.disabled = !farmSyncReady || !extended;
+  breakSeals.disabled = !farmSyncReady || !extended || !accountAllowed;
+  shortcutControls.disabled = !farmSyncReady || !extended || !accountAllowed;
   farmAssistanceAvailability.hidden = extended || !farmSyncReady;
-  farmAssistanceAvailability.textContent = confirmedMode === "disabled"
+  farmAssistanceAvailability.textContent = !accountAllowed
+    ? "Xác nhận nick trong tab game trước khi sửa cài đặt riêng."
+    : confirmedMode === "disabled"
     ? "Tùy chọn hỗ trợ farm đã lưu được giữ nguyên; chúng dùng lại khi bạn mở khóa và chọn chế độ phù hợp."
     : "Tùy chọn hỗ trợ farm đã lưu được giữ nguyên; chúng chỉ áp dụng ở Tool hỗ trợ.";
 }
@@ -386,10 +411,12 @@ function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {})
   syncBossTargetControls();
 }
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area !== "local" || !changes.farmPreferences) return;
+  if (area !== "local" || !(changes.farmPreferences || changes[GSTAccountProfiles.profilesKey])) return;
   farmStorageRevision++;
-  latestFarmPreferences = changes.farmPreferences.newValue ?? {};
-  if (farmSyncReady) syncFarmPreferences(latestFarmPreferences);
+  void readCurrentFarmPreferences().then((value) => {
+    latestFarmPreferences = value ?? {};
+    if (farmSyncReady) syncFarmPreferences(latestFarmPreferences);
+  }).catch(() => {});
 });
 farmPolicyMode.addEventListener("change", async () => {
   const mode = globalThis.GSTFarmPolicy.normalize(farmPolicyMode.value);
@@ -407,7 +434,7 @@ farmPolicyMode.addEventListener("change", async () => {
     const written = await updateFarmPreferences({ policyMode: mode });
     let committed = written;
     const revisionAtRead = farmStorageRevision;
-    try { committed = (await chrome.storage.local.get("farmPreferences")).farmPreferences ?? written; } catch {}
+    try { committed = await readCurrentFarmPreferences() ?? written; } catch {}
     if (requestRevision !== farmPolicyRequestRevision) return;
     if (farmStorageRevision !== revisionAtRead && latestFarmPreferences) committed = latestFarmPreferences;
     latestFarmPreferences = committed;
@@ -419,7 +446,7 @@ farmPolicyMode.addEventListener("change", async () => {
     if (requestRevision === farmPolicyRequestRevision) {
       let rollback = latestFarmPreferences ?? farmConfirmed;
       const revisionAtRead = farmStorageRevision;
-      try { rollback = (await chrome.storage.local.get("farmPreferences")).farmPreferences ?? rollback; } catch {}
+      try { rollback = await readCurrentFarmPreferences() ?? rollback; } catch {}
       if (farmStorageRevision !== revisionAtRead && latestFarmPreferences) rollback = latestFarmPreferences;
       latestFarmPreferences = rollback;
       syncFarmPreferences(rollback);
@@ -506,7 +533,7 @@ async function saveFarmPatch(patch, rollback, { draftWrite = false, preserveDraf
     const written = await updateFarmPreferences(patch, { draftWrite });
     let committed = written;
     const revisionAtRead = farmStorageRevision;
-    try { committed = (await chrome.storage.local.get("farmPreferences")).farmPreferences ?? written; } catch {}
+    try { committed = await readCurrentFarmPreferences() ?? written; } catch {}
     if (farmStorageRevision !== revisionAtRead && latestFarmPreferences) committed = latestFarmPreferences;
     latestFarmPreferences = committed;
     syncFarmPreferences(committed, { forceKeys: [...Object.keys(patch), "targetMode", "excludeBoss"]
@@ -1075,7 +1102,8 @@ fontControls.addEventListener("change", async () => {
 });
 
 const farmLoadRevision = farmStorageRevision;
-chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences", "farmPreferences", "farmShortcut", "areaMapOptions"]).then(({ preferences, displayPreferences, fontPreferences, farmPreferences, farmShortcut, areaMapOptions }) => {
+chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences", "farmPreferences",
+  GSTAccountProfiles.profilesKey, "farmShortcut", "areaMapOptions"]).then(async ({ preferences, displayPreferences, fontPreferences, farmPreferences, farmShortcut, areaMapOptions, [GSTAccountProfiles.profilesKey]: accountProfiles }) => {
   enabledInput.checked = preferences?.enabled === true;
   document.getElementById("speedSettings").hidden = !enabledInput.checked;
   for (const [input, fallback] of [[walkingInput, 3.5], [flyingInput, 2], [farmWalkingInput, 2], [farmFlyingInput, 1.5]]) {
@@ -1098,8 +1126,11 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   fontFamily.disabled = !font.enabled;
   fontControls.disabled = false;
   farmReturnDeath.checked = areaMapOptions?.returnDeath === true;
+  const context = await accountContextPromise;
+  const storedFarmPreferences = { farmPreferences, [GSTAccountProfiles.profilesKey]: accountProfiles };
   const initialFarmPreferences = farmLoadRevision === farmStorageRevision
-    ? (farmPreferences ?? {}) : (latestFarmPreferences ?? {});
+    ? GSTAccountProfiles.currentProfile(context, "farm", storedFarmPreferences)
+    : (latestFarmPreferences ?? {});
   const farmPreferencesWithPolicy = globalThis.GSTFarmPolicy.withMode(initialFarmPreferences,
     globalThis.GSTFarmPolicy.read(initialFarmPreferences));
   syncFarmPreferences(farmPreferencesWithPolicy, { preserveDraft: false });
@@ -1109,14 +1140,15 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   farmPolicyLoaded = true;
   syncFarmPolicyUI(farmPreferencesWithPolicy);
   farmPolicyFeedback.textContent = "";
-  const migrationNeeded = initialFarmPreferences.excludeBoss && ["boss", "bossLevel"].includes(normalizeFarmTargetMode(initialFarmPreferences.targetMode))
-    || ["bossFirst", "level"].includes(initialFarmPreferences.targetMode);
+  const accountAllowed = !context || context.verified === true;
+  const migrationNeeded = accountAllowed && (initialFarmPreferences.excludeBoss && ["boss", "bossLevel"].includes(normalizeFarmTargetMode(initialFarmPreferences.targetMode))
+    || ["bossFirst", "level"].includes(initialFarmPreferences.targetMode));
   if (migrationNeeded) {
     const migrationPolicyRevision = farmPolicyRequestRevision;
     updateFarmPreferences({}).then(async (committed) => {
       let current = committed;
       const revisionAtRead = farmStorageRevision;
-      try { current = (await chrome.storage.local.get("farmPreferences")).farmPreferences ?? committed; } catch {}
+      try { current = await readCurrentFarmPreferences() ?? committed; } catch {}
       if (farmPolicyRequestRevision !== migrationPolicyRevision) return;
       if (farmStorageRevision !== revisionAtRead && latestFarmPreferences) current = latestFarmPreferences;
       latestFarmPreferences = current;
