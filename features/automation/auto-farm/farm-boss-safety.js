@@ -902,6 +902,7 @@
   }
   globalThis.GSTFarmBossSafety = {
     configure(scene, value) {
+      const stopRetreat = settings.bossRetreat === true && value.bossRetreat === false && retreating;
       const retreatHpPercent = value.retreatHpPercent, recoveryHpPercent = value.recoveryHpPercent;
       const hpThresholds = Number.isSafeInteger(retreatHpPercent) && retreatHpPercent >= 1
         && Number.isSafeInteger(recoveryHpPercent) && retreatHpPercent < recoveryHpPercent && recoveryHpPercent <= 100
@@ -912,6 +913,7 @@
         ...hpThresholds };
       retreatThreshold = settings.retreatHpPercent / 100;
       recoveryThreshold = settings.recoveryHpPercent / 100;
+      if (stopRetreat) cancelRetreat();
       this.attach(scene);
     },
     attach(scene) { try { attach(scene); } catch { detach(); } },
