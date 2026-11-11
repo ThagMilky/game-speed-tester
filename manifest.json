@@ -41,6 +41,7 @@
         "features/movement/map/map-travel-page.js",
         "shared/navigation/farm-routing.js",
         "features/movement/flight/flight-page.js",
+        "features/movement/meditation/meditation-page.js",
         "features/automation/auto-farm/farm-behavior.js",
         "features/automation/auto-farm/farm-defense.js",
         "features/automation/auto-farm/farm-encounter.js",
@@ -98,7 +99,8 @@
         "features/movement/map/area-map-content.js",
         "features/visual/background/background-content.js",
         "features/automation/auto-quest/quest-content.js",
-        "features/movement/flight/flight-content.js"
+        "features/movement/flight/flight-content.js",
+        "features/movement/meditation/meditation-content.js"
       ],
       "run_at": "document_start",
       "world": "ISOLATED"

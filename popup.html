@@ -22,6 +22,7 @@
   <script src="features/automation/auto-chest/chest-popup.js" defer></script>
   <script src="features/automation/auto-quest/quest-popup.js" defer></script>
   <script src="features/movement/flight/flight-popup.js" defer></script>
+  <script src="features/movement/meditation/meditation-popup.js" defer></script>
   <script src="ui/game-menu/menu-position.js" defer></script>
   <script src="ui/popup/popup-help.js" defer></script>
   <script src="ui/game-menu/menu-popup.js" defer></script>
@@ -385,6 +386,11 @@
         <label class="switch-row"><span>Luôn giữ trạng thái bay</span><input id="alwaysFlying" class="switch" type="checkbox"></label>
         <p class="hint">Đã bay thì bỏ qua. Đang đi bộ thì chờ ổn định 1 giây, yêu cầu bay một lần và chờ game xác nhận. Giữ lựa chọn qua đổi map/hồi sinh. Tắt công tắc không ép hạ xuống đi bộ; Auto Farm vẫn có hỗ trợ bay riêng. Nếu bạn tự tắt bay khi công tắc đang bật, tool sẽ bật lại sau khoảng nghỉ. Không spam khi game chưa cho phép bay.</p>
         <p id="flightStatus" class="hint" role="status">Đang đọc trạng thái bay…</p>
+        <label class="switch-row separated"><span>Luôn thiền</span><input id="alwaysMeditating" class="switch" type="checkbox" disabled></label>
+        <p class="hint">Đồng bộ lựa chọn cho các tab game. Chỉ yêu cầu thiền khi nhân vật an toàn và đứng yên; nhường khi đang farm, tự động hóa khác hoặc thao tác tay. Khi Auto Farm bật, lựa chọn này tự tắt và chỉ bật lại bằng tay.</p>
+        <p id="meditationSavedStatus" class="feature-status" role="status" aria-live="polite">Đang đọc lựa chọn thiền đã lưu…</p>
+        <p id="meditationRuntimeStatus" class="hint" role="status" aria-live="polite">Trạng thái thiền theo game trong tab đang mở: chưa rõ.</p>
+        <p id="meditationFeedback" class="notice" role="status" aria-live="polite"></p>
         <fieldset id="controls" disabled aria-label="Tùy chọn tốc độ">
           <p class="save-mode">Công tắc tự lưu · Đổi số rồi rời ô nhập để lưu (hoặc bấm Lưu tốc độ)</p>
           <label class="switch-row"><span>Bật điều chỉnh tốc độ</span><input id="enabled" class="switch" type="checkbox"></label>

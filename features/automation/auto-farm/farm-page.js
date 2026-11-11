@@ -110,8 +110,12 @@
       else delete old.auto.toggle;
     }
   }
+  function needsActivationTracking() {
+    return settings.policyMode === "disabled"
+      || globalThis.GSTMeditation?.wantsFarmActivationObserver?.() === true;
+  }
   function maintainActivationLock() {
-    if (settings.policyMode !== "disabled") { clearActivationLock(); return; }
+    if (!needsActivationTracking()) { clearActivationLock(); return; }
     const scene = sceneNow();
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.on !== "boolean"
         || typeof scene.auto?.toggle !== "function" || typeof scene.toggleAutoFarm !== "function") return;
@@ -126,7 +130,10 @@
           message = "Auto Farm đang bị khóa bởi chế độ Disabled. Hãy đổi chế độ rồi bật lại bằng tay.";
           return undefined;
         }
-        return original.apply(this, args);
+        const wasOn = this.on === true;
+        const result = original.apply(this, args);
+        if (!wasOn && this.on === true) globalThis.GSTMeditation?.farmStarted?.(scene);
+        return result;
       };
       try { scene.auto.toggle = owner.wrapper; }
       catch {
@@ -138,10 +145,22 @@
     const owner = activationLock;
     if (scene.auto.on && !owner.stopRequested) {
       owner.stopRequested = true;
-      // The lock is installed first; this is the single native OFF request.
-      scene.toggleAutoFarm();
+      if (settings.policyMode === "disabled") {
+        // The lock is installed first; this is the single native OFF request.
+        scene.toggleAutoFarm();
+      } else globalThis.GSTMeditation?.farmStarted?.(scene);
     }
   }
+  function syncActivationTracking() {
+    if (needsActivationTracking()) {
+      maintainActivationLock();
+      if (activationWatcher === null) activationWatcher = setInterval(maintainActivationLock, 500);
+    } else {
+      clearActivationLock();
+      clearInterval(activationWatcher); activationWatcher = null;
+    }
+  }
+  globalThis.GSTFarmActivation = Object.freeze({ sync: syncActivationTracking });
 
   function guardFarmKey(event) {
     if (settings.policyMode === "native") return;
@@ -866,7 +885,6 @@
       syncFarmKeyGuard();
       globalThis.GSTFarmSession?.setPolicyMode?.(settings.policyMode, sceneNow());
       if (settings.policyMode !== "extended") stopForLockedPolicy();
-      if (settings.policyMode !== "disabled") { clearActivationLock(); clearInterval(activationWatcher); activationWatcher = null; }
       globalThis.GSTFarmRevivePolicy?.configure(settings.autoRespawn);
       globalThis.GSTFarmCombat?.configure(sceneNow(), settings.noRetreat);
       globalThis.GSTFarmBossSafety?.configure(sceneNow(), settings);
@@ -880,10 +898,7 @@
       globalThis.GSTFarmRouting?.configure(sceneNow(), settings);
       globalThis.GSTMovementDiagnostics?.configure(settings);
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());
-      if (settings.policyMode === "disabled") {
-        maintainActivationLock();
-        if (activationWatcher === null) activationWatcher = setInterval(() => maintainActivationLock(), 500);
-      }
+      syncActivationTracking();
       globalThis.GSTFarmCombat?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
       if (settings.targetMode === "all" && !settings.excludeBoss) clearFilter();
@@ -958,10 +973,7 @@
   window.addEventListener("pageshow", () => {
     syncFarmKeyGuard();
     suspended = false;
-    if (settings.policyMode === "disabled") {
-      maintainActivationLock();
-      if (activationWatcher === null) activationWatcher = setInterval(() => maintainActivationLock(), 500);
-    }
+    syncActivationTracking();
     watch();
     discover();
   });

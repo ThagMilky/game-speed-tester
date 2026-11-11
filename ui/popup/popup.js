@@ -675,6 +675,10 @@ window.addEventListener("message", async (event) => {
   try {
     result = await flushFarmNumericDrafts();
     if (result.saved) {
+      const meditation = await globalThis.GSTMeditationPopup?.flushPendingSave?.();
+      if (meditation?.saved === false) result = { saved: false, reason: "persistence" };
+    }
+    if (result.saved) {
       const potion = globalThis.GSTPotionPopup?.flushNumericDrafts;
       const harvest = globalThis.GSTHarvestPopup?.flushNumericDrafts;
       if (!potion || !harvest) result = { saved: false, reason: "load" };

@@ -126,6 +126,12 @@
       reset(); message = "Đang bay."; return true;
     }
     if (waitingForMount(scene, now)) return false;
+    if (globalThis.GSTMeditation?.blocksFlight?.(scene) === true) {
+      stableAt = null;
+      message = "Đang nhường yêu cầu Luôn thiền; lựa chọn bay vẫn được giữ.";
+      record("blocked", scene);
+      return false;
+    }
     if (now - last < 250) return false;
     last = now;
     if (scene.uiBlocked || scene.pendingSkill || scene.aiming || scene.harvesting || scene.self.med || scene.self.fish
