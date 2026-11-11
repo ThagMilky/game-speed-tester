@@ -5,7 +5,7 @@
   const nativeEligible = (enemy) => enemy?.hostile === true || enemy?.aggro === false;
   const explored = new Map();
   let scanAt = 0, exhaustedUntil = 0, correctionUntil = 0, lastFix;
-  let resumeTarget = null, handoff = null, resumeReason = null, centerSync = null;
+  let resumeTarget = null, handoff = null, resumeReason = null, centerSync = null, nearbyCandidate = null;
   const nativeReach = 6.5, handoffReach = 5.5;
   function observeHit(scene, event) {
     const owner = binding;
@@ -18,7 +18,15 @@
     owner.hitSequence = (owner.hitSequence || 0) + 1;
     owner.lastHit = { id: event.by, at: time, sequence: owner.hitSequence };
   }
+  const routeNotes = new Map();
   function routeLog(scene, reason, extra = {}) {
+    const key = `${reason}:${extra.targetId ?? ""}:${extra.fromId ?? ""}:${extra.toId ?? ""}:${extra.switchReason ?? ""}`;
+    const time = scene?.now?.();
+    if (!finite(time)) return;
+    const previous = routeNotes.get(key);
+    if (finite(previous) && time - previous < 3) return;
+    routeNotes.set(key, time);
+    if (routeNotes.size > 64) routeNotes.delete(routeNotes.keys().next().value);
     globalThis.GSTMovementDiagnostics?.event?.(scene, reason, extra);
   }
   function hostMapKey(host) {
@@ -96,6 +104,8 @@
         const heldDistance = range(held, { x: scene.px, y: scene.py });
         // Only an ongoing fight may hold native ownership indefinitely.
         if (engaged && target?.id === held.id && host.inCombat?.()) {
+          if (job) routeLog(scene, "target_decision", { fromId: job.id, toId: held.id,
+            switchSource: "map", switchReason: "active_close_fight" });
           if (job) release();
           return true;
         }
@@ -155,7 +165,7 @@
         const result = bosses.length
           ? safeBossRoute(scene, host, { x, y }, { x: gx, y: gy }, bosses)
           : host.route(x, y, gx, gy);
-        return permittedRoute(scene, area, { x, y }, result, respectExclusions) ? result : null;
+        return permittedRoute(scene, area, { x, y }, result, respectExclusions, { x: gx, y: gy }) ? result : null;
       }
     };
     return GSTNavigation.leg(scene, owner, safe, owner.x, owner.y,
@@ -248,12 +258,14 @@
         || from.x < 0 || from.y < 0 || from.x >= w || from.y >= h
         || to.x < 0 || to.y < 0 || to.x >= w || to.y >= h) return false;
     if (respectExclusions && globalThis.GSTFarmBossSafety?.allowsSegment?.(scene, from, to) === false) return false;
-    if (!area.home || withinArea(area, from)) return withinArea(area, to);
-    // A realm/map objective may leave the farm circle. Once back under
-    // radius navigation, allow only inward progress until re-entering it.
-    return range(to, area.home) <= range(from, area.home) + 1e-6;
+    if (area.home && (!withinArea(area, from) || !withinArea(area, to))) {
+      routeLog(scene, "farm_boundary_denied", { targetId: job?.actor ? job.id : null, action: "defer",
+        remaining: range(to, from) });
+      return false;
+    }
+    return true;
   }
-  function permittedRoute(scene, area, from, route, respectExclusions = true) {
+  function permittedRoute(scene, area, from, route, respectExclusions = true, destination = null) {
     if (!Array.isArray(route) || !route.length) return false;
     let previous = from;
     for (const point of route) {
@@ -262,7 +274,7 @@
       if (!permittedStep(scene, area, previous, next, respectExclusions)) return false;
       previous = next;
     }
-    return true;
+    return !destination || permittedStep(scene, area, previous, destination, respectExclusions);
   }
   function release() {
     if (job && binding) GSTNavigation.cancel(binding.scene, job.navigation);
@@ -337,10 +349,32 @@
       ? priority?.switchReason?.(pursuing, challenger, position, time - job.startedAt) : "";
     const localPriority = !pursuing && current && challenger && challenger.id !== current.id
       ? priority?.switchReason?.(current, challenger, position, 3) : "";
-    const target = better || localPriority ? challenger : pursuing ?? returning ?? current ?? nearbyAggro ?? challenger;
+    const currentDistance = current ? range(current, position) : Infinity;
+    const engaged = host.inCombat?.() && current && currentDistance <= handoffReach;
+    const nearby = ordered.find((enemy) => range(enemy, position) <= nativeReach) ?? null;
+    if (!nearby || nearbyCandidate?.id !== nearby.id) nearbyCandidate = nearby ? { id: nearby.id, at: time } : null;
+    const nearbyStable = nearby && nearbyCandidate && time - nearbyCandidate.at >= 0.75;
+    const retained = pursuing ?? returning ?? current ?? nearbyAggro ?? challenger;
+    const preferNearby = !better && !localPriority && nearbyStable && retained
+      && range(retained, position) > nativeReach && nearby.id !== retained.id;
+    const target = engaged ? current : better || localPriority ? challenger
+      : preferNearby ? nearby : retained;
+    let decisionReason = "";
+    if (preferNearby || engaged || better || localPriority) {
+      decisionReason = engaged ? "active_close_fight" : better === "boss_priority" || localPriority === "boss_priority"
+        ? "boss_priority" : better || localPriority ? "level_priority" : "nearby_actionable";
+      routeLog(scene, "target_decision", { fromId: current?.id ?? retained?.id, toId: target?.id,
+        switchSource: "map", switchReason: decisionReason });
+    } else if (retained && range(retained, position) > nativeReach && nearby === null) {
+      routeLog(scene, "target_decision", { fromId: retained.id, toId: retained.id,
+        switchSource: "map", switchReason: "distant_retained" });
+    }
     if (target?.id === resumeTarget) resumeTarget = null;
-    if (target) return { ...target, actor: true, switchReason: better || localPriority || "" };
+    if (target) return { ...target, actor: true,
+      switchReason: decisionReason || better || localPriority || "" };
     if (monsters.length) {
+      if (!eligible.length) routeLog(scene, "target_decision", { switchSource: "map",
+        switchReason: "candidates_deferred" });
       // All known candidates are skipped/deferred. Rest only until the earliest retry.
       if (preferences.idleMode === "seek" && !eligible.length) {
         const retryTimes = monsters.map((enemy) => Math.max(scene.auto.skipped.get(enemy.id) || time,
@@ -465,7 +499,7 @@
       const mapKey = hostMapKey(host);
       if (mapKey !== null && binding.mapKey !== mapKey) {
         release(); endHandoff("map_changed");
-        resumeTarget = null; resumeReason = null; deferred.clear(); explored.clear();
+        resumeTarget = null; resumeReason = null; nearbyCandidate = null; deferred.clear(); explored.clear();
         scanAt = 0; exhaustedUntil = 0; retryAt = 0;
         lastFix = undefined; correctionUntil = 0; centerSync = null;
         binding.mapKey = mapKey;
@@ -633,7 +667,7 @@
           const route = bosses.length
             ? safeBossRoute(scene, host, { x, y }, { x: gx, y: gy }, bosses)
             : host.route(x, y, gx, gy);
-          return permittedRoute(scene, area, { x, y }, route, respectExclusions) ? route : null;
+          return permittedRoute(scene, area, { x, y }, route, respectExclusions, { x: gx, y: gy }) ? route : null;
         },
         steer: (x, y) => {
           if (!permittedStep(scene, area, { x: scene.px, y: scene.py },
@@ -670,7 +704,7 @@
     }
     retryAt = 0; message = ""; deferred.clear(); explored.clear();
     scanAt = 0; exhaustedUntil = 0; lastFix = undefined; correctionUntil = 0;
-    resumeTarget = null; handoff = null; resumeReason = null; centerSync = null;
+    resumeTarget = null; handoff = null; resumeReason = null; centerSync = null; nearbyCandidate = null;
   }
   function attach(scene) {
     if ((!globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() && !seekRealmBoss(scene)) || !wanted(scene) || suspended) { detach(); return; }

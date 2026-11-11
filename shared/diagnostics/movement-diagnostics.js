@@ -6,7 +6,8 @@
   const incidentReasons = ["short_frame_gap", "movement_stall", "owner_change", "routing_correction",
     "routing_replan", "routing_stuck", "map_correction", "map_replan", "map_stuck",
     "portal_combat_yield", "chest_combat_yield", "chest_target_yield", "frame_gap", "correction", "target_switch",
-    "map_handoff", "map_resume", "loot_begin", "loot_done", "loot_skip", "realm_phase"];
+    "map_handoff", "map_resume", "loot_begin", "loot_done", "loot_skip", "realm_phase",
+    "target_decision", "farm_boundary_denied"];
   let binding = null, preferences = {};
   try {
     const previous = JSON.parse(sessionStorage.getItem(uiLogKey) ?? "[]");
@@ -205,7 +206,8 @@
         row.fromId = Number.isSafeInteger(extra.fromId) && extra.fromId >= 0 ? extra.fromId : null;
         row.toId = Number.isSafeInteger(extra.toId) && extra.toId >= 0 ? extra.toId : null;
         row.switchSource = ["map", "radius"].includes(extra.switchSource) ? extra.switchSource : null;
-        row.switchReason = ["boss_priority", "level_priority", "target_unavailable", "pick_failed"]
+        row.switchReason = ["boss_priority", "level_priority", "target_unavailable", "pick_failed",
+          "nearby_actionable", "active_close_fight", "distant_retained", "outside_circle", "candidates_deferred"]
           .includes(extra.switchReason) ? extra.switchReason : null;
         append(row); appendIncident(row);
       } catch { /* A diagnostic must never change Auto Farm behavior. */ }

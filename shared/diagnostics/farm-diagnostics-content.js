@@ -94,7 +94,8 @@
       "short_frame_gap", "movement_stall", "owner_change", "routing_correction",
       "routing_replan", "routing_stuck", "map_correction", "map_replan", "map_stuck",
       "portal_combat_yield", "chest_combat_yield", "chest_target_yield", "target_switch",
-      "map_handoff", "map_resume", "loot_begin", "loot_done", "loot_skip", "realm_phase"];
+      "map_handoff", "map_resume", "loot_begin", "loot_done", "loot_skip", "realm_phase",
+      "target_decision", "farm_boundary_denied"];
     if (!reasons.includes(row?.reason)) return null;
     const number = (value) => Number.isFinite(value) ? Math.round(Math.max(-1e8, Math.min(1e8, value)) * 1000) / 1000 : null;
     const point = (value) => Array.isArray(value) && value.length === 2 && value.every(Number.isFinite) ? value.map(number) : null;
@@ -127,7 +128,8 @@
     result.fromId = Number.isSafeInteger(row.fromId) && row.fromId >= 0 ? row.fromId : null;
     result.toId = Number.isSafeInteger(row.toId) && row.toId >= 0 ? row.toId : null;
     result.switchSource = ["map", "radius"].includes(row.switchSource) ? row.switchSource : null;
-    result.switchReason = ["boss_priority", "level_priority", "target_unavailable", "pick_failed"]
+    result.switchReason = ["boss_priority", "level_priority", "target_unavailable", "pick_failed",
+      "nearby_actionable", "active_close_fight", "distant_retained", "outside_circle", "candidates_deferred"]
       .includes(row.switchReason) ? row.switchReason : null;
     result.scope = ["radius", "map"].includes(row.scope) ? row.scope : null;
     result.panel = ["none", "skills", "workshop", "other"].includes(row.panel) ? row.panel : "none";

@@ -25,6 +25,29 @@
     return ["GSTHarvest", "GSTFarmMap", "GSTFarmSeals", "GSTRealm", "GSTChest", "GSTQuest", "GSTMapTravel"]
       .some((name) => globalThis[name]?.controls?.(scene));
   }
+  let boundaryLogAt = -Infinity;
+  function boundaryEvent(scene, target, remaining) {
+    const now = scene.now();
+    if (binding?.scene === scene) {
+      binding.note = "Đang hoãn đường farm vì đích hoặc đường đi vượt vòng tròn đã chọn.";
+      binding.noteUntil = now + 3;
+    }
+    if (now - boundaryLogAt < 3) return;
+    boundaryLogAt = now;
+    globalThis.GSTMovementDiagnostics?.event?.(scene, "farm_boundary_denied", {
+      targetId: Number.isSafeInteger(target) && target >= 0 ? target : null,
+      remaining: Number.isFinite(remaining) ? remaining : null, action: "defer"
+    });
+  }
+  function farmOwnerControls(scene) {
+    return otherOwner(scene) || globalThis.GSTFarmDefense?.controls?.(scene)
+      || globalThis.GSTFarmBossSafety?.controls?.(scene);
+  }
+  function inCircle(boundary, x, y) {
+    return Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(boundary?.radius)
+      && Number.isFinite(boundary?.home?.x) && Number.isFinite(boundary?.home?.y)
+      && Math.hypot(x - boundary.home.x, y - boundary.home.y) <= boundary.radius;
+  }
   function ready(scene, time) {
     const d = scene.driver;
     return scene.auto.on && scene.self && !scene.self.dead && !scene.leaving && d
@@ -56,10 +79,62 @@
       paused: false, note: "", noteUntil: 0 };
     owner.wrapper = function (host, time, x, y, gx, gy, reach) {
       // Private navigation objects inherit walk(); leave their existing owners in control.
-      if (this !== auto || !ready(scene, time) || !auto.target || ![time, x, y, gx, gy, reach].every(Number.isFinite)
-          || typeof host.clear !== "function") {
-        if (this === auto) { owner.track = null; GSTNavigation.cancel(scene, auto); }
+      if (this !== auto) return original.apply(this, arguments);
+      // Other controllers use GSTNavigation and own their vectors independently.
+      // Do not let native farm walk write over them while they hold movement.
+      if (farmOwnerControls(scene)) {
+        owner.track = null; GSTNavigation.cancel(scene, auto);
+        return true;
+      }
+      const boundary = globalThis.GSTHarvest?.farmBoundary?.(scene);
+      const validInput = [time, x, y, gx, gy, reach].every(Number.isFinite)
+        && typeof host.clear === "function";
+      if (boundary && !validInput) {
+        boundaryEvent(scene, auto.target, null);
+        owner.track = null; GSTNavigation.cancel(scene, auto);
+        return true;
+      }
+      if (boundary && (!inCircle(boundary, x, y) || !inCircle(boundary, gx, gy))) {
+        boundaryEvent(scene, auto.target, Math.hypot(gx - x, gy - y));
+        owner.track = null; GSTNavigation.cancel(scene, auto);
+        auto.path = []; auto.pathAt = -Infinity; auto.sideUntil = 0;
+        return true;
+      }
+      if (!ready(scene, time) || !validInput) {
+        owner.track = null; GSTNavigation.cancel(scene, auto);
+        if (boundary) return true;
         return original.apply(this, arguments);
+      }
+      if (!auto.target) {
+        owner.track = null; GSTNavigation.cancel(scene, auto);
+        return boundary ? original.call(this, host, time, x, y, gx, gy, reach)
+          : original.apply(this, arguments);
+      }
+      if (boundary) {
+        const clear = host.clear.bind(host), route = host.route?.bind(host), steer = host.steer?.bind(host);
+        host = { ...host,
+          clear: (sx, sy, ex, ey) => {
+            if (!inCircle(boundary, sx, sy) || !inCircle(boundary, ex, ey)) {
+              boundaryEvent(scene, auto.target, Math.hypot(ex - sx, ey - sy)); return false;
+            }
+            return clear(sx, sy, ex, ey);
+          },
+          route: typeof route === "function" ? (sx, sy, ex, ey) => {
+            if (!inCircle(boundary, sx, sy) || !inCircle(boundary, ex, ey)) {
+              boundaryEvent(scene, auto.target, Math.hypot(ex - sx, ey - sy)); return null;
+            }
+            const path = route(sx, sy, ex, ey);
+            if (Array.isArray(path) && path.every((p) => Array.isArray(p) && p.length >= 2
+                && inCircle(boundary, p[0], p[1]))) return path;
+            boundaryEvent(scene, auto.target, Math.hypot(ex - sx, ey - sy)); return null;
+          } : undefined,
+          steer: (dx, dy) => {
+            if (!inCircle(boundary, scene.px + dx * 0.25, scene.py + dy * 0.25)) {
+              boundaryEvent(scene, auto.target, Math.hypot(gx - x, gy - y));
+              return steer?.(0, 0);
+            }
+            return steer?.(dx, dy);
+          } };
       }
       let track = owner.track;
       if (!track || track.id !== auto.target || time - track.seenAt > 1 || Math.hypot(gx - track.gx, gy - track.gy) > 1.5) {
@@ -106,7 +181,7 @@
       }
       // Skip only a crossed intermediate corner with a collision-clear next segment.
       GSTNavigation.prune(scene, auto, host, true);
-      const result = original.apply(this, arguments);
+      const result = original.call(this, host, time, x, y, gx, gy, reach);
       if (result) GSTNavigation.schedule(scene, auto, gx, gy, reach);
       GSTNavigation.remember(scene, auto, gx, gy);
       const next = auto.path?.[0];

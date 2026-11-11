@@ -31,6 +31,9 @@
     catch { return null; }
   };
   GSTHarvest.farmOrigin = (scene) => session?.scene === scene ? { ...session.home } : null;
+  GSTHarvest.farmBoundary = (scene) => settings.policyMode === "extended" && settings.enabled
+    && settings.searchScope === "radius" && session?.scene === scene
+    ? { home: { ...session.home }, radius: settings.radius } : null;
   // Both features share the same once-per-death request state.
   GSTHarvest.respawn = (scene) => checkRespawn(scene, true);
   GSTHarvest.autoRespawnEnabled = () => settings.autoRespawn;
@@ -632,7 +635,7 @@
       }
       const point = { x: scene.auto.ax, y: scene.auto.ay };
       session = { scene, auto: scene.auto, home: point, center: { ...point }, mapKey: nativeMapKey(scene.autoHost()), at: -Infinity,
-        reanchor: false, targetOverride: null };
+        targetOverride: null };
       clearInterval(watcher);
       watcher = null;
       scene.events.on("preupdate", onFrame);
@@ -677,7 +680,6 @@
         s.center = { ...s.home };
         s.unsafeHoldCenter = null;
         s.rankTarget = null;
-        s.reanchor = false;
       }
       const searchRadius = nativeRadius(s.scene);
       if (searchRadius === null && (settings.enabled || settings.targetMode !== "all"
@@ -788,17 +790,9 @@
       if (s.auto.moved || time < s.auto.pauseUntil) {
         restore(s);
         s.unsafeHoldCenter = null;
-        s.reanchor = true;
         s.rankTarget = null;
         message = "Paused for manual movement.";
         return;
-      }
-      if (s.reanchor || !owned(s)) {
-        s.home = { x: s.auto.ax, y: s.auto.ay };
-        s.center = { ...s.home };
-        s.unsafeHoldCenter = null;
-        s.reanchor = false;
-        s.rankTarget = null;
       }
       if (s.auto.resting || host.meditating() || s.scene.pendingSkill || s.scene.aiming || GSTFarmRouting.blocked(s.scene)) {
         message = "Waiting for built-in healing, skill or UI handling.";
@@ -815,6 +809,14 @@
       if (!Array.isArray(enemies)) {
         stop("Invalid Auto Farm enemy data; stopped.", true);
         return;
+      }
+      const currentActor = s.scene.views?.get?.(s.auto.target);
+      if (currentActor?.k === "m" && finite(currentActor.x) && finite(currentActor.y)
+          && settings.searchScope === "radius" && distance(currentActor, s.home) > settings.radius) {
+        diagnostic(s.scene, "reject:outside_circle", "target_decision",
+          { fromId: currentActor.id, toId: currentActor.id, switchSource: "radius", switchReason: "outside_circle" });
+        s.auto.target = 0; s.auto.path = []; s.auto.pathAt = -Infinity; s.auto.think = 0;
+        s.rankTarget = null;
       }
       const eligible = enemies.filter((enemy) => finite(enemy?.id) && finite(enemy.x) && finite(enemy.y)
         && !enemy.dead && nativeEligible(enemy)
@@ -877,6 +879,17 @@
     } catch {
       stop("Auto Farm interface error; extended range stopped.", true);
     }
+  }
+
+  const diagnosticKeys = new Map();
+  function diagnostic(scene, key, reason, extra = {}) {
+    const time = scene?.now?.();
+    if (!finite(time)) return;
+    const previous = diagnosticKeys.get(key);
+    if (finite(previous) && time - previous < 3) return;
+    diagnosticKeys.set(key, time);
+    if (diagnosticKeys.size > 64) diagnosticKeys.delete(diagnosticKeys.keys().next().value);
+    globalThis.GSTMovementDiagnostics?.event?.(scene, reason, extra);
   }
 
   function shiftToward(s, enemy, searchRadius) {

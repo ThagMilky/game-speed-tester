@@ -206,7 +206,7 @@
       // update(): an imminent boss hit must not be silently ignored.
       || scene.heldAttack || scene.harvesting
       || (!retreating && (scene.auto.resting || scene.self.med)) || scene.self.fish || scene.keyCapture
-      // Let the native Auto Farm drink pills before considering boss movement.
+      // Let native Auto Farm drink pills during non-urgent map travel.
       || (!imminent && globalThis.GSTMapTravel?.active?.(scene)
         && globalThis.GSTHarvest?.needsRecovery?.(scene))
       || globalThis.GSTQuest?.controls?.(scene)
@@ -323,8 +323,8 @@
   }
   function zone(scene) {
     const w = scene.map?.w, h = scene.map?.h;
-    // The farm circle is not the safe-movement boundary for an explicit map journey.
-    // Keep the native map edges and collision/path checks for emergency escapes.
+    // During explicit map travel, safety is only a brief emergency handoff;
+    // keep that owner's map-bound route instead of constraining it to farm radius.
     if (globalThis.GSTMapTravel?.active?.(scene))
       return finite(w) && finite(h) && w > 0 && h > 0
         ? { w, h, home: { x: scene.px, y: scene.py }, radius: Infinity } : null;
@@ -334,9 +334,8 @@
     const home = GSTHarvest.farmOrigin(scene) ?? { x: scene.auto.ax, y: scene.auto.ay };
     if (![w, h, home.x, home.y].every(finite) || w <= 0 || h <= 0
         || !wholeMap && (!finite(radius) || radius < 1)) return null;
-    // Ordinary radius farming stays inside its circle. An explicit realm
-    // boss/seal objective may travel beyond it; only then use map boundaries
-    // for emergency dodges rather than disabling safety outside the circle.
+    // Farm-owned safety movement must stay within the configured/session circle.
+    // A separately requested Realm objective remains independently map-bound.
     const realmObjective = globalThis.GSTRealm?.seekBoss?.(scene) === true
       || globalThis.GSTFarmSeals?.pending?.(scene) === true;
     const outsideFarmCircle = !wholeMap && distance({ x: scene.px, y: scene.py }, home) > radius;
