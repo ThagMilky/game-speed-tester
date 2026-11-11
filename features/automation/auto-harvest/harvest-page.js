@@ -25,7 +25,7 @@
     "interaction_target_other", "interaction_cache_timeout", "interact_error"]);
   const unconfirmedCodes = new Set(["harvest_unconfirmed", "request_timeout", "node_unavailable_before_ack", "target_changed"]);
   const summary = () => `Thành công ${totals.success} · Thất bại/bỏ qua ${totals.failed} · Chưa xác nhận ${totals.unconfirmed} · Hủy/nhường ${totals.canceled}`;
-  GSTHarvest.journey = (scene) => binding?.scene === scene && job && !job.observingRevoked
+  GSTHarvest.journey = (scene) => binding?.scene === scene && job && !job.observingOutstanding
     ? { x: job.node.x, y: job.node.y, path: job.path } : null;
   GSTHarvest.isEnabled = () => settings.enabled;
   const skipped = new Map();
@@ -174,10 +174,10 @@
     }
     owner.steer = null;
   }
-  function observeRevokedRequest(scene, now) {
-    if (!job.observingRevoked) {
+  function observeOutstandingRequest(scene, now, cause = "allow_farm_revoked") {
+    if (!job.observingOutstanding) {
       relinquishMovement(scene);
-      job.observingRevoked = true; job.observeAfterRelease = true;
+      job.observingOutstanding = true; job.observationCause = cause;
     }
     if (scene.harvesting && scene.harvestNode === job.index) {
       if (job.phase !== "harvesting") {
@@ -191,16 +191,16 @@
     if (job.acknowledged === true && finite(job.inventoryBefore) && count !== null
         && count > job.inventoryBefore && scene.nodes?.[job.index] === job.node && !job.node.ready) {
       lastResult = { text: `Thành công: nhận thêm ${count - job.inventoryBefore} ${job.node.item}.`, until: now + 5000 };
-      release("Đã xác nhận lượt hái sau khi thu hồi quyền farm.", 20000, "harvest_success");
+      release("Đã xác nhận lượt hái trong thời gian quan sát.", 20000, "harvest_success");
       return;
     }
     if ((job.phase === "harvesting" && now - job.requestedAt >= 15000)
         || (job.phase === "confirming" && now - job.finishedAt >= 3000)) {
-      release("Đã thu hồi quyền farm; lượt hái chưa có kết quả xác nhận.", 20000, "harvest_unconfirmed");
+      release("Lượt hái chưa có kết quả xác nhận trong thời gian quan sát.", 20000, "harvest_unconfirmed");
       return;
     }
     if (job.phase === "request" && now - job.requestedAt >= 8000) {
-      release("Đã thu hồi quyền farm; yêu cầu hái chưa được xác nhận.", 20000, "request_timeout");
+      release("Yêu cầu hái chưa được xác nhận trong thời gian quan sát.", 20000, "request_timeout");
       return;
     }
     message = job.acknowledged ? `Đang quan sát kết quả hái ${job.node.item}; không điều khiển di chuyển.`
@@ -267,11 +267,14 @@
         gameNotices: [...(job.notices ?? [])],
         serverRejectionObserved: false });
       const row = recentAttempts[recentAttempts.length - 1];
-      const watchPermissionRevocation = job.observeAfterRelease === true && code !== "harvest_success";
-      if ((["manual_key", "manual_skill", "manual_pointer"].includes(code) && job.acknowledged === true
-          || watchPermissionRevocation) && scene) {
-        row.endedBy = watchPermissionRevocation ? "allow_farm_revoked" : code;
-        row.followUp = watchPermissionRevocation ? "watching_after_permission_revoke" : "watching_after_yield";
+      const observationCause = job.observationCause;
+      const manualYield = ["manual_key", "manual_skill", "manual_pointer"].includes(code) && job.acknowledged === true;
+      const watchAfterObservation = observationCause && !manualYield && code !== "harvest_success";
+      if ((manualYield || watchAfterObservation) && scene) {
+        row.endedBy = watchAfterObservation ? observationCause : code;
+        row.followUp = watchAfterObservation
+          ? observationCause === "allow_farm_revoked" ? "watching_after_permission_revoke" : "watching_after_auto_farm_activated"
+          : "watching_after_yield";
         observations.push({ row, node: job.node, until: performance.now() + 8000 });
       }
       if (recentAttempts.length > 10) recentAttempts.shift();
@@ -366,7 +369,7 @@
       const handler = function () {
         // Native update remains responsible for combat/death/respawn whenever we yield.
         if (binding?.auto === this && job) {
-          if (observeWithoutFarmPermission(scene)) return false;
+          if (job.observingOutstanding || observeWithoutFarmPermission(scene)) return false;
           const preserveNativeHarvest = nativeHarvestOutstanding();
           if (preserveNativeHarvest && safetyPreemptsMovement(scene)) return false;
           let reason = "Interface game thay đổi; tạm nhường điều khiển.";
@@ -431,7 +434,7 @@
         }
       });
       globalThis.GSTHarvestVisual?.configure(scene, settings.showTargetLine);
-      GSTHarvest.controls = (current) => binding?.scene === current && job !== null && !job.observingRevoked
+      GSTHarvest.controls = (current) => binding?.scene === current && job !== null && !job.observingOutstanding
         && !safetyPreemptsMovement(current);
       scene.events.on("preupdate", onFrame);
       scene.events.on("shutdown", onShutdown);
@@ -475,8 +478,9 @@
       && !scene.auto.lootSkip?.has?.(`${item.x.toFixed(1)},${item.y.toFixed(1)}`));
   }
   function step(scene, now) {
-    if (observeWithoutFarmPermission(scene)) { observeRevokedRequest(scene, now); return; }
-    if (job) job.observingRevoked = false;
+    if (job?.observingOutstanding || observeWithoutFarmPermission(scene)) {
+      observeOutstandingRequest(scene, now, job?.observationCause ?? "allow_farm_revoked"); return;
+    }
     const preserveNativeHarvest = nativeHarvestOutstanding();
     const safetyOwnsMovement = preserveNativeHarvest && safetyPreemptsMovement(scene);
     const reason = blockedReason(scene, false, preserveNativeHarvest)
@@ -667,7 +671,10 @@
       if (scene.auto.on !== binding.farmOn) {
         binding.farmOn = scene.auto.on;
         if (scene.auto.on) {
-          if (job?.phase !== "harvesting" && !observeWithoutFarmPermission(scene)) release();
+          const requestOutstanding = job?.requestedAt !== undefined
+            && (nativeHarvestOutstanding() || job.acknowledged === true);
+          if (requestOutstanding) observeOutstandingRequest(scene, performance.now(), "auto_farm_activated");
+          else if (job?.phase !== "harvesting" && !observeWithoutFarmPermission(scene)) release();
           binding.home = { ...(GSTHarvest.farmOrigin(scene) ?? { x: scene.auto.ax, y: scene.auto.ay }) };
         }
       }
@@ -719,7 +726,7 @@
       trace("harvest.ack", "started");
     }
     if (settings.enabled && binding?.scene && observeWithoutFarmPermission(binding.scene)) {
-      observeRevokedRequest(binding.scene, performance.now());
+      observeOutstandingRequest(binding.scene, performance.now(), "allow_farm_revoked");
     }
     if (!settings.enabled) {
       detach();
