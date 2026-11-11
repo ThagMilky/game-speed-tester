@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const origin = "https://nghichthienky.online";
-  const fields = ["hidePlayers", "hidePlayerEffects", "hideOwnEffects", "hideMonsterEffects",
+  const fields = ["hidePlayers", "hidePlayerEffects", "hideOwnEffects", "hideOwnCharacter", "hideResourceVisuals", "hideGameUI", "hideNPCVisuals", "hideMonsterEffects",
     "hideDisciples", "hidePets", "hideCompanionEffects", "hideBasicEffects",
     "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings", "hideBosses", "hideBossEffects", "simpleMinimap", "minimapColors"];
   let settings = {}, measure = false, suspended = false, watcher = null, binding = null;
@@ -41,10 +41,39 @@
     owner.dom.clear();
   }
   function hideDom(owner, element) {
-    if (!element?.style || owner.dom.has(element)) return;
+    if (!element?.style) return;
+    const tracked = owner.dom.get(element);
+    if (tracked) {
+      if (element.style.getPropertyValue("visibility") !== "hidden"
+          || element.style.getPropertyPriority("visibility") !== "important") {
+        tracked.value = element.style.getPropertyValue("visibility");
+        tracked.priority = element.style.getPropertyPriority("visibility");
+        element.style.setProperty("visibility", "hidden", "important");
+      }
+      return;
+    }
     owner.dom.set(element, { value: element.style.getPropertyValue("visibility"),
       priority: element.style.getPropertyPriority("visibility") });
     element.style.setProperty("visibility", "hidden", "important");
+  }
+  const nativeUiIds = ["minimap", "hud-left", "tracker", "skills", "gauge", "chat", "menubar", "bossbar",
+    "utility-controls", "statusfx", "kn-effects", "party", "toast", "achievement-ribbon", "inspect-card",
+    "invite", "emotes", "realm-launch", "realm-status", "realm-progress", "realm-protect", "realm-inherit",
+    "realm-floor", "class-cta", "coach", "loot-filter", "loot-recover"];
+  function updateGameUi(owner, now) {
+    if (!on("hideGameUI") || now - owner.uiSyncAt < 300) return;
+    owner.uiSyncAt = now;
+    for (const id of nativeUiIds) {
+      const element = document.getElementById(id);
+      if (element?.matches('[role="dialog"], [role="alertdialog"], [aria-modal="true"]')
+          || element?.querySelector('[role="dialog"], [role="alertdialog"], [aria-modal="true"]')) continue;
+      hideDom(owner, element);
+    }
+    // Native menus use .panel[data-title]. Keep dialogs and the extension menu available.
+    for (const panel of document.querySelectorAll(".panel[data-title]")) {
+      if (panel.closest("#gst-game-menu") || panel.matches('[role="dialog"], [role="alertdialog"], [aria-modal="true"]')) continue;
+      hideDom(owner, panel);
+    }
   }
   // Only walk known visual attachments, never the scene or game state graph.
   const visualKeys = ["view", "hand", "weapon", "armed", "trail", "back", "front", "rings", "motes",
@@ -73,6 +102,48 @@
     }
     for (const key of visualKeys) if (value[key]) mask(owner, value[key], depth + 1);
   }
+  function updateResourceLabels(owner) {
+    const scene = owner.scene;
+    if (!on("hideResourceVisuals") || !Array.isArray(scene.nodes)) return;
+    const camera = scene.cameras.main, view = camera.worldView;
+    const now = performance.now();
+    if (owner.resourceNodes !== scene.nodes || owner.resourceNodeCount !== scene.nodes.length
+        || now - owner.resourceSyncAt >= 1000) {
+      owner.resourceNodes = scene.nodes;
+      owner.resourceNodeCount = scene.nodes.length;
+      owner.resourceSyncAt = now;
+      owner.resourceNodeSet = new Set(scene.nodes);
+    }
+    const margin = 128;
+    for (const node of scene.nodes) {
+      if (!node) continue;
+      mask(owner, node.img);
+      mask(owner, node.glow);
+      let label = owner.labels.get(node);
+      let point = owner.points.get(node);
+      if (!point) { point = scene.toPx(node.x, node.y); owner.points.set(node, point); }
+      const [x, y] = point;
+      const inView = node.ready === true && view
+        && x >= view.x - margin && x <= view.right + margin
+        && y >= view.y - margin && y <= view.bottom + margin;
+      if (!inView) { if (label?.visible) label.setVisible(false); continue; }
+      if (!label) {
+        label = scene.add.text(x, y - 30, String(node.item ?? ""), {
+          fontFamily: "Arial, sans-serif", fontSize: "12px", color: "#fff7da",
+          stroke: "#241b12", strokeThickness: 3, backgroundColor: "rgba(28,20,12,.72)",
+          padding: { x: 4, y: 2 }
+        }).setOrigin(.5, 1).setDepth(1e3 - Math.round(node.y * 10) + 1);
+        owner.labels.set(node, label);
+      }
+      else if (!label.visible) label.setVisible(true);
+    }
+    for (const [node, label] of owner.labels) {
+      if (owner.resourceNodeSet.has(node)) continue;
+      if (label.scene) label.destroy();
+      owner.labels.delete(node);
+      owner.points.delete(node);
+    }
+  }
   function wrap(owner, object, key, handler) {
     if (typeof object?.[key] !== "function") return;
     const original = object[key], descriptor = Object.getOwnPropertyDescriptor(object, key);
@@ -95,6 +166,7 @@
     try {
       owner.epoch++;
       const scene = owner.scene;
+      updateGameUi(owner, performance.now());
       owner.mapReady = GSTFpsMap.update(scene, settings, (value) => mask(owner, value));
       if (on("hidePlayers") || on("hideMonsters") || on("hideBosses") || on("hideBossEffects") || on("hidePlayerEffects")
           || on("hideMonsterEffects") || on("hideDisciples") || on("hidePets") || on("hideCompanionEffects")) {
@@ -122,6 +194,16 @@
         mask(owner, scene.myAura);
         mask(owner, scene.cultivation?.entries?.get(scene.you));
       }
+      if (on("hideOwnCharacter")) {
+        mask(owner, scene.player);
+        mask(owner, scene.playerShadow);
+        mask(owner, scene.mounts?.get(0));
+        mask(owner, scene.swords?.get(0));
+      }
+      if (on("hideNPCVisuals")) {
+        for (const npc of scene.npcs ?? []) mask(owner, npc.ch);
+      }
+      updateResourceLabels(owner);
       if (on("hideNumbers")) {
         // Chieu/Danh use Juice's own text pool, not scene.floatText().
         for (const number of scene.juice?.nums ?? []) mask(owner, number.txt);
@@ -159,6 +241,8 @@
     owner.scene.events.off("destroy", detach);
     restoreMasks(owner);
     restoreDom(owner);
+    for (const label of owner.labels.values()) if (label.scene) label.destroy();
+    owner.labels.clear(); owner.points.clear();
     GSTFpsMap.clear();
     for (const undo of owner.hooks.reverse()) undo();
   }
@@ -168,7 +252,8 @@
     if (!scene?.sys?.isActive?.() || typeof scene.views?.values !== "function"
         || typeof scene.views?.get !== "function" || !scene.events?.on || !scene.events.off
         || !Number.isInteger(scene.cameras?.main?.id)) return;
-    const owner = { scene, masks: new Map(), dom: new Map(), hooks: [], epoch: 0 };
+    const owner = { scene, masks: new Map(), dom: new Map(), labels: new Map(), points: new Map(),
+      hooks: [], epoch: 0, uiSyncAt: 0, resourceSyncAt: 0 };
     binding = owner;
     const minimapRange = () => settings.enabled ? settings.minimapRange : 1;
     wrap(owner, scene.minimap, "draw", GSTFpsMinimap.handler(scene, () => on("simpleMinimap"), minimapRange));

@@ -434,6 +434,7 @@
           <label class="check-row"><input type="checkbox" data-fps-field="hidePlayers"><span>Ẩn hình người chơi khác, vũ khí, thú cưỡi và bóng</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hidePlayerEffects"><span>Giảm hiệu ứng người chơi khác</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideOwnEffects"><span>Giảm hiệu ứng của bạn (giữ dấu ngắm)</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideOwnCharacter"><span>Ẩn nhân vật của tôi (giữ tên)</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideDisciples"><span>Ẩn hình và bóng đệ tử</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hidePets"><span>Ẩn hình và bóng linh thú</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideCompanionEffects"><span>Giảm hiệu ứng đệ tử, linh thú xác định được nguồn</span></label>
@@ -442,6 +443,7 @@
           <label class="check-row"><input type="checkbox" data-fps-field="hideMonsters"><span>Ẩn hình và bóng quái thường, giữ tên / level / thanh máu</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideBosses"><span>Ẩn hình và bóng boss, giữ tên / thanh máu</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideBossEffects"><span>Giảm hiệu ứng boss xác định được nguồn (giữ cảnh báo)</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideNPCVisuals"><span>Ẩn hình NPC (giữ tên)</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideNumbers"><span>Ẩn số sát thương, hồi máu và chữ Né (kể cả chữ từ kỹ năng)</span></label>
           </div><div class="wide-group">
           <p class="field-title separated">Môi trường</p>
@@ -458,6 +460,8 @@
           <p class="hint" data-help-for="label:has([data-fps-field=simpleMinimap])">Đổi nền bản đồ nhỏ ở góc màn hình thành lưới: ô tối đi được, ô xám bị chặn. Giữ dấu nhân vật, quái và vùng an toàn; khung minimap vẫn tròn. Mỗi ô lấy mẫu va chạm ở tâm, không biểu diễn hết vật cản nhỏ hoặc bảo đảm cả ô đều đi được. Độc lập với nền địa hình chính.</p>
           <label class="check-row"><input type="checkbox" data-fps-field="hideVegetation"><span>Ẩn cây cỏ trang trí có chuyển động</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideBuildings"><span>Ẩn vật che khuất (nhà / cây lớn đã nhận diện)</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideResourceVisuals"><span>Ẩn hình tài nguyên (giữ tên)</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideGameUI"><span>Ẩn giao diện game</span></label>
           <p class="hint">Mỗi ô vuông là 1 ô game: tối = đi được, xám sáng = phần bị chặn, gần đen = ngoài map. Giữ hình dạng vật cản trong từng ô, chưa tính độ rộng nhân vật. Giữ tài nguyên, NPC, cổng và cảnh báo. Lớp chưa nhận diện có thể còn hiện. Chọn tất cả chỉ tick lựa chọn, vẫn cần bật công tắc tối ưu.</p>
           <div class="button-row"><button id="fpsSelectAll" type="button">Chọn tất cả</button><button id="fpsSelectNone" type="button">Bỏ chọn tất cả</button></div>
           <button id="fpsReset" type="button" class="secondary full">Khôi phục hình ảnh gốc</button>
