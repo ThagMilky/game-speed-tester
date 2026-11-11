@@ -196,29 +196,40 @@ body.embedded {
 #openGameMenu { font-size: 14px; max-width: 205px; flex-shrink: 0; }
 .app-workspace, .app-content { display: flex; flex-direction: column; min-height: 0; min-width: 0; flex: 1; }
 .feature-navigation {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
   flex-shrink: 0;
   gap: 7px;
   padding: 9px 14px;
   background: var(--subtle);
   border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-  scrollbar-width: thin;
+  overflow: visible;
 }
-.nav-caption { display: none; }
+.nav-caption {
+  grid-column: 1 / -1;
+  display: block;
+  padding: 5px 3px 0;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
 .feature-navigation .nav-item {
-  flex: 0 0 auto;
+  min-width: 0;
+  width: 100%;
   border: 1px solid transparent;
   background: transparent;
   color: var(--muted);
   font-size: 14px;
   font-weight: 600;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
   padding: 8px 11px;
-  min-height: 40px;
+  min-height: 44px;
   text-align: left;
 }
+.feature-navigation .nav-item[data-nav-panel="overview"] { grid-column: 1 / -1; }
 .feature-navigation .nav-item[aria-current="page"] {
   background: var(--accent-bg);
   color: var(--accent);
@@ -276,6 +287,7 @@ body.embedded {
 @media (min-width: 760px) {
   body.embedded[data-orientation="horizontal"] .app-workspace { flex-direction: row; }
   body.embedded[data-orientation="horizontal"] .feature-navigation {
+    display: flex;
     width: 216px;
     flex-direction: column;
     align-items: stretch;
@@ -287,7 +299,7 @@ body.embedded {
     gap: 4px;
   }
   body.embedded[data-orientation="horizontal"] .nav-caption {
-    display: block;
+    grid-column: auto;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 1px;
@@ -339,4 +351,9 @@ body.embedded {
   #featurePanels { padding: 12px; }
   #featurePanels > .card > .card-body { padding: 13px 12px; }
   .dashboard-tile { min-height: 82px; }
+}
+@media (max-width: 420px) {
+  .feature-navigation { grid-template-columns: minmax(0, 1fr); }
+  .feature-navigation .nav-item[data-nav-panel="overview"] { grid-column: auto; }
+  body.embedded[data-orientation="horizontal"] .feature-navigation { grid-template-columns: none; }
 }
