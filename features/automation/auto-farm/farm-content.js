@@ -7,6 +7,8 @@
   let shortcutRevision = 0;
   let sequence = 0;
   let navigating = false;
+  let suspended = false, loadTimer = null, loadAttempts = 0, loading = false;
+  let configurationSent = false, loadError = "";
   const pending = new Map();
 
   function configureShortcut(value) {
@@ -76,6 +78,8 @@
       return;
     }
     window.postMessage({ channel: "gst:farm:v1", type: "configure", ...settings }, origin);
+    configurationSent = true;
+    loadError = "";
   }
 
   window.addEventListener("message", (event) => {
@@ -89,10 +93,15 @@
     clearTimeout(entry.timeout);
     pending.delete(event.data.requestId);
     entry.respond({
+      configuration: {
+        loaded: settings !== null, sent: configurationSent,
+        received: event.data.configurationReceived === true,
+        ready: event.data.configurationReady === true, error: loadError
+      },
       autoOn: typeof event.data.autoOn === "boolean" ? event.data.autoOn : null,
       dead: typeof event.data.dead === "boolean" ? event.data.dead : null,
       encounterStatus: typeof event.data.encounterStatus === "string" ? event.data.encounterStatus.slice(0, 160) : "",
-      message: typeof event.data.message === "string" ? event.data.message.slice(0, 240) : "No Auto Farm status."
+      message: loadError || (typeof event.data.message === "string" ? event.data.message.slice(0, 240) : "No Auto Farm status.")
     });
   });
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
@@ -130,20 +139,36 @@
     }
   });
   window.addEventListener("pageshow", () => {
-    if (settings) configure(settings);
-    configureShortcut({ code: shortcut });
+    suspended = false;
+    loadAttempts = 0; void loadPreferences();
   });
   window.addEventListener("pagehide", () => {
+    suspended = true;
+    clearTimeout(loadTimer); loadTimer = null;
     for (const entry of pending.values()) {
       clearTimeout(entry.timeout);
       entry.respond({ message: "Page is navigating." });
     }
     pending.clear();
   });
-  const initialRevision = revision;
-  const initialShortcutRevision = shortcutRevision;
-  chrome.storage.local.get(["farmPreferences", "farmShortcut"]).then(({ farmPreferences, farmShortcut }) => {
-    if (revision === initialRevision) configure(farmPreferences);
-    if (shortcutRevision === initialShortcutRevision) configureShortcut(farmShortcut);
-  }).catch(() => { /* Do not replace saved filters or authorize auto-resume with guessed defaults. */ });
+  async function loadPreferences() {
+    if (suspended || loading) return;
+    loading = true;
+    clearTimeout(loadTimer); loadTimer = null;
+    const initialRevision = revision, initialShortcutRevision = shortcutRevision;
+    loadAttempts++;
+    try {
+      const { farmPreferences, farmShortcut } = await chrome.storage.local.get(["farmPreferences", "farmShortcut"]);
+      if (suspended) return;
+      if (revision === initialRevision) configure(farmPreferences);
+      if (shortcutRevision === initialShortcutRevision) configureShortcut(farmShortcut);
+    } catch (error) {
+      if (suspended || revision !== initialRevision) return;
+      const kind = ["TypeError", "ReferenceError", "RangeError"].includes(error?.name) ? error.name : "Error";
+      loadError = `Chưa đọc/gửi được cấu hình Auto Farm (${kind}); đã thử ${loadAttempts}/3 lần.`;
+      // Retry saved configuration only; never authorize automation using guessed settings.
+      if (loadAttempts < 3) loadTimer = setTimeout(loadPreferences, loadAttempts * 1000);
+    } finally { loading = false; }
+  }
+  void loadPreferences();
 })();

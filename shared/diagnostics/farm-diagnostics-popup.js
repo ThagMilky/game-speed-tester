@@ -126,6 +126,11 @@
       report.diagnosticsAvailable = available;
       report.farmStatus = {
         autoOn: typeof status?.autoOn === "boolean" ? status.autoOn : null,
+        configuration: status?.configuration ? {
+          loaded: status.configuration.loaded === true, sent: status.configuration.sent === true,
+          received: status.configuration.received === true, ready: status.configuration.ready === true,
+          error: typeof status.configuration.error === "string" ? status.configuration.error.slice(0, 160) : ""
+        } : null,
         message: typeof status?.message === "string" ? status.message.slice(0, 240) : "Không nhận được trạng thái farm."
       };
       output.value = JSON.stringify(report); output.hidden = false;

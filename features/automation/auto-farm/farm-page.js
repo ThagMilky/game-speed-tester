@@ -19,6 +19,7 @@
   let shortcutMessage = "";
   let message = "Chưa nhận được cấu hình Auto Farm từ extension.";
   let configurationError = "";
+  let configurationReceived = false;
   let activationLock = null;
   let activationWatcher = null;
   const finite = (value) => typeof value === "number" && Number.isFinite(value);
@@ -863,6 +864,7 @@
     }
     if (data.type === "configure" && typeof data.enabled === "boolean"
         && finite(data.radius) && data.radius >= 1 && data.radius <= 1000) {
+      configurationReceived = true;
       let stage = "settings";
       globalThis.GSTFarmConfigurationReady = false;
       configurationError = "";
@@ -977,6 +979,7 @@
       const defenseInfo = autoOn === false && !defense ? globalThis.GSTFarmDefense?.status(scene, true) : "";
       const encounterInfo = globalThis.GSTFarmEncounter?.status(scene) || "";
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
+        configurationReceived, configurationReady: globalThis.GSTFarmConfigurationReady === true,
         message: (settings.policyMode === "extended" && settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage
           || (dead && respawnMessage ? respawnMessage : primary)) + (defenseInfo ? ` · ${defenseInfo}` : ""),
         encounterStatus: encounterInfo,
