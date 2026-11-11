@@ -146,9 +146,15 @@
   function observeLeave(s, owner, destination, x, y) {
     const nav = s.nav, route = nativeRouteRecord();
     const navMatchesRoute = nativeNavMatchesRoute(s, nav, owner?.nativeRouteTarget);
-    if (!owner?.nativeTravel || !nav || !navMatchesRoute || !route
-        || !globalThis.GSTQuestHandoff?.sameTarget(route.target, owner.nativeRouteTarget)) return;
-    const intermediate = nav.scene === owner.expectedMap && Number.isInteger(nav.gate) && nav.gate >= 0
+    const teleport = owner?.nativeTeleportObserved;
+    const directTeleport = !!teleport && typeof teleport.stationId === "string" && Date.now() <= teleport.expires
+      && Date.now() - teleport.at <= 15000 && destination === owner.expectedMap
+      && globalThis.GSTQuestHandoff?.sameTarget(route?.target, owner.nativeRouteTarget)
+      && globalThis.GSTQuestHandoff?.sameTarget(teleport.route, owner.nativeRouteTarget)
+      && teleport.scene === destination;
+    if (!owner?.nativeTravel || !route || !globalThis.GSTQuestHandoff?.sameTarget(route.target, owner.nativeRouteTarget)
+        || !(nav && navMatchesRoute || directTeleport)) return;
+    const intermediate = nav?.scene === owner.expectedMap && Number.isInteger(nav?.gate) && nav.gate >= 0
       && s.map?.gates?.[nav.gate]?.to === destination;
     if (destination !== owner.expectedMap && !intermediate) return;
     const online = s.driver?.online === true, params = new URLSearchParams(location.search);
@@ -158,6 +164,42 @@
     owner.nativeLeaveObserved = { scene: destination, x, y, online, expectedSearch: params.toString() ? `?${params}` : "",
       connected: connected(s), dead: !!s.self?.dead, name: s.profile?.name, classId: s.profile?.classId, characterId: s.you,
       at: Date.now(), intermediate };
+  }
+  function wrapQuestNavigation(s, owner) {
+    const originalGoTo = s.goTo, originalTeleport = s.teleport;
+    owner.goToDescriptor = Object.getOwnPropertyDescriptor(s, "goTo");
+    owner.teleportDescriptor = Object.getOwnPropertyDescriptor(s, "teleport");
+    owner.goToWrapper = function (scene, x, y, label, ...rest) {
+      const current = run, request = current?.nativeRequest;
+      const initial = request && scene === request.scene && label === request.label;
+      const resumed = current?.nativeTravel && performance.now() <= (current.nativeResumeUntil ?? -Infinity)
+        && nativeNavMatchesRoute(s, { scene, x, y, label }, current.nativeRouteTarget);
+      if (!initial && !resumed) return originalGoTo.call(this, scene, x, y, label, ...rest);
+      current.nativeTeleportCandidate = null;
+      current.nativeGoToContext = { scene, label };
+      let result, station;
+      try { result = originalGoTo.call(this, scene, x, y, label, ...rest); }
+      finally {
+        delete current.nativeGoToContext;
+        station = current.nativeTeleportCandidate;
+        delete current.nativeTeleportCandidate;
+      }
+      const route = nativeRouteRecord();
+      if (result && station?.scene === scene && route?.target?.scene === scene && route.target.label === label
+          && (!resumed || route.target.x === x && route.target.y === y)) {
+        current.nativeTeleportObserved = { scene, route: { scene: route.target.scene, x: route.target.x,
+          y: route.target.y, label: route.target.label }, stationId: station.id, at: Date.now(), expires: Date.now() + 15000 };
+      }
+      return result;
+    };
+    owner.teleportWrapper = function (station, ...rest) {
+      if (run?.nativeGoToContext && station?.scene === run.nativeGoToContext.scene
+          && typeof station.id === "string" && Number.isFinite(station.x) && Number.isFinite(station.y)) {
+        run.nativeTeleportCandidate = { scene: station.scene, id: station.id, x: station.x, y: station.y };
+      }
+      return originalTeleport.call(this, station, ...rest);
+    };
+    s.goTo = owner.goToWrapper; s.teleport = owner.teleportWrapper;
   }
   function restoreHandoff(s) {
     if (!binding || binding.handoffChecked || !configured) return false;
@@ -174,7 +216,8 @@
     const saved = state.record, details = saved.run;
     const sameSelection = Array.isArray(saved.selected) && [...saved.selected].sort().join("\0") === [...selected].sort().join("\0");
     if (!details || details.phase !== "return" || !["accept", "claim"].includes(details.action)
-        || typeof details.id !== "string" || !Number.isFinite(saved.classId) || !sameSelection
+        || typeof details.id !== "string" || typeof saved.classId !== "string" || !saved.classId
+        || !sameSelection
         || saved.name !== s.profile?.name || saved.classId !== s.profile?.classId || saved.characterId !== s.you
         || saved.hopMap !== s.map?.scene || !connected(s) || s.self?.dead || s.leaving
         || !selected.includes(details.id)) return invalidate("The destination map, character, selection, or run state did not match.");
@@ -197,7 +240,8 @@
       nativeTravel: s.map.scene !== saved.expectedMap, expectedMap: saved.expectedMap,
       nativeTravelAt: performance.now(), nativeRouteTarget: { ...saved.route }, nativeRouteValue: route.value,
       nativeNav: nativeNavMatchesRoute(s, s.nav, saved.route) ? s.nav : null,
-      nativeRouteAttempted: true, arrivalWaitAt: performance.now(), nativeLeaveObserved: null };
+      nativeRouteAttempted: true, arrivalWaitAt: performance.now(), nativeLeaveObserved: null,
+      nativeResumeUntil: performance.now() + 5000 };
     observeManualClicks(s, run);
     handoff.consume(saved);
     globalThis.GSTFarmSession?.forget(s);
@@ -424,14 +468,19 @@
         if (target && !run.npc && typeof nativeNpc === "function") {
           if (!run.nativeTravel) {
             if (s.nav || nativeRouteRecord()) { stop("Đang có hành trình gốc khác; Auto Quest nhường và dừng để không ghi đè."); return false; }
-            if (!nativeNpc(target.id, target.name ?? run.title)) {
+            run.nativeRequest = { scene: target.scene, label: target.name ?? run.title };
+            let accepted;
+            try { accepted = nativeNpc(target.id, target.name ?? run.title); }
+            finally { delete run.nativeRequest; }
+            if (!accepted) {
               stop("Native navigation từ chối đường tới NPC (có thể map đang khóa). "); return false;
             }
             const route = nativeRouteRecord();
             const nativeNav = s.nav;
             const expectedMap = route?.target?.scene ?? nativeNav?.scene;
             const expectedLabel = route?.target?.label ?? nativeNav?.label;
-            if (typeof expectedMap !== "string" || expectedLabel !== (target.name ?? run.title)) {
+            if (typeof expectedMap !== "string" || expectedMap !== target.scene
+                || expectedLabel !== (target.name ?? run.title)) {
               stop("Không xác nhận được đích hành trình gốc của NPC quest đã chọn; đã dừng."); return false;
             }
             run.nativeTravel = expectedMap !== s.map.scene; run.expectedMap = run.nativeTravel ? expectedMap : ""; run.nativeTravelAt = now;
@@ -505,6 +554,12 @@
     if (old.scene.quests.load === old.questLoadWrapper) {
       if (old.questLoadDescriptor) Object.defineProperty(old.scene.quests, "load", old.questLoadDescriptor); else delete old.scene.quests.load;
     }
+    if (old.scene.goTo === old.goToWrapper) {
+      if (old.goToDescriptor) Object.defineProperty(old.scene, "goTo", old.goToDescriptor); else delete old.scene.goTo;
+    }
+    if (old.scene.teleport === old.teleportWrapper) {
+      if (old.teleportDescriptor) Object.defineProperty(old.scene, "teleport", old.teleportDescriptor); else delete old.scene.teleport;
+    }
     if (old.scene.panels.show === old.wrapper) {
       if (old.descriptor) Object.defineProperty(old.scene.panels, "show", old.descriptor); else delete old.scene.panels.show;
     }
@@ -535,7 +590,8 @@
           || !["active", "progress", "claimed", "forNpc"].every((key) => typeof s.quests?.[key] === "function")
           || !["now", "autoHost", "toggleAutoFarm", "interact", "pickTarget"].every((key) => typeof s[key] === "function")
           || typeof s.auto.walk !== "function" || typeof s.auto.update !== "function" || typeof s.panels.show !== "function"
-          || typeof s.quests.load !== "function" || typeof s.leave !== "function") return;
+          || typeof s.quests.load !== "function" || typeof s.leave !== "function"
+          || typeof s.goTo !== "function" || typeof s.teleport !== "function") return;
       const original = s.panels.show;
       const owner = { scene: s, auto: s.auto, rewards: new Map(), modalAt: -Infinity, modal: false, questRevision: 0,
         descriptor: Object.getOwnPropertyDescriptor(s.panels, "show"),
@@ -549,6 +605,7 @@
         return originalLeave.call(this, scene, x, y, ...rest);
       };
       s.leave = owner.leaveWrapper;
+      wrapQuestNavigation(s, owner);
       owner.wrapper = function (title, subtitle, body, ...rest) {
         const result = original.call(this, title, subtitle, body, ...rest);
         try { capture(title, body); } catch { /* Reading a reward must not break the game's panel. */ }
