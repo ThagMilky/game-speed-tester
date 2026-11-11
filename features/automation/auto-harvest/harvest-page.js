@@ -36,6 +36,16 @@
       && node.x < scene.map?.w && node.y < scene.map?.h;
   }
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  function retireAmbiguousHarvestObservations(scene, nodeIndex) {
+    const node = scene.nodes?.[nodeIndex];
+    if (!node || typeof node.item !== "string") return;
+    for (let i = observations.length - 1; i >= 0; i--) {
+      const observation = observations[i];
+      if (observation.scene !== scene || observation.row.item !== node.item) continue;
+      observation.row.followUp = "ambiguous_new_attempt";
+      observations.splice(i, 1);
+    }
+  }
   function positionSnapshot(scene, node) {
     const number = (n) => Number.isFinite(n) ? Math.round(n * 1000) / 1000 : null;
     return { localX: number(scene.px), localY: number(scene.py),
@@ -398,6 +408,16 @@
       };
       const removeUpdate = GSTFarmUpdate.add(scene, 20, handler);
       binding = { scene, auto, removeUpdate, home: { ...home }, farmOn: auto.on, methods: [] };
+      if (typeof scene.act === "function") {
+        wrapMethod(scene, "act", (originalAct) => function (...args) {
+          if (binding?.scene === this && args[0] === "harvest" && typeof args[1] === "string"
+              && /^\d+$/.test(args[1])) {
+            const nodeIndex = Number(args[1]);
+            if (Number.isSafeInteger(nodeIndex)) retireAmbiguousHarvestObservations(this, nodeIndex);
+          }
+          return originalAct.apply(this, args);
+        });
+      }
       wrapMethod(scene, "move", (originalMove) => function (...args) {
         if (binding?.scene !== this || !job || this.auto.on || !browsingUI(this) || blocked(this)) {
           return originalMove.apply(this, args);
