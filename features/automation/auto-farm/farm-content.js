@@ -32,7 +32,12 @@
   }
 
   function configure(value) {
-    const policyMode = globalThis.GSTFarmPolicy.read(value);
+    // The storage bridge must still deliver configuration if its isolated-world
+    // helper is unavailable. Preserve explicit native/disabled modes; MAIN also
+    // validates the mode before applying it.
+    const policyMode = typeof globalThis.GSTFarmPolicy?.read === "function"
+      ? globalThis.GSTFarmPolicy.read(value)
+      : ["native", "disabled"].includes(value?.policyMode) ? value.policyMode : "extended";
     settings = {
       policyMode,
       enabled: value?.enabled === true,
@@ -94,6 +99,7 @@
     pending.delete(event.data.requestId);
     entry.respond({
       configuration: {
+        policyHelper: typeof globalThis.GSTFarmPolicy?.read === "function",
         loaded: settings !== null, sent: configurationSent,
         received: event.data.configurationReceived === true,
         ready: event.data.configurationReady === true, error: loadError

@@ -127,6 +127,7 @@
       report.farmStatus = {
         autoOn: typeof status?.autoOn === "boolean" ? status.autoOn : null,
         configuration: status?.configuration ? {
+          policyHelper: status.configuration.policyHelper === true,
           loaded: status.configuration.loaded === true, sent: status.configuration.sent === true,
           received: status.configuration.received === true, ready: status.configuration.ready === true,
           error: typeof status.configuration.error === "string" ? status.configuration.error.slice(0, 160) : ""
