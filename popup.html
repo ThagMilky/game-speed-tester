@@ -109,11 +109,10 @@
           <h3 class="farm-group-title">Phạm vi farm</h3>
           <label for="farmSearchScope">Vùng tìm quái</label>
           <select id="farmSearchScope"><option value="radius">Tự chọn số ô</option><option value="map">Toàn map hiện tại</option></select>
-          <details class="diagnostic"><summary>Giải thích vùng tìm</summary><p>Tìm quanh điểm bắt đầu hoặc tìm trên toàn map. Toàn map chỉ dựa vào dữ liệu game cung cấp và không bảo đảm tìm hết quái.</p></details>
+          <p class="hint" data-help-for='label[for="farmSearchScope"]'>Tìm quanh điểm bắt đầu hoặc tìm trên toàn map. Toàn map chỉ dựa vào dữ liệu game cung cấp và không bảo đảm tìm hết quái. Số ô tính từ điểm bắt đầu farm. Ví dụ 30: tìm quái cách điểm đó tối đa 30 ô.</p>
           <div class="input-action">
             <div><label for="farmRadius">Giới hạn vùng farm <span class="range">1–1.000 ô</span></label><input id="farmRadius" type="number" min="1" max="1000" step="1" value="22" required><small id="farmRadiusError" class="field-error" aria-live="polite"></small></div>
           </div>
-          <p class="save-mode">Số ô tính từ điểm bắt đầu farm. Ví dụ 30: tìm quái cách điểm đó tối đa 30 ô.</p>
           <label class="check-row"><input id="farmShowRange" type="checkbox"><span>Hiện vòng phạm vi farm trên game</span></label>
           <p class="hint">Vòng xanh là giới hạn từ điểm bắt đầu; vòng xanh lá là vùng quét của Auto Farm gốc; vòng vàng quanh bản thân là vùng dọn quái gần khi bật.</p>
           </div>
