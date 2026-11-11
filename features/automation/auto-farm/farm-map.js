@@ -401,6 +401,10 @@
     };
     if (preferences.targetMode !== "boss")
       return scouting && preferences.idleMode === "seek" ? scout(scene, time) : returnHome();
+    if (preferences.bossFilter === "world") {
+      message = "Chưa thấy boss thế giới có marker xác nhận; đang chờ dữ liệu phù hợp.";
+      return scouting && preferences.idleMode === "seek" ? scout(scene, time) : returnHome();
+    }
     const known = [...scene.views.values()].some((actor) => actor.k === "m" && !actor.dead
       && (actor.st?.cls === "boss" || actor.st?.wb === true));
     if (known) { message = "Boss đã có dữ liệu nhưng không qua bộ lọc hiện tại."; return null; }
@@ -430,10 +434,12 @@
     const camps = globalThis.GSTAreaMap?.knownCamps?.(scene) ?? [];
     const camp = camps.filter((item) => {
         if (item.boss && globalThis.GSTFarmPriority?.excludesBoss?.()) return false;
+        // Map/camp memories retain only a generic boss flag, not the native wb marker.
+        if (item.boss && preferences.bossFilter === "world") return false;
         if (!Number.isSafeInteger(item.level)) return preferences.targetMode === "all"
           || preferences.targetMode === "boss" && item.boss === true;
         return globalThis.GSTFarmPriority?.matches?.({
-          lv: item.level, cls: item.boss ? "boss" : "mob", wb: item.boss === true
+          lv: item.level, cls: item.boss ? "boss" : "mob"
         }) !== false;
       })
        .filter((item) => withinArea(area, item)

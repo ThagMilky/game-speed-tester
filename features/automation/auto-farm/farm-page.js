@@ -4,7 +4,7 @@
   const channel = "gst:farm:v1";
   globalThis.GSTFarmConfigurationReady = false;
   let settings = { policyMode: "native", enabled: false, radius: 22, autoRespawn: true, autoMeditate: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
-    searchScope: "radius", idleMode: "hold", preferLoot: true, excludeBoss: false,
+    searchScope: "radius", idleMode: "hold", preferLoot: true, excludeBoss: false, bossFilter: "all",
     bossDodge: true, eliteDodge: false, bossRetreat: true, retreatHpPercent: 40, recoveryHpPercent: 100 };
   let filterBinding = null;
   let excludedBossChange = null;
@@ -42,6 +42,8 @@
   const isBoss = (enemy) => globalThis.GSTFarmMonsterClassification
     ? globalThis.GSTFarmMonsterClassification.isBoss(enemy) === true
     : enemy?.cls === "boss" || enemy?.wb === true;
+  const isWorldBoss = (enemy) => globalThis.GSTFarmMonsterClassification?.isWorldBoss?.(enemy) === true;
+  const targetFilterActive = () => settings.targetMode !== "all" || settings.excludeBoss || settings.bossFilter === "world";
   const ranked = () => ["bossLevel", "highLevel", "lowLevel"].includes(settings.targetMode);
   function comparePriority(a, b) {
     if (settings.targetMode === "bossLevel" && isBoss(a) !== isBoss(b)) return isBoss(a) ? -1 : 1;
@@ -63,6 +65,8 @@
   }
   function realmBossEligible(scene) {
     if (settings.policyMode !== "extended") return true;
+    // Realm encounter coordinates do not carry the source-confirmed world-boss marker.
+    if (settings.bossFilter === "world") return false;
     if (settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode)) return false;
     const levelRequired = ["maxLevel", "minLevel", "range"].includes(settings.targetMode);
     if (!levelRequired) return true;
@@ -84,19 +88,22 @@
     bossFocus: (scene) => settings.policyMode === "extended" && ["boss", "bossLevel"].includes(settings.targetMode)
       && realmBossEligible(scene) };
   function filterLabel() {
-    if (settings.targetMode === "bossLevel") return "Ưu tiên boss, rồi quái tu vi cao đến thấp";
-    if (settings.targetMode === "highLevel") return "Ưu tiên quái thường tu vi cao đến thấp";
-    if (settings.targetMode === "lowLevel") return "Ưu tiên quái thường tu vi thấp đến cao";
-    if (settings.targetMode === "boss") return "Chỉ farm boss";
-    if (settings.targetMode === "maxLevel") return `Chỉ farm ≤ ${globalThis.GSTFarmCompatibility?.describe(settings.targetLevel, "max") ?? "Mức đã lưu (giữ nguyên)"}`;
-    if (settings.targetMode === "minLevel") return `Chỉ farm ≥ ${globalThis.GSTFarmCompatibility?.describe(settings.targetLevel, "min") ?? "Mức đã lưu (giữ nguyên)"}`;
+    const subtype = settings.bossFilter === "world" ? " · Chỉ boss thế giới" : "";
+    const labeled = (text) => `${text}${subtype}`;
+    if (settings.targetMode === "bossLevel") return labeled("Ưu tiên boss, rồi quái tu vi cao đến thấp");
+    if (settings.targetMode === "highLevel") return labeled("Ưu tiên quái thường tu vi cao đến thấp");
+    if (settings.targetMode === "lowLevel") return labeled("Ưu tiên quái thường tu vi thấp đến cao");
+    if (settings.targetMode === "boss") return labeled("Chỉ farm boss");
+    if (settings.targetMode === "maxLevel") return labeled(`Chỉ farm ≤ ${globalThis.GSTFarmCompatibility?.describe(settings.targetLevel, "max") ?? "Mức đã lưu (giữ nguyên)"}`);
+    if (settings.targetMode === "minLevel") return labeled(`Chỉ farm ≥ ${globalThis.GSTFarmCompatibility?.describe(settings.targetLevel, "min") ?? "Mức đã lưu (giữ nguyên)"}`);
     if (settings.targetMode === "range") return settings.targetMinLevel <= settings.targetMaxLevel
-      ? `Chỉ farm trong khoảng ${globalThis.GSTFarmCompatibility?.describe(settings.targetMinLevel, "min") ?? "Mức đã lưu (giữ nguyên)"} đến ${globalThis.GSTFarmCompatibility?.describe(settings.targetMaxLevel, "max") ?? "Mức đã lưu (giữ nguyên)"}`
+      ? labeled(`Chỉ farm trong khoảng ${globalThis.GSTFarmCompatibility?.describe(settings.targetMinLevel, "min") ?? "Mức đã lưu (giữ nguyên)"} đến ${globalThis.GSTFarmCompatibility?.describe(settings.targetMaxLevel, "max") ?? "Mức đã lưu (giữ nguyên)"}`)
       : "Khoảng cảnh giới chưa hợp lệ; không chọn quái";
-    return "Farm tất cả quái";
+    return labeled("Farm tất cả quái");
   }
   function matchesTarget(enemy) {
     if (settings.policyMode !== "extended") return true;
+    if (isBoss(enemy) && settings.bossFilter === "world" && !isWorldBoss(enemy)) return false;
     if ((settings.excludeBoss || settings.targetMode === "highLevel" || settings.targetMode === "lowLevel") && isBoss(enemy)) return false;
     if (settings.targetMode === "boss") return isBoss(enemy);
     if (["all", "bossLevel", "highLevel", "lowLevel"].includes(settings.targetMode)) return true;
@@ -319,9 +326,12 @@
   }
 
   function clearExcludedBossTarget(scene) {
-    if (!(settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode)) || !scene?.auto?.on) return;
+    if (!scene?.auto?.on) return;
     const actor = scene.views?.get?.(scene.auto.target);
     if (actor?.k !== "m" || !isBoss(actor.st)) return;
+    const rejected = settings.excludeBoss || ["highLevel", "lowLevel"].includes(settings.targetMode)
+      || settings.policyMode === "extended" && settings.bossFilter === "world" && !isWorldBoss(actor.st);
+    if (!rejected) return;
     const replacementPath = [];
     excludedBossChange = { auto: scene.auto, target: actor.id,
       path: Array.isArray(scene.auto.path) ? [...scene.auto.path] : null,
@@ -348,7 +358,7 @@
     const actor = scene.views?.get?.(change.target);
     let restoredTarget = false;
     if (scene.auto.target === 0 && actor?.k === "m" && !actor.dead && isBoss(actor.st)
-        && nativeEligible(actor.st)) {
+        && nativeEligible(actor.st) && (settings.policyMode !== "extended" || matchesTarget(actor.st))) {
       scene.auto.target = change.target;
       restoredTarget = true;
     }
@@ -370,7 +380,7 @@
     owner.auto.think = 0;
   }
   function syncFilter(scene) {
-    const filteringActive = (ownerScene) => settings.targetMode !== "all" || settings.excludeBoss
+    const filteringActive = (ownerScene) => targetFilterActive()
       || globalThis.GSTFarmBossSafety?.hasExclusions?.(ownerScene) === true;
     const boundaryActive = () => settings.enabled && settings.searchScope === "radius";
     if (!filteringActive(scene) && !boundaryActive()) { clearFilter(); return; }
@@ -487,7 +497,7 @@
   function stop(reason, block = false) {
     // Keep the inert filter attached through death/off so the next native
     // update after revival/re-enable cannot select an unfiltered target.
-    if (block || (settings.targetMode === "all" && !settings.excludeBoss)) clearFilter();
+    if (block || !targetFilterActive()) clearFilter();
     if (block) revival = null;
     if (session) {
       const old = session;
@@ -591,10 +601,10 @@
       const exclusionFilterNeeded = globalThis.GSTFarmBossSafety?.hasExclusions?.(scene) === true;
       if (compatible(scene) && scene.self && !scene.leaving && connected(scene)
           && scene.auto !== blockedAuto
-          && (settings.enabled || settings.targetMode !== "all" || settings.excludeBoss || exclusionFilterNeeded))
+          && (settings.enabled || targetFilterActive() || exclusionFilterNeeded))
         syncFilter(scene);
       else clearFilter();
-      if (!settings.enabled && settings.targetMode === "all" && !settings.excludeBoss && !exclusionFilterNeeded) return;
+      if (!settings.enabled && !targetFilterActive() && !exclusionFilterNeeded) return;
       if (exclusionFilterNeeded) clearUnsafeFarmTarget(scene);
       if (revival && (revival.scene !== scene || revival.auto !== scene?.auto)) revival = null;
       if (!scene?.auto?.on) {
@@ -682,8 +692,7 @@
         s.rankTarget = null;
       }
       const searchRadius = nativeRadius(s.scene);
-      if (searchRadius === null && (settings.enabled || settings.targetMode !== "all"
-          || settings.excludeBoss)) {
+      if (searchRadius === null && (settings.enabled || targetFilterActive())) {
         clearFilter();
         message = "Bán kính Auto Farm gốc không được hỗ trợ; phần chọn mục tiêu mở rộng đang nhường cho game.";
         return;
@@ -938,7 +947,8 @@
       const filterChanged = settings.searchScope !== data.searchScope || settings.targetMode !== targetMode(data.targetMode)
         || settings.targetLevel !== data.targetLevel
         || settings.targetMinLevel !== data.targetMinLevel || settings.targetMaxLevel !== data.targetMaxLevel
-        || settings.excludeBoss !== (data.excludeBoss === true);
+        || settings.excludeBoss !== (data.excludeBoss === true)
+        || settings.bossFilter !== (data.bossFilter === "world" ? "world" : "all");
       const retreatHpPercent = data.retreatHpPercent, recoveryHpPercent = data.recoveryHpPercent;
       const hpThresholds = Number.isSafeInteger(retreatHpPercent) && retreatHpPercent >= 1
         && Number.isSafeInteger(recoveryHpPercent) && retreatHpPercent < recoveryHpPercent && recoveryHpPercent <= 100
@@ -958,7 +968,8 @@
         targetMinLevel: Number.isSafeInteger(data.targetMinLevel) && data.targetMinLevel > 0 ? data.targetMinLevel : 1,
         targetMaxLevel: Number.isSafeInteger(data.targetMaxLevel) && data.targetMaxLevel > 0 ? data.targetMaxLevel : 20,
         idleMode: ["home", "seek"].includes(data.idleMode) ? data.idleMode : "hold",
-        preferLoot: data.preferLoot !== false, selfDefense: data.selfDefense === true, autoEncounter: data.autoEncounter === true, excludeBoss: data.excludeBoss === true };
+        preferLoot: data.preferLoot !== false, selfDefense: data.selfDefense === true, autoEncounter: data.autoEncounter === true, excludeBoss: data.excludeBoss === true,
+        bossFilter: data.bossFilter === "world" ? "world" : "all" };
       stage = "policy";
       globalThis.GSTFarmPolicy?.setMode(settings.policyMode);
       syncFarmKeyGuard();
@@ -993,7 +1004,7 @@
       globalThis.GSTFarmCombat?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
       stage = "filter";
-      if (settings.targetMode === "all" && !settings.excludeBoss) clearFilter();
+      if (!targetFilterActive()) clearFilter();
       if (settings.policyMode === "extended") clearExcludedBossTarget(sceneNow());
       if (session) {
         if (scopeChanged) { restore(session); session.at = -Infinity; }
@@ -1011,7 +1022,7 @@
       } else if (settings.policyMode === "disabled") {
         shortcutMessage = "";
         message = "Auto Farm đang bị khóa bởi chế độ Disabled; tùy chọn đã lưu vẫn được giữ.";
-      } else if (!settings.enabled && settings.targetMode === "all" && !settings.excludeBoss) {
+      } else if (!settings.enabled && !targetFilterActive()) {
         if (watcher !== null) clearInterval(watcher);
         watcher = null;
         stop("Extended range disabled; original center restored where owned.");
@@ -1050,7 +1061,7 @@
       const encounterInfo = globalThis.GSTFarmEncounter?.status(scene) || "";
       window.postMessage({ channel: "gst:farm-status:v1", requestId: data.requestId,
         configurationReceived, configurationReady: globalThis.GSTFarmConfigurationReady === true,
-        message: (settings.policyMode === "extended" && settings.targetMode !== "all" ? `${filterLabel()}. ` : "") + (shortcutMessage
+        message: (settings.policyMode === "extended" && targetFilterActive() ? `${filterLabel()}. ` : "") + (shortcutMessage
           || (dead && respawnMessage ? respawnMessage : primary)) + (defenseInfo ? ` · ${defenseInfo}` : ""),
         encounterStatus: encounterInfo,
         autoOn, dead, active: session !== null, radius: settings.radius }, origin);

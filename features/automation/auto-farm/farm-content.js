@@ -64,6 +64,7 @@
       selfDefense: value?.selfDefense === true,
       autoEncounter: value?.autoEncounter === true,
       excludeBoss: value?.excludeBoss === true,
+      bossFilter: value?.bossFilter === "world" ? "world" : "all",
       targetMode: value?.targetMode === "level" ? "maxLevel"
         : value?.targetMode === "bossFirst" ? "bossLevel"
         : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(value?.targetMode) ? value.targetMode : "all",
@@ -78,7 +79,7 @@
     // The game only exposes window.game in its native ?timer mode; avoid offline lab mode.
     const monitorOnlineConnection = url.searchParams.get("online") !== "0";
     if ((monitorOnlineConnection || settings.enabled || settings.autoRespawn || settings.breakSeals
-        || settings.targetMode !== "all") && !url.searchParams.has("timer")) {
+        || settings.targetMode !== "all" || settings.bossFilter === "world") && !url.searchParams.has("timer")) {
       if (!navigating) {
         navigating = true;
         url.search += `${url.search ? "&" : "?"}timer`;

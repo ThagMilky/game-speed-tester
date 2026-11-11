@@ -46,6 +46,7 @@ const farmNearbyClear = document.getElementById("farmNearbyClear");
 const farmNearbyRadius = document.getElementById("farmNearbyRadius");
 const farmRadius = document.getElementById("farmRadius");
 const farmTargetMode = document.getElementById("farmTargetMode");
+const farmBossFilter = document.getElementById("farmBossFilter");
 const farmBossDodge = document.getElementById("farmBossDodge");
 const farmEliteDodge = document.getElementById("farmEliteDodge");
 const farmBossRetreat = document.getElementById("farmBossRetreat");
@@ -284,6 +285,7 @@ function normalizedFarmPreferences(raw = {}) {
     enabled: raw.enabled === true, radius: raw.enabled === true ? radius : 11,
     searchScope: raw.enabled === true && raw.searchScope === "map" ? "map" : "radius",
     targetMode: mode, targetLevel: positiveLevel(raw.targetLevel, 1),
+    bossFilter: raw.bossFilter === "world" ? "world" : "all",
     targetMinLevel: positiveLevel(raw.targetMinLevel, 1), targetMaxLevel: positiveLevel(raw.targetMaxLevel, 20),
     excludeBoss: raw.excludeBoss === true, noRetreat: raw.noRetreat !== false,
     showTargetLine: raw.showTargetLine === true, showRange: raw.showRange === true,
@@ -348,6 +350,7 @@ function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {})
   farmAutoEncounter.checked = next.autoEncounter;
   farmExcludeBoss.checked = next.excludeBoss;
   farmTargetMode.value = next.targetMode;
+  farmBossFilter.value = next.bossFilter;
   const preserveSingle = levelDraft.dirty && ["maxLevel", "minLevel"].includes(oldMode)
     && ["maxLevel", "minLevel"].includes(next.targetMode) && !forceKeys.includes("targetLevel");
   if (preserveSingle && draftSingleValue !== null)
@@ -467,7 +470,8 @@ function farmSummaries() {
   document.getElementById("farmTargetSummary").textContent = targetSummary;
   document.getElementById("farmEncounterSummary").textContent = `Auto nhận kỳ ngộ · ${farmConfirmed.autoEncounter ? "bật" : "tắt"}`;
   document.getElementById("farmDefenseSummary").textContent = `Tự vệ ${farmConfirmed.selfDefense ? "bật" : "tắt"} · Dọn gần ${farmConfirmed.nearbyClear ? "bật" : "tắt"} · Thiền ${farmConfirmed.autoMeditate ? "bật" : "tắt"} · Hồi sinh ${farmConfirmed.autoRespawn ? "bật" : "tắt"}`;
-  document.getElementById("farmBossSummary").textContent = `Boss · ${farmConfirmed.excludeBoss ? "không chọn boss" : "cho phép boss"}`;
+  const bossFilterLabel = prefs.bossFilter === "world" ? "chỉ boss thế giới" : "tất cả boss";
+  document.getElementById("farmBossSummary").textContent = `Boss · ${farmConfirmed.excludeBoss ? "không chọn boss" : bossFilterLabel}`;
   document.getElementById("farmRecoverySummary").textContent = `Hồi phục · ${farmConfirmed.noRetreat ? "không rút lui" : "theo game"}`;
 }
 async function saveFarmPatch(patch, rollback, { draftWrite = false, preserveDraftKeys = [] } = {}) {
@@ -546,6 +550,12 @@ farmTargetMode.addEventListener("change", async () => {
   if (patch.excludeBoss === false) farmExcludeBoss.checked = false;
   await saveFarmPatch(patch, () => { farmTargetMode.value = farmConfirmed.targetMode; farmExcludeBoss.checked = farmConfirmed.excludeBoss; syncFarmLevelInputs(); });
   farmTargetMode.disabled = farmExcludeBoss.disabled = false;
+});
+farmBossFilter.addEventListener("change", async () => {
+  const next = farmBossFilter.value === "world" ? "world" : "all";
+  farmBossFilter.disabled = true;
+  await saveFarmPatch({ bossFilter: next }, () => { farmBossFilter.value = farmConfirmed.bossFilter; });
+  farmBossFilter.disabled = false;
 });
 for (const [input, key] of [[farmSearchScope, "searchScope"], [farmIdleMode, "idleMode"]]) {
   input.addEventListener("change", async () => {
