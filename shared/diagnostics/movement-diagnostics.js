@@ -1,7 +1,10 @@
 (() => {
+function initializeMovementDiagnostics() {
   "use strict";
   // Observe existing frames only. Never steer, pause, pick targets or send actions.
-  const { clean } = GSTMovementLogSchema, events = [], uiIncidents = [], incidents = [];
+  const schema = globalThis.GSTMovementLogSchema;
+  if (typeof schema?.clean !== "function" || typeof schema?.number !== "function") return false;
+  const { clean } = schema, events = [], uiIncidents = [], incidents = [];
   const uiLogKey = "gst:movement-ui:v1", incidentKey = "gst:movement-incidents:v1";
   const incidentReasons = ["short_frame_gap", "movement_stall", "owner_change", "routing_correction",
     "routing_replan", "routing_stuck", "map_correction", "map_replan", "map_stuck",
@@ -85,7 +88,7 @@
           && now - owner.lastShortGapAt >= 1500) {
         owner.lastShortGapAt = now;
         const row = snapshot(scene, "short_frame_gap", owner.before);
-        row.frameGapMs = GSTMovementLogSchema.number(rawGap);
+        row.frameGapMs = schema.number(rawGap);
         append(row); appendIncident(row); owner.loggedAt = now;
       }
       // An active steer with almost no movement for 350ms is a suspect stall,
@@ -100,7 +103,7 @@
       } else if (now - owner.moveAt >= 350 && now - owner.lastStallAt >= 2500) {
         owner.lastStallAt = now;
         const row = snapshot(scene, "movement_stall", owner.before);
-        row.stillMs = GSTMovementLogSchema.number(now - owner.moveAt);
+        row.stillMs = schema.number(now - owner.moveAt);
         row.littleProgress = true;
         append(row); appendIncident(row); owner.loggedAt = now;
       }
@@ -112,14 +115,14 @@
           const reason = previousPanel === "none" ? "panel_open"
             : currentPanel === "none" ? "panel_close" : "panel_switch";
           const row = snapshot(scene, reason, owner.before);
-          row.frameGapMs = GSTMovementLogSchema.number(rawGap);
+          row.frameGapMs = schema.number(rawGap);
           append(row); appendUi(row); owner.loggedAt = now;
         }
       }
       if (!document.hidden && rawGap >= 500 && owner.panel !== "none" && now - owner.lastPanelGapAt >= 2000) {
         owner.lastPanelGapAt = now;
         const row = snapshot(scene, "panel_gap", owner.before);
-        row.frameGapMs = GSTMovementLogSchema.number(rawGap);
+        row.frameGapMs = schema.number(rawGap);
         append(row); appendUi(row); owner.loggedAt = now;
       }
       const corrected = owner.fix !== undefined && fix !== undefined && owner.fix !== fix;
@@ -129,12 +132,12 @@
       const gap = now - owner.at > 1000;
       const row = snapshot(scene, corrected ? "correction" : gap ? "frame_gap" : "state", owner.before);
       row.targetChanged = targetChanged;
-      row.elapsedMs = GSTMovementLogSchema.number(now - owner.at);
-      row.frameGapMs = GSTMovementLogSchema.number(rawGap);
-      row.distance = owner.position && row.position ? GSTMovementLogSchema.number(Math.hypot(row.position[0] - owner.position[0], row.position[1] - owner.position[1])) : null;
+      row.elapsedMs = schema.number(now - owner.at);
+      row.frameGapMs = schema.number(rawGap);
+      row.distance = owner.position && row.position ? schema.number(Math.hypot(row.position[0] - owner.position[0], row.position[1] - owner.position[1])) : null;
       const commanded = row.manual || row.steerBefore?.some((value) => value !== 0) || row.steerAfter?.some((value) => value !== 0);
       if (!commanded || corrected || gap || row.distance === null || row.distance >= 0.05) owner.stillAt = now;
-      row.stillMs = GSTMovementLogSchema.number(now - owner.stillAt);
+      row.stillMs = schema.number(now - owner.stillAt);
       row.littleProgress = row.stillMs >= 750;
       const ownerKey = row.owners.join("|");
       if (owner.ownerKey !== null && owner.ownerKey !== ownerKey && row.auto
@@ -189,11 +192,11 @@
         row.lootCount = Number.isSafeInteger(extra.lootCount) && extra.lootCount >= 0 ? extra.lootCount : null;
         row.realmPhase = ["seals", "boss", "chests", "exit", "unknown"].includes(extra.realmPhase)
           ? extra.realmPhase : null;
-        row.pauseMs = GSTMovementLogSchema.number(extra.pauseMs);
-        row.retryMs = GSTMovementLogSchema.number(extra.retryMs);
+        row.pauseMs = schema.number(extra.pauseMs);
+        row.retryMs = schema.number(extra.retryMs);
         row.targetId = Number.isSafeInteger(extra.targetId) && extra.targetId >= 0 ? extra.targetId : null;
-        row.remaining = GSTMovementLogSchema.number(extra.remaining);
-        row.stuckMs = GSTMovementLogSchema.number(extra.stuckMs);
+        row.remaining = schema.number(extra.remaining);
+        row.stuckMs = schema.number(extra.stuckMs);
         row.attempt = Number.isSafeInteger(extra.attempt) && extra.attempt >= 0 && extra.attempt <= 2 ? extra.attempt : null;
         row.fromOwner = ["GSTFarmMap", "native_farm_eligible"].includes(extra.fromOwner) ? extra.fromOwner : null;
         row.toOwner = ["GSTFarmMap", "native_farm_eligible"].includes(extra.toOwner) ? extra.toOwner : null;
@@ -222,4 +225,26 @@
     }
   };
   window.addEventListener("pagehide", detach);
+  return true;
+}
+
+if (!initializeMovementDiagnostics()) {
+  // Retry on the next consumer call if a late dependency becomes available.
+  const pending = {};
+  let configuration;
+  for (const method of ["configure", "attach", "event", "snapshot"]) {
+    pending[method] = (...args) => {
+      if (method === "configure") configuration = args[0];
+      if (initializeMovementDiagnostics()) {
+        if (configuration) globalThis.GSTMovementDiagnostics.configure(configuration);
+        return globalThis.GSTMovementDiagnostics[method](...args);
+      }
+      if (method === "snapshot") return {
+        build: "movement-log-3", tracking: false, unavailable: "movement_log_schema_missing",
+        current: null, events: [], uiIncidents: [], incidents: []
+      };
+    };
+  }
+  globalThis.GSTMovementDiagnostics = pending;
+}
 })();
