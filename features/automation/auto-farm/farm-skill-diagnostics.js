@@ -15,15 +15,32 @@
   const time = () => performance.now();
   const cleanSkill = (key) => skillKeys.has(key) ? key : "";
   function snapshotState(owner, key) {
-    const now = owner?.now?.(), selfAt = owner?.selfAt;
-    const localDeadline = Number.isFinite(owner?.cdLocal?.[key]) ? owner.cdLocal[key] : null;
-    const nativeRaw = Number.isFinite(owner?.self?.cd?.[key]) ? owner.self.cd[key] : null;
-    const nativeElapsed = Number.isFinite(now) && Number.isFinite(selfAt) ? Math.max(0, now - selfAt) : 0;
+    let now = null, selfAt = null;
+    let localDeadline = null, nativeRaw = null;
+    try {
+      if (typeof owner?.now === "function") {
+        const value = owner.now();
+        if (Number.isFinite(value)) now = value;
+      }
+      if (Number.isFinite(owner?.selfAt)) selfAt = owner.selfAt;
+      if (Number.isFinite(owner?.cdLocal?.[key])) localDeadline = owner.cdLocal[key];
+      const self = owner?.self;
+      const cooldowns = self && typeof self === "object" && !Array.isArray(self)
+        && self.cd && typeof self.cd === "object" && !Array.isArray(self.cd) ? self.cd : null;
+      // Native cooldown reads use cd[key] ?? 0. A valid map may omit a skill,
+      // but absent/invalid map data must remain unknown for evidence checks.
+      if (cooldowns) {
+        const value = cooldowns[key] ?? 0;
+        if (Number.isFinite(value)) nativeRaw = value;
+      }
+    } catch { /* Invalid snapshot objects are unknown diagnostic evidence. */ }
+    const nativeSnapshotValid = Number.isFinite(nativeRaw) && Number.isFinite(now) && Number.isFinite(selfAt);
+    const nativeElapsed = nativeSnapshotValid ? Math.max(0, now - selfAt) : null;
     return {
       localDeadline,
       localCooldownMs: Number.isFinite(localDeadline) && Number.isFinite(now)
         ? clampMs((localDeadline - now) * 1000) : null,
-      nativeCooldownMs: Number.isFinite(nativeRaw) ? clampMs((nativeRaw - nativeElapsed) * 1000) : null,
+      nativeCooldownMs: nativeSnapshotValid ? clampMs((nativeRaw - nativeElapsed) * 1000) : null,
       selfAt: Number.isFinite(selfAt) ? selfAt : null,
       dashActive: key === "Q" && Number.isFinite(owner?.dashT) && owner.dashT > 0,
       pendingSkill: owner?.pendingSkill?.key === key
