@@ -29,9 +29,14 @@
       shortcutBusy = false;
       return;
     }
+    const expectedIdentity = GSTAccountProfiles.identity(context);
     GSTAccountProfiles.updateFeature(context, "harvest", (saved) => {
       const previous = GSTHarvest.normalize(saved);
       return { enabled: !previous.enabled };
+    }, () => {
+      const latest = GSTAccountProfiles.context();
+      return latest.ready && latest.context?.verified === true
+        && GSTAccountProfiles.matchesIdentity(latest.context, expectedIdentity, expectedIdentity.tabId);
     }).catch((error) => { failure("shortcut.toggle", error); }).finally(() => { shortcutBusy = false; });
   }, true);
   let debugEnabled = false;
@@ -304,8 +309,12 @@
       return true;
     }
     if (message?.type === "gst:harvest-configure") {
-      if (!accountProfileReady || !accountProfileVerified) {
-        respond({ accepted: false, applied: false, reason: "account_identity_unconfirmed" });
+      const context = GSTAccountProfiles.context();
+      if (!accountProfileReady || !accountProfileVerified
+          || !Number.isInteger(message.targetTabId)
+          || message.profileIdentity?.tabId !== message.targetTabId
+          || !GSTAccountProfiles.matchesIdentity(context.context, message.profileIdentity, message.targetTabId)) {
+        respond({ accepted: false, applied: false, reason: "account_identity_mismatch" });
         return;
       }
       revision++;

@@ -2,6 +2,7 @@
 
 const accountsKey = "gstAccounts:v1";
 const attemptsKey = "gstAccountAttempts:v1";
+const attemptsLock = "gst:account-attempts:v1";
 const origin = "https://nghichthienky.online";
 const tabAttempts = new Map();
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -13,28 +14,59 @@ async function readAccounts() {
 async function getAccount(accountId) {
   return (await readAccounts()).find((item) => item?.id === accountId) ?? null;
 }
-async function attempts() {
-  const value = await chrome.storage.session.get(attemptsKey);
-  const records = value[attemptsKey] && typeof value[attemptsKey] === "object" ? value[attemptsKey] : {};
-  const now = Date.now();
-  for (const [tabId, record] of Object.entries(records)) {
-    if (!record || record.deadline < now) {
-      delete records[tabId];
-      tabAttempts.delete(Number(tabId));
+async function updateAttempts(update) {
+  return navigator.locks.request(attemptsLock, async () => {
+    const value = await chrome.storage.session.get(attemptsKey);
+    const records = value[attemptsKey] && typeof value[attemptsKey] === "object"
+      ? { ...value[attemptsKey] } : {};
+    const mapChanges = [];
+    const now = Date.now();
+    for (const [key, record] of Object.entries(records)) {
+      if (!record || !Number.isFinite(record.deadline) || record.deadline < now) {
+        delete records[key];
+        const tabId = Number(key);
+        const expiredId = typeof record?.attemptId === "string" ? record.attemptId : tabAttempts.get(tabId);
+        if (expiredId) mapChanges.push({ tabId, attemptId: expiredId, remove: true });
+      }
     }
-  }
-  return records;
+    const result = await update(records, mapChanges);
+    await chrome.storage.session.set({ [attemptsKey]: records });
+    for (const change of mapChanges) {
+      if (change.remove) {
+        if (tabAttempts.get(change.tabId) === change.attemptId) tabAttempts.delete(change.tabId);
+      } else tabAttempts.set(change.tabId, change.attemptId);
+    }
+    return result;
+  });
 }
-async function setAttempt(tabId, attempt) {
-  const value = await attempts();
-  value[String(tabId)] = attempt;
-  await chrome.storage.session.set({ [attemptsKey]: value });
+function getAttempt(tabId) {
+  return updateAttempts((records) => {
+    const record = records[String(tabId)];
+    return record ? { ...record } : null;
+  });
 }
-async function clearAttempt(tabId) {
-  const value = await attempts();
-  delete value[String(tabId)];
-  await chrome.storage.session.set({ [attemptsKey]: value });
-  tabAttempts.delete(tabId);
+function createAttempt(tabId, attempt) {
+  return updateAttempts((records, mapChanges) => {
+    const key = String(tabId);
+    if (records[key]) return false;
+    records[key] = attempt;
+    mapChanges.push({ tabId, attemptId: attempt.attemptId, remove: false });
+    return true;
+  });
+}
+function clearAttempt(tabId, expectedAttemptId) {
+  if (typeof expectedAttemptId !== "string" || !expectedAttemptId) return Promise.resolve(false);
+  return updateAttempts((records, mapChanges) => {
+    const key = String(tabId), record = records[key];
+    if (record?.attemptId !== expectedAttemptId) return false;
+    delete records[key];
+    mapChanges.push({ tabId, attemptId: expectedAttemptId, remove: true });
+    return true;
+  });
+}
+async function clearRemovedTabAttempt(tabId, expectedAttemptId) {
+  const observedId = expectedAttemptId || (await getAttempt(tabId))?.attemptId;
+  if (observedId) await clearAttempt(tabId, observedId);
 }
 async function readTabContext(tabId) {
   try { return await chrome.tabs.sendMessage(tabId, { type: "gst:account-context" }); }
@@ -96,43 +128,35 @@ async function launch(message) {
   if (!Number.isInteger(targetTabId)) return { accepted: false, reason: "tab_open_failed" };
   if (tabAttempts.has(targetTabId))
     return { accepted: false, reason: "attempt_already_active" };
-  tabAttempts.set(targetTabId, attemptId);
-  try {
-    if ((await attempts())[String(targetTabId)]) {
-      tabAttempts.delete(targetTabId);
-      return { accepted: false, reason: "attempt_already_active" };
-    }
-  } catch {
-    tabAttempts.delete(targetTabId);
-    return { accepted: false, reason: "attempt_storage_unavailable" };
-  }
   const record = { attemptId, accountId: account.id, slot: account.slot, deadline: Date.now() + 120000 };
   try {
-    await setAttempt(targetTabId, record);
+    if (!await createAttempt(targetTabId, record)) {
+      return { accepted: false, reason: "attempt_already_active" };
+    }
     const base = source?.launchUrl || origin + "/?online=1&timer";
     await chrome.tabs.update(targetTabId, { url: buildTargetUrl(base, account, attemptId) });
   } catch {
-    await clearAttempt(targetTabId);
+    await clearAttempt(targetTabId, attemptId);
     return { accepted: false, reason: "tab_navigation_failed" };
   }
 
   const ready = await waitForContent(targetTabId);
-  if (!ready) { await clearAttempt(targetTabId); return { accepted: false, reason: "tab_load_timeout" }; }
+  if (!ready) { await clearAttempt(targetTabId, attemptId); return { accepted: false, reason: "tab_load_timeout" }; }
   try {
     const result = await chrome.tabs.sendMessage(targetTabId, {
       type: "gst:account-attempt", attemptId, accountId: account.id, slot: account.slot
     });
     if (result?.accepted !== true) {
-      await clearAttempt(targetTabId);
+      await clearAttempt(targetTabId, attemptId);
       return { accepted: false, reason: result?.reason ?? "native_login_failed" };
     }
     if (result.reused) {
-      await clearAttempt(targetTabId);
+      await clearAttempt(targetTabId, attemptId);
       return { accepted: true, reused: true, character: result.character };
     }
     return { accepted: true, submitted: result.submitted === true, tabId: targetTabId };
   } catch {
-    await clearAttempt(targetTabId);
+    await clearAttempt(targetTabId, attemptId);
     return { accepted: false, reason: "target_tab_unavailable" };
   }
 }
@@ -149,7 +173,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       if (!Number.isInteger(tabId) || typeof message.slot !== "string" || !message.slot
           || typeof message.attemptId !== "string" || typeof message.accountId !== "string")
         return { accepted: false, reason: "attempt_context_missing" };
-      const record = (await attempts())[String(tabId)];
+      const record = await getAttempt(tabId);
       if (!record || record.attemptId !== message.attemptId || record.accountId !== message.accountId
           || record.slot !== message.slot || record.deadline < Date.now())
         return { accepted: false, reason: "attempt_expired" };
@@ -169,10 +193,11 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
           expectedCharacterId: typeof message.characterId === "string" ? message.characterId : "" };
         await chrome.storage.local.set({ [accountsKey]: rows });
       });
-      await clearAttempt(tabId);
+      await clearAttempt(tabId, record.attemptId);
       return { accepted: true };
     })().then(respond).catch(async () => {
-      if (Number.isInteger(sender.tab?.id)) await clearAttempt(sender.tab.id);
+      if (Number.isInteger(sender.tab?.id) && typeof message.attemptId === "string")
+        await clearAttempt(sender.tab.id, message.attemptId);
       respond({ accepted: false, reason: "identity_save_failed" });
     });
     return true;
@@ -181,17 +206,19 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
     (async () => {
       const tabId = sender.tab?.id;
       if (!Number.isInteger(tabId)) return { accepted: false };
-      const record = (await attempts())[String(tabId)];
+      const record = await getAttempt(tabId);
       if (!record || record.attemptId !== message.attemptId || record.accountId !== message.accountId
           || record.slot !== message.slot) {
-        tabAttempts.delete(tabId);
         return { accepted: false };
       }
-      await clearAttempt(tabId);
+      await clearAttempt(tabId, record.attemptId);
       return { accepted: true };
     })().then(respond).catch(() => respond({ accepted: false }));
     return true;
   }
 });
 
-chrome.tabs.onRemoved.addListener((tabId) => { void clearAttempt(tabId).catch(() => {}); });
+chrome.tabs.onRemoved.addListener((tabId) => {
+  const expectedAttemptId = tabAttempts.get(tabId) ?? "";
+  void clearRemovedTabAttempt(tabId, expectedAttemptId).catch(() => {});
+});

@@ -204,9 +204,39 @@ let farmSaveQueue = Promise.resolve();
 const farmWrites = new Map();
 let farmPreferenceWritesPending = 0;
 let popupAccountContext = null;
+let popupAccountTabId = null;
+let popupAccountContextVersion = 0;
+let popupAccountBindingRequired = false;
 let accountContextLoaded = false;
-const accountContextPromise = GSTAccountProfiles.activeContext().catch(() => null).then((context) => {
+let popupContextRead = null;
+function samePopupContext(expected, actual, tabId) {
+  if (expected === null) return actual === null;
+  if (!expected || !actual || expected.tabId !== tabId || actual.tabId !== tabId) return false;
+  if (expected.verified === true)
+    return GSTAccountProfiles.matchesIdentity(actual, GSTAccountProfiles.identity(expected), tabId);
+  return actual.verified !== true && expected.reason === actual.reason && expected.slot === actual.slot;
+}
+function updatePopupAccountContext(context) {
+  const previous = popupAccountContext;
+  if (context && popupAccountTabId !== null) context = { ...context, tabId: popupAccountTabId };
+  if (samePopupContext(popupAccountContext, context, popupAccountTabId)) return false;
+  if (previous !== null || context !== null) popupAccountBindingRequired = true;
   popupAccountContext = context;
+  popupAccountContextVersion++;
+  globalThis.GSTPopupAccountContext = context;
+  const status = document.getElementById("accountActiveStatus");
+  if (status) status.textContent = context?.verified
+    ? "Tab hiện tại: " + (context.accountLabel || "Nick hiện tại") + " · " + context.character + "."
+    : "Chưa xác nhận được nick trong tab hiện tại; cài đặt Farm/Thu hoạch bị khóa.";
+  window.dispatchEvent(new CustomEvent("gst:popup-account-context-change", {
+    detail: { context, previous, version: popupAccountContextVersion }
+  }));
+  return true;
+}
+const accountContextPromise = GSTAccountProfiles.captureActiveContext().catch(() => ({ tabId: null, context: null })).then(({ tabId, context }) => {
+  popupAccountTabId = tabId;
+  popupAccountContext = context;
+  popupAccountBindingRequired = context !== null;
   accountContextLoaded = true;
   globalThis.GSTPopupAccountContext = context;
   const status = document.getElementById("accountActiveStatus");
@@ -218,11 +248,46 @@ const accountContextPromise = GSTAccountProfiles.activeContext().catch(() => nul
   syncFarmPolicyUI(farmConfirmed);
   return context;
 });
+async function validatePopupAccountContext(expected, version) {
+  await accountContextPromise;
+  const tabId = popupAccountTabId;
+  const startingVersion = popupAccountContextVersion;
+  if (!popupContextRead) {
+    popupContextRead = (tabId === null ? Promise.resolve(null) : GSTAccountProfiles.contextForTab(tabId, { fresh: true }))
+      .finally(() => { popupContextRead = null; });
+  }
+  const fresh = await popupContextRead;
+  if (startingVersion !== popupAccountContextVersion)
+    return { valid: false, context: popupAccountContext, tabId, version: popupAccountContextVersion };
+  const valid = version === popupAccountContextVersion && samePopupContext(expected, fresh, tabId);
+  if (!samePopupContext(popupAccountContext, fresh, tabId)) updatePopupAccountContext(fresh);
+  return { valid, context: fresh, tabId, version: popupAccountContextVersion };
+}
 globalThis.GSTPopupAccountContextPromise = accountContextPromise;
+globalThis.GSTPopupAccountSession = {
+  current: () => popupAccountContext,
+  tabId: () => popupAccountTabId,
+  version: () => popupAccountContextVersion,
+  bindingRequired: () => popupAccountBindingRequired,
+  validate: validatePopupAccountContext
+};
+void accountContextPromise.then(() => {
+  if (popupAccountTabId === null) return;
+  const timer = setInterval(() => {
+    void validatePopupAccountContext(popupAccountContext, popupAccountContextVersion);
+  }, 1200);
+  window.addEventListener("pagehide", () => clearInterval(timer), { once: true });
+});
 function updateFarmPreferences(patch, { draftWrite = false } = {}) {
+  const expectedContext = popupAccountContext;
+  const expectedVersion = popupAccountContextVersion;
   const save = farmSaveQueue.catch(() => {}).then(async () => {
-    const context = await accountContextPromise;
-    if (context && context.verified !== true) throw new Error("Account identity is not confirmed.");
+    await accountContextPromise;
+    const binding = await validatePopupAccountContext(expectedContext, expectedVersion);
+    if (!binding.valid || (binding.context && binding.context.verified !== true)
+        || (popupAccountBindingRequired && binding.context?.verified !== true))
+      throw new Error("Account identity changed or is not confirmed.");
+    const context = binding.context;
     return GSTAccountProfiles.updateFeature(context, "farm", (current) => {
     const policyMode = Object.prototype.hasOwnProperty.call(patch, "policyMode")
       ? globalThis.GSTFarmPolicy.normalize(patch.policyMode) : globalThis.GSTFarmPolicy.read(current);
@@ -239,6 +304,9 @@ function updateFarmPreferences(patch, { draftWrite = false } = {}) {
       else if (current.targetMode === "level") farmPreferences.targetMode = "maxLevel";
     }
     return farmPreferences;
+    }, async () => {
+      const latest = await validatePopupAccountContext(expectedContext, expectedVersion);
+      return latest.valid && (!popupAccountBindingRequired || latest.context?.verified === true);
     });
   });
   farmSaveQueue = save;
@@ -247,18 +315,19 @@ function updateFarmPreferences(patch, { draftWrite = false } = {}) {
   return save;
 }
 async function readCurrentFarmPreferences() {
-  const context = await accountContextPromise;
+  await accountContextPromise;
   const stored = await chrome.storage.local.get(["farmPreferences", GSTAccountProfiles.profilesKey]);
-  return GSTAccountProfiles.currentProfile(context, "farm", stored);
+  if (popupAccountBindingRequired && popupAccountContext?.verified !== true) return {};
+  return GSTAccountProfiles.currentProfile(popupAccountContext, "farm", stored);
 }
 
 async function refreshFarm() {
   if (farmBusy) return;
   farmBusy = true;
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab?.id) throw new Error("No active tab.");
-    const status = await chrome.tabs.sendMessage(tab.id, { type: "gst:farm-status" });
+    const tabId = popupAccountTabId;
+    if (!Number.isInteger(tabId)) throw new Error("No bound game tab.");
+    const status = await chrome.tabs.sendMessage(tabId, { type: "gst:farm-status" });
     const farmLabel = status.autoOn === true ? "BẬT" : status.autoOn === false ? "TẮT" : "CHƯA RÕ";
     autoFarmValue.textContent = status.autoOn === true ? "Đang bật" : status.autoOn === false ? "Đã tắt" : "Chưa rõ";
     autoFarmValue.dataset.state = status.autoOn === true ? "on" : status.autoOn === false ? "off" : "unknown";
@@ -333,7 +402,8 @@ function syncFarmPolicyUI(raw = {}) {
   const pendingSelection = farmPolicyPending > 0 ? farmPolicyMode.value : null;
   farmPolicyMode.value = confirmedMode;
   if (pendingSelection && globalThis.GSTFarmPolicy.modes.includes(pendingSelection)) farmPolicyMode.value = pendingSelection;
-  const accountAllowed = !accountContextLoaded || !popupAccountContext || popupAccountContext.verified === true;
+  const accountAllowed = !accountContextLoaded || (popupAccountContext
+    ? popupAccountContext.verified === true : !popupAccountBindingRequired);
   farmPolicyMode.disabled = !farmPolicyLoaded || !accountAllowed;
   farmPolicySavedMode.textContent = farmPolicyHasSavedValue
     ? `Chế độ đã lưu: ${farmPolicyLabels[confirmedMode]}.`
@@ -417,6 +487,21 @@ chrome.storage.onChanged.addListener((changes, area) => {
     latestFarmPreferences = value ?? {};
     if (farmSyncReady) syncFarmPreferences(latestFarmPreferences);
   }).catch(() => {});
+});
+window.addEventListener("gst:popup-account-context-change", async (event) => {
+  const version = event.detail?.version;
+  const stored = await chrome.storage.local.get(["farmPreferences", GSTAccountProfiles.profilesKey]);
+  if (version !== popupAccountContextVersion) return;
+  const context = popupAccountContext;
+  const preferences = popupAccountBindingRequired && context?.verified !== true
+    ? {} : GSTAccountProfiles.currentProfile(context, "farm", stored);
+  farmStorageRevision++;
+  latestFarmPreferences = preferences;
+  farmHpSyncedEditRevision = farmHpEditRevision;
+  farmDraftError = false;
+  clearFarmTargetErrors();
+  syncFarmPreferences(preferences, { preserveDraft: false, forceKeys: ["radius", "nearbyRadius",
+    "targetLevel", "targetMinLevel", "targetMaxLevel", "retreatHpPercent", "recoveryHpPercent"] });
 });
 farmPolicyMode.addEventListener("change", async () => {
   const mode = globalThis.GSTFarmPolicy.normalize(farmPolicyMode.value);
@@ -526,14 +611,17 @@ function farmSummaries() {
   document.getElementById("farmRecoverySummary").textContent = `Hồi phục · ${farmConfirmed.noRetreat ? "không rút lui" : "theo game"}`;
 }
 async function saveFarmPatch(patch, rollback, { draftWrite = false, preserveDraftKeys = [], successMessage } = {}) {
+  const contextVersion = popupAccountContextVersion;
   farmPreferenceWritesPending++;
   syncBossTargetControls();
   farmMessage("Đang lưu…");
   try {
     const written = await updateFarmPreferences(patch, { draftWrite });
+    if (contextVersion !== popupAccountContextVersion) return false;
     let committed = written;
     const revisionAtRead = farmStorageRevision;
     try { committed = await readCurrentFarmPreferences() ?? written; } catch {}
+    if (contextVersion !== popupAccountContextVersion) return false;
     if (farmStorageRevision !== revisionAtRead && latestFarmPreferences) committed = latestFarmPreferences;
     latestFarmPreferences = committed;
     syncFarmPreferences(committed, { forceKeys: [...Object.keys(patch), "targetMode", "excludeBoss"]
@@ -541,6 +629,7 @@ async function saveFarmPatch(patch, rollback, { draftWrite = false, preserveDraf
     farmMessage(typeof successMessage === "function" ? successMessage(committed) : "Đã lưu cài đặt.");
     return true;
   } catch {
+    if (contextVersion !== popupAccountContextVersion) return false;
     rollback?.();
     farmMessage("Chưa lưu được lựa chọn; cài đặt cũ được giữ.");
     return false;
@@ -1126,10 +1215,12 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   fontFamily.disabled = !font.enabled;
   fontControls.disabled = false;
   farmReturnDeath.checked = areaMapOptions?.returnDeath === true;
-  const context = await accountContextPromise;
+  await accountContextPromise;
+  const context = popupAccountContext;
   const storedFarmPreferences = { farmPreferences, [GSTAccountProfiles.profilesKey]: accountProfiles };
   const initialFarmPreferences = farmLoadRevision === farmStorageRevision
-    ? GSTAccountProfiles.currentProfile(context, "farm", storedFarmPreferences)
+    ? popupAccountBindingRequired && context?.verified !== true ? {}
+      : GSTAccountProfiles.currentProfile(context, "farm", storedFarmPreferences)
     : (latestFarmPreferences ?? {});
   const farmPreferencesWithPolicy = globalThis.GSTFarmPolicy.withMode(initialFarmPreferences,
     globalThis.GSTFarmPolicy.read(initialFarmPreferences));

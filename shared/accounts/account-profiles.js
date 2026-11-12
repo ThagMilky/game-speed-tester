@@ -15,7 +15,38 @@
     if (!context?.verified || !context.profileKey) return base;
     return { ...base, ...(storage[profilesKey]?.[context.profileKey]?.[feature] ?? {}) };
   }
-  async function updateFeature(context, feature, update) {
+  function identity(context) {
+    if (!context?.verified || !context.profileKey) return null;
+    return {
+      tabId: context.tabId,
+      profileKey: context.profileKey,
+      accountId: context.accountId ?? "",
+      slot: context.slot ?? "",
+      character: context.character ?? "",
+      classId: context.classId ?? "",
+      characterId: context.characterId ?? ""
+    };
+  }
+  function matchesIdentity(context, expected, tabId) {
+    const actual = identity(context);
+    return !!actual && !!expected && expected.tabId === tabId
+      && actual.profileKey === expected.profileKey && actual.accountId === expected.accountId
+      && actual.slot === expected.slot && actual.character === expected.character
+      && actual.classId === expected.classId && actual.characterId === expected.characterId;
+  }
+  async function contextForTab(tabId, { fresh = false } = {}) {
+    if (!Number.isInteger(tabId)) return null;
+    try {
+      const context = await chrome.tabs.sendMessage(tabId, { type: "gst:account-context", fresh });
+      return context && typeof context === "object" ? { ...context, tabId } : null;
+    } catch { return null; }
+  }
+  async function captureActiveContext() {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    return { tabId: Number.isInteger(tab?.id) ? tab.id : null,
+      context: Number.isInteger(tab?.id) ? await contextForTab(tab.id, { fresh: true }) : null };
+  }
+  async function updateFeature(context, feature, update, validate) {
     if (!["farm", "harvest"].includes(feature)) throw new Error("Unknown account preference.");
     const globalKey = feature === "farm" ? "farmPreferences" : "harvestPreferences";
     const scoped = !!context?.verified && !!context.profileKey;
@@ -24,6 +55,7 @@
     const queued = locks.get(lockName) ?? Promise.resolve();
     const save = queued.catch(() => {}).then(() => navigator.locks.request(lockName, async () => {
       const storage = await chrome.storage.local.get(scoped ? [globalKey, profilesKey] : [globalKey]);
+      if (validate && await validate() !== true) throw new Error("Account context changed before preference write.");
       const current = scoped
         ? { ...(storage[globalKey] ?? {}), ...(storage[profilesKey]?.[context.profileKey]?.[feature] ?? {}) }
         : { ...(storage[globalKey] ?? {}) };
@@ -52,6 +84,7 @@
   }
   const api = {
     accountsKey, profilesKey, profileKey, currentProfile, updateFeature,
+    identity, matchesIdentity, contextForTab, captureActiveContext,
     context: () => contextState,
     onContext(listener) { listeners.add(listener); return () => listeners.delete(listener); },
     setContext,
@@ -76,10 +109,7 @@
     async activeContext() {
       const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
       if (!tab?.id) return null;
-      try {
-        const context = await chrome.tabs.sendMessage(tab.id, { type: "gst:account-context" });
-        return context && typeof context === "object" ? { ...context, tabId: tab.id } : null;
-      } catch { return null; }
+      return contextForTab(tab.id);
     },
     removeAccountProfiles(slot) {
       return navigator.locks.request("gst:account-profiles", async () => {

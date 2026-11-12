@@ -127,8 +127,12 @@
       return;
     }
     if (message?.type === "gst:farm-configure") {
-      if (!accountProfileReady || !accountProfileVerified) {
-        respond({ accepted: false, reason: "account_identity_unconfirmed" });
+      const context = GSTAccountProfiles.context();
+      if (!accountProfileReady || !accountProfileVerified
+          || !Number.isInteger(message.targetTabId)
+          || message.profileIdentity?.tabId !== message.targetTabId
+          || !GSTAccountProfiles.matchesIdentity(context.context, message.profileIdentity, message.targetTabId)) {
+        respond({ accepted: false, reason: "account_identity_mismatch" });
         return;
       }
       revision++;

@@ -155,6 +155,10 @@
       return currentContext;
     } finally { refreshBusy = false; }
   }
+  async function refreshLatestContext() {
+    while (refreshBusy) await delay(10);
+    return refresh();
+  }
   function removeAttemptFromUrl() {
     try {
       const url = new URL(location.href);
@@ -251,7 +255,10 @@
   });
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
     if (sender.id !== chrome.runtime.id) return;
-    if (message?.type === "gst:account-context") { refresh().then(respond); return true; }
+    if (message?.type === "gst:account-context") {
+      (message.fresh === true ? refreshLatestContext() : refresh()).then(respond);
+      return true;
+    }
     if (message?.type === "gst:account-attempt") {
       fillNativeLogin(message).then(respond).catch(() => respond({ accepted: false, reason: "native_login_failed" }));
       return true;
