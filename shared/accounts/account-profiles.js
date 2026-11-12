@@ -11,8 +11,11 @@
     return (typeof slot === "string" && slot ? "slot:" + slot : "legacy") + ":" + character.normalize("NFC");
   }
   function currentProfile(context, feature, storage) {
-    const base = storage[feature === "farm" ? "farmPreferences" : "harvestPreferences"] ?? {};
+    const globalKey = feature === "farm" ? "farmPreferences"
+      : feature === "harvest" ? "harvestPreferences" : "connectionRecoveryPreferences";
+    const base = storage[globalKey] ?? {};
     if (!context?.verified || !context.profileKey) return base;
+    if (feature === "connectionRecovery" && !context.accountId) return base;
     return { ...base, ...(storage[profilesKey]?.[context.profileKey]?.[feature] ?? {}) };
   }
   function identity(context) {
@@ -47,11 +50,14 @@
       context: Number.isInteger(tab?.id) ? await contextForTab(tab.id, { fresh: true }) : null };
   }
   async function updateFeature(context, feature, update, validate) {
-    if (!["farm", "harvest"].includes(feature)) throw new Error("Unknown account preference.");
-    const globalKey = feature === "farm" ? "farmPreferences" : "harvestPreferences";
-    const scoped = !!context?.verified && !!context.profileKey;
+    if (!["farm", "harvest", "connectionRecovery"].includes(feature)) throw new Error("Unknown account preference.");
+    const globalKey = feature === "farm" ? "farmPreferences"
+      : feature === "harvest" ? "harvestPreferences" : "connectionRecoveryPreferences";
+    const scoped = !!context?.verified && !!context.profileKey
+      && (feature !== "connectionRecovery" || !!context.accountId);
     const lockName = scoped ? "gst:account-profiles"
-      : feature === "farm" ? "gst:farm-preferences" : "gst:harvest-preferences";
+      : feature === "farm" ? "gst:farm-preferences"
+        : feature === "harvest" ? "gst:harvest-preferences" : "gst:connection-recovery-preferences";
     const queued = locks.get(lockName) ?? Promise.resolve();
     const save = queued.catch(() => {}).then(() => navigator.locks.request(lockName, async () => {
       const storage = await chrome.storage.local.get(scoped ? [globalKey, profilesKey] : [globalKey]);

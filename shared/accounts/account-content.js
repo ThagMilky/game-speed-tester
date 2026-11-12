@@ -59,8 +59,10 @@
     const accounts = await GSTAccountProfiles.readAccounts();
     return accounts.find((account) => account?.slot === slot) ?? null;
   }
-  async function sendProfile(context, force = false) {
-    const storage = await chrome.storage.local.get(["farmPreferences", "harvestPreferences", GSTAccountProfiles.profilesKey]);
+  async function sendProfile(context, force = false, knownAccount = null) {
+    const storage = await chrome.storage.local.get(["farmPreferences", "harvestPreferences",
+      "connectionRecoveryPreferences", GSTAccountProfiles.profilesKey]);
+    const account = knownAccount ?? await accountForSlot();
     const key = context?.profileKey ?? "";
     const profile = key ? storage[GSTAccountProfiles.profilesKey]?.[key] : null;
     const verified = context?.verified === true;
@@ -70,12 +72,27 @@
     const harvestPreferences = verified
       ? { ...(storage.harvestPreferences ?? {}), ...(profile?.harvest ?? {}) }
       : { ...(storage.harvestPreferences ?? {}), enabled: false };
+    const recoveryProfileKey = verified ? key
+      : slot && account?.expectedCharacter ? GSTAccountProfiles.profileKey(slot, account.expectedCharacter) : "";
+    const recoveryProfile = recoveryProfileKey
+      ? storage[GSTAccountProfiles.profilesKey]?.[recoveryProfileKey] : null;
+    const connectionRecoveryPreferences = {
+      ...(storage.connectionRecoveryPreferences ?? {}), ...(recoveryProfile?.connectionRecovery ?? {})
+    };
+    const connectionRecoveryContext = {
+      verified, managed: !!slot, slot, accountId: account?.id ?? "",
+      profileKey: recoveryProfileKey,
+      expectedCharacter: account?.expectedCharacter ?? "",
+      expectedClassId: account?.expectedClassId ?? ""
+    };
     const nextKey = (verified ? "ready" : "blocked") + ":" + key + ":"
-      + JSON.stringify([storage.farmPreferences, storage.harvestPreferences, profile ?? {}]);
+      + JSON.stringify([storage.farmPreferences, storage.harvestPreferences,
+        storage.connectionRecoveryPreferences, profile ?? {}, recoveryProfile ?? {}, connectionRecoveryContext]);
     if (!force && nextKey === lastProfile) return;
     lastProfile = nextKey;
     window.postMessage({ channel: "gst:account-profile:v1", type: "profile", verified,
-      profileKey: verified ? key : "", farmPreferences, harvestPreferences }, origin);
+      profileKey: verified ? key : "", farmPreferences, harvestPreferences,
+      connectionRecoveryPreferences, connectionRecoveryContext }, origin);
     GSTAccountProfiles.setContext(context);
   }
   async function confirmFirstIdentity(snapshot, account) {
@@ -174,8 +191,8 @@
       GSTAccountProfiles.setContext(context);
       if (identity !== lastIdentity || forceProfile) {
         lastIdentity = identity;
-        await sendProfile(context, true);
-      } else await sendProfile(context);
+        await sendProfile(context, true, account);
+      } else await sendProfile(context, false, account);
       return context;
     } catch {
       lastError = "account_context_unavailable";
@@ -437,7 +454,7 @@
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && [GSTAccountProfiles.accountsKey, GSTAccountProfiles.profilesKey,
-      "farmPreferences", "harvestPreferences"].some((key) => changes[key])) void refresh(true);
+      "farmPreferences", "harvestPreferences", "connectionRecoveryPreferences"].some((key) => changes[key])) void refresh(true);
   });
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
     if (sender.id !== chrome.runtime.id) return;

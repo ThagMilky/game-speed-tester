@@ -103,6 +103,23 @@
         <p id="farmPolicyFeedback" class="notice" role="status" aria-live="polite"></p>
       </div>
     </details>
+    <details class="card" data-category="settings" data-panel="connection">
+      <summary><span><strong>Kết nối &amp; tự tải lại</strong><small>Hỗ trợ kết nối riêng theo nick đã xác nhận</small></span></summary>
+      <div class="card-body">
+        <fieldset id="connectionRecoveryControls" disabled aria-label="Tùy chọn khôi phục kết nối">
+          <p class="save-mode">Tự lưu · nick được quản lý dùng cài đặt riêng; tab không quản lý nick dùng mặc định chung</p>
+          <label class="switch-row"><span>Bật hỗ trợ kết nối lại của extension</span><input id="connectionAutoReconnect" class="switch" type="checkbox" checked></label>
+          <p class="hint">Tắt chỉ dừng các lần thử bổ sung do extension gọi. Kết nối lại gốc của game vẫn hoạt động.</p>
+          <label class="switch-row"><span>Tự tải lại sau khi kết nối lỗi kéo dài</span><input id="connectionAutoReload" class="switch" type="checkbox"></label>
+          <div class="two-columns separated">
+            <div><label for="connectionReloadDelay">Chờ trước khi đếm ngược (giây)</label><input id="connectionReloadDelay" type="number" min="30" max="600" step="1" value="90"></div>
+          </div>
+          <p class="hint">Chỉ tải lại sau khi game báo đúng lỗi mất kết nối và các lần thử đã kết thúc; không tự xử lý màn đăng nhập, lỗi tài khoản hoặc thử thách xác minh. Đếm ngược hủy được trong 10 giây. Tối đa 3 lần trong 15 phút. Khoảng chờ cho phép từ 30 đến 600 giây.</p>
+          <p id="connectionRecoveryScope" class="feature-status" role="status" aria-live="polite">Đang xác định phạm vi cài đặt…</p>
+          <p id="connectionRecoveryFeedback" class="notice" role="status" aria-live="polite"></p>
+        </fieldset>
+      </div>
+    </details>
     <details class="card" data-category="auto" data-panel="farm">
       <summary><span><strong>Auto Farm</strong><small>Phạm vi, nhặt đồ và tự dùng đan</small></span></summary>
       <div class="card-body">
