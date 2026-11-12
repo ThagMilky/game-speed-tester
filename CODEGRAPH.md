@@ -226,3 +226,7 @@ Auto Bí cảnh (vào cổng, tìm boss bằng metadata và tìm lối ra) đã 
 ## Gỡ rương và đồng hồ Bí cảnh
 
 Tự tìm/mở rương, lịch sử rương/cổng và đồng hồ/thông báo Bí cảnh đã được gỡ khỏi manifest, popup và overlay. Account shutdown không chờ ACK Chest/Realm. Giữ Farm qua đổi map tiếp tục dùng bridge Farm Session độc lập; phong ấn vẫn là tùy chọn Farm. Các guard tùy chọn với GSTChest/GSTRealm trong module còn lại không tạo controller. Các khóa storage cũ được giữ nhưng không được nạp để chạy tính năng đã gỡ.
+
+## Bố cục và trạng thái Auto Farm
+
+`ui/popup/farm-layout.js` nạp sau các popup feature và trước popup-help; di chuyển nguyên control sang bảy nhóm theo tác vụ, giữ ID/listener/storage. Wrapper fieldset phản chiếu trạng thái disabled của fieldset nguồn qua MutationObserver; potion/shortcut vẫn giữ fieldset riêng. Thanh cuối mục Farm dùng dữ liệu storage đã lưu qua GSTPopupAccountSession.validate và GSTAccountProfiles.currentProfile, xác minh lại sau đọc; không đếm bản nháp input. Nó tách số công tắc bật/tắt khỏi native runtime tại autoFarmValue, giữ unknown khi chưa xác nhận nick, ghi rõ các tùy chọn dùng chung/độc lập. Nhãn trạng thái chỉ mở nhóm và cuộn tới control, không thay đổi lựa chọn. Không đổi runtime automation hoặc schema preferences.

@@ -6,7 +6,7 @@
   const feedback = document.getElementById("potionFeedback");
   let confirmed = {}, queue = Promise.resolve(), loaded = false;
   const thresholdWrites = new Map();
-  function summary() { document.getElementById("potionSummary").textContent = `Đan · HP ${confirmed.hpEnabled ? "bật" : "tắt"} · MP ${confirmed.mpEnabled ? "bật" : "tắt"}`; }
+  function summary() { document.getElementById("potionSummary").textContent = `Đan HP ${confirmed.hpEnabled ? "bật" : "tắt"} & MP ${confirmed.mpEnabled ? "bật" : "tắt"}`; }
   function sync() { hpPercent.disabled = !hpEnabled.checked; mpPercent.disabled = !mpEnabled.checked; }
   function message(text) {
     const draft = hpPercent.value !== String(confirmed.hpPercent) || mpPercent.value !== String(confirmed.mpPercent);

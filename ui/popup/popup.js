@@ -752,8 +752,8 @@ function farmSummaries() {
       : "";
   document.getElementById("farmTargetSummary").textContent = targetSummary;
   document.getElementById("farmEncounterSummary").textContent = `Auto nhận kỳ ngộ · ${farmConfirmed.autoEncounter ? "bật" : "tắt"}`;
-  document.getElementById("farmDefenseSummary").textContent = `Tự vệ ${farmConfirmed.selfDefense ? "bật" : "tắt"} · Dọn gần ${farmConfirmed.nearbyClear ? "bật" : "tắt"} · Hồi sinh ${farmConfirmed.autoRespawn ? "bật" : "tắt"}`;
-  document.getElementById("farmBossSummary").textContent = `Tự bảo vệ · ${farmConfirmed.bossDodge ? "né boss" : "né boss tắt"} · ${farmConfirmed.eliteDodge ? "né tinh anh" : "né tinh anh tắt"}`;
+  document.getElementById("farmDefenseSummary").textContent = `Tự vệ ${farmConfirmed.selfDefense ? "bật" : "tắt"} & Dọn gần ${farmConfirmed.nearbyClear ? "bật" : "tắt"} & Hồi sinh ${farmConfirmed.autoRespawn ? "bật" : "tắt"}`;
+  document.getElementById("farmBossSummary").textContent = `Tự bảo vệ · ${farmConfirmed.bossDodge ? "né boss" : "né boss tắt"} & ${farmConfirmed.eliteDodge ? "né tinh anh" : "né tinh anh tắt"}`;
   document.getElementById("farmRecoverySummary").textContent = `Hồi phục · ${farmConfirmed.noRetreat ? "không rút lui" : "theo game"}`;
 }
 async function saveFarmPatch(patch, rollback, { draftWrite = false, preserveDraftKeys = [], successMessage } = {}) {
