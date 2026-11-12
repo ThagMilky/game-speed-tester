@@ -99,6 +99,7 @@
     byId("accountPasswordToggle").textContent = "Hiện";
     byId("accountPasswordToggle").setAttribute("aria-pressed", "false");
     passwordInput.required = true;
+    passwordInput.autocomplete = "new-password";
     title.textContent = "Thêm tài khoản";
     byId("accountSave").textContent = "Lưu tài khoản";
     cancel.hidden = true;
@@ -107,13 +108,16 @@
     editingId = row.id;
     labelInput.value = row.label;
     usernameInput.value = row.username;
-    passwordInput.value = "";
+    passwordInput.value = row.password;
     passwordInput.required = false;
-    passwordInput.type = "password";
+    passwordInput.type = "text";
+    byId("accountPasswordToggle").textContent = "Ẩn";
+    byId("accountPasswordToggle").setAttribute("aria-pressed", "true");
+    passwordInput.autocomplete = "current-password";
     title.textContent = "Sửa tài khoản";
     byId("accountSave").textContent = "Lưu thay đổi";
     cancel.hidden = false;
-    feedback.textContent = "Để trống mật khẩu nếu muốn giữ mật khẩu đã lưu.";
+    feedback.textContent = "Mật khẩu đã lưu đang hiển thị. Sửa trực tiếp nếu muốn đổi; để trống thì giữ mật khẩu cũ.";
     labelInput.focus();
   }
   function render() {
@@ -134,14 +138,14 @@
       const actions = document.createElement("div");
       actions.className = "account-entry-actions";
       const login = document.createElement("button");
-      login.type = "button"; login.textContent = "Đăng nhập ở tab này";
+      login.type = "button"; login.textContent = "Login ở tab này";
       login.addEventListener("click", () => { void launch(view, "current"); });
       const open = document.createElement("button");
-      open.type = "button"; open.textContent = "Mở thêm nick";
+      open.type = "button"; open.textContent = "Mở ở tab mới";
       open.addEventListener("click", () => { void launch(view, "additional"); });
       const editButton = document.createElement("button");
       editButton.type = "button"; editButton.className = "quiet"; editButton.textContent = "Sửa";
-      editButton.addEventListener("click", () => edit(view));
+      editButton.addEventListener("click", () => edit({ ...view, password: row.password }));
       const remove = document.createElement("button");
       remove.type = "button"; remove.className = "quiet"; remove.textContent = "Xóa";
       remove.addEventListener("click", () => { void removeAccount(view); });
@@ -149,6 +153,7 @@
       if (row.expectedCharacter || row.expectedClassId || row.expectedCharacterId) {
         const reverify = document.createElement("button");
         reverify.type = "button"; reverify.className = "quiet"; reverify.textContent = "Xác nhận lại nhân vật";
+        reverify.title = "Dùng khi dấu xác nhận nhân vật đã lưu không đúng. Thao tác này xóa dấu xác nhận, giữ hồ sơ Farm/Thu hoạch và yêu cầu xác nhận lại ở lần đăng nhập kế tiếp.";
         reverify.addEventListener("click", () => { void clearSavedIdentity(view); });
         actions.append(reverify);
       }
@@ -260,9 +265,10 @@
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (busy || !form.reportValidity()) return;
-    const label = labelInput.value.trim(), username = usernameInput.value.trim(), password = passwordInput.value;
-    if (!label || !username || (!editingId && !password)) {
-      feedback.textContent = "Nhập tên gợi nhớ, tên đăng nhập và mật khẩu.";
+    const username = usernameInput.value.trim(), password = passwordInput.value;
+    const label = labelInput.value.trim() || username;
+    if (!username || (!editingId && !password)) {
+      feedback.textContent = "Nhập tên đăng nhập và mật khẩu.";
       return;
     }
     setBusy(true);
