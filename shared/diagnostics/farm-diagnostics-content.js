@@ -88,14 +88,20 @@
     const skills = ["1", "2", "3", "4", "5", "6", "Q"];
     const sources = ["farm_cast", "auto_q"];
     const stages = ["guard_blocked", "q_blocked", "native_invoked", "native_skill_invoked",
-      "native_return", "local_state_changed", "snapshot_cooldown", "ambiguous", "unconfirmed"];
+      "native_return", "native_rejected", "local_state_changed", "snapshot_cooldown", "ambiguous", "unconfirmed"];
     const reasons = ["player_target", "player_lock", "player_aim", "targeting_unavailable",
       "dodge_preference_off", "native_method_unavailable", "extension_throttle", "dash_active",
       "facing_unavailable", "local_cooldown", "snapshot_cooldown", "rooted", "stunned",
       "no_safe_direction", "hazard_window", "overlapping_attempt", "manual_input", "observation_timeout",
-      "collection_disabled", "capacity", "scene_change", "manual_tracking_unavailable", "policy_change"];
-    const number = (value) => Number.isFinite(value)
-      ? Math.round(Math.max(0, Math.min(120000, value))) : null;
+      "collection_disabled", "capacity", "scene_change", "manual_tracking_unavailable", "policy_change",
+      "skill_unavailable", "self_unavailable", "dead", "silenced", "rooted_mobility_skill",
+      "cooldown_wait", "unknown"];
+    const conditions = ["skill_unavailable", "self_unavailable", "class_resource_guard_unknown",
+      "class_guard_unknown", "dead", "dead_state_unknown", "silenced", "rooted_mobility_skill",
+      "status_state_unknown", "cooldown_wait", "cooldown_state_unknown", "mana_cost_unknown",
+      "out_of_range", "range_state_unknown", "skill_lookup_unknown", "native_guard_state_unknown"];
+    const number = (value, max = 120000) => Number.isFinite(value)
+      ? Math.round(Math.max(0, Math.min(max, value)) * 1000) / 1000 : null;
     const events = (Array.isArray(data?.events) ? data.events : []).slice(-80).map((row) => {
       if (!row || !skills.includes(row.skill) || !sources.includes(row.source) || !stages.includes(row.stage)
           || !Number.isSafeInteger(row.attemptId) || row.attemptId < 0 || row.attemptId > 1e9) return null;
@@ -104,8 +110,14 @@
       if (reasons.includes(row.reason)) result.reason = row.reason;
       if (["host.cast", "scene.useSkill"].includes(row.method)) result.method = row.method;
       if (["true", "false", "undefined", "other"].includes(row.returnKind)) result.returnKind = row.returnKind;
+      if (Array.isArray(row.conditions))
+        result.conditions = row.conditions.filter((value) => conditions.includes(value)).slice(0, conditions.length);
       for (const key of ["localCooldownDeltaMs", "snapshotAdvanceMs", "cooldownBeforeMs", "cooldownAfterMs"])
         if (row[key] !== undefined) result[key] = number(row[key]);
+      if (row.skillWaitMs !== undefined) result.skillWaitMs = number(row.skillWaitMs);
+      for (const key of ["targetDistance", "maxRange"])
+        if (row[key] !== undefined) result[key] = number(row[key], 10000);
+      if (Number.isSafeInteger(row.repeatCount)) result.repeatCount = Math.max(1, Math.min(10000, row.repeatCount));
       for (const key of ["dashStarted", "pendingSkillChanged"])
         if (typeof row[key] === "boolean") result[key] = row[key];
       return result;

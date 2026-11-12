@@ -365,6 +365,74 @@
       return "targeting_unavailable";
     return "";
   }
+  function inspectNativeCastRejection(scene, host, skillKey, aimX, aimY) {
+    const result = { reason: "unknown", conditions: [] };
+    let uncertainEarlierGuard = false;
+    const condition = (value) => { if (!result.conditions.includes(value)) result.conditions.push(value); };
+    const confirm = (reason, observed) => {
+      condition(observed);
+      if (!uncertainEarlierGuard) result.reason = reason;
+    };
+    try {
+      if (typeof host?.kit !== "function") { condition("skill_lookup_unknown"); return result; }
+      const kit = host.kit(skillKey);
+      if (!kit) return { reason: "skill_unavailable", conditions: ["skill_unavailable"] };
+      if (!scene?.self) return { reason: "self_unavailable", conditions: ["self_unavailable"] };
+
+      const classId = scene.profile?.classId;
+      if (classId === "the-tu") {
+        condition("class_resource_guard_unknown");
+        uncertainEarlierGuard = true;
+      } else if (typeof classId !== "string") {
+        condition("class_guard_unknown");
+        uncertainEarlierGuard = true;
+      }
+      if (scene.dead === true) {
+        confirm("dead", "dead");
+        return result;
+      }
+      if (scene.dead !== false) { condition("dead_state_unknown"); uncertainEarlierGuard = true; }
+
+      const effects = scene.self.fx;
+      if (typeof effects !== "string") { condition("status_state_unknown"); uncertainEarlierGuard = true; }
+      else {
+        if (effects.includes("s")) {
+          confirm("silenced", "silenced");
+          return result;
+        }
+        if (effects.includes("r") && ["dash", "blink"].includes(kit.shape)) {
+          confirm("rooted_mobility_skill", "rooted_mobility_skill");
+          return result;
+        }
+      }
+
+      if (typeof scene.skillWait !== "function") {
+        condition("cooldown_state_unknown"); uncertainEarlierGuard = true;
+      } else {
+        const wait = scene.skillWait(skillKey);
+        if (Number.isFinite(wait)) {
+          result.skillWaitMs = Math.round(Math.max(0, Math.min(120000, wait * 1000)));
+          if (wait > 0) {
+            confirm("cooldown_wait", "cooldown_wait");
+            return result;
+          }
+        } else { condition("cooldown_state_unknown"); uncertainEarlierGuard = true; }
+      }
+
+      // The source checks a class/resource formula before range, but that
+      // formula is not exposed here. Record range only as an observed condition.
+      condition("mana_cost_unknown");
+      const nativeRange = kit.castRange ?? kit.range;
+      if ([nativeRange, aimX, aimY, scene.px, scene.py].every(finite)) {
+        const maxRange = Math.max(0, Math.min(10000, nativeRange + 1));
+        const targetDistance = Math.hypot(aimX - scene.px, aimY - scene.py);
+        result.maxRange = Math.round(maxRange * 1000) / 1000;
+        result.targetDistance = Math.round(Math.min(10000, targetDistance) * 1000) / 1000;
+        if (targetDistance > nativeRange + 1) condition("out_of_range");
+      } else condition("range_state_unknown");
+    } catch { condition("native_guard_state_unknown"); }
+    return result;
+  }
   function withFarmTargetingGuard(scene, host, action, blockedValue, skillKey = "") {
     if (!playerTargetGuardActive()) return action();
     const reason = farmTargetGuardReason(scene);
@@ -540,9 +608,11 @@
           }
           return withFarmTargetingGuard(this, host, () => {
             const diagnostics = globalThis.GSTFarmSkillDiagnostics;
-            return typeof diagnostics?.invoke === "function"
-              ? diagnostics.invoke(this, skillKey, "farm_cast", "host.cast", () => host.cast?.(...callArgs))
-              : host.cast?.(...callArgs);
+            if (typeof diagnostics?.invoke !== "function") return host.cast(...callArgs);
+            const rejection = diagnostics.isEnabled?.(this) === true
+              ? inspectNativeCastRejection(this, host, skillKey, aimX, aimY) : null;
+            return diagnostics.invoke(this, skillKey, "farm_cast", "host.cast",
+              () => host.cast(...callArgs), rejection);
           }, false, skillKey);
         };
       }

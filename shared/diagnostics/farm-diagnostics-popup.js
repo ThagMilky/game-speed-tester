@@ -149,11 +149,13 @@
           pick(row, [["at", "t"], ["type", "event"]], ["auto", "flying", "always", "farm"])) },
       skill: { build: data.skill?.build || "unavailable", enabled: data.skill?.enabled === true,
         tracking: data.skill?.tracking === true,
-        legend: "guard_blocked/q_blocked=extension blocked before native; native_invoked/native_skill_invoked/native_return=call evidence only; local_state_changed=client state only; snapshot_cooldown=newer client snapshot; unconfirmed=not enough evidence; no stage proves server receipt or damage",
+        legend: "guard_blocked/q_blocked=extension block; native_rejected=host.cast returned false without scene.useSkill; reason unknown means native conditions could not be isolated; conditions are observed allowlisted predicates, not guessed cost formulas; repeats are coalesced; local/snapshot stages describe client evidence only, never server receipt or damage",
         events: (Array.isArray(data.skill?.events) ? data.skill.events : []).slice(-80).map((row) => {
           const result = pick(row, [["at", "t"], ["attemptId", "attempt"], ["skill", "skill"],
             ["source", "source"], ["stage", "stage"], ["reason", "reason"], ["method", "method"],
-            ["returnKind", "return"], ["localCooldownDeltaMs", "localCooldownDeltaMs"],
+            ["returnKind", "return"], ["conditions", "conditions"], ["skillWaitMs", "skillWaitMs"],
+            ["targetDistance", "targetDistance"], ["maxRange", "maxRange"], ["repeatCount", "repeatCount"],
+            ["localCooldownDeltaMs", "localCooldownDeltaMs"],
             ["snapshotAdvanceMs", "snapshotAdvanceMs"], ["cooldownBeforeMs", "cooldownBeforeMs"],
             ["cooldownAfterMs", "cooldownAfterMs"], ["dashStarted", "dashStarted"],
             ["pendingSkillChanged", "pendingSkillChanged"]]);
