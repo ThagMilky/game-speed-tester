@@ -5,7 +5,7 @@
   const slot = new URLSearchParams(location.search).get("slot") ?? "";
   const attemptId = new URLSearchParams(location.search).get("gstAttempt") ?? "";
   const pageRequests = new Map();
-  let sequence = 0, lastIdentity = "", lastProfile = "", pendingAttempt = null;
+  let sequence = 0, lastIdentity = "", lastProfile = "", pendingAttempt = null, attemptBusy = false;
   let currentContext = null, refreshBusy = false, lastError = "";
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const visible = (element) => !!element?.getClientRects?.().length;
@@ -62,8 +62,13 @@
       return;
     }
     if (!pendingAttempt?.submitted || pendingAttempt.slot !== slot || pendingAttempt.accountId !== account.id
-        || !snapshot?.connected || snapshot.loginVisible || snapshot.loginRejected || !snapshot.character
-        || (account.expectedCharacter && snapshot.character !== account.expectedCharacter)) return;
+        || !snapshot?.connected || snapshot.loginVisible || snapshot.loginRejected || !snapshot.character) return;
+    if ((account.expectedCharacter && snapshot.character !== account.expectedCharacter)
+        || (account.expectedClassId && account.expectedClassId !== snapshot.classId)
+        || (account.expectedCharacterId && account.expectedCharacterId !== snapshot.characterId)) {
+      await failPendingAttempt("saved_identity_conflict");
+      return;
+    }
     let response;
     try {
       response = await chrome.runtime.sendMessage({ type: "gst:account-confirm", attemptId: pendingAttempt.id,
@@ -173,33 +178,94 @@
       && input !== user && input !== pass
       && !["hidden", "checkbox", "radio", "submit", "button"].includes(input.type));
   }
+  async function stopForAccountSwitch() {
+    const result = await pageRequest("stop-for-switch", 3500);
+    return result
+      ? { ready: result.ready === true, reason: result.reason ?? "unknown", autoOn: result.autoOn }
+      : { ready: false, reason: "automation_stop_unconfirmed" };
+  }
   async function fillNativeLogin(message) {
     if (!message || typeof message.attemptId !== "string" || message.attemptId !== attemptId
         || message.slot !== slot || typeof message.accountId !== "string")
       return { accepted: false, reason: "attempt_mismatch" };
-    if (pendingAttempt?.id === message.attemptId) return { accepted: true, submitted: pendingAttempt.submitted };
-    if (pendingAttempt) return { accepted: false, reason: "another_attempt_active" };
+    if (pendingAttempt?.id === message.attemptId)
+      return { accepted: true, submitted: pendingAttempt.submitted, recoveryStarted: pendingAttempt.logoutRequested === true };
+    if (pendingAttempt || attemptBusy) return { accepted: false, reason: "another_attempt_active" };
     const account = await accountForSlot();
     if (!account || account.id !== message.accountId) return { accepted: false, reason: "account_not_found" };
     lastError = "";
+    pendingAttempt = { id: message.attemptId, accountId: account.id, slot, submitted: false,
+      logoutRequested: message.resume === true, deadline: Number.isFinite(message.deadline)
+        ? message.deadline : Date.now() + 120000 };
+    attemptBusy = true;
+    try {
+      return await continueNativeLogin(account, message.resume === true);
+    } catch {
+      await failPendingAttempt("native_login_failed");
+      return { accepted: false, reason: "native_login_failed" };
+    } finally { attemptBusy = false; }
+  }
+  async function requestNativeLogout() {
+    const pending = pendingAttempt;
+    if (!pending) return { accepted: false, reason: "attempt_expired" };
+    let stopped;
+    try { stopped = await stopForAccountSwitch(); } catch { stopped = null; }
+    if (stopped?.ready !== true || stopped.autoOn !== false) {
+      const reason = stopped?.reason || "automation_stop_unconfirmed";
+      await failPendingAttempt(reason);
+      return { accepted: false, reason };
+    }
+    let marked;
+    try {
+      marked = await chrome.runtime.sendMessage({ type: "gst:account-attempt-recovery",
+        attemptId: pending.id, accountId: pending.accountId, slot: pending.slot });
+    } catch { marked = null; }
+    if (marked?.accepted !== true) {
+      await failPendingAttempt(marked?.reason || "attempt_expired");
+      return { accepted: false, reason: marked?.reason || "attempt_expired" };
+    }
+    pending.logoutRequested = true;
+    pending.deadline = marked.deadline;
+    const logout = document.getElementById("logout-button");
+    if (!logout?.isConnected || logout.disabled || typeof logout.click !== "function") {
+      await failPendingAttempt("native_logout_unavailable");
+      return { accepted: false, reason: "native_logout_unavailable" };
+    }
+    logout.click();
+    return { accepted: true, recoveryStarted: true };
+  }
+  async function continueNativeLogin(account, resumed = false) {
     let status = await refresh();
     if (status?.verified && status.accountId === account.id) {
+      pendingAttempt = null;
       removeAttemptFromUrl();
       return { accepted: true, reused: true, character: status.character };
     }
-    if (status?.connected) return { accepted: false, reason: "identity_confirmation_required" };
-    pendingAttempt = { id: message.attemptId, accountId: account.id, slot, submitted: false,
-      deadline: Date.now() + 120000 };
-    const until = Date.now() + 20000;
-    while (Date.now() < until && pendingAttempt?.id === message.attemptId) {
+    if (status?.connected) {
+      if (resumed || pendingAttempt.logoutRequested) {
+        await failPendingAttempt("native_logout_not_effective");
+        return { accepted: false, reason: "native_logout_not_effective" };
+      }
+      return requestNativeLogout();
+    }
+    const until = Math.min(Date.now() + 20000, pendingAttempt?.deadline ?? Date.now() + 20000);
+    while (Date.now() < until && pendingAttempt?.id === attemptId) {
       status = await refresh();
       if (status?.verified && status.accountId === account.id) {
         pendingAttempt = null;
         removeAttemptFromUrl();
         return { accepted: true, reused: true, character: status.character };
       }
+      if (status?.connected) {
+        if (pendingAttempt.logoutRequested) {
+          await failPendingAttempt("native_logout_not_effective");
+          return { accepted: false, reason: "native_logout_not_effective" };
+        }
+        return requestNativeLogout();
+      }
       if (status?.loginError === "native_login_rejected") {
-        pendingAttempt = null; return { accepted: false, reason: "native_login_rejected" };
+        await failPendingAttempt("native_login_rejected");
+        return { accepted: false, reason: "native_login_rejected" };
       }
       const root = document.querySelector("#login");
       const form = root?.querySelector("form");
@@ -207,7 +273,8 @@
         const user = root.querySelector('input[name="login"]');
         const pass = root.querySelector('input[name="lpass"]');
         if (challengeDetected(root, user, pass)) {
-          pendingAttempt = null; return { accepted: false, reason: "verification_required" };
+          await failPendingAttempt("verification_required");
+          return { accepted: false, reason: "verification_required" };
         }
         const other = root.querySelector(".other");
         if (other && visible(other)) { other.click(); await delay(100); continue; }
@@ -215,10 +282,10 @@
         if (loginTab && !loginTab.classList.contains("on")) { loginTab.click(); await delay(50); continue; }
         const nativeForm = user?.form;
         if (!user || !pass || nativeForm !== form || !nativeForm.requestSubmit) {
-          pendingAttempt = null; return { accepted: false, reason: "native_login_ui_changed" };
+          await failPendingAttempt("native_login_ui_changed");
+          return { accepted: false, reason: "native_login_ui_changed" };
         }
         const remember = root.querySelector('input[name="keep"]');
-        // Let the native login create its slot session, but avoid its optional persistent remember-token.
         if (remember) remember.checked = false;
         user.value = account.username;
         pass.value = account.password;
@@ -232,8 +299,31 @@
       }
       await delay(250);
     }
-    pendingAttempt = null;
+    await failPendingAttempt("native_login_timeout");
     return { accepted: false, reason: "native_login_timeout" };
+  }
+  async function resumePendingAttempt() {
+    if (!attemptId || !slot || pendingAttempt || attemptBusy) return;
+    const account = await accountForSlot();
+    if (!account) return;
+    let response;
+    try {
+      response = await chrome.runtime.sendMessage({ type: "gst:account-attempt-resume",
+        attemptId, accountId: account.id, slot });
+    } catch {
+      lastError = "attempt_context_unavailable";
+      await refresh(true);
+      return;
+    }
+    if (response?.accepted !== true || response.attemptId !== attemptId || response.slot !== slot) {
+      if (response?.reason !== "recovery_not_pending") {
+        lastError = response?.reason || "attempt_expired";
+        if (response?.reason === "attempt_expired" || response?.reason === "account_not_found") removeAttemptFromUrl();
+        await refresh(true);
+      }
+      return;
+    }
+    await fillNativeLogin({ ...response, resume: true });
   }
 
   window.addEventListener("message", (event) => {
@@ -264,12 +354,11 @@
       return true;
     }
     if (message?.type === "gst:account-stop") {
-      pageRequest("stop-for-switch", 3500).then((result) => respond(result
-        ? { ready: result.ready === true, reason: result.reason ?? "unknown", autoOn: result.autoOn }
-        : { ready: false, reason: "automation_stop_unconfirmed" }));
+      stopForAccountSwitch().then(respond);
       return true;
     }
   });
   setInterval(() => { void refresh(); }, 1000);
   void refresh(true);
+  void resumePendingAttempt();
 })();

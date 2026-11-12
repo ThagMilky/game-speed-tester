@@ -22,10 +22,15 @@
     native_login_rejected: "Game chưa nhận thông tin đăng nhập. Kiểm tra tên đăng nhập và mật khẩu trong form.",
     native_login_timeout: "Không thấy form đăng nhập phù hợp trong thời gian chờ.",
     native_login_ui_changed: "Form đăng nhập của game đã đổi; không tự điền vào giao diện khác.",
+    native_logout_unavailable: "Không tìm thấy nút đăng xuất native của game; chưa đổi nhân vật.",
+    native_logout_not_effective: "Game vẫn giữ nhân vật cũ sau khi đăng xuất; hãy xử lý trong giao diện game rồi thử lại.",
     unexpected_character: "Nhân vật trong game không khớp tài khoản đã xác nhận.",
     identity_confirmation_required: "Tab đang có nhân vật chưa được xác nhận cho tài khoản này.",
+    saved_identity_conflict: "Nhân vật đăng nhập khác dấu xác nhận đã lưu. Dùng nút “Xác nhận lại nhân vật” nếu thông tin cũ sai; hồ sơ riêng sẽ được giữ.",
     account_not_found: "Không tìm thấy tài khoản đã lưu.",
     attempt_already_active: "Tab này đang có một lần đăng nhập khác.",
+    attempt_expired: "Lượt đăng nhập đã hết hạn hoặc không còn hợp lệ. Hãy bắt đầu lại từ nút tài khoản.",
+    attempt_context_unavailable: "Chưa kiểm tra lại được lượt đăng nhập sau khi tải lại trang. Hãy thử đăng nhập lại.",
     tab_load_timeout: "Tab game chưa tải xong để tiếp tục đăng nhập.",
     account_context_unavailable: "Chưa đọc được trạng thái tài khoản trong tab."
   };
@@ -62,7 +67,8 @@
   function render() {
     const nodes = rows.map((row) => {
       const view = { id: row.id, slot: row.slot, label: row.label, username: row.username,
-        expectedCharacter: row.expectedCharacter, expectedClassId: row.expectedClassId };
+        expectedCharacter: row.expectedCharacter, expectedClassId: row.expectedClassId,
+        expectedCharacterId: row.expectedCharacterId };
       const card = document.createElement("article");
       card.className = "account-entry";
       const heading = document.createElement("h3");
@@ -87,7 +93,14 @@
       const remove = document.createElement("button");
       remove.type = "button"; remove.className = "quiet"; remove.textContent = "Xóa";
       remove.addEventListener("click", () => { void removeAccount(view); });
-      actions.append(login, open, editButton, remove);
+      actions.append(login, open, editButton);
+      if (row.expectedCharacter || row.expectedClassId || row.expectedCharacterId) {
+        const reverify = document.createElement("button");
+        reverify.type = "button"; reverify.className = "quiet"; reverify.textContent = "Xác nhận lại nhân vật";
+        reverify.addEventListener("click", () => { void clearSavedIdentity(view); });
+        actions.append(reverify);
+      }
+      actions.append(remove);
       card.append(heading, user, identity, actions);
       return card;
     });
@@ -131,6 +144,7 @@
       if (result?.accepted) {
         feedback.textContent = result.reused
           ? "Đã xác nhận " + row.label + " · " + result.character + "."
+          : result.recoveryStarted ? "Đã dùng nút đăng xuất của game trên tab này; đang chờ form để đăng nhập lại."
           : result.submitted ? "Đã gửi form đăng nhập của game; chờ game xác nhận nhân vật."
             : "Tab game đã mở; chờ giao diện game xác nhận tài khoản.";
       } else feedback.textContent = explain(result?.reason);
@@ -154,6 +168,37 @@
       await reload();
       feedback.textContent = "Đã xóa tài khoản và cài đặt riêng trong extension.";
     } catch { feedback.textContent = "Chưa xóa được tài khoản."; }
+    finally { setBusy(false); }
+  }
+  async function clearSavedIdentity(row) {
+    if (busy || !window.confirm("Xóa dấu xác nhận nhân vật “" + (row.expectedCharacter || "đã lưu")
+        + "” của tài khoản “" + row.label + "”? Hồ sơ Farm/Thu hoạch sẽ được giữ nguyên. Lần đăng nhập kế tiếp sẽ xác nhận lại nhân vật.")) return;
+    setBusy(true);
+    try {
+      const captured = await GSTAccountProfiles.captureActiveContext();
+      if (captured.context?.verified && captured.context.accountId === row.id) {
+        let stopped;
+        try { stopped = await chrome.tabs.sendMessage(captured.tabId, { type: "gst:account-stop" }); }
+        catch { stopped = null; }
+        if (stopped?.ready !== true || stopped.autoOn !== false) {
+          feedback.textContent = explain(stopped?.reason || "automation_stop_unconfirmed");
+          return;
+        }
+      }
+      await GSTAccountProfiles.updateAccounts((current) => {
+        const existing = current.find((item) => item.id === row.id && item.slot === row.slot);
+        if (!existing || existing.expectedCharacter !== row.expectedCharacter
+            || existing.expectedClassId !== row.expectedClassId
+            || existing.expectedCharacterId !== row.expectedCharacterId)
+          throw new Error("Saved identity changed.");
+        return current.map((item) => item.id === row.id
+          ? { ...item, expectedCharacter: "", expectedClassId: "", expectedCharacterId: "" }
+          : item);
+      });
+      await reload();
+      feedback.textContent = "Đã xóa dấu xác nhận nhân vật. Hồ sơ riêng được giữ nguyên; hãy đăng nhập lại để xác nhận.";
+      await refreshStatus();
+    } catch { feedback.textContent = "Chưa cập nhật được dấu xác nhận nhân vật."; }
     finally { setBusy(false); }
   }
   form.addEventListener("submit", async (event) => {

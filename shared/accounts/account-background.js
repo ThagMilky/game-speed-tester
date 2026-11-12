@@ -68,6 +68,21 @@ async function clearRemovedTabAttempt(tabId, expectedAttemptId) {
   const observedId = expectedAttemptId || (await getAttempt(tabId))?.attemptId;
   if (observedId) await clearAttempt(tabId, observedId);
 }
+async function recoveryAttempt(tabId, attemptId, accountId, slot, markLogout = false) {
+  if (!Number.isInteger(tabId) || typeof attemptId !== "string" || !attemptId
+      || typeof accountId !== "string" || !accountId || typeof slot !== "string" || !slot) return null;
+  return updateAttempts((records) => {
+    const record = records[String(tabId)];
+    if (!record || record.attemptId !== attemptId || record.accountId !== accountId || record.slot !== slot
+        || record.deadline < Date.now()) return null;
+    if (markLogout) {
+      if ((record.logoutAttempts ?? 0) >= 1) return null;
+      record.logoutAttempts = (record.logoutAttempts ?? 0) + 1;
+      record.recoveryRequested = true;
+    } else if (record.recoveryRequested !== true) return null;
+    return { ...record };
+  });
+}
 async function readTabContext(tabId) {
   try { return await chrome.tabs.sendMessage(tabId, { type: "gst:account-context" }); }
   catch { return null; }
@@ -96,6 +111,13 @@ function buildTargetUrl(base, account, attemptId) {
   url.searchParams.set("slot", account.slot);
   url.searchParams.set("gstAttempt", attemptId);
   return url.href;
+}
+function senderMatchesAttempt(sender, record) {
+  try {
+    const url = new URL(sender.url);
+    return url.origin === origin && url.searchParams.get("slot") === record.slot
+      && url.searchParams.get("gstAttempt") === record.attemptId;
+  } catch { return false; }
 }
 async function launch(message) {
   if (!crypto.randomUUID || !["current", "additional"].includes(message.mode))
@@ -144,7 +166,8 @@ async function launch(message) {
   if (!ready) { await clearAttempt(targetTabId, attemptId); return { accepted: false, reason: "tab_load_timeout" }; }
   try {
     const result = await chrome.tabs.sendMessage(targetTabId, {
-      type: "gst:account-attempt", attemptId, accountId: account.id, slot: account.slot
+      type: "gst:account-attempt", attemptId, accountId: account.id, slot: account.slot,
+      deadline: record.deadline
     });
     if (result?.accepted !== true) {
       await clearAttempt(targetTabId, attemptId);
@@ -154,8 +177,12 @@ async function launch(message) {
       await clearAttempt(targetTabId, attemptId);
       return { accepted: true, reused: true, character: result.character };
     }
-    return { accepted: true, submitted: result.submitted === true, tabId: targetTabId };
+    return { accepted: true, submitted: result.submitted === true,
+      recoveryStarted: result.recoveryStarted === true, tabId: targetTabId };
   } catch {
+    const record = await getAttempt(targetTabId).catch(() => null);
+    if (record?.attemptId === attemptId && record.recoveryRequested === true && record.deadline > Date.now())
+      return { accepted: true, recoveryStarted: true, tabId: targetTabId };
     await clearAttempt(targetTabId, attemptId);
     return { accepted: false, reason: "target_tab_unavailable" };
   }
@@ -179,7 +206,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
         return { accepted: false, reason: "attempt_expired" };
       if (typeof message.character !== "string" || !message.character.trim())
         return { accepted: false, reason: "identity_unconfirmed" };
-      await navigator.locks.request("gst:accounts:v1", async () => {
+      const update = await navigator.locks.request("gst:accounts:v1", async () => {
         const rows = await readAccounts();
         const index = rows.findIndex((item) => item?.id === record.accountId && item.slot === record.slot);
         if (index < 0) throw new Error("Account changed.");
@@ -187,12 +214,17 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
         if ((account.expectedCharacter && account.expectedCharacter !== message.character)
             || (account.expectedClassId && account.expectedClassId !== message.classId)
             || (account.expectedCharacterId && account.expectedCharacterId !== message.characterId))
-          throw new Error("Identity changed.");
+          return { conflict: true };
         rows[index] = { ...account, expectedCharacter: message.character,
           expectedClassId: typeof message.classId === "string" ? message.classId : "",
           expectedCharacterId: typeof message.characterId === "string" ? message.characterId : "" };
         await chrome.storage.local.set({ [accountsKey]: rows });
+        return { conflict: false };
       });
+      if (update.conflict) {
+        await clearAttempt(tabId, record.attemptId);
+        return { accepted: false, reason: "saved_identity_conflict" };
+      }
       await clearAttempt(tabId, record.attemptId);
       return { accepted: true };
     })().then(respond).catch(async () => {
@@ -200,6 +232,36 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
         await clearAttempt(sender.tab.id, message.attemptId);
       respond({ accepted: false, reason: "identity_save_failed" });
     });
+    return true;
+  }
+  if (message?.type === "gst:account-attempt-recovery") {
+    (async () => {
+      const tabId = sender.tab?.id;
+      if (!senderMatchesAttempt(sender, { attemptId: message.attemptId, slot: message.slot }))
+        return { accepted: false, reason: "attempt_expired" };
+      const record = await recoveryAttempt(tabId, message.attemptId, message.accountId, message.slot, true);
+      return record
+        ? { accepted: true, deadline: record.deadline }
+        : { accepted: false, reason: "attempt_expired" };
+    })().then(respond).catch(() => respond({ accepted: false, reason: "attempt_expired" }));
+    return true;
+  }
+  if (message?.type === "gst:account-attempt-resume") {
+    (async () => {
+      const tabId = sender.tab?.id;
+      if (!senderMatchesAttempt(sender, { attemptId: message.attemptId, slot: message.slot }))
+        return { accepted: false, reason: "attempt_expired" };
+      const observed = await getAttempt(tabId);
+      if (observed?.attemptId === message.attemptId && observed.accountId === message.accountId
+          && observed.slot === message.slot && observed.recoveryRequested !== true)
+        return { accepted: false, reason: "recovery_not_pending" };
+      const record = await recoveryAttempt(tabId, message.attemptId, message.accountId, message.slot);
+      if (!record) return { accepted: false, reason: "attempt_expired" };
+      const account = await getAccount(record.accountId);
+      if (!account || account.slot !== record.slot) return { accepted: false, reason: "account_not_found" };
+      return { accepted: true, attemptId: record.attemptId, accountId: record.accountId,
+        slot: record.slot, deadline: record.deadline, logoutAttempts: record.logoutAttempts ?? 0 };
+    })().then(respond).catch(() => respond({ accepted: false, reason: "attempt_expired" }));
     return true;
   }
   if (message?.type === "gst:account-attempt-failed") {
