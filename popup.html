@@ -112,9 +112,12 @@
           <p class="hint">Tắt chỉ dừng các lần thử bổ sung do extension gọi. Kết nối lại gốc của game vẫn hoạt động.</p>
           <label class="switch-row"><span>Tự tải lại sau khi kết nối lỗi kéo dài</span><input id="connectionAutoReload" class="switch" type="checkbox"></label>
           <div class="two-columns separated">
-            <div><label for="connectionReloadDelay">Chờ trước khi đếm ngược (giây)</label><input id="connectionReloadDelay" type="number" min="30" max="600" step="1" value="90"></div>
+            <div><label for="connectionReloadDelay">Chờ trước khi đếm ngược (30–600 giây)</label><input id="connectionReloadDelay" type="number" min="30" max="600" step="1" value="90"></div>
+            <div><label for="connectionReloadCountdown">Thời gian đếm ngược (3–60 giây)</label><input id="connectionReloadCountdown" type="number" min="3" max="60" step="1" value="10"></div>
+            <div><label for="connectionReloadLimit">Số lần tối đa (1–10)</label><input id="connectionReloadLimit" type="number" min="1" max="10" step="1" value="3"></div>
+            <div><label for="connectionReloadWindow">Trong khoảng thời gian (5–120 phút)</label><input id="connectionReloadWindow" type="number" min="5" max="120" step="1" value="15"></div>
           </div>
-          <p class="hint">Chỉ tải lại sau khi game báo đúng lỗi mất kết nối và các lần thử đã kết thúc; không tự xử lý màn đăng nhập, lỗi tài khoản hoặc thử thách xác minh. Đếm ngược hủy được trong 10 giây. Tối đa 3 lần trong 15 phút. Khoảng chờ cho phép từ 30 đến 600 giây.</p>
+          <p class="hint">Mặc định: chờ 90 giây, đếm ngược 10 giây, tối đa 3 lần trong 15 phút. Chỉ tải lại sau khi game báo đúng lỗi mất kết nối và các lần thử đã kết thúc; không tự xử lý màn đăng nhập, lỗi tài khoản hoặc thử thách xác minh. Có thể hủy trong lúc đếm ngược.</p>
           <p id="connectionRecoveryScope" class="feature-status" role="status" aria-live="polite">Đang xác định phạm vi cài đặt…</p>
           <p id="connectionRecoveryFeedback" class="notice" role="status" aria-live="polite"></p>
         </fieldset>

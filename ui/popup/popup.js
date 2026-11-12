@@ -322,12 +322,16 @@ async function readCurrentFarmPreferences() {
 }
 
 const connectionRecoveryDefaults = Object.freeze({
-  autoReconnect: true, autoReload: false, reloadDelaySeconds: 90
+  autoReconnect: true, autoReload: false, reloadDelaySeconds: 90,
+  reloadCountdownSeconds: 10, reloadLimit: 3, reloadWindowMinutes: 15
 });
 const connectionRecoveryControls = document.getElementById("connectionRecoveryControls");
 const connectionAutoReconnect = document.getElementById("connectionAutoReconnect");
 const connectionAutoReload = document.getElementById("connectionAutoReload");
 const connectionReloadDelay = document.getElementById("connectionReloadDelay");
+const connectionReloadCountdown = document.getElementById("connectionReloadCountdown");
+const connectionReloadLimit = document.getElementById("connectionReloadLimit");
+const connectionReloadWindow = document.getElementById("connectionReloadWindow");
 const connectionRecoveryScope = document.getElementById("connectionRecoveryScope");
 const connectionRecoveryFeedback = document.getElementById("connectionRecoveryFeedback");
 let connectionRecoveryConfirmed = { ...connectionRecoveryDefaults };
@@ -335,12 +339,15 @@ let connectionRecoveryReady = false;
 let connectionRecoveryRevision = 0;
 let connectionRecoveryQueue = Promise.resolve();
 function normalizeConnectionRecovery(raw = {}) {
-  const delay = Number.isSafeInteger(raw.reloadDelaySeconds)
-    ? Math.max(30, Math.min(600, raw.reloadDelaySeconds)) : 90;
+  const bounded = (value, min, max, fallback) => Number.isSafeInteger(value)
+    ? Math.max(min, Math.min(max, value)) : fallback;
   return {
     autoReconnect: raw.autoReconnect !== false,
     autoReload: raw.autoReload === true,
-    reloadDelaySeconds: delay
+    reloadDelaySeconds: bounded(raw.reloadDelaySeconds, 30, 600, 90),
+    reloadCountdownSeconds: bounded(raw.reloadCountdownSeconds, 3, 60, 10),
+    reloadLimit: bounded(raw.reloadLimit, 1, 10, 3),
+    reloadWindowMinutes: bounded(raw.reloadWindowMinutes, 5, 120, 15)
   };
 }
 function syncConnectionRecovery(raw, { allowed, managed, known = true, label = "" } = {}) {
@@ -348,10 +355,16 @@ function syncConnectionRecovery(raw, { allowed, managed, known = true, label = "
   connectionAutoReconnect.checked = connectionRecoveryConfirmed.autoReconnect;
   connectionAutoReload.checked = connectionRecoveryConfirmed.autoReload;
   connectionReloadDelay.value = String(connectionRecoveryConfirmed.reloadDelaySeconds);
+  connectionReloadCountdown.value = String(connectionRecoveryConfirmed.reloadCountdownSeconds);
+  connectionReloadLimit.value = String(connectionRecoveryConfirmed.reloadLimit);
+  connectionReloadWindow.value = String(connectionRecoveryConfirmed.reloadWindowMinutes);
   connectionRecoveryControls.disabled = !connectionRecoveryReady || !allowed;
   connectionAutoReconnect.disabled = !connectionRecoveryReady || !allowed;
   connectionAutoReload.disabled = !connectionRecoveryReady || !allowed;
   connectionReloadDelay.disabled = !allowed || !connectionRecoveryReady || !connectionRecoveryConfirmed.autoReload;
+  connectionReloadCountdown.disabled = !allowed || !connectionRecoveryReady || !connectionRecoveryConfirmed.autoReload;
+  connectionReloadLimit.disabled = !allowed || !connectionRecoveryReady || !connectionRecoveryConfirmed.autoReload;
+  connectionReloadWindow.disabled = !allowed || !connectionRecoveryReady || !connectionRecoveryConfirmed.autoReload;
   connectionRecoveryScope.textContent = !known
     ? "Không xác định được phạm vi của tab; cài đặt kết nối đang khóa để tránh ghi nhầm hồ sơ."
     : !allowed
@@ -359,29 +372,25 @@ function syncConnectionRecovery(raw, { allowed, managed, known = true, label = "
     : managed ? `Cài đặt kết nối riêng cho ${label || "nick đã xác nhận"}.`
       : "Đang dùng mặc định chung cho tab không quản lý nick.";
 }
-async function connectionTabIsManaged(tabId) {
-  if (!Number.isInteger(tabId)) return false;
-  try {
-    const tab = await chrome.tabs.get(tabId);
-    if (typeof tab.url !== "string") return null;
-    return !!new URL(tab.url).searchParams.get("slot");
-  } catch { return null; }
-}
 async function loadConnectionRecovery() {
   const revision = connectionRecoveryRevision;
   await accountContextPromise;
-  const [stored, managed] = await Promise.all([
+  const expectedContext = popupAccountContext, expectedVersion = popupAccountContextVersion;
+  const [stored, binding] = await Promise.all([
     chrome.storage.local.get(["connectionRecoveryPreferences", GSTAccountProfiles.profilesKey]),
-    connectionTabIsManaged(popupAccountTabId)
+    validatePopupAccountContext(expectedContext, expectedVersion)
   ]);
   if (revision !== connectionRecoveryRevision) return;
-  const context = popupAccountContext;
-  const accountManaged = managed === true || !!context?.slot;
-  const allowed = managed !== null && (!accountManaged || context?.verified === true && !!context.accountId);
-  const preferences = accountManaged && !allowed ? stored.connectionRecoveryPreferences ?? {}
-    : GSTAccountProfiles.currentProfile(context, "connectionRecovery", stored);
+  const context = binding.context;
+  const known = binding.valid && !!context && binding.tabId === popupAccountTabId
+    && context.tabId === popupAccountTabId;
+  const accountManaged = known && !!context.slot;
+  const allowed = known && (!accountManaged || context.verified === true && !!context.accountId);
+  const preferences = !known ? connectionRecoveryDefaults
+    : accountManaged && !allowed ? stored.connectionRecoveryPreferences ?? {}
+      : GSTAccountProfiles.currentProfile(context, "connectionRecovery", stored);
   connectionRecoveryReady = true;
-  syncConnectionRecovery(preferences, { allowed, managed: accountManaged, known: managed !== null,
+  syncConnectionRecovery(preferences, { allowed, managed: accountManaged, known,
     label: context?.verified ? context.accountLabel || context.character : "" });
 }
 function updateConnectionRecovery(patch) {
@@ -390,22 +399,21 @@ function updateConnectionRecovery(patch) {
   const revision = ++connectionRecoveryRevision;
   const save = connectionRecoveryQueue.catch(() => {}).then(async () => {
     await accountContextPromise;
-    const managed = await connectionTabIsManaged(popupAccountTabId);
     const binding = await validatePopupAccountContext(expectedContext, expectedVersion);
-    const accountManaged = managed === true || !!binding.context?.slot;
-    if (!binding.valid || managed === null
-        || accountManaged && (binding.context?.verified !== true || !binding.context.accountId)
-        || !accountManaged && binding.context?.accountId && binding.context.slot)
-      throw new Error("Nick hoặc tab đã thay đổi; chưa lưu cài đặt kết nối.");
     const context = binding.context;
+    const known = binding.valid && !!context && binding.tabId === popupAccountTabId
+      && context.tabId === popupAccountTabId;
+    const accountManaged = known && !!context.slot;
+    if (!known || accountManaged && (context.verified !== true || !context.accountId))
+      throw new Error("Nick hoặc tab đã thay đổi; chưa lưu cài đặt kết nối.");
     const written = await GSTAccountProfiles.updateFeature(context, "connectionRecovery",
       (current) => normalizeConnectionRecovery({ ...current, ...patch }), async () => {
         const latest = await validatePopupAccountContext(expectedContext, expectedVersion);
-        const latestManaged = await connectionTabIsManaged(binding.tabId);
-        const latestManagedContext = latestManaged === true || !!latest.context?.slot;
-        return latest.valid && latestManaged === managed
-          && (!latestManagedContext || latest.context?.verified === true && latest.context.accountId === context.accountId)
-          && !( !latestManagedContext && latest.context?.accountId && latest.context.slot);
+        const latestContext = latest.context;
+        return latest.valid && !!latestContext && latest.tabId === binding.tabId
+          && latestContext.tabId === binding.tabId
+          && !!latestContext.slot === accountManaged
+          && (!accountManaged || latestContext.verified === true && latestContext.accountId === context.accountId);
       });
     if (Number.isInteger(binding.tabId)) {
       try { await chrome.tabs.sendMessage(binding.tabId, { type: "gst:account-context", fresh: true }); }
@@ -432,16 +440,21 @@ for (const [input, key] of [[connectionAutoReconnect, "autoReconnect"], [connect
     void updateConnectionRecovery({ [key]: input.checked });
   });
 }
-connectionReloadDelay.addEventListener("change", () => {
-  const value = Number(connectionReloadDelay.value);
-  if (!Number.isSafeInteger(value) || value < 30 || value > 600) {
-    connectionRecoveryFeedback.textContent = "Khoảng chờ phải từ 30 đến 600 giây.";
-    connectionReloadDelay.value = String(connectionRecoveryConfirmed.reloadDelaySeconds);
+for (const [input, key, min, max, label] of [
+  [connectionReloadDelay, "reloadDelaySeconds", 30, 600, "Khoảng chờ phải từ 30 đến 600 giây."],
+  [connectionReloadCountdown, "reloadCountdownSeconds", 3, 60, "Đếm ngược phải từ 3 đến 60 giây."],
+  [connectionReloadLimit, "reloadLimit", 1, 10, "Số lần tải lại phải từ 1 đến 10."],
+  [connectionReloadWindow, "reloadWindowMinutes", 5, 120, "Khoảng giới hạn phải từ 5 đến 120 phút."]
+]) input.addEventListener("change", () => {
+  const value = Number(input.value);
+  if (!Number.isSafeInteger(value) || value < min || value > max) {
+    connectionRecoveryFeedback.textContent = label;
+    input.value = String(connectionRecoveryConfirmed[key]);
     return;
   }
-  connectionReloadDelay.disabled = true;
+  input.disabled = true;
   connectionRecoveryFeedback.textContent = "Đang lưu cài đặt kết nối…";
-  void updateConnectionRecovery({ reloadDelaySeconds: value });
+  void updateConnectionRecovery({ [key]: value });
 });
 void accountContextPromise.then(loadConnectionRecovery);
 window.addEventListener("gst:popup-account-context-change", () => { void loadConnectionRecovery(); });

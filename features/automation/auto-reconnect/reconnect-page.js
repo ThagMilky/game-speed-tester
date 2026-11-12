@@ -4,11 +4,9 @@
   // decisions inside the game's original driver.
   const retryDelays = [15000, 30000, 60000];
   const replyTimeout = 12000;
-  const defaults = Object.freeze({ autoReconnect: true, autoReload: false, reloadDelaySeconds: 90 });
+  const defaults = Object.freeze({ autoReconnect: true, autoReload: false, reloadDelaySeconds: 90,
+    reloadCountdownSeconds: 10, reloadLimit: 3, reloadWindowMinutes: 15 });
   const episodeStorageKey = "gst:connection-recovery:v1";
-  const reloadWindowMs = 15 * 60 * 1000;
-  const reloadLimit = 3;
-  const cancelSeconds = 10;
   let suspended = false, timer = null, state = null;
   let preferences = { ...defaults }, profileContext = null, preferencesReady = false;
   let activeScopeKey = "", reloadTimer = null, reloadBanner = null;
@@ -28,12 +26,15 @@
       && typeof driver.link?.open === "function";
   }
   function normalizePreferences(value = {}) {
-    const delay = Number.isSafeInteger(value.reloadDelaySeconds)
-      ? Math.max(30, Math.min(600, value.reloadDelaySeconds)) : defaults.reloadDelaySeconds;
+    const bounded = (candidate, min, max, fallback) => Number.isSafeInteger(candidate)
+      ? Math.max(min, Math.min(max, candidate)) : fallback;
     return {
       autoReconnect: value.autoReconnect !== false,
       autoReload: value.autoReload === true,
-      reloadDelaySeconds: delay
+      reloadDelaySeconds: bounded(value.reloadDelaySeconds, 30, 600, defaults.reloadDelaySeconds),
+      reloadCountdownSeconds: bounded(value.reloadCountdownSeconds, 3, 60, defaults.reloadCountdownSeconds),
+      reloadLimit: bounded(value.reloadLimit, 1, 10, defaults.reloadLimit),
+      reloadWindowMinutes: bounded(value.reloadWindowMinutes, 5, 120, defaults.reloadWindowMinutes)
     };
   }
   function readRecords() {
@@ -73,7 +74,7 @@
     memoryCanceled.delete(scopeKey);
   }
   function hideReloadBanner() {
-    reloadBanner?.remove();
+    reloadBanner?.root?.remove();
     reloadBanner = null;
   }
   function stopReloadCountdown() {
@@ -81,7 +82,7 @@
     reloadTimer = null;
   }
   function showReloadBanner(message, cancelAction = null) {
-    if (!reloadBanner?.isConnected) {
+    if (!reloadBanner?.root?.isConnected) {
       const root = document.createElement("div");
       root.setAttribute("role", "status");
       root.setAttribute("aria-live", "assertive");
@@ -125,16 +126,17 @@
         classId: context.expectedClassId || current.classId });
     }
     if (context?.managed || context?.slot) return null;
-    return JSON.stringify({ type: "unmanaged", character: current.character,
-      classId: current.classId, characterId: current.characterId });
+    // sessionStorage already isolates this record to the current tab. Character
+    // and class keep unmanaged contexts distinct while ignoring transient entity IDs.
+    return JSON.stringify({ type: "unmanaged", character: current.character, classId: current.classId });
   }
-  function cancelCurrentOutage(scopeKey, text = "Tự tải lại đã bị hủy cho lần mất kết nối này.") {
+  function cancelCurrentOutage(scopeKey) {
     if (!scopeKey) return;
     memoryCanceled.add(scopeKey);
     const record = readRecords()[scopeKey];
     if (record) { record.canceled = true; record.countdownStartedAt = 0; saveRecord(record); }
     stopReloadCountdown();
-    showReloadBanner(text);
+    hideReloadBanner();
   }
   function applyProfileMessage(data) {
     const context = data.connectionRecoveryContext;
@@ -155,7 +157,8 @@
     preferencesReady = true;
     const scene = sceneNow();
     const nextScope = scene ? reloadScope(scene) : null;
-    if (previousScope && nextScope !== previousScope) {
+    const settingsChanged = Object.keys(defaults).some((key) => preferences[key] !== previous[key]);
+    if (previousScope && (nextScope !== previousScope || settingsChanged)) {
       const oldRecord = readRecords()[previousScope];
       if (oldRecord?.countdownStartedAt) { oldRecord.countdownStartedAt = 0; saveRecord(oldRecord); }
       stopReloadCountdown();
@@ -163,7 +166,7 @@
     }
     activeScopeKey = nextScope ?? "";
     if (previous.autoReload && !preferences.autoReload && previousScope && previousScope === nextScope)
-      cancelCurrentOutage(previousScope, "Tự tải lại đã tắt; lần mất kết nối hiện tại sẽ không tự tải lại.");
+      cancelCurrentOutage(previousScope);
   }
   function detach() {
     const previous = state;
@@ -325,6 +328,7 @@
       showReloadBanner("Không lưu được giới hạn an toàn trong tab; extension sẽ không tự tải lại.");
       return;
     }
+    const reloadWindowMs = preferences.reloadWindowMinutes * 60 * 1000;
     const retainedReloads = record.reloads.filter((at) => Number.isFinite(at) && wallNow - at < reloadWindowMs);
     if (retainedReloads.length !== record.reloads.length) {
       record.reloads = retainedReloads;
@@ -341,14 +345,14 @@
       return;
     }
     if (record.canceled || memoryCanceled.has(scopeKey)) {
-      showReloadBanner("Tự tải lại đã bị hủy cho lần mất kết nối này.");
+      hideReloadBanner();
       return;
     }
     if (!owner.nativeReconnectStarted
         || preferences.autoReconnect && record.extensionAttempts < retryDelays.length) return;
     if (wallNow - record.startedAt < preferences.reloadDelaySeconds * 1000) return;
-    if (record.reloads.length >= reloadLimit) {
-      showReloadBanner("Đã đạt giới hạn 3 lần tải lại trong 15 phút. Hãy kiểm tra kết nối thủ công.");
+    if (record.reloads.length >= preferences.reloadLimit) {
+      showReloadBanner(`Đã đạt giới hạn ${preferences.reloadLimit} lần tải lại trong ${preferences.reloadWindowMinutes} phút. Hãy kiểm tra kết nối thủ công.`);
       return;
     }
     if (!record.countdownStartedAt) {
@@ -358,7 +362,7 @@
         return;
       }
     }
-    const due = record.countdownStartedAt + cancelSeconds * 1000;
+    const due = record.countdownStartedAt + preferences.reloadCountdownSeconds * 1000;
     const remaining = Math.max(0, Math.ceil((due - wallNow) / 1000));
     showReloadBanner(`Kết nối vẫn lỗi; trang sẽ tải lại sau ${remaining} giây.`, () => {
       const latestScope = reloadScope(owner.scene);
@@ -390,19 +394,23 @@
         return "Mạng: trạng thái phiên đang mơ hồ; extension tạm dừng hành động tự động để tránh tải lại nhầm.";
       const scopeKey = reloadScope(owner.scene);
       if (!preferencesReady) return "Mạng: lỗi kết nối đã được game xác nhận; đang đọc cài đặt.";
+      const record = scopeKey ? readRecords()[scopeKey] : null;
+      if (record?.canceled || memoryCanceled.has(scopeKey))
+        return "Mạng: tự tải lại đã bị hủy cho lần mất kết nối này.";
       if (preferences.autoReload && !scopeKey)
         return "Mạng: tự tải lại đang chờ xác nhận nhân vật/tab; không đủ identity an toàn.";
       if (preferences.autoReload && navigator.onLine === false)
         return "Mạng: trình duyệt đang offline; chờ kết nối trước khi tự tải lại.";
       if (preferences.autoReload && !driver.reconnecting && !driver.handingOver && !owner.pending) {
-        const record = scopeKey ? readRecords()[scopeKey] : null;
-        if (record?.reloads?.filter((at) => Date.now() - at < reloadWindowMs).length >= reloadLimit)
-          return "Mạng: đã đạt giới hạn tự tải lại; cần kiểm tra thủ công.";
+        const reloadWindowMs = preferences.reloadWindowMinutes * 60 * 1000;
+        if (record?.reloads?.filter((at) => Date.now() - at < reloadWindowMs).length >= preferences.reloadLimit)
+          return `Mạng: đã đạt giới hạn ${preferences.reloadLimit} lần trong ${preferences.reloadWindowMinutes} phút; cần kiểm tra thủ công.`;
         if (!owner.nativeReconnectStarted)
           return "Mạng: đang chờ xác nhận kết quả lần thử reconnect gốc của game.";
         if (preferences.autoReconnect && (record?.extensionAttempts ?? 0) < retryDelays.length)
           return "Mạng: game báo mất kết nối; đang chờ các lần thử bổ sung kết thúc.";
-        if (preferences.autoReload) return "Mạng: đang chờ thời gian tải lại đã đặt.";
+        if (preferences.autoReload)
+          return `Mạng: chờ ${preferences.reloadDelaySeconds} giây, sau đó đếm ngược ${preferences.reloadCountdownSeconds} giây.`;
       }
       if (!preferences.autoReconnect && !preferences.autoReload)
         return "Mạng: hỗ trợ reconnect của extension đang tắt; dùng nút Kết nối lại của game nếu cần.";
@@ -469,6 +477,7 @@
       }
       owner.healthySince = null;
       retry(owner, now, true);
+      manageReload(owner, now);
       return;
     }
     const persistedEpisode = readRecords()[reloadScope(scene) ?? ""];
