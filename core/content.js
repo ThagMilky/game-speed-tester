@@ -17,7 +17,6 @@
   let farmDisplayTimer = null;
   let displaySuspended = false;
   let latestFps = null;
-  let realmTime = "Bí cảnh: đang đọc dữ liệu…";
 
   function monitorFarmDisplay() {
     const needed = !displaySuspended && displayPreferences?.visible
@@ -39,8 +38,8 @@
   function normalizeDisplay(value) {
     return {
       visible: value?.visible !== false,
-      fields: Object.fromEntries(["override", "speed", "movement", "autoFarm", "harvest", "fps", "realm", "fix", "message"]
-        .map((key) => [key, ["harvest", "fps", "realm"].includes(key) ? value?.fields?.[key] === true : value?.fields?.[key] !== false]))
+      fields: Object.fromEntries(["override", "speed", "movement", "autoFarm", "harvest", "fps", "fix", "message"]
+        .map((key) => [key, ["harvest", "fps"].includes(key) ? value?.fields?.[key] === true : value?.fields?.[key] !== false]))
     };
   }
 
@@ -95,7 +94,6 @@
       : status?.state === "flying" ? "Bay" : "Chưa rõ";
     const fields = displayPreferences.fields;
     const lines = [];
-    if (fields.realm) lines.push(realmTime);
     if (fields.fps) lines.push(`FPS: ${latestFps ?? "—"}`);
     if (fields.override) lines.push(`Override: ${status ? (!status.enabled ? "TẮT" : status.suppressed ? "TẠM TẮT" : "BẬT") : "—"}`);
     if (fields.speed) lines.push(`Tốc độ: ${status?.current ?? "—"}`);
@@ -142,11 +140,6 @@
   }
 
   window.addEventListener("message", (event) => {
-    if (event.source === window && event.origin === origin && event.data?.channel === "gst:realm-time-status:v1") {
-      realmTime = typeof event.data.message === "string" ? event.data.message.slice(0, 300) : "Bí cảnh: chưa cập nhật.";
-      if (displayPreferences?.fields.realm) renderOverlay();
-      return;
-    }
     if (event.source === window && event.origin === origin && event.data?.channel === "gst:fps-status:v1"
         && !event.data.ready) {
       latestFps = Number.isFinite(event.data.fps) && event.data.fps > 0 ? Math.round(event.data.fps) : null;

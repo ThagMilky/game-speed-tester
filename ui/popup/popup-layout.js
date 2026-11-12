@@ -41,8 +41,6 @@
     ["copyFarmDiagnostics", "diagnosticsFarm"],
     ["copyHarvestHistory", "diagnosticsHarvest"],
     ["copyHarvestDebug", "diagnosticsHarvest"],
-    ["copychestHistory", "diagnosticsRealm"],
-    ["copyportalHistory", "diagnosticsRealm"]
   ]) {
     const item = document.getElementById(buttonId)?.closest("details.diagnostic");
     const target = document.getElementById(targetId);

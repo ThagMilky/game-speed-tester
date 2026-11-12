@@ -14,13 +14,10 @@
   <script src="features/automation/auto-harvest/harvest-options.js" defer></script>
   <script src="features/automation/auto-harvest/harvest-popup.js" defer></script>
   <script src="features/automation/auto-farm/farm-session-popup.js" defer></script>
-  <script src="features/automation/auto-realm/realm-history-popup.js" defer></script>
   <script src="shared/diagnostics/farm-diagnostics-popup.js" defer></script>
   <script src="features/automation/auto-potion/potion-popup.js" defer></script>
   <script src="features/visual/fps/fps-options.js" defer></script>
   <script src="features/visual/fps/fps-popup.js" defer></script>
-  <script src="features/automation/auto-realm/realm-time-popup.js" defer></script>
-  <script src="features/automation/auto-chest/chest-popup.js" defer></script>
   <script src="features/automation/auto-quest/quest-popup.js" defer></script>
   <script src="shared/accounts/accounts-popup.js" defer></script>
   <script src="features/movement/flight/flight-popup.js" defer></script>
@@ -45,7 +42,6 @@
       <span class="nav-caption">TỰ ĐỘNG</span>
       <button type="button" class="nav-item" data-nav-panel="farm">Auto Farm</button>
       <button type="button" class="nav-item" data-nav-panel="harvest">Thu hoạch</button>
-      <button type="button" class="nav-item" data-nav-panel="realm">Rương &amp; thời gian</button>
       <button type="button" class="nav-item" data-nav-panel="quest">Auto Quest</button>
       <span class="nav-caption">CÀI ĐẶT</span>
       <button type="button" class="nav-item" data-nav-panel="accounts">Tài khoản</button>
@@ -76,7 +72,6 @@
           <div class="dashboard-grid" aria-label="Mở nhanh tính năng">
             <button type="button" class="dashboard-tile" data-open-panel="farm"><strong>Auto Farm</strong><span data-summary-for="farm">Đang đọc trạng thái…</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="harvest"><strong>Thu hoạch</strong><span data-summary-for="harvest">Đang đọc cài đặt…</span></button>
-            <button type="button" class="dashboard-tile" data-open-panel="realm"><strong>Rương &amp; thời gian</strong><span data-summary-for="realm">Đang đọc cài đặt…</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="quest"><strong>Auto Quest</strong><span data-summary-for="quest">Đang đọc trạng thái…</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="speed"><strong>Tốc độ &amp; bay</strong><span data-summary-for="speed">Đang đọc cài đặt…</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="fps"><strong>Hình ảnh &amp; FPS</strong><span data-summary-for="fps">Đang đọc cài đặt…</span></button>
@@ -191,6 +186,11 @@
             <label class="check-row separated"><input id="farmNearbyClear" type="checkbox"><span>Chủ động dọn quái sát người (có thể ngoài bộ lọc)</span></label>
             <div class="input-action"><div><label for="farmNearbyRadius">Bán kính dọn gần (1–6 ô)</label><input id="farmNearbyRadius" type="number" min="1" max="6" step="1" value="2"></div></div>
             <p class="hint">Không đuổi quái xa; ưu tiên đánh thường 1–2 quái ngoài bộ lọc. Luôn tôn trọng lựa chọn loại boss và nhường thao tác tay.</p>
+        <div class="separated">
+          <label class="check-row"><input id="breakSeals" type="checkbox" disabled><span>Tự phá phong ấn khi đánh boss bí cảnh</span></label>
+          <p class="hint">Chỉ dùng ở Tool hỗ trợ; lựa chọn vẫn được lưu khi chuyển chế độ.</p>
+          <p class="hint">Ưu tiên phong ấn còn đòn, dùng đường đi/đánh thường gốc rồi quay lại boss. Nếu số đòn không giảm trong 8 giây thì dừng thử mục tiêu đó, không tăng nhịp đánh.</p>
+        </div>
             <label class="check-row separated"><input id="farmKeepAcrossMaps" type="checkbox" checked disabled><span>Giữ Auto Farm qua đổi map</span></label>
             <p class="hint">Giữ ý định Farm theo tab và nhân vật; thao tác tắt Farm chủ động vẫn được tôn trọng.</p>
             <label class="check-row separated"><input id="farmAutoRespawn" type="checkbox" checked><span>Tự động hồi sinh</span></label>
@@ -347,33 +347,6 @@
         </details>
       </div>
     </details>
-    <details class="card" data-category="auto" data-panel="realm">
-      <summary><span><strong>Rương &amp; thời gian</strong><small>Rương, thời gian và thông báo</small></span></summary>
-      <div class="card-body">
-        <div class="separated">
-          <label class="check-row"><input id="breakSeals" type="checkbox" disabled><span>Tự phá phong ấn khi đánh boss bí cảnh</span></label>
-          <p class="hint">Chỉ dùng ở Tool hỗ trợ; lựa chọn vẫn được lưu khi chuyển chế độ.</p>
-          <p class="hint">Ưu tiên phong ấn còn đòn, dùng đường đi/đánh thường gốc rồi quay lại boss. Nếu số đòn không giảm trong 8 giây thì dừng thử mục tiêu đó, không tăng nhịp đánh.</p>
-        </div>
-        <fieldset id="chestControls" class="separated" disabled>
-          <p class="field-title">Tự tìm và mở rương bí cảnh</p>
-          <label class="switch-row"><span>Bật tự tìm và mở rương</span><input id="chestEnabled" class="switch" type="checkbox"></label>
-          <label class="check-row"><input id="chestAllowFarm" type="checkbox"><span>Cho phép nhặt khi Auto Farm bật</span></label>
-          <label for="chestKind">Loại rương</label><select id="chestKind"><option value="all">Tất cả</option><option value="common">Thường</option><option value="hidden">Ẩn</option><option value="treasure">Linh tàng</option></select>
-          <p class="hint">Tự đi tới rương và mở bằng tương tác F của game. Nếu có quái thù địch sát nhân vật/rương, ưu tiên đánh bằng thao tác gốc trước khi mở — hoạt động cả khi Auto Farm đang tắt. Muốn nhặt khi Auto Farm bật, tick cho phép ở trên. Chỉ tìm rương game đã gửi tọa độ; không bỏ bảo vệ hoặc tương tác cổng thoát. Rương không phản hồi/không tới được tạm bỏ 30 giây. Game quyết định quyền nhận đồ.</p>
-        </fieldset>
-        <p id="chestStatus" class="hint" role="status">Đang đọc dữ liệu rương…</p>
-        <p class="field-title">Thời gian &amp; thông báo</p>
-        <label class="check-row"><input id="realmNotices" type="checkbox" disabled><span>Nhắc trước đợt 5 phút, có cổng mở, còn 2 phút để rút</span></label>
-        <p class="hint">Thông báo trong trang, một lần mỗi mốc/đợt theo tab. Cổng thông báo chưa lọc theo bậc cấp; kiểm tra điều kiện vào trong game. Mất dữ liệu thì không đoán lịch.</p>
-        <details class="diagnostic"><summary>10 lượt rương gần nhất</summary>
-          <p class="save-mode">Log các hành trình đã kết thúc trong tab; reload đặt lại. Rương biến mất chưa chứng minh nhận đồ.</p>
-          <button id="copychestHistory" type="button" class="full">Sao chép log rương</button>
-          <textarea wrap="off" id="historychestOutput" class="history-output" hidden readonly rows="2" aria-label="Log rương"></textarea>
-          <p id="historychestFeedback" class="notice" role="status"></p>
-        </details>
-      </div>
-    </details>
     <details class="card" data-category="auto" data-panel="quest">
       <summary><span><strong>Auto Quest · Cơ bản</strong><small>Chỉ làm quest đã chọn trong map hiện tại</small></span></summary>
       <div class="card-body">
@@ -496,7 +469,6 @@
         <fieldset id="displayControls" disabled aria-label="Tùy chọn bảng trạng thái">
           <label class="switch-row"><span>Hiện bảng trong game</span><input id="showOverlay" class="switch" type="checkbox" checked></label>
           <div class="choice-grid">
-            <label class="check-row"><input type="checkbox" data-display-field="realm"><span>Thời gian bí cảnh</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="fps"><span>FPS</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="autoFarm" checked><span>Auto Farm</span></label>
             <label class="check-row"><input type="checkbox" data-display-field="harvest"><span>Thu hoạch (bật/tắt và trạng thái)</span></label>
@@ -561,7 +533,6 @@
       <div class="card-body diagnostics-grid">
         <section class="diagnostics-group"><h3>Auto Farm</h3><div id="diagnosticsFarm"></div></section>
         <section class="diagnostics-group"><h3>Thu hoạch</h3><div id="diagnosticsHarvest"></div></section>
-        <section class="diagnostics-group"><h3>Bí cảnh &amp; rương</h3><div id="diagnosticsRealm"></div></section>
       </div>
     </section>
     <section class="card account-page" data-panel="accounts" hidden aria-labelledby="accountsTitle">

@@ -2,7 +2,6 @@
   "use strict";
   const origin = "https://nghichthienky.online";
   const channel = "gst:account:v1";
-  let sequence = 0;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const connected = (scene) => !!scene?.driver && !scene.driver.closing && !scene.driver.reconnecting
@@ -54,28 +53,6 @@
       return { ready: false, reason: "identity_changed_during_recovery" };
     return { ready: true, settingsOpen: true };
   }
-  function waitForConfiguration(statusChannel, requestId, predicate, timeoutMs = 1200) {
-    return new Promise((resolve) => {
-      const timer = setTimeout(() => {
-        window.removeEventListener("message", onMessage);
-        resolve(false);
-      }, timeoutMs);
-      function onMessage(event) {
-        if (event.source !== window || event.origin !== origin || event.data?.channel !== statusChannel
-            || event.data.requestId !== requestId) return;
-        clearTimeout(timer);
-        window.removeEventListener("message", onMessage);
-        resolve(predicate(event.data));
-      }
-      window.addEventListener("message", onMessage);
-    });
-  }
-  async function disableFeature(channelName, statusName, preferences, predicate) {
-    const requestId = "account-stop:" + (++sequence);
-    const ack = waitForConfiguration(statusName, requestId, predicate);
-    window.postMessage({ channel: channelName, type: "configure", requestId, preferences }, origin);
-    return ack;
-  }
   async function stopForSwitch() {
     const scene = sceneNow();
     const offline = new URL(location.href).searchParams.get("online") === "0";
@@ -98,11 +75,6 @@
       if (globalThis.GSTMapTravel?.active?.(scene) === true)
         return { ready: false, reason: "map_travel_stop_unconfirmed" };
     } catch { return { ready: false, reason: "map_travel_stop_unconfirmed" }; }
-    const [chestStopped] = await Promise.all([
-      disableFeature("gst:chest:v1", "gst:chest-status:v1", { enabled: false },
-        (data) => data.enabled === false)
-    ]);
-    if (!chestStopped) return { ready: false, reason: "task_stop_unconfirmed" };
     if (scene?.auto?.on === true) {
       try { globalThis.GSTFarmSession?.forget?.(scene); } catch { return { ready: false, reason: "farm_stop_failed" }; }
       try { scene.toggleAutoFarm(); } catch { return { ready: false, reason: "farm_stop_failed" }; }

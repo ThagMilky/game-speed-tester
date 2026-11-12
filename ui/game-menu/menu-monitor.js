@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const keys = ["preferences", "farmPreferences", "harvestPreferences", "realmPreferences",
-    "chestPreferences", "flightPreferences", "fpsPreferences", "displayPreferences", "fontPreferences", "realmNotices",
+    "flightPreferences", "fpsPreferences", "displayPreferences", "fontPreferences",
     GSTAccountProfiles.profilesKey];
   const values = {}, changed = new Set();
   const output = document.getElementById("activeFeatures");
@@ -21,8 +21,6 @@
     const summaries = {
       farm: farm === "on" ? "Auto Farm đang bật" : farm === "off" ? "Auto Farm đang tắt" : "Chưa đọc được trạng thái",
       harvest: !loaded ? "Đang đọc cài đặt…" : values.harvestPreferences?.enabled ? "Đã bật tự thu hoạch" : "Chưa bật thu hoạch",
-      realm: !loaded ? "Đang đọc cài đặt…" : values.chestPreferences?.enabled
-        ? "Đã bật tự mở rương" : "Chưa bật tự động",
       quest: quest === "true" ? "Auto Quest đang chạy" : "Chưa xác nhận đang chạy",
       speed: !loaded ? "Đang đọc cài đặt…" : values.preferences?.enabled ? "Đang bật điều chỉnh tốc độ" : "Không điều chỉnh tốc độ",
       fps: !loaded ? "Đang đọc cài đặt…" : values.fpsPreferences?.enabled ? "Đã bật tối ưu FPS" : "Chưa bật tối ưu FPS"
@@ -41,7 +39,6 @@
     for (const [key, field, label] of [
       ["farmPreferences", "breakSeals", "Phong ấn"],
       ["harvestPreferences", "enabled", "Thu hoạch"],
-      ["chestPreferences", "enabled", "Mở rương"],
       ["flightPreferences", "always", "Luôn bay"],
       ["preferences", "enabled", "Tốc độ"],
       ["fpsPreferences", "enabled", "FPS"]
@@ -49,7 +46,6 @@
     if (loaded && values.fontPreferences?.enabled !== false) labels.push("Đổi font");
     if (values.realmPreferences?.keepFarm !== false && loaded) labels.push("Giữ farm");
     if (values.displayPreferences?.visible !== false && loaded) labels.push("Bảng trạng thái");
-    if (values.realmNotices === true) labels.push("Nhắc bí cảnh");
     const signature = JSON.stringify(labels);
     if (output.dataset.signature === signature) return;
     output.dataset.signature = signature;
