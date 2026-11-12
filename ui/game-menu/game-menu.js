@@ -1,6 +1,7 @@
 (() => {
   "use strict";
   let menuOrientation = "vertical", orientationRevision = 0;
+  let menuShortcut = { code: "Tab", ctrl: false, alt: false, shift: false, meta: false }, shortcutRevision = 0;
   const setOrientation = (value) => {
     menuOrientation = value === "horizontal" ? "horizontal" : "vertical";
     if (root) root.dataset.orientation = menuOrientation;
@@ -178,6 +179,16 @@
     frame.style.cssText = "border:0;width:100%;flex:1;min-height:0;background:#11191f";
     panel.querySelector("section").append(frame); frame.focus();
   }
+  function matchesShortcut(event) {
+    return event.code === menuShortcut.code && event.ctrlKey === menuShortcut.ctrl
+      && event.altKey === menuShortcut.alt && event.shiftKey === menuShortcut.shift
+      && event.metaKey === menuShortcut.meta;
+  }
+  window.addEventListener("keydown", (event) => {
+    if (event.repeat || editing || opened || !matchesShortcut(event)) return;
+    if (event.target?.matches?.("input, textarea, select, [contenteditable='true']")) return;
+    event.preventDefault(); event.stopImmediatePropagation(); open();
+  }, true);
   function mount() {
     if (root || !document.body) return;
     root = document.createElement("div"); root.id = "gst-game-menu"; root.dataset.orientation = menuOrientation; root.dataset.open = "false";
@@ -253,6 +264,19 @@
     revision++; saved = GSTMenuPosition.normalize(changes.menuPosition.newValue);
     if (editing) endEdit(); else position();
   });
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local" || !changes.menuShortcut) return;
+    shortcutRevision++; menuShortcut = normalizeShortcut(changes.menuShortcut.newValue);
+  });
+  function normalizeShortcut(value) {
+    const code = typeof value?.code === "string" && /^[A-Za-z][A-Za-z0-9]*$/.test(value.code) ? value.code : "Tab";
+    return { code, ctrl: value?.ctrl === true, alt: value?.alt === true,
+      shift: value?.shift === true, meta: value?.meta === true };
+  }
+  const initialShortcutRevision = shortcutRevision;
+  chrome.storage.local.get("menuShortcut").then((value) => {
+    if (shortcutRevision === initialShortcutRevision) menuShortcut = normalizeShortcut(value.menuShortcut);
+  }).catch(() => {});
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes.menuOrientation) { orientationRevision++; setOrientation(changes.menuOrientation.newValue); }
   });

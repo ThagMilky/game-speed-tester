@@ -10,6 +10,36 @@
   }
   const controls = document.getElementById("menuPositionControls"), select = document.getElementById("menuPosition");
   const feedback = document.getElementById("menuPositionFeedback");
+  const shortcutLabel = document.getElementById("menuShortcutLabel"), shortcutFeedback = document.getElementById("menuShortcutFeedback");
+  let shortcut = { code: "Tab", ctrl: false, alt: false, shift: false, meta: false }, recording = false, shortcutRevision = 0;
+  const showShortcut = () => { shortcutLabel.textContent = `${shortcut.ctrl ? "Ctrl + " : ""}${shortcut.alt ? "Alt + " : ""}${shortcut.shift ? "Shift + " : ""}${shortcut.meta ? "Meta + " : ""}${shortcut.code}`; };
+  const storeShortcut = async (value) => {
+    try { await chrome.storage.local.set({ menuShortcut: value }); shortcut = value; showShortcut(); shortcutFeedback.textContent = "Đã lưu phím mở Menu tool."; }
+    catch { shortcutFeedback.textContent = "Chưa lưu được phím. Thử lại."; }
+  };
+  document.getElementById("captureMenuShortcut").addEventListener("click", () => {
+    recording = true; shortcutFeedback.textContent = "Bấm một phím hoặc giữ Ctrl/Alt/Shift/Meta rồi bấm phím. Esc để hủy.";
+  });
+  document.getElementById("resetMenuShortcut").addEventListener("click", () => {
+    recording = false; void storeShortcut({ code: "Tab", ctrl: false, alt: false, shift: false, meta: false });
+  });
+  window.addEventListener("keydown", (event) => {
+    if (!recording) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    if (event.key === "Escape") { recording = false; shortcutFeedback.textContent = "Đã hủy."; return; }
+    if (["Control", "Alt", "Shift", "Meta"].includes(event.key) || event.repeat) return;
+    if (!event.code || event.code === "F5") { shortcutFeedback.textContent = "Phím này không dùng được."; return; }
+    recording = false;
+    void storeShortcut({ code: event.code, ctrl: event.ctrlKey, alt: event.altKey, shift: event.shiftKey, meta: event.metaKey });
+  }, true);
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes.menuShortcut) { shortcutRevision++; shortcut = changes.menuShortcut.newValue ?? shortcut; showShortcut(); }
+  });
+  const initialShortcutRevision = shortcutRevision;
+  chrome.storage.local.get("menuShortcut").then((value) => {
+    if (shortcutRevision === initialShortcutRevision) shortcut = value.menuShortcut ?? shortcut;
+    showShortcut();
+  }).catch(() => { shortcutFeedback.textContent = "Chưa đọc được phím tắt."; });
   let saved = GSTMenuPosition.normalize(null), busy = false, revision = 0;
   function render() { select.value = saved.position; }
   async function savePosition(value) {

@@ -548,6 +548,11 @@
       <summary><span><strong>Vị trí nút Menu tool</strong><small>Chọn nhanh hoặc kéo tùy chỉnh</small></span></summary>
       <div class="card-body">
         <fieldset id="menuPositionControls" disabled>
+          <label>Phím tắt mở Menu tool</label>
+          <div class="button-row"><button id="captureMenuShortcut" type="button">Đặt phím</button><button id="resetMenuShortcut" type="button" class="quiet">Mặc định</button></div>
+          <p id="menuShortcutLabel" class="hint">Tab</p>
+          <p class="hint">Có thể dùng một phím hoặc tổ hợp Ctrl/Alt/Shift/Meta + phím, ví dụ Ctrl+A.</p>
+          <p id="menuShortcutFeedback" class="notice" role="status" aria-live="polite"></p>
           <label for="menuPosition">Vị trí chọn nhanh (tự lưu)</label>
           <select id="menuPosition"><option value="top-center">Trên giữa — mặc định</option><option value="top-left">Trên trái</option><option value="top-right">Trên phải</option><option value="bottom-left">Dưới trái</option><option value="bottom-center">Dưới giữa</option><option value="bottom-right">Dưới phải</option><option value="custom">Tùy chỉnh</option></select>
           <div class="button-row"><button id="editMenuPosition" type="button">Chỉnh vị trí</button><button id="resetMenuPosition" type="button">Về mặc định</button></div>
