@@ -167,7 +167,10 @@
     }
     append(attempt, "native_rejected", reason, { method: "host.cast", returnKind: "false",
       conditions, skillWaitMs: evidence?.skillWaitMs, targetDistance: evidence?.targetDistance,
-      maxRange: evidence?.maxRange, skillWaitBeforeMs: attempt.skillWaitBeforeMs, repeatCount: 1 });
+      maxRange: evidence?.maxRange, skillWaitBeforeMs: attempt.skillWaitBeforeMs,
+      ...(Number.isFinite(attempt.skillWaitBeforeMs) ? {
+        skillWaitMinMs: attempt.skillWaitBeforeMs, skillWaitMaxMs: attempt.skillWaitBeforeMs
+      } : {}), repeatCount: 1 });
     const row = events.at(-1);
     if (row) lastRejected.set(signature, { at: stamp, row });
     if (lastRejected.size > 32) lastRejected.delete(lastRejected.keys().next().value);

@@ -24,6 +24,7 @@
   const failedCodes = new Set(["attack_timeout", "stalled", "approach_timeout", "no_path", "path_blocked",
     "interaction_target_other", "interaction_cache_timeout", "interact_error"]);
   const unconfirmedCodes = new Set(["harvest_unconfirmed", "request_timeout", "node_unavailable_before_ack", "target_changed"]);
+  const harvestOwnershipTimeoutMs = 15000;
   const summary = () => `Thành công ${totals.success} · Thất bại/bỏ qua ${totals.failed} · Chưa xác nhận ${totals.unconfirmed} · Hủy/nhường ${totals.canceled}`;
   GSTHarvest.journey = (scene) => binding?.scene === scene && job && !job.observingOutstanding
     ? { x: job.node.x, y: job.node.y, path: job.path } : null;
@@ -158,7 +159,10 @@
     } catch { /* The native defaults remain conservative. */ }
     const host = scene.autoHost();
     if (typeof host.hp !== "function" || typeof host.mp !== "function" || typeof host.pills !== "function") return true;
-    return (host.hp?.() < hp && (globalThis.GSTFarmCombat?.keepsFighting?.() === false
+    const combatAssistanceActive = globalThis.GSTFarmCombat?.active?.(scene) === true;
+    const combatKeepsFighting = combatAssistanceActive
+      && globalThis.GSTFarmCombat?.keepsFighting?.() === true;
+    return (host.hp?.() < hp && (!combatKeepsFighting
       || (host.pills("hp") ?? []).some((count) => count > 0))) || (host.mp?.() < mp
       && (host.pills?.("mp") ?? []).some((count) => count > 0));
   }
@@ -193,6 +197,9 @@
   }
   const blocked = (scene, fresh = false) => blockedReason(scene, fresh) !== null;
   GSTHarvest.needsRecovery = needsRecovery;
+  function harvestOwnershipExpired(owner, now) {
+    return finite(owner?.requestedAt) && finite(now) && now - owner.requestedAt >= harvestOwnershipTimeoutMs;
+  }
   const nativeHarvestOutstanding = () => ["request", "harvesting", "confirming"].includes(job?.phase);
   const observeWithoutFarmPermission = (scene) => scene?.auto?.on === true && settings.allowFarm !== true
     && job?.requestedAt !== undefined && (nativeHarvestOutstanding() || job.acknowledged === true);
@@ -226,7 +233,7 @@
       release("Đã xác nhận lượt hái trong thời gian quan sát.", 20000, "harvest_success");
       return;
     }
-    if ((job.phase === "harvesting" && now - job.requestedAt >= 15000)
+    if ((job.phase === "harvesting" && harvestOwnershipExpired(job, now))
         || (job.phase === "confirming" && now - job.finishedAt >= 3000)) {
       release("Lượt hái chưa có kết quả xác nhận trong thời gian quan sát.", 20000, "harvest_unconfirmed");
       return;
@@ -554,6 +561,11 @@
           job.phase = "harvesting"; job.acknowledged = true;
           job.finishedAt = null;
           trace("harvest.ack", "started");
+        }
+        if (job.acknowledged === true && harvestOwnershipExpired(job, now)) {
+          release("Game vẫn báo đang hái sau thời gian theo dõi; đã nhường quyền và tiếp tục quan sát kết quả.",
+            20000, "harvest_unconfirmed");
+          return;
         }
         message = `Đang hái ${job.node.item}.`;
       } else if (job.phase === "harvesting" || job.phase === "confirming") {
