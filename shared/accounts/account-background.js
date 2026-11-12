@@ -250,8 +250,12 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
     (async () => {
       const tabId = sender.tab?.id;
       if (!senderMatchesAttempt(sender, { attemptId: message.attemptId, slot: message.slot }))
-        return { accepted: false, reason: "attempt_expired" };
+        return { accepted: false, reason: "attempt_url_mismatch" };
       const observed = await getAttempt(tabId);
+      if (!observed) return { accepted: false, reason: "attempt_record_missing_or_expired" };
+      if (observed.attemptId !== message.attemptId || observed.accountId !== message.accountId
+          || observed.slot !== message.slot)
+        return { accepted: false, reason: "attempt_record_mismatch" };
       if (observed?.attemptId === message.attemptId && observed.accountId === message.accountId
           && observed.slot === message.slot && observed.recoveryRequested !== true)
         return { accepted: false, reason: "recovery_not_pending" };

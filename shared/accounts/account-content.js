@@ -7,6 +7,23 @@
   const pageRequests = new Map();
   let sequence = 0, lastIdentity = "", lastProfile = "", pendingAttempt = null, attemptBusy = false;
   let currentContext = null, refreshBusy = false, lastError = "";
+  const traceKey = "gst:account-login-trace:v1";
+  const stages = ["page_loaded", "attempt_received", "waiting_form", "form_seen", "credentials_filled",
+    "form_submitted", "logout_requested", "resume_requested", "resume_accepted", "resume_rejected",
+    "login_failed", "identity_confirmed"];
+  let loginTrace = [];
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(traceKey) ?? "[]");
+    if (Array.isArray(saved)) loginTrace = saved.filter((row) => stages.includes(row?.stage)
+      && Number.isFinite(row.at)).slice(-19).map(({ stage, at }) => ({ stage, at }));
+  } catch {}
+  function trace(stage) {
+    if (!stages.includes(stage)) return;
+    loginTrace.push({ stage, at: Date.now() });
+    loginTrace = loginTrace.slice(-20);
+    try { sessionStorage.setItem(traceKey, JSON.stringify(loginTrace)); } catch {}
+  }
+  trace("page_loaded");
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const visible = (element) => !!element?.getClientRects?.().length;
 
@@ -76,6 +93,7 @@
         characterId: snapshot.characterId });
     } catch { lastError = "identity_save_failed"; return; }
     if (response?.accepted) {
+      trace("identity_confirmed");
       account.expectedCharacter = snapshot.character;
       account.expectedClassId = snapshot.classId;
       account.expectedCharacterId = snapshot.characterId;
@@ -89,6 +107,7 @@
     if (!pending) return;
     pendingAttempt = null;
     lastError = reason;
+    trace("login_failed");
     try {
       await chrome.runtime.sendMessage({ type: "gst:account-attempt-failed",
         attemptId: pending.id, accountId: pending.accountId, slot: pending.slot });
@@ -143,7 +162,8 @@
         reason,
         loginVisible: snapshot?.loginVisible === true, connected: snapshot?.connected === true,
         autoOn: snapshot?.autoOn === true, offline: snapshot?.offline === true,
-        launchUrl: safeLaunchUrl(snapshot?.launchUrl), loginError: lastError
+        launchUrl: safeLaunchUrl(snapshot?.launchUrl), loginError: lastError,
+        loginTrace: loginTrace.map(({ stage, at }) => ({ stage, at }))
       };
       currentContext = context;
       GSTAccountProfiles.setContext(context);
@@ -218,6 +238,7 @@
     const account = await accountForSlot();
     if (!account || account.id !== message.accountId) return { accepted: false, reason: "account_not_found" };
     lastError = "";
+    trace("attempt_received");
     pendingAttempt = { id: message.attemptId, accountId: account.id, slot, submitted: false,
       logoutRequested: message.resume === true, deadline: Number.isFinite(message.deadline)
         ? message.deadline : Date.now() + 120000 };
@@ -293,10 +314,12 @@
       await failPendingAttempt("native_logout_unavailable");
       return { accepted: false, reason: "native_logout_unavailable" };
     }
+    trace("logout_requested");
     logout.click();
     return { accepted: true, recoveryStarted: true };
   }
   async function continueNativeLogin(account, resumed = false) {
+    trace("waiting_form");
     let status = await refresh();
     if (status?.verified && status.accountId === account.id) {
       pendingAttempt = null;
@@ -332,6 +355,7 @@
       const root = document.querySelector("#login");
       const form = root?.querySelector("form");
       if (root && form && visible(root)) {
+        if (loginTrace.at(-1)?.stage !== "form_seen") trace("form_seen");
         const user = root.querySelector('input[name="login"]');
         const pass = root.querySelector('input[name="lpass"]');
         if (challengeDetected(root, user, pass)) {
@@ -351,12 +375,14 @@
         if (remember) remember.checked = false;
         user.value = account.username;
         pass.value = account.password;
+        trace("credentials_filled");
         user.dispatchEvent(new Event("input", { bubbles: true }));
         user.dispatchEvent(new Event("change", { bubbles: true }));
         pass.dispatchEvent(new Event("input", { bubbles: true }));
         pass.dispatchEvent(new Event("change", { bubbles: true }));
         pendingAttempt.submitted = true;
         nativeForm.requestSubmit();
+        trace("form_submitted");
         return { accepted: true, submitted: true };
       }
       await delay(250);
@@ -370,6 +396,7 @@
     if (!account) return;
     let response;
     try {
+      trace("resume_requested");
       response = await chrome.runtime.sendMessage({ type: "gst:account-attempt-resume",
         attemptId, accountId: account.id, slot });
     } catch {
@@ -378,6 +405,7 @@
       return;
     }
     if (response?.accepted !== true || response.attemptId !== attemptId || response.slot !== slot) {
+      trace("resume_rejected");
       if (response?.reason !== "recovery_not_pending") {
         lastError = response?.reason || "attempt_expired";
         if (response?.reason === "attempt_expired" || response?.reason === "account_not_found") removeAttemptFromUrl();
@@ -385,6 +413,7 @@
       }
       return;
     }
+    trace("resume_accepted");
     await fillNativeLogin({ ...response, resume: true });
   }
 

@@ -37,6 +37,18 @@
     account_context_unavailable: "Chưa đọc được trạng thái tài khoản trong tab."
   };
   function explain(reason) { return reasons[reason] || "Chưa hoàn tất thao tác. Kiểm tra tab game rồi thử lại."; }
+  Object.assign(reasons, {
+    attempt_url_mismatch: "URL sau reload không khớp lượt đăng nhập hoặc slot đã chọn.",
+    attempt_record_missing_or_expired: "Bản ghi lượt đăng nhập không còn hoặc đã hết hạn sau reload.",
+    attempt_record_mismatch: "Tab đang giữ một lượt đăng nhập khác với lượt cần tiếp tục."
+  });
+  const stageLabels = {
+    page_loaded: "Tải trang", attempt_received: "Nhận lượt đăng nhập", waiting_form: "Chờ form",
+    form_seen: "Thấy form", credentials_filled: "Đã điền", form_submitted: "Đã gửi form",
+    logout_requested: "Đã yêu cầu logout", resume_requested: "Kiểm tra lượt sau reload",
+    resume_accepted: "Cho phép tiếp tục", resume_rejected: "Chưa thể tiếp tục",
+    login_failed: "Lượt đăng nhập dừng", identity_confirmed: "Đúng nhân vật"
+  };
   function setBusy(value) {
     busy = value;
     byId("accountSave").disabled = value;
@@ -121,6 +133,8 @@
   }
   async function refreshStatus() {
     const context = await GSTAccountProfiles.activeContext();
+    const trace = Array.isArray(context?.loginTrace) ? context.loginTrace : [];
+    const steps = trace.slice(-8).map((row) => stageLabels[row?.stage]).filter(Boolean);
     if (!context) {
       status.textContent = "Tab hiện tại chưa có cầu nối game để xác nhận nick.";
       return;
@@ -136,6 +150,7 @@
     } else {
       status.textContent = "Tab hiện tại chưa xác nhận nick; Farm và Thu hoạch đang bị khóa.";
     }
+    if (steps.length) status.textContent += " · Tiến trình: " + steps.join(" → ");
   }
   async function launch(row, mode) {
     if (busy) return;
