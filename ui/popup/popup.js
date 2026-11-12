@@ -71,6 +71,8 @@ const farmPreferLoot = document.getElementById("farmPreferLoot");
 const farmSelfDefense = document.getElementById("farmSelfDefense");
 const farmAutoRespawn = document.getElementById("farmAutoRespawn");
 const farmAutoEncounter = document.getElementById("farmAutoEncounter");
+const farmAcceptPartyInvites = document.getElementById("farmAcceptPartyInvites");
+const farmAllowPlayerTargets = document.getElementById("farmAllowPlayerTargets");
 const positiveLevel = (value, fallback) => Number.isSafeInteger(value) && value > 0 ? value : fallback;
 const validFarmHpThresholds = (retreat, recovery) => Number.isSafeInteger(retreat) && retreat >= 1 && retreat < recovery
   && Number.isSafeInteger(recovery) && recovery <= 100;
@@ -532,6 +534,8 @@ function normalizedFarmPreferences(raw = {}) {
     preferLoot: raw.preferLoot !== false, selfDefense: raw.selfDefense === true,
     autoRespawn: raw.autoRespawn !== false,
     autoEncounter: raw.autoEncounter === true, bossDodge: raw.bossDodge !== false,
+    acceptPartyInvites: raw.acceptPartyInvites === true,
+    allowPlayerTargets: raw.allowPlayerTargets === true,
     eliteDodge: raw.eliteDodge === true, bossRetreat: raw.bossRetreat !== false,
     ...hpThresholds
   };
@@ -588,6 +592,8 @@ function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {})
   farmSelfDefense.checked = next.selfDefense;
   farmAutoRespawn.checked = next.autoRespawn;
   farmAutoEncounter.checked = next.autoEncounter;
+  farmAcceptPartyInvites.checked = next.acceptPartyInvites;
+  farmAllowPlayerTargets.checked = next.allowPlayerTargets;
   farmExcludeBoss.checked = next.excludeBoss;
   farmTargetMode.value = next.targetMode;
   farmBossFilter.value = next.bossFilter;
@@ -782,6 +788,7 @@ for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmShowRan
   [farmNearbyClear, "nearbyClear"], [farmNoRetreat, "noRetreat"],
   [breakSeals, "breakSeals"], [farmPreferLoot, "preferLoot"], [farmSelfDefense, "selfDefense"],
   [farmAutoRespawn, "autoRespawn"], [farmAutoEncounter, "autoEncounter"], [farmBossDodge, "bossDodge"],
+  [farmAcceptPartyInvites, "acceptPartyInvites"], [farmAllowPlayerTargets, "allowPlayerTargets"],
   [farmEliteDodge, "eliteDodge"],
   [farmBossRetreat, "bossRetreat"]]) {
   input.addEventListener("change", async () => {

@@ -48,6 +48,7 @@
         "features/automation/auto-farm/farm-behavior.js",
         "features/automation/auto-farm/farm-defense.js",
         "features/automation/auto-farm/farm-encounter.js",
+        "features/automation/auto-farm/farm-party.js",
         "features/automation/auto-farm/farm-monster-classification.js",
         "features/automation/auto-farm/farm-boss-safety.js",
         "features/automation/auto-farm/farm-map.js",

@@ -699,6 +699,7 @@
     // Exploration has lower priority than portals/chests/harvest. It must not
     // advertise a lock that prevents those earlier handlers from starting.
     controls: (scene) => !!binding && binding.scene === scene && job !== null && !job.scout,
+    movementOwned: (scene) => !!binding && binding.scene === scene && (job !== null || handoff !== null),
     nativeHandling: (scene) => !!binding && binding.scene === scene && !!scene?.auto?.on && handoff !== null,
     mayMeditate(scene) {
       // Only an actual exhaustion/cooldown pause can yield to meditation.

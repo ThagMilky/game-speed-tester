@@ -9,7 +9,7 @@
   let navigating = false;
   let suspended = false, loadTimer = null, loadAttempts = 0, loading = false;
   let configurationSent = false, loadError = "";
-  let accountProfileReady = false, accountProfileVerified = false;
+  let accountProfileReady = false, accountProfileVerified = false, accountProfileKey = "", accountId = "";
   const pending = new Map();
 
   function configureShortcut(value) {
@@ -46,6 +46,9 @@
     settings = {
       policyMode,
       identityBlocked: value?.identityBlocked === true,
+      identityVerified: accountProfileReady && accountProfileVerified,
+      accountProfileKey: accountProfileVerified ? accountProfileKey : "",
+      accountId: accountProfileVerified ? accountId : "",
       enabled: value?.enabled === true,
       showTargetLine: value?.showTargetLine === true,
       showRange: value?.showRange === true,
@@ -64,6 +67,8 @@
       preferLoot: value?.preferLoot !== false,
       selfDefense: value?.selfDefense === true,
       autoEncounter: value?.autoEncounter === true,
+      acceptPartyInvites: accountProfileReady && accountProfileVerified && value?.acceptPartyInvites === true,
+      allowPlayerTargets: accountProfileReady && accountProfileVerified && value?.allowPlayerTargets === true,
       excludeBoss: value?.excludeBoss === true,
       bossFilter: value?.bossFilter === "world" ? "world" : "all",
       targetMode: value?.targetMode === "level" ? "maxLevel"
@@ -158,6 +163,8 @@
         || (event.data.verified === true && state.context?.profileKey !== event.data.profileKey)) return;
     accountProfileReady = true;
     accountProfileVerified = event.data.verified === true;
+    accountProfileKey = accountProfileVerified ? event.data.profileKey : "";
+    accountId = accountProfileVerified ? event.data.connectionRecoveryContext?.accountId ?? "" : "";
     revision++;
     const preferences = accountProfileVerified
       ? event.data.farmPreferences

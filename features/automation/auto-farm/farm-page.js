@@ -5,6 +5,7 @@
   globalThis.GSTFarmConfigurationReady = false;
   let settings = { policyMode: "native", enabled: false, radius: 22, autoRespawn: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
     searchScope: "radius", idleMode: "hold", preferLoot: true, excludeBoss: false, bossFilter: "all",
+    identityVerified: false, accountProfileKey: "", accountId: "", acceptPartyInvites: false, allowPlayerTargets: false,
     bossDodge: true, eliteDodge: false, bossRetreat: true, retreatHpPercent: 40, recoveryHpPercent: 100 };
   let identityBlocked = false;
   let filterBinding = null;
@@ -45,6 +46,8 @@
     : enemy?.cls === "boss" || enemy?.wb === true;
   const isWorldBoss = (enemy) => globalThis.GSTFarmMonsterClassification?.isWorldBoss?.(enemy) === true;
   const targetFilterActive = () => settings.targetMode !== "all" || settings.excludeBoss || settings.bossFilter === "world";
+  const playerTargetGuardActive = () => settings.policyMode === "extended"
+    && (identityBlocked || settings.identityVerified !== true || settings.allowPlayerTargets !== true);
   const ranked = () => ["bossLevel", "highLevel", "lowLevel"].includes(settings.targetMode);
   function comparePriority(a, b) {
     if (settings.targetMode === "bossLevel" && isBoss(a) !== isBoss(b)) return isBoss(a) ? -1 : 1;
@@ -311,6 +314,7 @@
     if (!binding) return;
     binding.scene.events.off("shutdown", clearFilter);
     binding.scene.events.off("destroy", clearFilter);
+    binding.scene.events.off("preupdate", guardDisallowedPlayerTarget);
     if (binding.scene.autoHost !== binding.wrapper) return;
     if (binding.descriptor) Object.defineProperty(binding.scene, "autoHost", binding.descriptor);
     else delete binding.scene.autoHost;
@@ -318,6 +322,87 @@
 
   function boundaryHome(scene) {
     return session?.scene === scene ? session.home : { x: scene.auto?.ax, y: scene.auto?.ay };
+  }
+  function playerActor(scene, id) {
+    if (!Number.isSafeInteger(id)) return null;
+    const actor = scene?.views?.get?.(id);
+    return actor?.k === "p" && !actor.dead ? actor : null;
+  }
+  function anotherMovementOwner(scene) {
+    try {
+      if (globalThis.GSTFarmMap?.movementOwned?.(scene) === true
+          || globalThis.GSTFarmMap?.controls?.(scene) === true
+          || globalThis.GSTFarmMap?.nativeHandling?.(scene) === true
+          || globalThis.GSTFarmBehavior?.collecting?.(scene) === true) return true;
+    } catch { return true; }
+    for (const name of ["GSTHarvest", "GSTFarmSeals", "GSTRealm", "GSTChest", "GSTQuest", "GSTMapTravel",
+      "GSTFarmDefense", "GSTFarmBossSafety"]) {
+      try { if (globalThis[name]?.controls?.(scene) === true) return true; }
+      catch { return true; }
+    }
+    return false;
+  }
+  function guardDisallowedPlayerTarget(scene) {
+    if (!playerTargetGuardActive() || scene?.auto?.on !== true) return;
+    const actor = playerActor(scene, scene.auto.target);
+    if (!actor || scene.auto.moved || scene.heldAttack || scene.pendingSkill || scene.aiming
+        || globalThis.GSTFarmInput?.movement?.(scene) || anotherMovementOwner(scene)) return;
+    // auto.target/path belong to the native Farm controller. Keep lockId intact:
+    // it is the game's manual target and manual attacks still use native methods.
+    scene.auto.target = 0;
+    if (Array.isArray(scene.auto.path)) scene.auto.path = [];
+    scene.auto.pathAt = -Infinity;
+    scene.auto.think = 0;
+    scene.autoX = scene.autoY = 0;
+  }
+  function withFarmTargetingGuard(scene, host, action, blockedValue) {
+    if (!playerTargetGuardActive()) return action();
+    if (playerActor(scene, scene.auto?.target) || playerActor(scene, scene.lockId)) return blockedValue;
+    if (scene.aimSet === true && finite(scene.aimX) && finite(scene.aimY)
+        && [...(scene.views?.values?.() ?? [])].some((actor) => actor?.k === "p" && !actor.dead
+          && Math.hypot(actor.x - scene.aimX, actor.y - scene.aimY) < 0.2)) return blockedValue;
+    const originalNearest = scene.nearestEnemy, originalAny = scene.anyEnemy;
+    if (typeof originalNearest !== "function" || typeof originalAny !== "function") return blockedValue;
+    const nearestMonster = (range) => {
+      if (!finite(range) || range < 0) return null;
+      const pos = host.pos?.();
+      if (!Array.isArray(pos) || !pos.every(finite)) return null;
+      let selected = null, best = range;
+      const enemies = host.enemies?.();
+      if (!Array.isArray(enemies)) return null;
+      for (const enemy of enemies) {
+        const actor = scene.views?.get?.(enemy?.id);
+        if (!actor || actor.k !== "m" || actor.dead || enemy.dead
+            || !(enemy.hostile === true || enemy.aggro === true || enemy.hpPct < 1)
+            || !finite(enemy.x) || !finite(enemy.y)) continue;
+        const distance = Math.hypot(enemy.x - pos[0], enemy.y - pos[1]);
+        if (distance < best) { selected = actor; best = distance; }
+      }
+      return selected;
+    };
+    const nearest = function (...args) {
+      const target = originalNearest.apply(this, args);
+      return target?.k === "p" ? nearestMonster(args[0]) : target;
+    };
+    const any = (range) => nearestMonster(range) !== null;
+    const restore = (name, descriptor) => {
+      try {
+        if (descriptor) Object.defineProperty(scene, name, descriptor);
+        else delete scene[name];
+      } catch { /* Restore best effort; never replace another owner's later method. */ }
+    };
+    const nearestDescriptor = Object.getOwnPropertyDescriptor(scene, "nearestEnemy");
+    const anyDescriptor = Object.getOwnPropertyDescriptor(scene, "anyEnemy");
+    try {
+      scene.nearestEnemy = nearest;
+      scene.anyEnemy = any;
+      if (scene.nearestEnemy !== nearest || scene.anyEnemy !== any) return blockedValue;
+      return action();
+    } catch { return blockedValue; }
+    finally {
+      restore("nearestEnemy", nearestDescriptor);
+      restore("anyEnemy", anyDescriptor);
+    }
   }
   function insideFarmBoundary(scene, actor) {
     if (!settings.enabled || settings.searchScope !== "radius") return true;
@@ -380,21 +465,64 @@
     }
     owner.auto.think = 0;
   }
-  function syncFilter(scene) {
-    const filteringActive = (ownerScene) => targetFilterActive()
-      || globalThis.GSTFarmBossSafety?.hasExclusions?.(ownerScene) === true;
-    const boundaryActive = () => settings.enabled && settings.searchScope === "radius";
-    if (!filteringActive(scene) && !boundaryActive()) { clearFilter(); return; }
-    clearExcludedBossTarget(scene);
-    if (filterBinding?.scene === scene && scene.autoHost === filterBinding.wrapper) return;
+  function syncFilter(scene, guardOnly = false) {
+    const filteringActive = (ownerScene) => !guardOnly && (targetFilterActive()
+      || globalThis.GSTFarmBossSafety?.hasExclusions?.(ownerScene) === true);
+    const boundaryActive = () => !guardOnly && settings.enabled && settings.searchScope === "radius";
+    const filterHostActive = filteringActive(scene) || boundaryActive();
+    const guardPlayers = playerTargetGuardActive();
+    if (!filterHostActive && !guardPlayers) { clearFilter(); return; }
+    if (guardOnly && filterBinding?.scene === scene && filterBinding.guardOnly
+        && scene.autoHost === filterBinding.wrapper) {
+      if (guardPlayers && !filterBinding.playerGuardAttached) {
+        scene.events.on("preupdate", guardDisallowedPlayerTarget);
+        filterBinding.playerGuardAttached = true;
+      } else if (!guardPlayers && filterBinding.playerGuardAttached) {
+        scene.events.off("preupdate", guardDisallowedPlayerTarget);
+        filterBinding.playerGuardAttached = false;
+      }
+      return;
+    }
+    if (guardOnly && filterBinding?.scene === scene) clearFilter();
+    if (!guardOnly) clearExcludedBossTarget(scene);
+    if (!guardOnly && filterBinding?.scene === scene && scene.autoHost === filterBinding.wrapper) {
+      if (guardPlayers && !filterBinding.playerGuardAttached) {
+        scene.events.on("preupdate", guardDisallowedPlayerTarget);
+        filterBinding.playerGuardAttached = true;
+      } else if (!guardPlayers && filterBinding.playerGuardAttached) {
+        scene.events.off("preupdate", guardDisallowedPlayerTarget);
+        filterBinding.playerGuardAttached = false;
+      }
+      return;
+    }
     clearFilter();
     const original = scene.autoHost;
     if (typeof original !== "function") throw new Error("Auto Farm host unavailable.");
-    if (typeof original.call(scene)?.enemies !== "function") throw new Error("Enemy list unavailable.");
+    if (filterHostActive && typeof original.call(scene)?.enemies !== "function")
+      throw new Error("Enemy list unavailable.");
     const descriptor = Object.getOwnPropertyDescriptor(scene, "autoHost");
     const wrapper = function (...args) {
       const host = original.apply(this, args);
-      if ((!filteringActive(this) && !boundaryActive()) || !this.auto?.on) return host;
+      const guardPlayersNow = playerTargetGuardActive();
+      const filterNow = filteringActive(this) || boundaryActive();
+      if ((!filterNow && !guardPlayersNow) || !this.auto?.on) return host;
+      if (guardPlayersNow) guardDisallowedPlayerTarget(this);
+      const guardedHost = { ...host };
+      if (guardPlayersNow) {
+        guardedHost.face = (x, y, id) => playerActor(this, id) ? false : host.face?.(x, y, id);
+        guardedHost.steer = (x, y) => playerActor(this, this.auto?.target) ? false : host.steer?.(x, y);
+        guardedHost.basic = (...callArgs) => withFarmTargetingGuard(this, host,
+          () => host.basic?.(...callArgs), undefined);
+        guardedHost.cast = (...callArgs) => {
+          const [, aimX, aimY] = callArgs;
+          const directPlayerAim = finite(aimX) && finite(aimY)
+            && [...(this.views?.values?.() ?? [])].some((actor) => actor?.k === "p" && !actor.dead
+              && Math.hypot(actor.x - aimX, actor.y - aimY) < 0.2);
+          return directPlayerAim ? false : withFarmTargetingGuard(this, host,
+            () => host.cast?.(...callArgs), false);
+        };
+      }
+      if (!filterNow) return guardedHost;
       // Keep the wrapper through recovery; the enemy getter exposes raw threats while resting.
       const eligible = (enemy) => nativeEligible(enemy)
         && globalThis.GSTFarmBossSafety?.allowsTarget?.(this, enemy) !== false && (
@@ -406,7 +534,7 @@
         const enemies = typeof host?.enemies === "function" ? host.enemies() : [];
         return Array.isArray(enemies) ? enemies.filter(eligible) : [];
       };
-      return { ...host,
+      return { ...guardedHost,
         // Chest safety must see actual nearby monsters, not farm-targeting filters.
         gstRawEnemies: () => host.enemies(),
         allEligibleEnemies, enemies: () => {
@@ -423,9 +551,10 @@
         } };
     };
     scene.autoHost = wrapper;
-    filterBinding = { scene, descriptor, wrapper };
+    filterBinding = { scene, descriptor, wrapper, playerGuardAttached: guardPlayers, guardOnly };
     scene.events.on("shutdown", clearFilter);
     scene.events.on("destroy", clearFilter);
+    if (guardPlayers) scene.events.on("preupdate", guardDisallowedPlayerTarget);
   }
 
   function pickRanked(s, host, time, pos, candidates, moveCenter, searchRadius) {
@@ -498,7 +627,7 @@
   function stop(reason, block = false) {
     // Keep the inert filter attached through death/off so the next native
     // update after revival/re-enable cannot select an unfiltered target.
-    if (block || !targetFilterActive()) clearFilter();
+    if (block || !targetFilterActive() && !playerTargetGuardActive()) clearFilter();
     if (block) revival = null;
     if (session) {
       const old = session;
@@ -588,6 +717,15 @@
     if (settings.policyMode !== "extended" || identityBlocked || suspended || session) return;
     try {
       const scene = sceneNow();
+      if (settings.acceptPartyInvites) globalThis.GSTFarmParty?.configure(scene, settings);
+      const farmFeaturesActive = settings.enabled || targetFilterActive()
+        || globalThis.GSTFarmBossSafety?.hasExclusions?.(scene) === true;
+      if (!farmFeaturesActive && playerTargetGuardActive()) {
+        if (compatible(scene) && scene.self && !scene.leaving && connected(scene) && scene.auto !== blockedAuto)
+          syncFilter(scene);
+        else clearFilter();
+        return;
+      }
       globalThis.GSTFarmCombat?.attach(scene);
       globalThis.GSTFarmRevivePolicy?.attach(scene);
       globalThis.GSTFarmBehavior?.attach(scene);
@@ -694,7 +832,8 @@
       }
       const searchRadius = nativeRadius(s.scene);
       if (searchRadius === null && (settings.enabled || targetFilterActive())) {
-        clearFilter();
+        if (playerTargetGuardActive()) syncFilter(s.scene, true);
+        else clearFilter();
         message = "Bán kính Auto Farm gốc không được hỗ trợ; phần chọn mục tiêu mở rộng đang nhường cho game.";
         return;
       }
@@ -958,7 +1097,12 @@
       identityBlocked = data.identityBlocked === true;
       if (wasIdentityBlocked !== identityBlocked && activationLock) activationLock.stopRequested = false;
       settings = { policyMode: globalThis.GSTFarmPolicy?.normalize(data.policyMode) ?? "extended",
-        identityBlocked, enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn !== false,
+        identityBlocked, identityVerified: data.identityVerified === true,
+        accountProfileKey: typeof data.accountProfileKey === "string" ? data.accountProfileKey : "",
+        accountId: typeof data.accountId === "string" ? data.accountId : "",
+        acceptPartyInvites: data.acceptPartyInvites === true,
+        allowPlayerTargets: data.allowPlayerTargets === true,
+        enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn !== false,
         noRetreat: data.noRetreat !== false,
         bossDodge: data.bossDodge !== false, eliteDodge: data.eliteDodge === true, bossRetreat: data.bossRetreat !== false,
         ...hpThresholds,
@@ -996,6 +1140,8 @@
       globalThis.GSTFarmDefense?.configure(sceneNow(), farmRuntimeSettings);
       stage = "encounter";
       globalThis.GSTFarmEncounter?.configure(sceneNow(), farmRuntimeSettings);
+      stage = "party";
+      globalThis.GSTFarmParty?.configure(sceneNow(), farmRuntimeSettings);
       stage = "map";
       globalThis.GSTFarmMap?.configure(sceneNow(), settings.policyMode !== "extended" || identityBlocked
         ? { ...farmRuntimeSettings, enabled: false, searchScope: "radius", targetMode: "all", excludeBoss: false }
@@ -1012,7 +1158,8 @@
       globalThis.GSTFarmCombat?.attach(sceneNow());
       globalThis.GSTFarmRevivePolicy?.attach(sceneNow());
       stage = "filter";
-      if (!targetFilterActive()) clearFilter();
+      if (!targetFilterActive() && !playerTargetGuardActive()) clearFilter();
+      else syncFilter(sceneNow());
       if (settings.policyMode === "extended") clearExcludedBossTarget(sceneNow());
       if (session) {
         if (scopeChanged) { restore(session); session.at = -Infinity; }
@@ -1035,7 +1182,7 @@
       } else if (settings.policyMode === "disabled") {
         shortcutMessage = "";
         message = "Auto Farm đang bị khóa bởi chế độ Disabled; tùy chọn đã lưu vẫn được giữ.";
-      } else if (!settings.enabled && !targetFilterActive()) {
+      } else if (!settings.enabled && !targetFilterActive() && !playerTargetGuardActive()) {
         if (watcher !== null) clearInterval(watcher);
         watcher = null;
         stop("Extended range disabled; original center restored where owned.");
@@ -1068,7 +1215,7 @@
       const network = globalThis.GSTConnectionRecovery?.status(scene) || "";
       const primary = configurationError || (identityBlocked || settings.policyMode === "disabled" ? message
         : network || defense || globalThis.GSTFarmBossSafety?.status(scene) || waitReason
-        || globalThis.GSTFarmMap?.status(scene) || globalThis.GSTFarmBehavior?.status(scene)
+        || globalThis.GSTFarmParty?.status(scene) || globalThis.GSTFarmMap?.status(scene) || globalThis.GSTFarmBehavior?.status(scene)
         || globalThis.GSTFarmSession?.status(scene) || globalThis.GSTFarmSeals?.status(scene) || message);
       const defenseInfo = autoOn === false && !defense ? globalThis.GSTFarmDefense?.status(scene, true) : "";
       const encounterInfo = globalThis.GSTFarmEncounter?.status(scene) || "";
