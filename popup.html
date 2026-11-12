@@ -13,7 +13,7 @@
   <script src="ui/popup/popup-layout.js" defer></script>
   <script src="features/automation/auto-harvest/harvest-options.js" defer></script>
   <script src="features/automation/auto-harvest/harvest-popup.js" defer></script>
-  <script src="features/automation/auto-realm/realm-popup.js" defer></script>
+  <script src="features/automation/auto-farm/farm-session-popup.js" defer></script>
   <script src="features/automation/auto-realm/realm-history-popup.js" defer></script>
   <script src="shared/diagnostics/farm-diagnostics-popup.js" defer></script>
   <script src="features/automation/auto-potion/potion-popup.js" defer></script>
@@ -45,7 +45,7 @@
       <span class="nav-caption">TỰ ĐỘNG</span>
       <button type="button" class="nav-item" data-nav-panel="farm">Auto Farm</button>
       <button type="button" class="nav-item" data-nav-panel="harvest">Thu hoạch</button>
-      <button type="button" class="nav-item" data-nav-panel="realm">Bí cảnh</button>
+      <button type="button" class="nav-item" data-nav-panel="realm">Rương &amp; thời gian</button>
       <button type="button" class="nav-item" data-nav-panel="quest">Auto Quest</button>
       <span class="nav-caption">CÀI ĐẶT</span>
       <button type="button" class="nav-item" data-nav-panel="accounts">Tài khoản</button>
@@ -76,7 +76,7 @@
           <div class="dashboard-grid" aria-label="Mở nhanh tính năng">
             <button type="button" class="dashboard-tile" data-open-panel="farm"><strong>Auto Farm</strong><span data-summary-for="farm">Đang đọc trạng thái…</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="harvest"><strong>Thu hoạch</strong><span data-summary-for="harvest">Đang đọc cài đặt…</span></button>
-            <button type="button" class="dashboard-tile" data-open-panel="realm"><strong>Bí cảnh &amp; rương</strong><span data-summary-for="realm">Đang đọc cài đặt…</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="realm"><strong>Rương &amp; thời gian</strong><span data-summary-for="realm">Đang đọc cài đặt…</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="quest"><strong>Auto Quest</strong><span data-summary-for="quest">Đang đọc trạng thái…</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="speed"><strong>Tốc độ &amp; bay</strong><span data-summary-for="speed">Đang đọc cài đặt…</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="fps"><strong>Hình ảnh &amp; FPS</strong><span data-summary-for="fps">Đang đọc cài đặt…</span></button>
@@ -181,7 +181,7 @@
           <details class="advanced" open><summary>Khi hết mục tiêu &amp; nhặt đồ</summary><div class="advanced-body">
             <label for="farmIdleMode">Khi không còn mục tiêu</label>
             <select id="farmIdleMode"><option value="hold">Nhặt đồ rồi đứng chờ</option><option value="home">Nhặt đồ rồi quay về điểm bắt đầu</option><option value="seek">Nhặt đồ rồi chủ động tìm quái mới</option></select>
-            <p class="hint">Khi hết quái, Auto Farm sẽ nhặt đồ rồi đứng chờ, quay về hoặc tìm tiếp tùy chế độ. Tự thiền có công tắc riêng ở mục Tự vệ.</p>
+            <p class="hint">Khi hết quái, Auto Farm sẽ nhặt đồ rồi đứng chờ, quay về hoặc tìm tiếp tùy chế độ. Farm không tự thiền khi hết quái.</p>
             <label class="check-row"><input id="farmPreferLoot" type="checkbox" checked><span>Ưu tiên nhặt đồ sau giao tranh, trước khi chuyển bãi quái</span></label>
             <p class="hint">Ưu tiên đồ gần bãi vừa đánh, kể cả khi không bật Mở rộng vùng tìm quái. Chờ ngắn để vật phẩm xuất hiện; dùng cơ chế nhặt và giới hạn thử của game. Đồ không thể nhặt sẽ được bỏ qua tạm thời.</p>
           </div></details>
@@ -191,8 +191,8 @@
             <label class="check-row separated"><input id="farmNearbyClear" type="checkbox"><span>Chủ động dọn quái sát người (có thể ngoài bộ lọc)</span></label>
             <div class="input-action"><div><label for="farmNearbyRadius">Bán kính dọn gần (1–6 ô)</label><input id="farmNearbyRadius" type="number" min="1" max="6" step="1" value="2"></div></div>
             <p class="hint">Không đuổi quái xa; ưu tiên đánh thường 1–2 quái ngoài bộ lọc. Luôn tôn trọng lựa chọn loại boss và nhường thao tác tay.</p>
-            <label class="check-row separated"><input id="farmAutoMeditate" type="checkbox" checked><span>Tự thiền khi hết quái</span></label>
-            <p class="hint">Độc lập với Tự vệ; chỉ dùng khi Auto Farm đang bật và đã nhặt đồ. Tắt sẽ ngừng phiên thiền do tool mở, không tắt thiền thủ công.</p>
+            <label class="check-row separated"><input id="farmKeepAcrossMaps" type="checkbox" checked disabled><span>Giữ Auto Farm qua đổi map</span></label>
+            <p class="hint">Giữ ý định Farm theo tab và nhân vật; thao tác tắt Farm chủ động vẫn được tôn trọng.</p>
             <label class="check-row separated"><input id="farmAutoRespawn" type="checkbox" checked><span>Tự động hồi sinh</span></label>
             <p class="hint">Tắt: tool không tự yêu cầu hồi sinh và không can thiệp quy tắc dừng sau khi chết của Auto Farm. Nếu game tự hồi sinh độc lập, công tắc này không chặn được game.</p>
           </div></details>
@@ -348,28 +348,8 @@
       </div>
     </details>
     <details class="card" data-category="auto" data-panel="realm">
-      <summary><span><strong>Bí cảnh</strong><small>Cổng vào, thời gian và các tùy chọn bí cảnh</small></span></summary>
+      <summary><span><strong>Rương &amp; thời gian</strong><small>Rương, thời gian và thông báo</small></span></summary>
       <div class="card-body">
-        <p id="realmStatus" class="hint" role="status" aria-live="polite">Đang đọc trạng thái bí cảnh…</p>
-        <fieldset id="realmControls" disabled aria-label="Tùy chọn bí cảnh">
-          <p class="save-mode">Tự lưu khi thay đổi</p>
-          <label class="switch-row"><span>Bật Tự vào bí cảnh</span><input id="realmEnabled" class="switch" type="checkbox"></label>
-          <label class="check-row"><input id="realmAllowFarm" type="checkbox"><span>Cho phép vào khi Auto Farm đang bật</span></label>
-          <label class="check-row"><input id="realmKeepFarm" type="checkbox" checked><span>Giữ Auto Farm qua đổi map</span></label>
-          <label for="realmEntryMode">Khi tìm thấy cổng</label>
-          <select id="realmEntryMode"><option value="enter">Tự đi tới và vào cổng</option><option value="stand">Chỉ đi tới và đứng cạnh cổng</option></select>
-          <p class="hint">Ưu tiên cổng hợp lệ trong toàn map, kể cả khi đang giao tranh; tự đi tới thay vì chờ đánh xong. Chế độ đứng cạnh không tương tác. Chế độ vào cổng chỉ gửi yêu cầu khi game cho phép (đang giao tranh có thể bị từ chối). Bạn điều khiển tay thì tạm nhường 3 giây.</p>
-          <p class="hint">Giữ bộ lọc quái hiện tại; cổng vào không tự mở rương, bỏ bảo vệ hay rời bí cảnh. Chết trong bí cảnh có thể mất đồ của lượt đó.</p>
-          <div class="separated">
-            <p class="field-title">Mục tiêu trong bí cảnh (tự lưu)</p>
-            <label class="check-row"><input id="realmSeekBoss" type="checkbox"><span>Tự tìm boss theo tọa độ bí cảnh (cần bật Auto Farm)</span></label>
-            <p class="hint">Dùng bộ tìm đường Auto Farm hiện có; không tự đổi bộ lọc quái hay bật Auto Farm. Nếu boss chưa được game gửi tọa độ, không tự đoán vị trí.</p>
-            <label class="check-row"><input id="realmSeekExit" type="checkbox"><span>Tự tìm cổng thoát sau khi boss đã hạ và không còn rương được game liệt kê</span></label>
-            <label for="realmExitMode">Khi đến cổng thoát</label>
-            <select id="realmExitMode"><option value="stand">Chỉ đến gần và đứng cạnh cổng (mặc định)</option><option value="leave">Yêu cầu rút lui bằng tương tác gốc của game</option></select>
-            <p class="hint">Chỉ tự tìm cổng thoát trong bí cảnh, sau khi boss hết HP và danh sách rương hiện tại trống. Chế độ rút lui do game quyết định; nhân vật cần đứng yên ngoài giao tranh. Nếu game chưa gửi đủ rương, có thể chưa xác định được đã nhặt hết. Mặc định các tùy chọn này TẮT.</p>
-          </div>
-        </fieldset>
         <div class="separated">
           <label class="check-row"><input id="breakSeals" type="checkbox" disabled><span>Tự phá phong ấn khi đánh boss bí cảnh</span></label>
           <p class="hint">Chỉ dùng ở Tool hỗ trợ; lựa chọn vẫn được lưu khi chuyển chế độ.</p>
@@ -392,13 +372,6 @@
           <textarea wrap="off" id="historychestOutput" class="history-output" hidden readonly rows="2" aria-label="Log rương"></textarea>
           <p id="historychestFeedback" class="notice" role="status"></p>
         </details>
-        <details class="diagnostic"><summary>10 lượt cổng bí cảnh gần nhất</summary>
-          <p class="save-mode">Log các hành trình đã kết thúc trong tab; reload đặt lại. Rương biến mất chưa chứng minh nhận đồ.</p>
-          <button id="copyportalHistory" type="button" class="full">Sao chép log cổng bí cảnh</button>
-          <textarea wrap="off" id="historyportalOutput" class="history-output" hidden readonly rows="2" aria-label="Log cổng bí cảnh"></textarea>
-          <p id="historyportalFeedback" class="notice" role="status"></p>
-        </details>
-        <p id="realmFeedback" class="notice" role="alert"></p>
       </div>
     </details>
     <details class="card" data-category="auto" data-panel="quest">

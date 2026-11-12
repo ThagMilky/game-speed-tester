@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const finite = Number.isFinite;
-  let settings = { idleMode: "hold", preferLoot: true, autoMeditate: true, enabled: false, radius: 22 };
+  let settings = { idleMode: "hold", preferLoot: true, enabled: false, radius: 22 };
   let binding = null, configured = false, suspended = false, manualUntil = 0, noteUntil = 0, message = "";
   let lootTickAt = -Infinity, lootAt = -Infinity;
   let observedTarget = null, lootSite = null, lootActive = false, lootWaiting = false, lootLastCount = 0, lootAbandoned = false;
@@ -19,9 +19,7 @@
     lootTickAt = -Infinity; lootAt = -Infinity;
     observedTarget = null; lootSite = null; lootActive = false; lootWaiting = false; lootLastCount = 0; lootAbandoned = false;
     if (binding?.scene === scene) {
-      Object.assign(binding, { idleAt: -Infinity, readySince: null, medOwned: false,
-        medPending: null, medManual: false, cancelStart: false, medStillAt: null,
-        lastScanAt: -Infinity, lastScanSafe: false });
+      binding.idleAt = -Infinity;
     }
   }
   function syncContext(scene) {
@@ -42,160 +40,15 @@
   const connected = (scene) => scene.driver && !scene.driver.closing && !scene.driver.reconnecting
     && !scene.driver.displaced && (scene.driver.online === false || scene.driver.link?.open?.() === true);
   function say(text, seconds = 4) { message = text; noteUntil = performance.now() + seconds * 1000; }
-  function extensionMeditating(scene) {
-    const owner = binding;
-    return owner?.scene === scene && scene.self?.med === true && !owner.medManual
-      && (owner.medOwned || owner.medPending === "start");
-  }
   function manual(scene) {
     return GSTFarmInput.movement(scene) || scene.pendingSkill || scene.aiming || scene.heldAttack
-      || (!extensionMeditating(scene) && (scene.auto.moved || scene.now() < scene.auto.pauseUntil));
+      || scene.auto.moved || scene.now() < scene.auto.pauseUntil;
   }
   function blocked(scene) {
-    return globalThis.GSTMapTravel?.active(scene) || !scene.auto.on || !scene.self || scene.self.dead || !connected(scene) || scene.leaving
-      || GSTFarmRouting.blocked(scene) || scene.keyCapture || scene.overlay?.dialogOpen || scene.harvesting
-      || scene.self.med || scene.self.fish || scene.auto.resting
-      || (scene.self.realm?.inside?.protection ?? 0) > 0;
-  }
-  function inFarmArea(scene, point) {
-    if (!finite(point?.x) || !finite(point?.y)) return false;
-    if (settings.enabled && settings.searchScope === "map")
-      return finite(scene.map?.w) && finite(scene.map?.h)
-        && point.x >= 0 && point.y >= 0 && point.x < scene.map.w && point.y < scene.map.h;
-    const home = settings.enabled
-      ? (globalThis.GSTHarvest?.farmOrigin?.(scene) ?? { x: scene.auto.ax, y: scene.auto.ay })
-      : { x: scene.auto.ax, y: scene.auto.ay };
-    const radius = settings.enabled ? settings.radius
-      : globalThis.GSTFarmCompatibility?.nativeRadius(scene.auto.radius);
-    return finite(home?.x) && finite(home?.y) && finite(radius) && radius >= 1
-      && dist(point, home) <= radius;
-  }
-  function rawMonsters(host) {
-    const list = typeof host?.gstRawEnemies === "function" ? host.gstRawEnemies()
-      : typeof host?.enemies === "function" ? host.enemies() : null;
-    return Array.isArray(list) ? list : null;
-  }
-  function idleSafe(owner, host) {
-    const scene = owner.scene, now = performance.now();
-    const ownedMeditationPause = extensionMeditating(scene);
-    if (!scene.auto.on || !scene.self || scene.self.dead || !connected(scene) || scene.leaving
-        || !scene.sys?.isActive?.() || scene.auto !== owner.auto || scene.auto.resting
-        || scene.self.fish || scene.self.combat || scene.harvesting || scene.keyCapture
-        || scene.chat?.typing || scene.uiBlocked || scene.panels?.open || scene.overlay?.dialogOpen
-        || scene.pendingSkill || scene.aiming || scene.heldAttack
-        || (!ownedMeditationPause && (scene.auto.moved || scene.now() < scene.auto.pauseUntil))
-        || GSTFarmInput.movement(scene)
-        || GSTFarmRouting.blocked(scene) || now < manualUntil
-        || globalThis.GSTMapTravel?.active?.(scene) || globalThis.GSTQuest?.active?.(scene)
-        || globalThis.GSTFarmSeals?.pending?.(scene) || collecting(scene)
-        || ["GSTFarmDefense", "GSTFarmMap", "GSTRealm", "GSTChest", "GSTHarvest", "GSTFarmSeals", "GSTFarmBossSafety"]
-          .some((name) => globalThis[name]?.controls?.(scene))) return false;
-    // Only actionable filtered targets or actual local threats should block idle meditation.
-    // Unknown distant monsters outside the filter must not prevent resting forever.
-    // Seeking may meditate only during an explicit exhausted/cooldown pause.
-    // The navigator will wake it once the next search is due.
-    if (settings.idleMode === "seek" && globalThis.GSTFarmMap?.mayMeditate?.(scene) !== true)
-      return false;
-    const enemies = rawMonsters(host);
-    const eligible = typeof host?.enemies === "function" ? host.enemies() : null;
-    if (!enemies || !Array.isArray(eligible)) return false;
-    const pos = { x: scene.px, y: scene.py };
-    if (!finite(pos.x) || !finite(pos.y)) return false;
-    const danger = enemies.some((mob) => !mob.dead && finite(mob.x) && finite(mob.y)
-      && (mob.hostile === true || settings.nearbyClear && mob.aggro === false)
-      && dist(mob, pos) <= Math.max(3.2, settings.nearbyClear ? settings.nearbyRadius : 0));
-    const targets = eligible.some((mob) => !mob.dead && finite(mob.x) && finite(mob.y)
-      && inFarmArea(scene, mob) && globalThis.GSTFarmPriority?.matches?.(mob) !== false
-      && globalThis.GSTFarmMap?.actionable?.(scene, mob) !== false);
-    const visibleBoss = [...(scene.views?.values?.() ?? [])].some((actor) => actor?.k === "m"
-      && !actor.dead && (actor.st?.cls === "boss" || actor.st?.wb === true)
-      && finite(actor.x) && finite(actor.y) && dist(actor, pos) < 7);
-    if (danger || targets || visibleBoss) return false;
-    const loot = typeof host?.loot === "function" ? host.loot() : null;
-    if (!Array.isArray(loot) || loot.some((item) => inFarmArea(scene, item)
-        && !scene.auto.lootSkip?.has?.(`${item.x.toFixed(1)},${item.y.toFixed(1)}`))) return false;
-    if (settings.idleMode === "home") {
-      const home = globalThis.GSTHarvest?.farmOrigin?.(scene) ?? { x: scene.auto.ax, y: scene.auto.ay };
-      if (!finite(scene.px) || !finite(scene.py) || !finite(home.x) || !finite(home.y)
-          || dist({ x: scene.px, y: scene.py }, home) > 1.2) return false;
-    }
-    const selected = scene.views?.get?.(scene.auto.target);
-    const selectedEligible = selected && !selected.dead && inFarmArea(scene, selected)
-      && globalThis.GSTFarmPriority?.matches?.(selected.st) !== false
-      && globalThis.GSTFarmMap?.actionable?.(scene, selected) !== false;
-    return !selectedEligible && !scene.autoX && !scene.autoY;
-  }
-  function toggleMeditation(owner, host, direction) {
-    const now = performance.now();
-    if (now - owner.medRequestAt < (direction === "stop" ? 800 : 4000)
-        || typeof host?.meditate !== "function") return false;
-    try {
-      host.meditate(); // Game's native T action; no synthetic keypresses.
-      owner.medPending = direction; owner.medRequestAt = now;
-      return true;
-    } catch { return false; }
-  }
-  function wakeMeditation(scene) {
-    const owner = binding;
-    if (!owner || owner.scene !== scene) return false;
-    if (owner.medPending === "start") { owner.cancelStart = true; return true; }
-    if (!owner.medOwned) return false;
-    owner.readySince = null;
-    if (!scene.self?.med) { owner.medOwned = false; owner.medPending = null; return true; }
-    if (owner.medPending !== "stop") {
-      try { toggleMeditation(owner, scene.autoHost(), "stop"); } catch { /* Yield to game. */ }
-    }
-    return true;
-  }
-  function meditationGuard(scene) {
-    const owner = binding;
-    if (!owner || owner.scene !== scene) return;
-    const now = performance.now(), med = scene.self?.med === true;
-    if (owner.medPending === "start" && med) {
-      owner.medPending = null; owner.medOwned = !owner.medManual;
-    } else if (owner.medPending === "stop" && !med) {
-      owner.medPending = null; owner.medOwned = false;
-    } else if (owner.medPending && now - owner.medRequestAt >= 3500) {
-      owner.medPending = null;
-      if (!med) owner.cancelStart = false;
-    }
-    if (owner.medOwned && !med && owner.medPending !== "start") owner.medOwned = false;
-    if (owner.medManual && !med) owner.medManual = false;
-    if (!settings.autoMeditate) {
-      owner.readySince = null;
-      if (owner.medOwned || owner.medPending === "start") wakeMeditation(scene);
-      return;
-    }
-    if (med && !owner.medOwned && owner.medPending !== "start") return;
-    // Sampling the game lists every 300ms avoids a full scan on each render frame.
-    if (now - owner.lastScanAt >= 300) {
-      owner.lastScanAt = now;
-      owner.lastScanSafe = false;
-      if (owner.contextKey !== null) {
-        try { owner.lastScanSafe = idleSafe(owner, scene.autoHost()); } catch { /* Yield. */ }
-      }
-    }
-    if (!owner.lastScanSafe || owner.cancelStart) {
-      owner.readySince = null; owner.medStillAt = null;
-      if (owner.medOwned) wakeMeditation(scene);
-      if (!med && owner.medPending !== "start") owner.cancelStart = false;
-      return;
-    }
-    if (med || owner.medManual || owner.medPending) return; // Never cancel manual meditation.
-    // The native idle() callback may not run when another controller has yielded.
-    // Require actual stillness instead of depending on a callback timestamp.
-    if (!finite(scene.px) || !finite(scene.py) || scene.autoX || scene.autoY) {
-      owner.readySince = null; owner.medStillAt = null; return;
-    }
-    const here = { x: scene.px, y: scene.py };
-    if (!owner.medStillAt || dist(owner.medStillAt, here) > 0.12) {
-      owner.medStillAt = here;
-      owner.readySince = now;
-    }
-    owner.readySince ??= now;
-    if (now - owner.readySince >= 1800) {
-      try { toggleMeditation(owner, scene.autoHost(), "start"); } catch { /* Yield. */ }
-    }
+    return globalThis.GSTMapTravel?.active(scene) || !scene.auto.on || !scene.self || scene.self.dead
+      || !connected(scene) || scene.leaving || GSTFarmRouting.blocked(scene) || scene.keyCapture
+      || scene.overlay?.dialogOpen || (scene.self.realm?.inside?.protection ?? 0) > 0 || scene.harvesting
+      || scene.self.med || scene.self.fish || scene.auto.resting;
   }
   function modal(owner) {
     if (performance.now() - owner.modalAt >= 250) {
@@ -210,9 +63,7 @@
     if (!scene) return;
     if (sceneNow() !== scene || scene.auto !== binding.auto || !scene.sys?.isActive?.()) { detach(); return; }
     if (!globalThis.GSTFarmPolicy?.hasExtensionAssistance?.()) {
-      meditationGuard(scene);
-      const owner = binding;
-      if (owner?.nativeDetachPending && !scene.self?.med && !owner.medPending) detach();
+      detach();
       return;
     }
     if (!syncContext(scene)) return;
@@ -220,7 +71,6 @@
       manualUntil = performance.now() + 3000;
       say("Tạm nhường thao tác tay; chờ 3 giây rồi tiếp tục nhặt đồ/farm.");
     }
-    meditationGuard(scene);
     if (!scene.auto.on || scene.self?.dead || !connected(scene) || scene.leaving) {
       manualUntil = 0; message = "";
       observedTarget = null; lootSite = null; lootActive = false; lootWaiting = false; lootAbandoned = false; return;
@@ -407,9 +257,7 @@
         || typeof scene.views?.get !== "function" || typeof scene.views?.values !== "function"
         || typeof scene.auto.lootSkip?.has !== "function" || typeof scene.now !== "function" || !scene.events?.on || !scene.events.off) return;
     const owner = { scene, auto: scene.auto, undo: [], modalAt: -Infinity, modal: false,
-      idleAt: -Infinity, readySince: null, medOwned: false, medPending: null,
-      medManual: false, cancelStart: false, medStillAt: null, medRequestAt: -Infinity,
-      lastScanAt: -Infinity, lastScanSafe: false, contextKey: mapContext(scene) };
+      idleAt: -Infinity, contextKey: mapContext(scene) };
     binding = owner;
     wrap(owner, scene.auto, "idle", (original) => function (host, time, x, y) {
       if (!globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() || this !== owner.auto || !this.on || blocked(scene)
@@ -437,50 +285,32 @@
     configure(scene, value) {
       configured = true;
       const next = { idleMode: ["home", "seek"].includes(value.idleMode) ? value.idleMode : "hold",
-        preferLoot: value.preferLoot !== false, autoMeditate: value.autoMeditate !== false,
+        preferLoot: value.preferLoot !== false,
         enabled: value.enabled === true, radius: value.radius, searchScope: value.searchScope,
         nearbyClear: value.nearbyClear === true, nearbyRadius: value.nearbyRadius };
       if (binding && binding.scene !== scene) detach();
-      if (binding && Object.keys(next).some((key) => settings[key] !== next[key])) binding.readySince = null;
       settings = next;
       if (!globalThis.GSTFarmPolicy?.hasExtensionAssistance?.()) {
-        settings.autoMeditate = false;
-        if (binding && (binding.medOwned || binding.medPending)) {
-          binding.nativeDetachPending = true;
-          if (binding.medOwned) wakeMeditation(binding.scene);
-          else if (binding.medPending === "start") binding.cancelStart = true;
-        } else detach();
+        detach();
         return;
       }
       this.attach(scene);
     },
     attach(scene) { try { attach(scene); } catch { detach(); say("Chưa gắn được hành vi chờ/nhặt đồ."); } },
     pendingLoot: collecting,
-    ownsMeditation: (scene) => globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() === true && binding?.scene === scene && binding.medOwned === true,
-    wake: wakeMeditation,
+    ownsMeditation: () => false,
+    wake: () => false,
     status(scene) {
       if (!globalThis.GSTFarmPolicy?.hasExtensionAssistance?.()) return "";
       if (binding?.scene === scene && !syncContext(scene)) return "";
       if (!scene?.auto?.on) return "";
       if (!binding || binding.scene !== scene) return "";
-      if (binding.medOwned) return "Auto Farm đang thiền chờ quái xuất hiện.";
-      if (binding.medPending === "start") return "Auto Farm đang yêu cầu thiền khi hết quái.";
-      if (binding.medPending === "stop") return "Auto Farm đang thoát thiền để tiếp tục.";
       if (performance.now() < noteUntil) return message;
       if (performance.now() - lootAt < 1500) return "Đang ưu tiên nhặt đồ tại bãi vừa đánh.";
       return performance.now() - binding.idleAt < 1500
         ? "Hết mục tiêu phù hợp và đồ cần nhặt; đang đứng chờ quái xuất hiện." : "";
     }
   };
-  window.addEventListener("keydown", (event) => {
-    if (!event.isTrusted || event.repeat || event.ctrlKey || event.altKey || event.metaKey
-        || event.key?.toLowerCase() !== "t" || !binding?.scene?.self
-        || binding.scene.keyCapture || binding.scene.chat?.typing
-        || event.target?.closest?.("input,textarea,select,[contenteditable=true]")) return;
-    // Manual meditation always owns its own toggle.
-    binding.medManual = true; binding.medOwned = false; binding.cancelStart = true;
-    binding.readySince = null; binding.medPending = null;
-  }, true);
   window.addEventListener("pagehide", () => { suspended = true; detach(); });
   window.addEventListener("pageshow", () => { suspended = false; GSTFarmBehavior.attach(sceneNow()); });
 })();

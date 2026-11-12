@@ -98,14 +98,11 @@
       if (globalThis.GSTMapTravel?.active?.(scene) === true)
         return { ready: false, reason: "map_travel_stop_unconfirmed" };
     } catch { return { ready: false, reason: "map_travel_stop_unconfirmed" }; }
-    const [realmStopped, chestStopped] = await Promise.all([
-      disableFeature("gst:realm:v1", "gst:realm-status:v1",
-        { enabled: false, seekBoss: false, seekExit: false, keepFarm: false },
-        (data) => data.enabled === false && data.configKey?.includes('"enabled":false')),
+    const [chestStopped] = await Promise.all([
       disableFeature("gst:chest:v1", "gst:chest-status:v1", { enabled: false },
         (data) => data.enabled === false)
     ]);
-    if (!realmStopped || !chestStopped) return { ready: false, reason: "task_stop_unconfirmed" };
+    if (!chestStopped) return { ready: false, reason: "task_stop_unconfirmed" };
     if (scene?.auto?.on === true) {
       try { globalThis.GSTFarmSession?.forget?.(scene); } catch { return { ready: false, reason: "farm_stop_failed" }; }
       try { scene.toggleAutoFarm(); } catch { return { ready: false, reason: "farm_stop_failed" }; }

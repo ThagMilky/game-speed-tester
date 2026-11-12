@@ -53,7 +53,6 @@
       nearbyRadius: Number.isSafeInteger(value?.nearbyRadius)
         ? Math.max(1, Math.min(6, value.nearbyRadius)) : 2,
       autoRespawn: value?.autoRespawn !== false,
-      autoMeditate: value?.autoMeditate !== false,
       noRetreat: value?.noRetreat !== false,
       bossDodge: value?.bossDodge !== false,
       eliteDodge: value?.eliteDodge === true,

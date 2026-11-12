@@ -231,19 +231,14 @@
   }
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
-  const seekRealmBoss = (scene) => (!globalThis.GSTFarmPolicy?.hasExtensionAssistance?.()
-    || (preferences.excludeBoss !== true && !["highLevel", "lowLevel"].includes(preferences.targetMode)))
-    && globalThis.GSTFarmPriority?.realmBossEligible?.(scene) !== false
-    && globalThis.GSTRealm?.seekBoss?.(scene) === true;
-  const exclusionPathAllowed = (scene, point) => seekRealmBoss(scene)
-    || globalThis.GSTFarmBossSafety?.allowsSegment?.(scene, { x: scene.px, y: scene.py }, point) !== false;
+  const exclusionPathAllowed = (scene, point) => globalThis.GSTFarmBossSafety?.allowsSegment?.(scene, { x: scene.px, y: scene.py }, point) !== false;
   // Known targets inside a configured radius also need long-distance navigation.
   // Idle policy only decides what to do AFTER all eligible targets are exhausted.
-  const wanted = (scene) => preferences.enabled === true || seekRealmBoss(scene);
+  const wanted = (scene) => preferences.enabled === true;
   function searchArea(scene) {
     const w = scene.map?.w, h = scene.map?.h;
     if (![w, h].every(finite) || w <= 0 || h <= 0) return null;
-    if (preferences.searchScope === "map" || seekRealmBoss(scene))
+    if (preferences.searchScope === "map")
       return { minX: 0, minY: 0, maxX: w, maxY: h, home: null };
     const home = globalThis.GSTHarvest?.farmOrigin?.(scene), radius = preferences.radius;
     if (!home || ![home.x, home.y, radius].every(finite) || radius < 1) return null;
@@ -305,34 +300,6 @@
     const monsters = enemies.filter((enemy) => !enemy.dead && nativeEligible(enemy) && finite(enemy.id)
       && withinArea(area, enemy));
     const eligible = monsters.filter((enemy) => !(scene.auto.skipped.get(enemy.id) > time) && !deferred.has(enemy.id));
-    // Opt-in realm boss search uses the known encounter coordinates. Actual
-    // attacks still belong to the user's native Auto Farm skill/target filter.
-    // The metadata is NOT a fabricated monster actor.
-    if (seekRealmBoss(scene)) {
-      const metadata = scene.self.realm.inside.boss;
-      if (withinArea(area, metadata)) {
-        const liveBoss = eligible.find((enemy) => isBoss(enemy));
-        if (liveBoss) return { ...liveBoss, actor: true };
-        const knownBosses = [...scene.views.values()].filter((actor) => actor?.k === "m"
-          && !actor.dead && isBoss(actor.st));
-        if (knownBosses.length) {
-          const priority = globalThis.GSTFarmPriority;
-          if (knownBosses.some((actor) => priority?.matches?.(actor.st) === false)) {
-            message = "Boss đã có dữ liệu nhưng không qua bộ lọc cảnh giới/tầng hiện tại.";
-            return null;
-          }
-          const retryAt = Math.min(...knownBosses.map((actor) => Math.max(
-            scene.auto.skipped.get(actor.id) || time, deferred.get(actor.id) || time))
-            .filter((until) => until > time));
-          if (Number.isFinite(retryAt)) {
-            exhaustedUntil = retryAt;
-            message = "Boss phù hợp đang được tạm bỏ; chờ hết thời gian thử lại trước khi tiếp tục.";
-          } else message = "Boss đã có dữ liệu nhưng chưa đủ điều kiện chọn bởi Auto Farm gốc.";
-          return null;
-        }
-        if (!scouting) return { id: "realm:boss", x: metadata.x, y: metadata.y, actor: false };
-      }
-    }
     // Keep a valid target/journey stable before considering a different actor.
     const current = eligible.find((enemy) => enemy.id === scene.auto.target);
     const pursuing = job?.actor ? eligible.find((enemy) => enemy.id === job.id) : null;
@@ -393,7 +360,7 @@
       return null;
     }
     const returnHome = () => {
-      if (scouting || preferences.idleMode !== "home" || seekRealmBoss(scene)) return null;
+      if (scouting || preferences.idleMode !== "home") return null;
       const home = globalThis.GSTHarvest?.farmOrigin?.(scene);
       return home && withinArea(area, home)
         && globalThis.GSTFarmBossSafety?.isAreaExcluded?.(scene, home) !== true
@@ -409,15 +376,8 @@
     const known = [...scene.views.values()].some((actor) => actor.k === "m" && !actor.dead
       && (actor.st?.cls === "boss" || actor.st?.wb === true));
     if (known) { message = "Boss đã có dữ liệu nhưng không qua bộ lọc hiện tại."; return null; }
-    const metadata = scene.self.realm?.inside?.boss;
-    if (metadata && finite(metadata.hp) && metadata.hp > 0 && withinArea(area, metadata))
-      return scouting ? null : { ...metadata, actor: false };
-    if (metadata && finite(metadata.hp) && metadata.hp > 0 && !withinArea(area, metadata))
-      message = "Tọa độ boss nằm ngoài vùng farm đã chọn; không tự đi tới.";
-    else message = metadata?.hp === 0 ? "Boss bí cảnh đã bị hạ; giữ bộ lọc Chỉ boss."
-      : "Chưa có tọa độ boss trong dữ liệu game gửi về; chưa thể tự đi tìm boss này.";
-    if (scouting && preferences.idleMode === "seek" && metadata?.hp !== 0) return scout(scene, time);
-    return returnHome();
+    message = "Chưa thấy boss phù hợp; giữ bộ lọc và chờ dữ liệu quái.";
+    return scouting && preferences.idleMode === "seek" ? scout(scene, time) : returnHome();
   }
   function scout(scene, time) {
     const area = searchArea(scene);
@@ -645,9 +605,8 @@
         return recover(scene, host, time, "no_progress", remaining);
       }
       const owner = job;
-      // Realm objectives are an independent navigation owner. Temporary farm
-      // exclusions constrain farm/scout/home routes, not that Realm journey.
-      const respectExclusions = !seekRealmBoss(scene);
+      // Farm routes retain their configured area and boss exclusions.
+      const respectExclusions = true;
       const bosses = bossObstacles(scene);
       if (bosses.length && owner.navigation.path.length) {
         const point = owner.navigation.path[0];
@@ -721,7 +680,7 @@
     resumeTarget = null; handoff = null; resumeReason = null; centerSync = null; nearbyCandidate = null;
   }
   function attach(scene) {
-    if ((!globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() && !seekRealmBoss(scene)) || !wanted(scene) || suspended) { detach(); return; }
+    if (!globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() || !wanted(scene) || suspended) { detach(); return; }
     if (binding && binding.scene === scene && binding.auto === scene?.auto && GSTFarmUpdate.attached(scene)) return;
     detach();
     if (!scene?.sys?.isActive?.() || typeof scene.auto?.walk !== "function" || typeof scene.now !== "function"

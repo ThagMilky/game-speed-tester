@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  for (const kind of ["chest", "portal"]) {
+  for (const kind of ["chest"]) {
     const button = document.getElementById(`copy${kind}History`), output = document.getElementById(`history${kind}Output`), feedback = document.getElementById(`history${kind}Feedback`);
     button.addEventListener("click", async () => {
       button.disabled = true;

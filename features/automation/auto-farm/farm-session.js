@@ -191,7 +191,7 @@
         : "Đang giữ ý định Auto Farm; chờ nhân vật ổn định để bật lại.") : ""
   };
   window.addEventListener("message", (event) => {
-    if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:realm:v1"
+    if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:farm-session:v1"
         || event.data.type !== "configure") return;
     const nextKeep = event.data.preferences?.keepFarm !== false;
     if (configured && !keep && nextKeep) seedCurrent = true;

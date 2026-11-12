@@ -48,9 +48,6 @@ game-speed-tester/
   features/automation/auto-harvest/harvest-page.js Chọn cây, tìm đường, tương tác gốc và bàn giao với Auto Farm
   features/automation/auto-harvest/harvest-content.js Storage/cầu nối trạng thái và danh mục cây từ game
   features/automation/auto-harvest/harvest-popup.js Tìm tên không dấu, tick chọn, lưu tùy chọn Tự hái
-  features/automation/auto-realm/realm-page.js   Chọn cổng toàn map, đi và vào bằng callback gốc
-  features/automation/auto-realm/realm-content.js Storage/cầu nối cài đặt và trạng thái bí cảnh
-  features/automation/auto-realm/realm-popup.js  Công tắc bí cảnh, quyền phối hợp và giữ farm qua đổi map
   core/page.js        Truy cập Phaser, tách snapshot dùng cho scene rồi chỉnh ms
   popup.html     Giao diện
   ui/popup/popup.css      Định dạng giao diện
@@ -547,3 +544,5 @@ harvest-history-3: log request/end position (local px/py, snapshot self.x/y, sna
 Chẩn đoán nền: Auto Farm → Hỗ trợ khi gặp lỗi → Sao chép log chạy nền / hồi sinh. background-log-1 giữ tối đa 50 mốc trong sessionStorage riêng tab qua reload: visibility/focus/freeze/resume, state, postupdate gap >3 giây, kết nối/chết, revive button request và thay đổi native reviveTry, worker failure. Nhịp frame đọc từ postupdate hiện có, không timer/worker mới; không tự hồi sinh/gửi lại hay sửa scheduling. Khoảng ngừng chỉ được ghi khi JS chạy lại, không tự chứng minh nguyên nhân. Ghi nhận reviveTry là quan sát lịch thử native, không receipt server. Không ghi tài khoản, tọa độ, URL, packet hoặc raw stack. Tests/browser QA: NOT RUN; CI: NOT CHECKED.
 
 Rương/cổng: dọn GSTNavigation intent khi release; đồng bộ cấu hình rương giống nhau không hủy hành trình/request. Bí cảnh có nút sao chép 10 lượt rương và 10 lượt cổng gần nhất, kèm current enabled/attached/phase/message, số đối tượng game cung cấp và quyền phối hợp. Log mỗi hành trình đã kết thúc gồm lý do, thời lượng, khoảng cách, fresh/cached target type và requested; không ghi tên nhân vật, ID cổng/rương, packet hoặc credential. Reload đặt lại. disappeared chỉ là rương không còn trong danh sách, không receipt vật phẩm; entered chỉ khi cùng controller quan sát inside sau request; rời scene trước xác nhận ghi ended, không suy đoán thành công. Giữ lọc quái 6 ô, bảo vệ, cooldown, eligibility native và ownership. Source đối chiếu: Downloads/Game/WorldScene.js (realmUI target/interact, native F). Tests/browser/live QA: NOT RUN; CI: NOT CHECKED.
+
+Auto Bí cảnh và tự thiền khi Farm hết quái đã được gỡ. Luôn thiền vẫn là công tắc riêng; thiền hồi phục giữ theo game. Giữ Farm qua đổi map nằm trong nhóm Auto Farm. Rương và đồng hồ/thông báo Bí cảnh vẫn được giữ.

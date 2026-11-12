@@ -69,7 +69,6 @@ const farmTargetMaxLevelError = document.getElementById("farmTargetMaxLevelError
 const farmIdleMode = document.getElementById("farmIdleMode");
 const farmPreferLoot = document.getElementById("farmPreferLoot");
 const farmSelfDefense = document.getElementById("farmSelfDefense");
-const farmAutoMeditate = document.getElementById("farmAutoMeditate");
 const farmAutoRespawn = document.getElementById("farmAutoRespawn");
 const farmAutoEncounter = document.getElementById("farmAutoEncounter");
 const positiveLevel = (value, fallback) => Number.isSafeInteger(value) && value > 0 ? value : fallback;
@@ -531,7 +530,7 @@ function normalizedFarmPreferences(raw = {}) {
     breakSeals: raw.breakSeals === true,
     idleMode: ["home", "seek"].includes(raw.idleMode) ? raw.idleMode : "hold",
     preferLoot: raw.preferLoot !== false, selfDefense: raw.selfDefense === true,
-    autoMeditate: raw.autoMeditate !== false, autoRespawn: raw.autoRespawn !== false,
+    autoRespawn: raw.autoRespawn !== false,
     autoEncounter: raw.autoEncounter === true, bossDodge: raw.bossDodge !== false,
     eliteDodge: raw.eliteDodge === true, bossRetreat: raw.bossRetreat !== false,
     ...hpThresholds
@@ -587,7 +586,6 @@ function syncFarmPreferences(raw, { preserveDraft = true, forceKeys = [] } = {})
   farmIdleMode.value = next.idleMode;
   farmPreferLoot.checked = next.preferLoot;
   farmSelfDefense.checked = next.selfDefense;
-  farmAutoMeditate.checked = next.autoMeditate;
   farmAutoRespawn.checked = next.autoRespawn;
   farmAutoEncounter.checked = next.autoEncounter;
   farmExcludeBoss.checked = next.excludeBoss;
@@ -748,7 +746,7 @@ function farmSummaries() {
       : "";
   document.getElementById("farmTargetSummary").textContent = targetSummary;
   document.getElementById("farmEncounterSummary").textContent = `Auto nhận kỳ ngộ · ${farmConfirmed.autoEncounter ? "bật" : "tắt"}`;
-  document.getElementById("farmDefenseSummary").textContent = `Tự vệ ${farmConfirmed.selfDefense ? "bật" : "tắt"} · Dọn gần ${farmConfirmed.nearbyClear ? "bật" : "tắt"} · Thiền ${farmConfirmed.autoMeditate ? "bật" : "tắt"} · Hồi sinh ${farmConfirmed.autoRespawn ? "bật" : "tắt"}`;
+  document.getElementById("farmDefenseSummary").textContent = `Tự vệ ${farmConfirmed.selfDefense ? "bật" : "tắt"} · Dọn gần ${farmConfirmed.nearbyClear ? "bật" : "tắt"} · Hồi sinh ${farmConfirmed.autoRespawn ? "bật" : "tắt"}`;
   document.getElementById("farmBossSummary").textContent = `Tự bảo vệ · ${farmConfirmed.bossDodge ? "né boss" : "né boss tắt"} · ${farmConfirmed.eliteDodge ? "né tinh anh" : "né tinh anh tắt"}`;
   document.getElementById("farmRecoverySummary").textContent = `Hồi phục · ${farmConfirmed.noRetreat ? "không rút lui" : "theo game"}`;
 }
@@ -783,7 +781,7 @@ async function saveFarmPatch(patch, rollback, { draftWrite = false, preserveDraf
 for (const [input, key] of [[farmShowTargetLine, "showTargetLine"], [farmShowRange, "showRange"],
   [farmNearbyClear, "nearbyClear"], [farmNoRetreat, "noRetreat"],
   [breakSeals, "breakSeals"], [farmPreferLoot, "preferLoot"], [farmSelfDefense, "selfDefense"],
-  [farmAutoMeditate, "autoMeditate"], [farmAutoRespawn, "autoRespawn"], [farmAutoEncounter, "autoEncounter"], [farmBossDodge, "bossDodge"],
+  [farmAutoRespawn, "autoRespawn"], [farmAutoEncounter, "autoEncounter"], [farmBossDodge, "bossDodge"],
   [farmEliteDodge, "eliteDodge"],
   [farmBossRetreat, "bossRetreat"]]) {
   input.addEventListener("change", async () => {
@@ -1189,7 +1187,6 @@ async function refresh() {
   globalThis.GSTMenuMonitor?.render();
   refreshFarm();
   globalThis.GSTHarvestPopup?.refresh();
-  globalThis.GSTRealmPopup?.refresh();
   globalThis.GSTFpsPopup?.refresh();
   globalThis.GSTChestPopup?.refresh();
   globalThis.GSTQuestPopup?.refresh();

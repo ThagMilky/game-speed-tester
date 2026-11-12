@@ -21,8 +21,8 @@
     const summaries = {
       farm: farm === "on" ? "Auto Farm đang bật" : farm === "off" ? "Auto Farm đang tắt" : "Chưa đọc được trạng thái",
       harvest: !loaded ? "Đang đọc cài đặt…" : values.harvestPreferences?.enabled ? "Đã bật tự thu hoạch" : "Chưa bật thu hoạch",
-      realm: !loaded ? "Đang đọc cài đặt…" : values.realmPreferences?.enabled || values.chestPreferences?.enabled
-        ? "Đã bật tính năng bí cảnh / rương" : "Chưa bật tự động",
+      realm: !loaded ? "Đang đọc cài đặt…" : values.chestPreferences?.enabled
+        ? "Đã bật tự mở rương" : "Chưa bật tự động",
       quest: quest === "true" ? "Auto Quest đang chạy" : "Chưa xác nhận đang chạy",
       speed: !loaded ? "Đang đọc cài đặt…" : values.preferences?.enabled ? "Đang bật điều chỉnh tốc độ" : "Không điều chỉnh tốc độ",
       fps: !loaded ? "Đang đọc cài đặt…" : values.fpsPreferences?.enabled ? "Đã bật tối ưu FPS" : "Chưa bật tối ưu FPS"
@@ -41,7 +41,6 @@
     for (const [key, field, label] of [
       ["farmPreferences", "breakSeals", "Phong ấn"],
       ["harvestPreferences", "enabled", "Thu hoạch"],
-      ["realmPreferences", "enabled", "Vào bí cảnh"],
       ["chestPreferences", "enabled", "Mở rương"],
       ["flightPreferences", "always", "Luôn bay"],
       ["preferences", "enabled", "Tốc độ"],

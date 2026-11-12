@@ -3,7 +3,7 @@
   const origin = "https://nghichthienky.online";
   const channel = "gst:farm:v1";
   globalThis.GSTFarmConfigurationReady = false;
-  let settings = { policyMode: "native", enabled: false, radius: 22, autoRespawn: true, autoMeditate: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
+  let settings = { policyMode: "native", enabled: false, radius: 22, autoRespawn: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
     searchScope: "radius", idleMode: "hold", preferLoot: true, excludeBoss: false, bossFilter: "all",
     bossDodge: true, eliteDodge: false, bossRetreat: true, retreatHpPercent: 40, recoveryHpPercent: 100 };
   let identityBlocked = false;
@@ -959,7 +959,7 @@
       if (wasIdentityBlocked !== identityBlocked && activationLock) activationLock.stopRequested = false;
       settings = { policyMode: globalThis.GSTFarmPolicy?.normalize(data.policyMode) ?? "extended",
         identityBlocked, enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn !== false,
-        autoMeditate: data.autoMeditate !== false, noRetreat: data.noRetreat !== false,
+        noRetreat: data.noRetreat !== false,
         bossDodge: data.bossDodge !== false, eliteDodge: data.eliteDodge === true, bossRetreat: data.bossRetreat !== false,
         ...hpThresholds,
         showTargetLine: data.showTargetLine === true, showRange: data.showRange === true,
@@ -983,7 +983,7 @@
       if (settings.policyMode !== "extended" || identityBlocked) stopForLockedPolicy();
       stage = "revive";
       const farmRuntimeSettings = identityBlocked ? { ...settings, enabled: false,
-        autoRespawn: false, autoMeditate: false, selfDefense: false, nearbyClear: false, autoEncounter: false,
+        autoRespawn: false, selfDefense: false, nearbyClear: false, autoEncounter: false,
         bossDodge: false, eliteDodge: false, bossRetreat: false, noRetreat: true } : settings;
       globalThis.GSTFarmRevivePolicy?.configure(identityBlocked ? false : settings.autoRespawn);
       stage = "combat";
