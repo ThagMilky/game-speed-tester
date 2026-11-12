@@ -7,6 +7,43 @@
   const status = byId("accountActiveStatus"), title = byId("accountFormTitle");
   const cancel = byId("accountCancel");
   let rows = [], editingId = "", busy = false;
+  const autoMode = byId("accountAutoLoginMode"), autoAccount = byId("accountAutoLoginAccount");
+  const autoTarget = byId("accountAutoLoginTarget"), autoStatus = byId("accountAutoLoginStatus");
+  let autoPreferences = { mode: "off", accountId: "" }, autoLoaded = false, autoSaving = false;
+  autoMode.disabled = autoAccount.disabled = true;
+  function renderAutoLogin() {
+    autoMode.value = ["last", "account"].includes(autoPreferences.mode) ? autoPreferences.mode : "off";
+    autoTarget.hidden = autoMode.value !== "account";
+    const placeholder = new Option("Chọn tài khoản", "");
+    autoAccount.replaceChildren(placeholder, ...rows.map((row) => new Option(row.label, row.id)));
+    autoAccount.value = rows.some((row) => row.id === autoPreferences.accountId) ? autoPreferences.accountId : "";
+    autoMode.disabled = autoAccount.disabled = !autoLoaded || autoSaving;
+    if (autoPreferences.mode === "account" && !autoAccount.value)
+      autoStatus.textContent = "Chưa có tài khoản mặc định hợp lệ; chưa tự đăng nhập.";
+  }
+  async function saveAutoLogin() {
+    if (!autoLoaded || autoSaving) return;
+    const next = { mode: autoMode.value, accountId: autoAccount.value };
+    if (next.mode === "account" && !next.accountId) {
+      autoTarget.hidden = false;
+      autoStatus.textContent = "Chọn tài khoản để lưu chế độ này.";
+      return;
+    }
+    autoSaving = true;
+    autoMode.disabled = autoAccount.disabled = true;
+    try {
+      await chrome.storage.local.set({ gstAutoLogin: next });
+      autoPreferences = next;
+      autoStatus.textContent = "Đã lưu lựa chọn tự đăng nhập.";
+    } catch { autoStatus.textContent = "Chưa lưu được lựa chọn; giữ cài đặt cũ."; }
+    finally { autoSaving = false; renderAutoLogin(); }
+  }
+  autoMode.addEventListener("change", () => { autoTarget.hidden = autoMode.value !== "account"; void saveAutoLogin(); });
+  autoAccount.addEventListener("change", () => { void saveAutoLogin(); });
+  chrome.storage.local.get("gstAutoLogin").then((saved) => {
+    if (!autoLoaded) autoPreferences = saved.gstAutoLogin ?? autoPreferences;
+    autoLoaded = true; renderAutoLogin();
+  }).catch(() => { autoStatus.textContent = "Chưa đọc được lựa chọn tự đăng nhập."; });
   const uuid = () => crypto.randomUUID?.() ?? [...crypto.getRandomValues(new Uint8Array(16))]
     .map((value) => value.toString(16).padStart(2, "0")).join("");
   const reasons = {
@@ -38,6 +75,7 @@
   };
   function explain(reason) { return reasons[reason] || "Chưa hoàn tất thao tác. Kiểm tra tab game rồi thử lại."; }
   Object.assign(reasons, {
+    automatic_login_failed: "Chưa tự mở được tài khoản mặc định. Hãy dùng nút đăng nhập hoặc kiểm tra lại cài đặt.",
     attempt_url_mismatch: "URL sau reload không khớp lượt đăng nhập hoặc slot đã chọn.",
     attempt_record_missing_or_expired: "Bản ghi lượt đăng nhập không còn hoặc đã hết hạn sau reload.",
     attempt_record_mismatch: "Tab đang giữ một lượt đăng nhập khác với lượt cần tiếp tục."
@@ -130,6 +168,7 @@
       && typeof row.slot === "string" && typeof row.username === "string" && typeof row.password === "string")
       .map((row) => ({ ...row, label: typeof row.label === "string" && row.label.trim() ? row.label : row.username }));
     render();
+    renderAutoLogin();
   }
   async function refreshStatus() {
     const context = await GSTAccountProfiles.activeContext();
@@ -265,6 +304,11 @@
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes[GSTAccountProfiles.accountsKey]) void reload();
+    if (area === "local" && changes.gstAutoLogin) {
+      autoPreferences = changes.gstAutoLogin.newValue ?? { mode: "off", accountId: "" };
+      autoLoaded = true;
+      renderAutoLogin();
+    }
   });
   void reload().catch(() => { feedback.textContent = "Chưa đọc được danh sách tài khoản."; });
   void refreshStatus();

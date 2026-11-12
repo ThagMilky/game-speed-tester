@@ -122,7 +122,7 @@ function senderMatchesAttempt(sender, record) {
       && url.searchParams.get("gstAttempt") === record.attemptId;
   } catch { return false; }
 }
-async function launch(message) {
+async function launch(message, automaticTabId = null) {
   if (!crypto.randomUUID || !["current", "additional"].includes(message.mode))
     return { accepted: false, reason: "launcher_unavailable" };
   const account = await getAccount(message.accountId);
@@ -130,15 +130,21 @@ async function launch(message) {
       || typeof account.username !== "string" || !account.username
       || typeof account.password !== "string" || !account.password)
     return { accepted: false, reason: "account_not_found" };
-  const [active] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  const [active] = automaticTabId !== null ? [{ id: automaticTabId }]
+    : await chrome.tabs.query({ active: true, lastFocusedWindow: true });
   const source = active?.id ? await readTabContext(active.id) : null;
   if (message.mode === "current") {
     if (!active?.id || !source?.launchUrl || source.offline) return { accepted: false, reason: "open_game_tab_first" };
-    if (source.verified && source.accountId === account.id)
+    if (source.verified && source.accountId === account.id) {
+      await chrome.storage.local.set({ gstLastAccountId: account.id });
       return { accepted: true, reused: true, character: source.character };
+    }
+    if (automaticTabId !== null && (!source.defaultLoginEligible || source.connected || source.autoOn))
+      return { accepted: false, reason: "automatic_login_skipped" };
     if (tabAttempts.has(active.id)) return { accepted: false, reason: "attempt_already_active" };
     let stopped;
-    try { stopped = await chrome.tabs.sendMessage(active.id, { type: "gst:account-stop" }); }
+    try { stopped = automaticTabId !== null ? { ready: true, autoOn: false }
+      : await chrome.tabs.sendMessage(active.id, { type: "gst:account-stop" }); }
     catch { return { accepted: false, reason: "automation_stop_unconfirmed" }; }
     if (stopped?.ready !== true || stopped.autoOn !== false)
       return { accepted: false, reason: stopped?.reason ?? "automation_stop_unconfirmed" };
@@ -159,6 +165,13 @@ async function launch(message) {
       return { accepted: false, reason: "attempt_already_active" };
     }
     const base = source?.launchUrl || origin + "/?online=1&timer";
+    if (automaticTabId !== null) {
+      const latest = await readTabContext(targetTabId);
+      if (!latest?.defaultLoginEligible || latest.connected || latest.autoOn) {
+        await clearAttempt(targetTabId, attemptId);
+        return { accepted: false, reason: "automatic_login_skipped" };
+      }
+    }
     await chrome.tabs.update(targetTabId, { url: buildTargetUrl(base, account, attemptId) });
   } catch {
     await clearAttempt(targetTabId, attemptId);
@@ -177,6 +190,7 @@ async function launch(message) {
       return { accepted: false, reason: result?.reason ?? "native_login_failed" };
     }
     if (result.reused) {
+      await chrome.storage.local.set({ gstLastAccountId: account.id });
       await clearAttempt(targetTabId, attemptId);
       return { accepted: true, reused: true, character: result.character };
     }
@@ -193,6 +207,23 @@ async function launch(message) {
 
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   if (sender.id !== chrome.runtime.id) return;
+  if (message?.type === "gst:account-auto-login") {
+    (async () => {
+      const url = new URL(sender.url);
+      if (!Number.isInteger(sender.tab?.id) || sender.frameId !== 0 || url.origin !== origin
+          || !["/", "/index.html"].includes(url.pathname)
+          || url.searchParams.has("slot") || url.searchParams.has("gstAttempt")
+          || url.searchParams.has("map") || url.searchParams.has("at") || url.searchParams.get("online") === "0")
+        return { accepted: false, reason: "automatic_login_skipped" };
+      const saved = await chrome.storage.local.get(["gstAutoLogin", "gstLastAccountId"]);
+      const preferences = saved.gstAutoLogin;
+      const accountId = preferences?.mode === "account" ? preferences.accountId
+        : preferences?.mode === "last" ? saved.gstLastAccountId : "";
+      if (typeof accountId !== "string" || !accountId) return { accepted: false, reason: "automatic_login_skipped" };
+      return launch({ mode: "current", accountId }, sender.tab.id);
+    })().then(respond).catch(() => respond({ accepted: false, reason: "automatic_login_failed" }));
+    return true;
+  }
   if (message?.type === "gst:account-launch") {
     launch(message).then(respond).catch(() => respond({ accepted: false, reason: "launcher_failed" }));
     return true;
@@ -229,6 +260,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
         return { accepted: false, reason: "saved_identity_conflict" };
       }
       await clearAttempt(tabId, record.attemptId);
+      await chrome.storage.local.set({ gstLastAccountId: record.accountId });
       return { accepted: true };
     })().then(respond).catch(async () => {
       if (Number.isInteger(sender.tab?.id) && typeof message.attemptId === "string")

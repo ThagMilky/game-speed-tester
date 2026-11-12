@@ -4,6 +4,11 @@
   const channel = "gst:account:v1";
   const slot = new URLSearchParams(location.search).get("slot") ?? "";
   const attemptId = new URLSearchParams(location.search).get("gstAttempt") ?? "";
+  const entryUrl = new URL(location.href);
+  const defaultLoginEligible = ["/", "/index.html"].includes(entryUrl.pathname)
+    && !entryUrl.searchParams.has("slot") && !entryUrl.searchParams.has("gstAttempt")
+    && !entryUrl.searchParams.has("map") && !entryUrl.searchParams.has("at")
+    && entryUrl.searchParams.get("online") !== "0";
   const pageRequests = new Map();
   let sequence = 0, lastIdentity = "", lastProfile = "", pendingAttempt = null, attemptBusy = false;
   let currentContext = null, refreshBusy = false, lastError = "";
@@ -156,7 +161,7 @@
         ? slot + ":" + snapshot.character + ":" + snapshot.characterId + ":" + snapshot.classId
         : "unverified:" + slot + ":" + reason;
       const context = {
-        verified, profileKey: key, slot, launchAttemptId: attemptId,
+        verified, profileKey: key, slot, launchAttemptId: attemptId, defaultLoginEligible,
         character: verified ? snapshot.character : "",
         classId: verified ? snapshot.classId : "", characterId: verified ? snapshot.characterId : "",
         accountId: verified ? account?.id ?? "" : "", accountLabel: displayAccount,
@@ -453,4 +458,13 @@
   setInterval(() => { void refresh(); }, 1000);
   void refresh(true);
   void resumePendingAttempt();
+  if (defaultLoginEligible) {
+    void refreshLatestContext().then(() => chrome.runtime.sendMessage({ type: "gst:account-auto-login" }))
+      .then((result) => {
+        if (result?.accepted === false && result.reason !== "automatic_login_skipped") {
+          lastError = result.reason || "automatic_login_failed";
+          void refresh(true);
+        }
+      }).catch(() => { lastError = "automatic_login_failed"; });
+  }
 })();

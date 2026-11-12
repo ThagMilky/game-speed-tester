@@ -571,6 +571,13 @@
       <div class="card-body">
         <p class="hint">Tên đăng nhập và mật khẩu được lưu trên trình duyệt này, không mã hóa. Chỉ thêm tài khoản trên máy bạn tin cậy.</p>
         <p id="accountActiveStatus" class="feature-status" role="status" aria-live="polite">Đang xác nhận tài khoản trong tab hiện tại…</p>
+        <div class="account-form">
+          <label for="accountAutoLoginMode">Khi mở game trực tiếp</label>
+          <select id="accountAutoLoginMode"><option value="off">Không tự đăng nhập</option><option value="last">Nick đăng nhập thành công gần nhất</option><option value="account">Tài khoản chỉ định</option></select>
+          <div id="accountAutoLoginTarget" hidden><label for="accountAutoLoginAccount">Tài khoản mặc định</label><select id="accountAutoLoginAccount"></select></div>
+          <p class="hint">Chỉ áp dụng khi mở game không có slot riêng và chưa kết nối nhân vật. Tab nick khác giữ nguyên. Nếu cần, extension dùng mật khẩu đã lưu để điền form game.</p>
+          <p id="accountAutoLoginStatus" class="hint" role="status" aria-live="polite"></p>
+        </div>
         <div id="accountList" class="account-list" aria-label="Tài khoản đã lưu"></div>
         <form id="accountForm" class="account-form">
           <h3 id="accountFormTitle">Thêm tài khoản</h3>
