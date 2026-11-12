@@ -4,7 +4,7 @@
   let settings = { idleMode: "hold", preferLoot: true, autoMeditate: true, enabled: false, radius: 22 };
   let binding = null, configured = false, suspended = false, manualUntil = 0, noteUntil = 0, message = "";
   let lootTickAt = -Infinity, lootAt = -Infinity;
-  let observedTarget = null, lootSite = null, lootActive = false, lootLastCount = 0, lootAbandoned = false;
+  let observedTarget = null, lootSite = null, lootActive = false, lootWaiting = false, lootLastCount = 0, lootAbandoned = false;
   const sceneNow = () => window.game?.scene?.getScene?.("world")
     ?? (window.__ntkScene?.sys?.settings?.key === "world" ? window.__ntkScene : null);
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -17,7 +17,7 @@
   function clearContextState(scene) {
     manualUntil = 0; noteUntil = 0; message = "";
     lootTickAt = -Infinity; lootAt = -Infinity;
-    observedTarget = null; lootSite = null; lootActive = false; lootLastCount = 0; lootAbandoned = false;
+    observedTarget = null; lootSite = null; lootActive = false; lootWaiting = false; lootLastCount = 0; lootAbandoned = false;
     if (binding?.scene === scene) {
       Object.assign(binding, { idleAt: -Infinity, readySince: null, medOwned: false,
         medPending: null, medManual: false, cancelStart: false, medStillAt: null,
@@ -223,7 +223,7 @@
     meditationGuard(scene);
     if (!scene.auto.on || scene.self?.dead || !connected(scene) || scene.leaving) {
       manualUntil = 0; message = "";
-      observedTarget = null; lootSite = null; lootActive = false; lootAbandoned = false; return;
+      observedTarget = null; lootSite = null; lootActive = false; lootWaiting = false; lootAbandoned = false; return;
     }
   }
   // A loot phase belongs to the LAST confirmed local kill. Never chase a
@@ -302,6 +302,18 @@
     try {
       if (!scene || !globalThis.GSTFarmPolicy?.hasExtensionAssistance?.()) return false;
       const plan = lootPlan(scene, host, time);
+      if (plan?.waiting) lootWaiting = true;
+      else if (lootWaiting && (!plan || !plan.waiting)) {
+        const handoffBlocked = manual(scene) || scene.auto.moved || scene.pendingSkill || scene.aiming
+          || scene.auto.resting || scene.self?.med || scene.harvesting
+          || globalThis.GSTMapTravel?.active?.(scene)
+          || ["GSTFarmSeals", "GSTChest", "GSTRealm", "GSTHarvest", "GSTQuest"]
+            .some((name) => globalThis[name]?.controls?.(scene));
+        const waitEnded = !!plan || !lootSite || !settings.preferLoot;
+        if (waitEnded && !handoffBlocked) {
+          if (globalThis.GSTFarmRouting?.rebaseNativeWalk?.(scene) === true) lootWaiting = false;
+        }
+      }
       if (!plan || !plan.eligible.length && !plan.waiting) {
         if (lootActive) {
           globalThis.GSTMovementDiagnostics?.event?.(scene,
@@ -384,7 +396,7 @@
       for (const undo of old.undo.reverse()) undo();
     }
     manualUntil = 0; lootTickAt = -Infinity; lootAt = -Infinity;
-    observedTarget = null; lootSite = null; lootActive = false; lootLastCount = 0; lootAbandoned = false;
+    observedTarget = null; lootSite = null; lootActive = false; lootWaiting = false; lootLastCount = 0; lootAbandoned = false;
   }
   function attach(scene) {
     if (!configured || !globalThis.GSTFarmPolicy?.hasExtensionAssistance?.() || suspended) { detach(); return; }

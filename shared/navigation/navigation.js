@@ -39,7 +39,12 @@
         const stepSize = Math.max(1 / 240, delta / 16);
         for (let i = 0; remaining > 1e-8 && i < 16; i++) {
           if (Math.hypot(scene.px - intent.point[0], scene.py - intent.point[1]) <= intent.reach) {
-            scene.autoX = scene.autoY = 0; break;
+            scene.autoX = scene.autoY = 0;
+            // WorldScene moves before auto.update(). Wake only the native
+            // decision at an intermediate waypoint so its next leg is chosen
+            // in this frame; final attack reach keeps native timing unchanged.
+            if (intent.nav === scene.auto && intent.intermediate) intent.nav.think = 0;
+            break;
           }
           const step = i === 15 ? remaining : Math.min(remaining, stepSize);
           result = original.call(this, step, ...rest); remaining -= step;
@@ -52,6 +57,7 @@
     const point = Array.isArray(nav.path?.[0]) ? nav.path[0] : [gx, gy];
     if (!Array.isArray(point) || point.length !== 2 || !point.every(finite)) return;
     entry.intent = { nav, x: scene.autoX, y: scene.autoY, fix: scene.self?.fix, point: [...point],
+      intermediate: Math.hypot(point[0] - gx, point[1] - gy) >= 0.01,
       reach: Math.hypot(point[0] - gx, point[1] - gy) < 0.01 ? reach : 0.25 };
   }
   function crossed(scene, nav, point, tolerance) {

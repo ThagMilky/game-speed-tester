@@ -43,6 +43,19 @@
     return otherOwner(scene) || globalThis.GSTFarmDefense?.controls?.(scene)
       || globalThis.GSTFarmBossSafety?.controls?.(scene);
   }
+  function rebaseNativeWalk(scene) {
+    const owner = binding?.scene === scene ? binding : null, auto = scene?.auto, time = scene?.now?.();
+    if ((binding && !owner) || !scene || sceneNow() !== scene || !auto?.on
+        || ![scene.px, scene.py, time].every(Number.isFinite) || time < auto.pauseUntil
+        || !scene.self || scene.self.dead || scene.leaving || scene.harvesting || auto.resting
+        || farmOwnerControls(scene) || manual(scene) || auto.moved
+        || scene.pendingSkill || scene.aiming || scene.self.med) return false;
+    if (owner) { owner.track = null; owner.steer = null; }
+    GSTNavigation.cancel(scene, auto);
+    auto.lastX = scene.px; auto.lastY = scene.py; auto.stillSince = time;
+    auto.stuckCount = 0; auto.sideUntil = 0;
+    return true;
+  }
   function inCircle(boundary, x, y) {
     return Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(boundary?.radius)
       && Number.isFinite(boundary?.home?.x) && Number.isFinite(boundary?.home?.y)
@@ -243,6 +256,7 @@
     blocked,
     configure(scene, value) { enabled = value.enabled === true; detach(); attach(scene); },
     attach,
+    rebaseNativeWalk,
     status: (scene) => binding && binding.scene === scene && scene?.auto?.on && scene.now() < binding.noteUntil ? binding.note : ""
   };
   window.addEventListener("pagehide", () => { suspended = true; detach(); });

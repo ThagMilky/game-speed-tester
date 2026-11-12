@@ -61,6 +61,7 @@
     }
     if (Number.isSafeInteger(target.id)) scene.auto.target = target.id;
     release();
+    globalThis.GSTFarmRouting?.rebaseNativeWalk?.(scene);
     message = "Đang nhường Auto Farm gốc xử lý mục tiêu ở gần; chưa tìm bãi khác.";
   }
   function nativeBusy(scene, host, area, time) {
