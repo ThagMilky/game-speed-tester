@@ -45,6 +45,7 @@
       ? { retreatHpPercent, recoveryHpPercent } : { retreatHpPercent: 40, recoveryHpPercent: 100 };
     settings = {
       policyMode,
+      identityBlocked: value?.identityBlocked === true,
       enabled: value?.enabled === true,
       showTargetLine: value?.showTargetLine === true,
       showRange: value?.showRange === true,
@@ -161,7 +162,8 @@
     revision++;
     const preferences = accountProfileVerified
       ? event.data.farmPreferences
-      : { ...(event.data.farmPreferences ?? {}), enabled: false, autoRespawn: false, breakSeals: false, policyMode: "disabled" };
+      : { ...(event.data.farmPreferences ?? {}), identityBlocked: true,
+          enabled: false, autoRespawn: false, breakSeals: false };
     configure(preferences);
   });
   chrome.storage.onChanged.addListener((changes, area) => {

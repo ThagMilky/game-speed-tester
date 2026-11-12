@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const origin = "https://nghichthienky.online", storageKey = "gst:farm-intent:v1";
-  let configured = false, keep = true, suspended = false, watcher = null, binding = null, policyMode = "extended";
+  let configured = false, keep = true, suspended = false, identityBlocked = false, watcher = null, binding = null, policyMode = "extended";
   let intent = null, stableAt = null, pausedUntil = 0, attempted = false, at = -Infinity, suppressSeed = false;
   let resumeTimer = null;
   let seedCurrent = false;
@@ -22,7 +22,7 @@
     monitorResume();
   }
   function monitorResume() {
-    const needed = configured && policyMode === "extended" && !suppressSeed && !suspended && binding && keep && intent?.on && !binding.scene.auto.on && !attempted;
+    const needed = configured && policyMode === "extended" && !identityBlocked && !suppressSeed && !suspended && binding && keep && intent?.on && !binding.scene.auto.on && !attempted;
     if (!needed && resumeTimer !== null) { clearInterval(resumeTimer); resumeTimer = null; }
     // Native background stepping only runs while auto.on. This timer only
     // waits to restore an OFF scene and stops as soon as native farming resumes.
@@ -46,7 +46,7 @@
     try {
       const scene = binding?.scene;
       if (!scene) return;
-      if (policyMode !== "extended" || sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto) { detach(); watch(); return; }
+      if (policyMode !== "extended" || identityBlocked || sceneNow() !== scene || !scene.sys?.isActive?.() || scene.auto !== binding.auto) { detach(); watch(); return; }
       const now = performance.now();
       if (now - at < 200) return;
       at = now;
@@ -93,7 +93,7 @@
     } catch { detach(); watch(); }
   }
   function discover() {
-    if (!configured || policyMode !== "extended" || !keep || suspended || binding) return;
+    if (!configured || policyMode !== "extended" || identityBlocked || !keep || suspended || binding) return;
     try {
       const scene = sceneNow();
       if (!scene?.sys?.isActive?.() || !scene.self || typeof scene.profile?.name !== "string"
@@ -140,7 +140,7 @@
       monitorResume();
     } catch { detach(); watch(); }
   }
-  function watch() { if (configured && policyMode === "extended" && keep && !suspended && !binding && watcher === null) watcher = setInterval(discover, 1000); }
+  function watch() { if (configured && policyMode === "extended" && !identityBlocked && keep && !suspended && !binding && watcher === null) watcher = setInterval(discover, 1000); }
   globalThis.GSTFarmSession = {
     setPolicyMode(mode, scene) {
       policyMode = globalThis.GSTFarmPolicy?.normalize(mode) ?? "extended";
@@ -162,6 +162,14 @@
             if (intent?.on === true) intent = { ...intent, on: false, blocked: false };
           }
         }
+        detach(); clearInterval(watcher); watcher = null; monitorResume();
+        return;
+      }
+      watch(); discover(); monitorResume();
+    },
+    setIdentityBlocked(blocked) {
+      identityBlocked = blocked === true;
+      if (identityBlocked) {
         detach(); clearInterval(watcher); watcher = null; monitorResume();
         return;
       }

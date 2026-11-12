@@ -6,6 +6,7 @@
   let settings = { policyMode: "native", enabled: false, radius: 22, autoRespawn: true, autoMeditate: true, targetMode: "all", targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20,
     searchScope: "radius", idleMode: "hold", preferLoot: true, excludeBoss: false, bossFilter: "all",
     bossDodge: true, eliteDodge: false, bossRetreat: true, retreatHpPercent: 40, recoveryHpPercent: 100 };
+  let identityBlocked = false;
   let filterBinding = null;
   let excludedBossChange = null;
   let death = null;
@@ -126,7 +127,7 @@
     }
   }
   function needsActivationTracking() {
-    return settings.policyMode === "disabled"
+    return identityBlocked || settings.policyMode === "disabled"
       || globalThis.GSTMeditation?.wantsFarmActivationObserver?.() === true;
   }
   function maintainActivationLock() {
@@ -141,8 +142,8 @@
       const descriptor = Object.getOwnPropertyDescriptor(scene.auto, "toggle");
       const owner = { scene, auto: scene.auto, original, descriptor, stopRequested: false };
       owner.wrapper = function (...args) {
-        if (settings.policyMode === "disabled" && this.on === false) {
-          message = "Auto Farm đang bị khóa bởi chế độ Disabled. Hãy đổi chế độ rồi bật lại bằng tay.";
+        if ((identityBlocked || settings.policyMode === "disabled") && this.on === false) {
+          message = identityBlocked ? "Auto Farm đang chờ xác nhận đúng tài khoản." : "Auto Farm đang bị khóa bởi chế độ Disabled. Hãy đổi chế độ rồi bật lại bằng tay.";
           return undefined;
         }
         const wasOn = this.on === true;
@@ -160,7 +161,7 @@
     const owner = activationLock;
     if (scene.auto.on && !owner.stopRequested) {
       owner.stopRequested = true;
-      if (settings.policyMode === "disabled") {
+      if (identityBlocked || settings.policyMode === "disabled") {
         // The lock is installed first; this is the single native OFF request.
         scene.toggleAutoFarm();
       } else globalThis.GSTMeditation?.farmStarted?.(scene);
@@ -578,13 +579,13 @@
   function watch() {
     // Independent defense/meditation helpers still need a scene watcher when
     // the user disables respawn and expanded filtering.
-    if (settings.policyMode === "extended" && !suspended && !session && watcher === null) {
+    if (settings.policyMode === "extended" && !identityBlocked && !suspended && !session && watcher === null) {
       watcher = setInterval(discover, 1000);
     }
   }
 
   function discover() {
-    if (settings.policyMode !== "extended" || suspended || session) return;
+    if (settings.policyMode !== "extended" || identityBlocked || suspended || session) return;
     try {
       const scene = sceneNow();
       globalThis.GSTFarmCombat?.attach(scene);
@@ -953,6 +954,9 @@
       const hpThresholds = Number.isSafeInteger(retreatHpPercent) && retreatHpPercent >= 1
         && Number.isSafeInteger(recoveryHpPercent) && retreatHpPercent < recoveryHpPercent && recoveryHpPercent <= 100
         ? { retreatHpPercent, recoveryHpPercent } : { retreatHpPercent: 40, recoveryHpPercent: 100 };
+      const wasIdentityBlocked = identityBlocked;
+      identityBlocked = data.identityBlocked === true;
+      if (wasIdentityBlocked !== identityBlocked && activationLock) activationLock.stopRequested = false;
       settings = { policyMode: globalThis.GSTFarmPolicy?.normalize(data.policyMode) ?? "extended",
         enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn !== false,
         autoMeditate: data.autoMeditate !== false, noRetreat: data.noRetreat !== false,
@@ -974,8 +978,10 @@
       globalThis.GSTFarmPolicy?.setMode(settings.policyMode);
       syncFarmKeyGuard();
       stage = "session";
+      if (identityBlocked) globalThis.GSTFarmSession?.setIdentityBlocked?.(true, sceneNow());
       globalThis.GSTFarmSession?.setPolicyMode?.(settings.policyMode, sceneNow());
-      if (settings.policyMode !== "extended") stopForLockedPolicy();
+      if (!identityBlocked) globalThis.GSTFarmSession?.setIdentityBlocked?.(false, sceneNow());
+      if (settings.policyMode !== "extended" || identityBlocked) stopForLockedPolicy();
       stage = "revive";
       globalThis.GSTFarmRevivePolicy?.configure(settings.autoRespawn);
       stage = "combat";
@@ -989,7 +995,7 @@
       stage = "encounter";
       globalThis.GSTFarmEncounter?.configure(sceneNow(), settings);
       stage = "map";
-      globalThis.GSTFarmMap?.configure(sceneNow(), settings.policyMode !== "extended"
+      globalThis.GSTFarmMap?.configure(sceneNow(), settings.policyMode !== "extended" || identityBlocked
         ? { ...settings, enabled: false, searchScope: "radius", targetMode: "all", excludeBoss: false }
         : settings);
       stage = "visual";
@@ -1014,7 +1020,12 @@
       }
       if (!settings.autoRespawn) respawnMessage = "";
       stage = "start";
-      if (settings.policyMode === "native") {
+      if (identityBlocked) {
+        if (watcher !== null) clearInterval(watcher);
+        watcher = null;
+        shortcutMessage = "";
+        message = "Farm đang tạm khóa cho tới khi xác nhận đúng tài khoản; ý định đã lưu được giữ nguyên.";
+      } else if (settings.policyMode === "native") {
         if (watcher !== null) clearInterval(watcher);
         watcher = null;
         shortcutMessage = "";
@@ -1053,7 +1064,7 @@
       const scene = sceneNow();
       const defense = globalThis.GSTFarmDefense?.status(scene) || "";
       const network = globalThis.GSTConnectionRecovery?.status(scene) || "";
-      const primary = configurationError || (settings.policyMode === "disabled" ? message
+      const primary = configurationError || (identityBlocked || settings.policyMode === "disabled" ? message
         : network || defense || globalThis.GSTFarmBossSafety?.status(scene) || waitReason
         || globalThis.GSTFarmMap?.status(scene) || globalThis.GSTFarmBehavior?.status(scene)
         || globalThis.GSTFarmSession?.status(scene) || globalThis.GSTFarmSeals?.status(scene) || message);

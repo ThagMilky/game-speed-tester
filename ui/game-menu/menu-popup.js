@@ -5,7 +5,11 @@
   if (embedded) {
     document.body.classList.add("embedded"); button.hidden = true;
     window.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") { event.preventDefault(); event.stopImmediatePropagation(); parent.postMessage({ channel: "gst:menu-close:v1" }, "https://nghichthienky.online"); }
+      if (event.key === "Escape") {
+        event.preventDefault(); event.stopImmediatePropagation();
+        if (recording) { recording = false; shortcutFeedback.textContent = "Đã hủy."; return; }
+        parent.postMessage({ channel: "gst:menu-close:v1" }, "https://nghichthienky.online");
+      }
     }, true);
   }
   const controls = document.getElementById("menuPositionControls"), select = document.getElementById("menuPosition");
