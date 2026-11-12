@@ -100,6 +100,8 @@
       "class_guard_unknown", "dead", "dead_state_unknown", "silenced", "rooted_mobility_skill",
       "status_state_unknown", "cooldown_wait", "cooldown_state_unknown", "mana_cost_unknown",
       "out_of_range", "range_state_unknown", "skill_lookup_unknown", "native_guard_state_unknown"];
+    const attribution = ["not_specific"];
+    const priorEvidence = ["recent_attempt", "cooldown_history", "none_observed"];
     const number = (value, max = 120000) => Number.isFinite(value)
       ? Math.round(Math.max(0, Math.min(max, value)) * 1000) / 1000 : null;
     const events = (Array.isArray(data?.events) ? data.events : []).slice(-80).map((row) => {
@@ -112,9 +114,14 @@
       if (["true", "false", "undefined", "other"].includes(row.returnKind)) result.returnKind = row.returnKind;
       if (Array.isArray(row.conditions))
         result.conditions = row.conditions.filter((value) => conditions.includes(value)).slice(0, conditions.length);
+      if (attribution.includes(row.attribution)) result.attribution = row.attribution;
+      if (Array.isArray(row.priorEvidence))
+        result.priorEvidence = row.priorEvidence.filter((value) => priorEvidence.includes(value)).slice(0, 3);
       for (const key of ["localCooldownDeltaMs", "snapshotAdvanceMs", "cooldownBeforeMs", "cooldownAfterMs"])
         if (row[key] !== undefined) result[key] = number(row[key]);
       if (row.skillWaitMs !== undefined) result.skillWaitMs = number(row.skillWaitMs);
+      for (const key of ["skillWaitBeforeMs", "skillWaitMinMs", "skillWaitMaxMs"])
+        if (row[key] !== undefined) result[key] = number(row[key]);
       for (const key of ["targetDistance", "maxRange"])
         if (row[key] !== undefined) result[key] = number(row[key], 10000);
       if (Number.isSafeInteger(row.repeatCount)) result.repeatCount = Math.max(1, Math.min(10000, row.repeatCount));
