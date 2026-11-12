@@ -8,16 +8,17 @@
   let navigating = false;
   let repairedKey = null;
   let readError = "";
-  let shortcut = "KeyH", shortcutRevision = 0, shortcutBusy = false;
+  let shortcut = { code: "KeyH", ctrl: false, alt: true, shift: false, meta: false }, shortcutRevision = 0, shortcutBusy = false;
   let accountProfileReady = false, accountProfileVerified = false;
-  const shortcutCode = (value) => typeof value?.code === "string" && /^(Key[A-Z]|Digit[0-9])$/.test(value.code)
-    ? value.code : "KeyH";
+  const shortcutCode = (value) => ({ code: typeof value?.code === "string" ? value.code : "KeyH",
+    ctrl: value?.ctrl === true, alt: value?.alt !== false, shift: value?.shift === true, meta: value?.meta === true });
   function editableKeyTarget(event) {
     return [document.activeElement, ...event.composedPath()].some((node) => node instanceof HTMLElement
       && (node.isContentEditable || node.matches("input, textarea, select, [role='textbox']")));
   }
   window.addEventListener("keydown", (event) => {
-    if (event.code !== shortcut || !event.altKey || event.ctrlKey || event.shiftKey || event.metaKey
+    if (event.code !== shortcut.code || event.ctrlKey !== shortcut.ctrl || event.altKey !== shortcut.alt
+        || event.shiftKey !== shortcut.shift || event.metaKey !== shortcut.meta
         || event.repeat || event.isComposing || !event.isTrusted || document.hidden || !document.hasFocus()
         || editableKeyTarget(event) || document.getElementById("gst-game-menu")?.dataset.open === "true") return;
     event.preventDefault(); event.stopImmediatePropagation();
