@@ -156,7 +156,8 @@
         ? slot + ":" + snapshot.character + ":" + snapshot.characterId + ":" + snapshot.classId
         : "unverified:" + slot + ":" + reason;
       const context = {
-        verified, profileKey: key, slot, character: verified ? snapshot.character : "",
+        verified, profileKey: key, slot, launchAttemptId: attemptId,
+        character: verified ? snapshot.character : "",
         classId: verified ? snapshot.classId : "", characterId: verified ? snapshot.characterId : "",
         accountId: verified ? account?.id ?? "" : "", accountLabel: displayAccount,
         reason,

@@ -87,13 +87,16 @@ async function readTabContext(tabId) {
   try { return await chrome.tabs.sendMessage(tabId, { type: "gst:account-context" }); }
   catch { return null; }
 }
-async function waitForContent(tabId, timeoutMs = 30000) {
+async function waitForContent(tabId, expected, timeoutMs = 30000) {
   const until = Date.now() + timeoutMs;
   while (Date.now() < until) {
     try {
       await chrome.tabs.get(tabId);
       const context = await readTabContext(tabId);
-      if (context?.launchUrl || context?.reason === "native_login_required") return true;
+      // tabs.update() may resolve while the old document still answers messages.
+      // A bridge response is ready only when it belongs to this navigation.
+      if (context?.slot === expected.slot && context.launchAttemptId === expected.attemptId
+          && (context.launchUrl || context.reason === "native_login_required")) return true;
     } catch { return false; }
     await sleep(300);
   }
@@ -162,7 +165,7 @@ async function launch(message) {
     return { accepted: false, reason: "tab_navigation_failed" };
   }
 
-  const ready = await waitForContent(targetTabId);
+  const ready = await waitForContent(targetTabId, record);
   if (!ready) { await clearAttempt(targetTabId, attemptId); return { accepted: false, reason: "tab_load_timeout" }; }
   try {
     const result = await chrome.tabs.sendMessage(targetTabId, {
