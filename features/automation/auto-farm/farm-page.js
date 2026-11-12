@@ -355,12 +355,12 @@
     scene.auto.think = 0;
     scene.autoX = scene.autoY = 0;
   }
-  function farmTargetGuardReason(scene) {
+  function farmTargetGuardReason(scene, ignoreStoredAim = false) {
     if (playerActor(scene, scene.auto?.target)) return "player_target";
     if (playerActor(scene, scene.lockId)) return "player_lock";
-    if (scene.aimSet === true && finite(scene.aimX) && finite(scene.aimY)
+    if (!ignoreStoredAim && scene.aimSet === true && finite(scene.aimX) && finite(scene.aimY)
         && [...(scene.views?.values?.() ?? [])].some((actor) => actor?.k === "p" && !actor.dead
-          && Math.hypot(actor.x - scene.aimX, actor.y - scene.aimY) < 0.2)) return "player_aim";
+          && Math.hypot(actor.x - scene.aimX, actor.y - scene.aimY) < 0.2)) return "stored_aim_overlap";
     if (typeof scene.nearestEnemy !== "function" || typeof scene.anyEnemy !== "function")
       return "targeting_unavailable";
     return "";
@@ -433,9 +433,9 @@
     } catch { condition("native_guard_state_unknown"); }
     return result;
   }
-  function withFarmTargetingGuard(scene, host, action, blockedValue, skillKey = "") {
+  function withFarmTargetingGuard(scene, host, action, blockedValue, skillKey = "", ignoreStoredAim = false) {
     if (!playerTargetGuardActive()) return action();
-    const reason = farmTargetGuardReason(scene);
+    const reason = farmTargetGuardReason(scene, ignoreStoredAim);
     const blocked = (value) => {
       if (skillKey) globalThis.GSTFarmSkillDiagnostics?.blocked?.(scene, skillKey, "farm_cast", value);
       return blockedValue;
@@ -599,11 +599,17 @@
             return false;
           }
           const [, aimX, aimY] = callArgs;
+          const targetId = this.auto?.target;
+          const targetActor = Number.isSafeInteger(targetId) && targetId > 0 ? this.views?.get?.(targetId) : null;
+          // Native aimPoint() consumes a live lockId before aimX/aimY. The native
+          // Auto Farm calls face() with its selected enemy ID before casting.
+          const lockedMonsterTarget = !this.aiming && targetActor?.k === "m" && !targetActor.dead
+            && this.lockId === targetId;
           const directPlayerAim = finite(aimX) && finite(aimY)
             && [...(this.views?.values?.() ?? [])].some((actor) => actor?.k === "p" && !actor.dead
               && Math.hypot(actor.x - aimX, actor.y - aimY) < 0.2);
-          if (directPlayerAim) {
-            globalThis.GSTFarmSkillDiagnostics?.blocked?.(this, skillKey, "farm_cast", "player_aim");
+          if (directPlayerAim && !lockedMonsterTarget) {
+            globalThis.GSTFarmSkillDiagnostics?.blocked?.(this, skillKey, "farm_cast", "requested_aim_overlap");
             return false;
           }
           return withFarmTargetingGuard(this, host, () => {
@@ -613,7 +619,7 @@
               ? inspectNativeCastRejection(this, host, skillKey, aimX, aimY) : null;
             return diagnostics.invoke(this, skillKey, "farm_cast", "host.cast",
               () => host.cast(...callArgs), rejection);
-          }, false, skillKey);
+          }, false, skillKey, !this.aiming);
         };
       }
       if (!filterNow) return guardedHost;

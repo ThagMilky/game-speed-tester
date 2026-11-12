@@ -89,7 +89,8 @@
     const sources = ["farm_cast", "auto_q"];
     const stages = ["guard_blocked", "q_blocked", "native_invoked", "native_skill_invoked",
       "native_return", "native_rejected", "local_state_changed", "snapshot_cooldown", "ambiguous", "unconfirmed"];
-    const reasons = ["player_target", "player_lock", "player_aim", "targeting_unavailable",
+    const reasons = ["player_target", "player_lock", "player_aim", "requested_aim_overlap",
+      "stored_aim_overlap", "targeting_unavailable",
       "dodge_preference_off", "native_method_unavailable", "extension_throttle", "dash_active",
       "facing_unavailable", "local_cooldown", "snapshot_cooldown", "rooted", "stunned",
       "no_safe_direction", "hazard_window", "overlapping_attempt", "manual_input", "observation_timeout",
