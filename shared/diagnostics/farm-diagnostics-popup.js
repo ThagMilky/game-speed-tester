@@ -18,7 +18,8 @@
   async function skillRequest(action, enabled) {
     const target = await boundTarget();
     if (!target) throw new Error("account_identity_mismatch");
-    return chrome.tabs.sendMessage(target.tabId, { type: "gst:farm-skill-diagnostics", ...target,
+    return chrome.tabs.sendMessage(target.tabId, { type: "gst:farm-skill-diagnostics",
+      targetTabId: target.tabId, profileIdentity: target.profileIdentity,
       action, enabled: enabled === true });
   }
   async function refreshSkillStatus() {
