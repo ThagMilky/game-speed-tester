@@ -85,9 +85,9 @@
     }
     if (!pendingAttempt?.submitted || pendingAttempt.slot !== slot || pendingAttempt.accountId !== account.id
         || !snapshot?.connected || snapshot.loginVisible || snapshot.loginRejected || !snapshot.character) return;
+    // scene.you identifies the current world entity, not a durable account identity.
     if ((account.expectedCharacter && snapshot.character !== account.expectedCharacter)
-        || (account.expectedClassId && account.expectedClassId !== snapshot.classId)
-        || (account.expectedCharacterId && account.expectedCharacterId !== snapshot.characterId)) {
+        || (account.expectedClassId && account.expectedClassId !== snapshot.classId)) {
       await failPendingAttempt("saved_identity_conflict");
       return;
     }
@@ -101,7 +101,7 @@
       trace("identity_confirmed");
       account.expectedCharacter = snapshot.character;
       account.expectedClassId = snapshot.classId;
-      account.expectedCharacterId = snapshot.characterId;
+      account.expectedCharacterId = "";
       pendingAttempt = null;
       lastError = "";
       removeAttemptFromUrl();
@@ -144,8 +144,7 @@
           reason = "legacy_character_confirmed";
         } else if (!account) reason = "slot_not_managed";
         else if (account.expectedCharacter && (account.expectedCharacter !== snapshot.character
-            || (account.expectedClassId && account.expectedClassId !== snapshot.classId)
-            || (account.expectedCharacterId && account.expectedCharacterId !== snapshot.characterId)))
+            || (account.expectedClassId && account.expectedClassId !== snapshot.classId)))
           reason = "unexpected_character";
         else if (account.expectedCharacter === snapshot.character) {
           verified = true;

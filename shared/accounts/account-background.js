@@ -246,12 +246,12 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
         if (index < 0) throw new Error("Account changed.");
         const account = rows[index];
         if ((account.expectedCharacter && account.expectedCharacter !== message.character)
-            || (account.expectedClassId && account.expectedClassId !== message.classId)
-            || (account.expectedCharacterId && account.expectedCharacterId !== message.characterId))
+            || (account.expectedClassId && account.expectedClassId !== message.classId))
           return { conflict: true };
         rows[index] = { ...account, expectedCharacter: message.character,
           expectedClassId: typeof message.classId === "string" ? message.classId : "",
-          expectedCharacterId: typeof message.characterId === "string" ? message.characterId : "" };
+          // Native entity IDs may change on a new login; retain them only in live tab context.
+          expectedCharacterId: "" };
         await chrome.storage.local.set({ [accountsKey]: rows });
         return { conflict: false };
       });
