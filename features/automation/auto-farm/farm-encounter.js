@@ -158,7 +158,7 @@
   }
   globalThis.GSTFarmEncounter = {
     configure(scene, value) {
-      const next = value.autoEncounter === true;
+      const next = value.identityBlocked !== true && value.autoEncounter === true;
       if (enabled !== next) { enabled = next; detach(); }
       attach(scene);
     },

@@ -958,7 +958,7 @@
       identityBlocked = data.identityBlocked === true;
       if (wasIdentityBlocked !== identityBlocked && activationLock) activationLock.stopRequested = false;
       settings = { policyMode: globalThis.GSTFarmPolicy?.normalize(data.policyMode) ?? "extended",
-        enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn !== false,
+        identityBlocked, enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn !== false,
         autoMeditate: data.autoMeditate !== false, noRetreat: data.noRetreat !== false,
         bossDodge: data.bossDodge !== false, eliteDodge: data.eliteDodge === true, bossRetreat: data.bossRetreat !== false,
         ...hpThresholds,
@@ -978,30 +978,32 @@
       globalThis.GSTFarmPolicy?.setMode(settings.policyMode);
       syncFarmKeyGuard();
       stage = "session";
-      if (identityBlocked) globalThis.GSTFarmSession?.setIdentityBlocked?.(true, sceneNow());
+      globalThis.GSTFarmSession?.setIdentityBlocked?.(identityBlocked, sceneNow());
       globalThis.GSTFarmSession?.setPolicyMode?.(settings.policyMode, sceneNow());
-      if (!identityBlocked) globalThis.GSTFarmSession?.setIdentityBlocked?.(false, sceneNow());
       if (settings.policyMode !== "extended" || identityBlocked) stopForLockedPolicy();
       stage = "revive";
-      globalThis.GSTFarmRevivePolicy?.configure(settings.autoRespawn);
+      const farmRuntimeSettings = identityBlocked ? { ...settings, enabled: false,
+        autoRespawn: false, autoMeditate: false, selfDefense: false, nearbyClear: false, autoEncounter: false,
+        bossDodge: false, eliteDodge: false, bossRetreat: false, noRetreat: true } : settings;
+      globalThis.GSTFarmRevivePolicy?.configure(identityBlocked ? false : settings.autoRespawn);
       stage = "combat";
-      globalThis.GSTFarmCombat?.configure(sceneNow(), settings.noRetreat);
+      globalThis.GSTFarmCombat?.configure(sceneNow(), identityBlocked ? false : settings.noRetreat);
       stage = "boss-safety";
-      globalThis.GSTFarmBossSafety?.configure(sceneNow(), settings);
+      globalThis.GSTFarmBossSafety?.configure(sceneNow(), farmRuntimeSettings);
       stage = "behavior";
-      globalThis.GSTFarmBehavior?.configure(sceneNow(), settings);
+      globalThis.GSTFarmBehavior?.configure(sceneNow(), farmRuntimeSettings);
       stage = "defense";
-      globalThis.GSTFarmDefense?.configure(sceneNow(), settings);
+      globalThis.GSTFarmDefense?.configure(sceneNow(), farmRuntimeSettings);
       stage = "encounter";
-      globalThis.GSTFarmEncounter?.configure(sceneNow(), settings);
+      globalThis.GSTFarmEncounter?.configure(sceneNow(), farmRuntimeSettings);
       stage = "map";
       globalThis.GSTFarmMap?.configure(sceneNow(), settings.policyMode !== "extended" || identityBlocked
-        ? { ...settings, enabled: false, searchScope: "radius", targetMode: "all", excludeBoss: false }
-        : settings);
+        ? { ...farmRuntimeSettings, enabled: false, searchScope: "radius", targetMode: "all", excludeBoss: false }
+        : farmRuntimeSettings);
       stage = "visual";
       globalThis.GSTFarmVisual?.configure(sceneNow(), settings);
       stage = "routing";
-      globalThis.GSTFarmRouting?.configure(sceneNow(), settings);
+      globalThis.GSTFarmRouting?.configure(sceneNow(), farmRuntimeSettings);
       stage = "diagnostics";
       globalThis.GSTMovementDiagnostics?.configure(settings);
       globalThis.GSTFarmDiagnostics?.attach(sceneNow());

@@ -143,6 +143,9 @@
   function watch() { if (configured && policyMode === "extended" && !identityBlocked && keep && !suspended && !binding && watcher === null) watcher = setInterval(discover, 1000); }
   globalThis.GSTFarmSession = {
     setPolicyMode(mode, scene) {
+      // Identity gating is temporary; do not let an unconfirmed profile's
+      // global fallback policy overwrite the tab's saved session intent.
+      if (identityBlocked) return;
       policyMode = globalThis.GSTFarmPolicy?.normalize(mode) ?? "extended";
       if (policyMode !== "extended") {
         suppressSeed = true;

@@ -251,7 +251,8 @@
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:farm:v1"
         || event.data.type !== "configure") return;
-    enabled = event.data.breakSeals === true && event.data.policyMode === "extended";
+    enabled = event.data.identityBlocked !== true
+      && event.data.breakSeals === true && event.data.policyMode === "extended";
     if (!enabled) {
       detach(); clearInterval(watcher); watcher = null; message = "";
       // If safety existed only because seals were active, release it now.
