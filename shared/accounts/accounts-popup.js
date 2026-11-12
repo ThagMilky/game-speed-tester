@@ -24,6 +24,8 @@
     native_login_ui_changed: "Form đăng nhập của game đã đổi; không tự điền vào giao diện khác.",
     native_logout_unavailable: "Không tìm thấy nút đăng xuất native của game; chưa đổi nhân vật.",
     native_logout_not_effective: "Game vẫn giữ nhân vật cũ sau khi đăng xuất; hãy xử lý trong giao diện game rồi thử lại.",
+    native_settings_unavailable: "Không mở được bảng cài đặt native an toàn; chưa đổi nhân vật.",
+    identity_changed_during_recovery: "Nhân vật trong tab đã đổi trong lúc xử lý; lượt đăng nhập đã dừng để bảo vệ hồ sơ.",
     unexpected_character: "Nhân vật trong game không khớp tài khoản đã xác nhận.",
     identity_confirmation_required: "Tab đang có nhân vật chưa được xác nhận cho tài khoản này.",
     saved_identity_conflict: "Nhân vật đăng nhập khác dấu xác nhận đã lưu. Dùng nút “Xác nhận lại nhân vật” nếu thông tin cũ sai; hồ sơ riêng sẽ được giữ.",

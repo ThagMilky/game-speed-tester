@@ -10,12 +10,12 @@
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const visible = (element) => !!element?.getClientRects?.().length;
 
-  function pageRequest(type, timeout = 1200) {
+  function pageRequest(type, timeout = 1200, details = {}) {
     const requestId = "account:" + (++sequence);
     return new Promise((resolve) => {
       const timer = setTimeout(() => { pageRequests.delete(requestId); resolve(null); }, timeout);
       pageRequests.set(requestId, (value) => { clearTimeout(timer); resolve(value); });
-      window.postMessage({ channel, type, requestId }, origin);
+      window.postMessage({ channel, type, requestId, ...details }, origin);
     });
   }
   function safeLaunchUrl(value) {
@@ -184,6 +184,30 @@
       ? { ready: result.ready === true, reason: result.reason ?? "unknown", autoOn: result.autoOn }
       : { ready: false, reason: "automation_stop_unconfirmed" };
   }
+  function sameTargetIdentity(snapshot, expected) {
+    return snapshot?.connected === true && snapshot.slot === slot
+      && snapshot.character === expected.character && snapshot.classId === expected.classId
+      && snapshot.characterId === expected.characterId;
+  }
+  async function recoveryAttemptValid(pending) {
+    try {
+      const result = await chrome.runtime.sendMessage({ type: "gst:account-attempt-resume",
+        attemptId: pending.id, accountId: pending.accountId, slot: pending.slot });
+      return result?.accepted === true && result.attemptId === pending.id
+        && result.accountId === pending.accountId && result.slot === pending.slot
+        && result.deadline === pending.deadline && result.deadline > Date.now();
+    } catch { return false; }
+  }
+  async function waitForFreshLogoutButton(previousButton, until) {
+    while (Date.now() < until) {
+      const panel = document.querySelector('.panel[data-title="Cài đặt"]');
+      const button = panel?.querySelector("#logout-button");
+      if (panel && visible(panel) && button?.isConnected && button !== previousButton
+          && !button.disabled && visible(button)) return { panel, button };
+      await delay(100);
+    }
+    return null;
+  }
   async function fillNativeLogin(message) {
     if (!message || typeof message.attemptId !== "string" || message.attemptId !== attemptId
         || message.slot !== slot || typeof message.accountId !== "string")
@@ -208,6 +232,13 @@
   async function requestNativeLogout() {
     const pending = pendingAttempt;
     if (!pending) return { accepted: false, reason: "attempt_expired" };
+    let target;
+    try { target = await pageRequest("status"); } catch { target = null; }
+    if (!target?.connected || target.slot !== slot || !target.character) {
+      await failPendingAttempt("account_context_unavailable");
+      return { accepted: false, reason: "account_context_unavailable" };
+    }
+    pending.identity = { character: target.character, classId: target.classId, characterId: target.characterId };
     let stopped;
     try { stopped = await stopForAccountSwitch(); } catch { stopped = null; }
     if (stopped?.ready !== true || stopped.autoOn !== false) {
@@ -226,8 +257,39 @@
     }
     pending.logoutRequested = true;
     pending.deadline = marked.deadline;
-    const logout = document.getElementById("logout-button");
-    if (!logout?.isConnected || logout.disabled || typeof logout.click !== "function") {
+    const previousButton = document.querySelector('.panel[data-title="Cài đặt"] #logout-button');
+    let opened;
+    try {
+      opened = await pageRequest("open-settings-for-logout", 1500, {
+        attemptId: pending.id, slot: pending.slot, identity: pending.identity
+      });
+    } catch { opened = null; }
+    if (opened?.ready !== true || opened.settingsOpen !== true) {
+      await failPendingAttempt(opened?.reason || "native_settings_unavailable");
+      return { accepted: false, reason: opened?.reason || "native_settings_unavailable" };
+    }
+    const buttonResult = await waitForFreshLogoutButton(previousButton, Math.min(Date.now() + 2500, pending.deadline));
+    if (!buttonResult) {
+      const panel = document.querySelector('.panel[data-title="Cài đặt"]');
+      const reason = panel && visible(panel) ? "native_logout_unavailable" : "native_settings_unavailable";
+      await failPendingAttempt(reason);
+      return { accepted: false, reason };
+    }
+    const latest = await pageRequest("status");
+    const stoppedAgain = await stopForAccountSwitch();
+    const identityStillMatches = sameTargetIdentity(latest, pending.identity);
+    const shutdownConfirmed = stoppedAgain?.ready === true && stoppedAgain.autoOn === false;
+    const attemptStillValid = await recoveryAttemptValid(pending);
+    if (!identityStillMatches || !shutdownConfirmed || !attemptStillValid) {
+      const reason = !identityStillMatches ? "identity_changed_during_recovery"
+        : !shutdownConfirmed ? stoppedAgain?.reason || "automation_stop_unconfirmed" : "attempt_expired";
+      await failPendingAttempt(reason);
+      return { accepted: false, reason };
+    }
+    const currentPanel = document.querySelector('.panel[data-title="Cài đặt"]');
+    const logout = currentPanel?.querySelector("#logout-button");
+    if (currentPanel !== buttonResult.panel || !visible(currentPanel) || logout !== buttonResult.button
+        || !logout?.isConnected || logout.disabled || !visible(logout)) {
       await failPendingAttempt("native_logout_unavailable");
       return { accepted: false, reason: "native_logout_unavailable" };
     }

@@ -35,6 +35,25 @@
       launchUrl: location.origin === origin ? launchUrl() : ""
     };
   }
+  function openSettingsForLogout(data) {
+    const scene = sceneNow();
+    const before = snapshot();
+    const expected = data?.identity;
+    if (!scene || typeof scene.openSettings !== "function")
+      return { ready: false, reason: "native_settings_unavailable" };
+    if (data.slot !== before.slot || data.attemptId !== new URL(location.href).searchParams.get("gstAttempt")
+        || before.connected !== true || !expected || before.character !== expected.character
+        || before.classId !== expected.classId || before.characterId !== expected.characterId)
+      return { ready: false, reason: "identity_changed_during_recovery" };
+    try { scene.openSettings(); }
+    catch { return { ready: false, reason: "native_settings_unavailable" }; }
+    const after = snapshot();
+    if (sceneNow() !== scene || after.connected !== true || after.slot !== data.slot
+        || after.character !== expected.character || after.classId !== expected.classId
+        || after.characterId !== expected.characterId)
+      return { ready: false, reason: "identity_changed_during_recovery" };
+    return { ready: true, settingsOpen: true };
+  }
   function waitForConfiguration(statusChannel, requestId, predicate, timeoutMs = 1200) {
     return new Promise((resolve) => {
       const timer = setTimeout(() => {
@@ -102,10 +121,12 @@
   window.addEventListener("message", async (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== channel) return;
     const data = event.data;
-    if (!["status", "stop-for-switch"].includes(data.type) || typeof data.requestId !== "string") return;
+    if (!["status", "stop-for-switch", "open-settings-for-logout"].includes(data.type)
+        || typeof data.requestId !== "string") return;
     let result;
     try {
       if (data.type === "stop-for-switch") result = await stopForSwitch();
+      else if (data.type === "open-settings-for-logout") result = openSettingsForLogout(data);
       else result = { ready: true, ...snapshot() };
     } catch { result = { ready: false, reason: "account_status_unavailable" }; }
     window.postMessage({ channel: "gst:account-status:v1", requestId: data.requestId, ...result }, origin);
