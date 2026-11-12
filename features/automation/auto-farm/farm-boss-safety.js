@@ -687,15 +687,31 @@
   function tryDash(scene, host, time, pos, bounds, hazards, target, boss, lowHp) {
     // Q is reserved for an imminent hazard, not ordinary attack cooldowns.
     // Never synthesize key events.
+    const block = (reason) => globalThis.GSTFarmSkillDiagnostics?.blocked?.(scene, "Q", "auto_q", reason);
+    const imminent = hazards.filter((area) => distance(pos, area) <= area.radius + 0.8
+      && area.at - time <= 0.42 && area.until >= time);
+    if (!imminent.length) {
+      if (hazards.some((area) => distance(pos, area) <= area.radius + 0.8
+          && area.at <= time + 0.75 && area.until >= time)) block("hazard_window");
+      return false;
+    }
     if (!hasDodgePreference() || typeof scene.useSkill !== "function"
         || time - lastDashAt < 0.75 || (finite(scene.dashT) && scene.dashT > 0)
         || !finite(scene.faceX) || !finite(scene.faceY)
         || (scene.cdLocal?.Q ?? -Infinity) > time
         || (scene.self?.cd?.Q ?? 0) - Math.max(0, time - scene.selfAt) > 0.08
-        || scene.self?.fx?.includes?.("r") || scene.self?.fx?.includes?.("s")) return false;
-    const imminent = hazards.filter((area) => distance(pos, area) <= area.radius + 0.8
-      && area.at - time <= 0.42 && area.until >= time);
-    if (!imminent.length) return false;
+        || scene.self?.fx?.includes?.("r") || scene.self?.fx?.includes?.("s")) {
+      const reason = !hasDodgePreference() ? "dodge_preference_off"
+        : typeof scene.useSkill !== "function" ? "native_method_unavailable"
+        : time - lastDashAt < 0.75 ? "extension_throttle"
+        : finite(scene.dashT) && scene.dashT > 0 ? "dash_active"
+        : !finite(scene.faceX) || !finite(scene.faceY) ? "facing_unavailable"
+        : (scene.cdLocal?.Q ?? -Infinity) > time ? "local_cooldown"
+        : (scene.self?.cd?.Q ?? 0) - Math.max(0, time - scene.selfAt) > 0.08 ? "snapshot_cooldown"
+        : scene.self?.fx?.includes?.("r") ? "rooted" : "stunned";
+      block(reason);
+      return false;
+    }
     const closest = imminent.sort((a, b) => distance(pos, a) - distance(pos, b))[0];
     const outwardAngle = Math.atan2(pos.y - closest.y, pos.x - closest.x);
     const bossAngle = boss ? Math.atan2(pos.y - boss.y, pos.x - boss.x) : outwardAngle;
@@ -726,12 +742,15 @@
         - radialDrift * 1.2 + (goalAngle === angle ? 0.1 : 0);
       if (candidate > score) { best = direction; score = candidate; }
     }
-    if (!best) return false;
+    if (!best) { block("no_safe_direction"); return false; }
     const oldDash = scene.dashT, oldCooldown = scene.cdLocal?.Q;
     const oldFace = [scene.faceX, scene.faceY], flying = scene.self.fly === true;
     scene.faceX = best[0]; scene.faceY = best[1];
     // The third arg disables the game's manual-input cancellation. Auto Farm owns this frame.
-    scene.useSkill("Q", false, false);
+    const diagnostics = globalThis.GSTFarmSkillDiagnostics;
+    if (typeof diagnostics?.invoke === "function")
+      diagnostics.invoke(scene, "Q", "auto_q", "scene.useSkill", () => scene.useSkill("Q", false, false));
+    else scene.useSkill("Q", false, false);
     const accepted = (finite(scene.dashT) && scene.dashT > 0 && scene.dashT !== oldDash)
       || (finite(scene.cdLocal?.Q) && scene.cdLocal.Q > time + 0.1 && scene.cdLocal.Q !== oldCooldown);
     if (!accepted) {
@@ -1022,9 +1041,15 @@
       }
       if (retreating && scene.auto.resting) return delegateNativeRecovery(scene, host, time, delta);
       if (retreating && scene.self.med) { release(); return true; }
-      const hazards = hasDodgePreference() ? activeHazards(scene, time) : [];
+      const dodgeAllowed = hasDodgePreference();
+      const skillDiagnostics = globalThis.GSTFarmSkillDiagnostics;
+      const diagnosticHazards = !dodgeAllowed && skillDiagnostics?.isEnabled?.(scene) === true
+        ? activeHazards(scene, time) : null;
+      const hazards = dodgeAllowed ? activeHazards(scene, time) : [];
       const danger = hazards.some((area) => distance(area, pos) <= area.radius + 0.8
         && area.at <= time + 0.75 && area.until >= time);
+      const diagnosticDanger = diagnosticHazards?.some((area) => distance(area, pos) <= area.radius + 0.8
+        && area.at <= time + 0.75 && area.until >= time) === true;
       const avoidanceBoss = settings.bossDodge || retreating ? boss : null;
       const threats = localThreats(scene, host, pos, time);
       refreshExpiredUnsafeAreas(scene, host, time, bounds, hazards);
@@ -1071,6 +1096,8 @@
             : `Không còn quái gần; chờ HP đạt ${settings.recoveryHpPercent}%.`);
         return true;
       }
+      if (diagnosticDanger)
+        globalThis.GSTFarmSkillDiagnostics?.blocked?.(scene, "Q", "auto_q", "dodge_preference_off");
       if ((danger || cooldownKite) && hasDodgePreference()) {
         const escape = job && inside(bounds, job.point) ? job : null;
         if (danger && tryDash(scene, host, time, pos, bounds, hazards, escape, avoidanceBoss,

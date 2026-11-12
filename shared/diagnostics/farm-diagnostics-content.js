@@ -84,6 +84,35 @@
           flying: row.flying === true, always: row.always === true, farm: row.farm === true }))
     };
   }
+  function cleanSkill(data) {
+    const skills = ["1", "2", "3", "4", "5", "6", "Q"];
+    const sources = ["farm_cast", "auto_q"];
+    const stages = ["guard_blocked", "q_blocked", "native_invoked", "native_skill_invoked",
+      "native_return", "local_state_changed", "snapshot_cooldown", "ambiguous", "unconfirmed"];
+    const reasons = ["player_target", "player_lock", "player_aim", "targeting_unavailable",
+      "dodge_preference_off", "native_method_unavailable", "extension_throttle", "dash_active",
+      "facing_unavailable", "local_cooldown", "snapshot_cooldown", "rooted", "stunned",
+      "no_safe_direction", "hazard_window", "overlapping_attempt", "manual_input", "observation_timeout",
+      "collection_disabled", "capacity", "scene_change", "manual_tracking_unavailable", "policy_change"];
+    const number = (value) => Number.isFinite(value)
+      ? Math.round(Math.max(0, Math.min(120000, value))) : null;
+    const events = (Array.isArray(data?.events) ? data.events : []).slice(-80).map((row) => {
+      if (!row || !skills.includes(row.skill) || !sources.includes(row.source) || !stages.includes(row.stage)
+          || !Number.isSafeInteger(row.attemptId) || row.attemptId < 0 || row.attemptId > 1e9) return null;
+      const result = { at: bgDate(row.at), attemptId: row.attemptId, skill: row.skill,
+        source: row.source, stage: row.stage };
+      if (reasons.includes(row.reason)) result.reason = row.reason;
+      if (["host.cast", "scene.useSkill"].includes(row.method)) result.method = row.method;
+      if (["true", "false", "undefined", "other"].includes(row.returnKind)) result.returnKind = row.returnKind;
+      for (const key of ["localCooldownDeltaMs", "snapshotAdvanceMs", "cooldownBeforeMs", "cooldownAfterMs"])
+        if (row[key] !== undefined) result[key] = number(row[key]);
+      for (const key of ["dashStarted", "pendingSkillChanged"])
+        if (typeof row[key] === "boolean") result[key] = row[key];
+      return result;
+    }).filter(Boolean);
+    return { build: data?.build === "farm-skill-1" ? "farm-skill-1" : "unavailable",
+      enabled: data?.enabled === true, tracking: data?.tracking === true, events };
+  }
   // Isolated-world log collection must still work if the shared schema was not
   // initialized in this page; preserve its field allowlist on that fallback.
   function cleanMovement(row) {
@@ -153,6 +182,7 @@
         events: (Array.isArray(data?.background?.events) ? data.background.events : []).slice(-80).map(cleanBackground).filter(Boolean),
         incidents: (Array.isArray(data?.background?.incidents) ? data.background.incidents : []).slice(-24).map(cleanBackground).filter(Boolean) },
       bossSafety: cleanBossSafety(data?.bossSafety),
+      skill: cleanSkill(data?.skill),
       flight: cleanFlight(data?.flight),
       movement: { build: ["movement-log-1", "movement-log-2", "movement-log-3"].includes(data?.movement?.build)
           ? data.movement.build : "unavailable",

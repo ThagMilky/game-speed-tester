@@ -6,10 +6,12 @@
   let shortcut = null;
   let shortcutRevision = 0;
   let sequence = 0;
+  const skillPending = new Map();
   let navigating = false;
   let suspended = false, loadTimer = null, loadAttempts = 0, loading = false;
   let configurationSent = false, loadError = "";
   let accountProfileReady = false, accountProfileVerified = false, accountProfileKey = "", accountId = "";
+  let accountSlot = "", accountCharacter = "", accountClassId = "", accountCharacterId = "";
   const pending = new Map();
 
   function configureShortcut(value) {
@@ -49,6 +51,10 @@
       identityVerified: accountProfileReady && accountProfileVerified,
       accountProfileKey: accountProfileVerified ? accountProfileKey : "",
       accountId: accountProfileVerified ? accountId : "",
+      accountSlot: accountProfileVerified ? accountSlot : "",
+      accountCharacter: accountProfileVerified ? accountCharacter : "",
+      accountClassId: accountProfileVerified ? accountClassId : "",
+      accountCharacterId: accountProfileVerified ? accountCharacterId : "",
       enabled: value?.enabled === true,
       showTargetLine: value?.showTargetLine === true,
       showRange: value?.showRange === true,
@@ -101,6 +107,16 @@
   }
 
   window.addEventListener("message", (event) => {
+    if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:farm:v1"
+        || event.data.type !== "skill-diagnostics-result" || typeof event.data.requestId !== "string") return;
+    const entry = skillPending.get(event.data.requestId);
+    if (!entry) return;
+    clearTimeout(entry.timeout);
+    skillPending.delete(event.data.requestId);
+    entry.respond({ accepted: event.data.accepted === true, enabled: event.data.enabled === true,
+      reason: typeof event.data.reason === "string" ? event.data.reason : "" });
+  });
+  window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:farm-status:v1") return;
     if (event.data.ready) {
       if (settings) configure(settings);
@@ -145,6 +161,28 @@
       respond({ accepted: true });
       return;
     }
+    if (message?.type === "gst:farm-skill-diagnostics") {
+      const expected = message.profileIdentity;
+      const state = GSTAccountProfiles.context();
+      const identityValid = accountProfileReady && accountProfileVerified
+        && Number.isInteger(message.targetTabId) && expected?.tabId === message.targetTabId
+        && GSTAccountProfiles.matchesIdentity(state.context, expected, message.targetTabId)
+        && expected.profileKey === accountProfileKey;
+      if (!identityValid || !["status", "clear", "set"].includes(message.action)
+          || (message.action === "set" && typeof message.enabled !== "boolean")) {
+        respond({ accepted: false, enabled: false, reason: "policy_change" });
+        return;
+      }
+      const requestId = `skill-diagnostics:${++sequence}`;
+      const timeout = setTimeout(() => {
+        skillPending.delete(requestId);
+        respond({ accepted: false, enabled: false, reason: "manual_tracking_unavailable" });
+      }, 1000);
+      skillPending.set(requestId, { respond, timeout });
+      window.postMessage({ channel: "gst:farm:v1", type: "skill-diagnostics", requestId,
+        action: message.action, enabled: message.enabled === true, profileKey: expected.profileKey }, origin);
+      return true;
+    }
     if (message?.type !== "gst:farm-status") return;
     const requestId = String(++sequence);
     const timeout = setTimeout(() => {
@@ -165,6 +203,11 @@
     accountProfileVerified = event.data.verified === true;
     accountProfileKey = accountProfileVerified ? event.data.profileKey : "";
     accountId = accountProfileVerified ? event.data.connectionRecoveryContext?.accountId ?? "" : "";
+    const identity = accountProfileVerified ? state.context : null;
+    accountSlot = identity?.slot ?? "";
+    accountCharacter = identity?.character ?? "";
+    accountClassId = identity?.classId ?? "";
+    accountCharacterId = identity?.characterId ?? "";
     revision++;
     const preferences = accountProfileVerified
       ? event.data.farmPreferences
@@ -191,6 +234,11 @@
       entry.respond({ message: "Page is navigating." });
     }
     pending.clear();
+    for (const entry of skillPending.values()) {
+      clearTimeout(entry.timeout);
+      entry.respond({ accepted: false, enabled: false, reason: "scene_change" });
+    }
+    skillPending.clear();
   });
   async function loadPreferences() {
     if (suspended || loading) return;

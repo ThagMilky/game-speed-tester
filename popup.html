@@ -281,6 +281,9 @@
 
           <button id="copyFarmDiagnostics" type="button" class="full">Sao chép log di chuyển / chạy nền</button>
           <p class="hint">Xuất log JSON một dòng cho Agent: gộp bản ghi trùng, bỏ trường trống; flags chỉ liệt kê trạng thái đúng. Vẫn giữ 120 mốc di chuyển trong lần mở trang và 20 mốc ON/OFF theo tab. Khi bị khựng, sao chép trước khi tải lại game. Không ghi nội dung phím gõ, tài khoản hoặc packet.</p>
+          <label class="switch-row"><span>Thu thập chẩn đoán kỹ năng Auto Farm</span><input id="farmSkillDiagnosticsEnabled" class="switch" type="checkbox" disabled></label>
+          <p class="hint">Mặc định tắt. Ghi lần thử kỹ năng, điều kiện bị chặn, lời gọi native và thay đổi trạng thái/cooldown quan sát được ở client. Đây không phải bằng chứng server đã nhận chiêu hoặc gây sát thương.</p>
+          <button id="clearFarmSkillDiagnostics" type="button" class="full" disabled>Xóa log kỹ năng Auto Farm</button>
           <textarea wrap="off" id="farmDiagnosticsOutput" readonly rows="2" aria-label="Chẩn đoán Auto Farm" hidden spellcheck="false"></textarea>
           <p id="farmDiagnosticsFeedback" class="notice" role="status"></p>
         </details>

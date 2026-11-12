@@ -2,6 +2,41 @@
   "use strict";
   const button = document.getElementById("copyFarmDiagnostics");
   const output = document.getElementById("farmDiagnosticsOutput"), feedback = document.getElementById("farmDiagnosticsFeedback");
+  const skillEnabled = document.getElementById("farmSkillDiagnosticsEnabled");
+  const clearSkill = document.getElementById("clearFarmSkillDiagnostics");
+  let confirmedSkillEnabled = false, skillBusy = false;
+
+  async function boundTarget() {
+    await globalThis.GSTPopupAccountContextPromise;
+    const session = globalThis.GSTPopupAccountSession;
+    const expected = session?.current?.(), version = session?.version?.(), tabId = session?.tabId?.();
+    if (!Number.isInteger(tabId) || !expected?.verified || !globalThis.GSTAccountProfiles?.identity) return null;
+    const binding = await session.validate(expected, version);
+    if (!binding?.valid || binding.tabId !== tabId || !binding.context?.verified) return null;
+    return { tabId, profileIdentity: globalThis.GSTAccountProfiles.identity(binding.context) };
+  }
+  async function skillRequest(action, enabled) {
+    const target = await boundTarget();
+    if (!target) throw new Error("account_identity_mismatch");
+    return chrome.tabs.sendMessage(target.tabId, { type: "gst:farm-skill-diagnostics", ...target,
+      action, enabled: enabled === true });
+  }
+  async function refreshSkillStatus() {
+    if (skillBusy) return;
+    try {
+      const result = await skillRequest("status");
+      if (!result?.accepted) throw new Error("policy_change");
+      confirmedSkillEnabled = result.enabled === true;
+      skillEnabled.checked = confirmedSkillEnabled;
+      skillEnabled.disabled = false;
+      clearSkill.disabled = false;
+    } catch {
+      confirmedSkillEnabled = false;
+      skillEnabled.checked = false;
+      skillEnabled.disabled = true;
+      clearSkill.disabled = true;
+    }
+  }
 
   // Compact only at export: collection, retention and the sanitized bridge remain unchanged.
   // In each record, flags lists true states; states absent from flags are false.
@@ -92,7 +127,7 @@
     const movement = data.movement || {}, bg = data.background || {};
     const boss = data.bossSafety || {}, flight = data.flight || {};
     return {
-      format: "gst-farm-agent-2",
+      format: "gst-farm-agent-3",
       legend: "t=UTC; event=reason; also=other simultaneous events; flags lists true states (others false); missing fields=null; ownerScope=eligibility (not actual move)",
       farm: { tracking: data.tracking === true,
         current: pick(data.current, [["on", "on"], ["deaths", "deaths"]], farmFlags),
@@ -110,17 +145,58 @@
       flight: { build: flight.build,
         state: pick(flight, flightFields, flightFlags),
         events: (flight.events || []).map((row) =>
-          pick(row, [["at", "t"], ["type", "event"]], ["auto", "flying", "always", "farm"])) }
+          pick(row, [["at", "t"], ["type", "event"]], ["auto", "flying", "always", "farm"])) },
+      skill: { build: data.skill?.build || "unavailable", enabled: data.skill?.enabled === true,
+        tracking: data.skill?.tracking === true,
+        legend: "guard_blocked/q_blocked=extension blocked before native; native_invoked/native_skill_invoked/native_return=call evidence only; local_state_changed=client state only; snapshot_cooldown=newer client snapshot; unconfirmed=not enough evidence; no stage proves server receipt or damage",
+        events: (Array.isArray(data.skill?.events) ? data.skill.events : []).slice(-80).map((row) => {
+          const result = pick(row, [["at", "t"], ["attemptId", "attempt"], ["skill", "skill"],
+            ["source", "source"], ["stage", "stage"], ["reason", "reason"], ["method", "method"],
+            ["returnKind", "return"], ["localCooldownDeltaMs", "localCooldownDeltaMs"],
+            ["snapshotAdvanceMs", "snapshotAdvanceMs"], ["cooldownBeforeMs", "cooldownBeforeMs"],
+            ["cooldownAfterMs", "cooldownAfterMs"], ["dashStarted", "dashStarted"],
+            ["pendingSkillChanged", "pendingSkillChanged"]]);
+          return result;
+        }) }
     };
   }
+  skillEnabled.addEventListener("change", async () => {
+    skillBusy = true; skillEnabled.disabled = true; clearSkill.disabled = true;
+    try {
+      const result = await skillRequest("set", skillEnabled.checked);
+      if (!result?.accepted) throw new Error(result?.reason || "policy_change");
+      confirmedSkillEnabled = result.enabled === true;
+      skillEnabled.checked = confirmedSkillEnabled;
+      feedback.textContent = confirmedSkillEnabled ? "Đã bật thu thập log kỹ năng cho tab/tài khoản này." : "Đã tắt thu thập log kỹ năng.";
+    } catch {
+      skillEnabled.checked = confirmedSkillEnabled;
+      feedback.textContent = "Không đổi được chẩn đoán: tab chưa xác minh, Farm không ở chế độ mở rộng hoặc bridge chưa sẵn sàng.";
+    } finally { skillBusy = false; await refreshSkillStatus(); }
+  });
+  clearSkill.addEventListener("click", async () => {
+    clearSkill.disabled = true;
+    try {
+      const result = await skillRequest("clear");
+      if (!result?.accepted) throw new Error("policy_change");
+      output.value = ""; output.hidden = true;
+      feedback.textContent = "Đã xóa log kỹ năng của tab/tài khoản hiện tại.";
+    } catch { feedback.textContent = "Không xóa được log: tab chưa xác minh hoặc bridge chưa sẵn sàng."; }
+    finally { await refreshSkillStatus(); }
+  });
+  window.addEventListener("gst:popup-account-context-change", () => { void refreshSkillStatus(); });
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && (changes.farmPreferences || changes[GSTAccountProfiles.profilesKey]))
+      void refreshSkillStatus();
+  });
+  void refreshSkillStatus();
   button.addEventListener("click", async () => {
     button.disabled = true;
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.id) throw new Error("No tab");
+      const target = await boundTarget();
+      if (!target) throw new Error("No verified tab");
       let data = null, status = null;
-      try { data = await chrome.tabs.sendMessage(tab.id, { type: "gst:farm-diagnostics" }); } catch {}
-      try { status = await chrome.tabs.sendMessage(tab.id, { type: "gst:farm-status" }); } catch {}
+      try { data = await chrome.tabs.sendMessage(target.tabId, { type: "gst:farm-diagnostics" }); } catch {}
+      try { status = await chrome.tabs.sendMessage(target.tabId, { type: "gst:farm-status" }); } catch {}
       const available = data?.build === "farm-stop-1";
       const report = compact(available ? data : {});
       report.diagnosticsAvailable = available;

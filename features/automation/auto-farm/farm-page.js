@@ -355,14 +355,25 @@
     scene.auto.think = 0;
     scene.autoX = scene.autoY = 0;
   }
-  function withFarmTargetingGuard(scene, host, action, blockedValue) {
-    if (!playerTargetGuardActive()) return action();
-    if (playerActor(scene, scene.auto?.target) || playerActor(scene, scene.lockId)) return blockedValue;
+  function farmTargetGuardReason(scene) {
+    if (playerActor(scene, scene.auto?.target)) return "player_target";
+    if (playerActor(scene, scene.lockId)) return "player_lock";
     if (scene.aimSet === true && finite(scene.aimX) && finite(scene.aimY)
         && [...(scene.views?.values?.() ?? [])].some((actor) => actor?.k === "p" && !actor.dead
-          && Math.hypot(actor.x - scene.aimX, actor.y - scene.aimY) < 0.2)) return blockedValue;
+          && Math.hypot(actor.x - scene.aimX, actor.y - scene.aimY) < 0.2)) return "player_aim";
+    if (typeof scene.nearestEnemy !== "function" || typeof scene.anyEnemy !== "function")
+      return "targeting_unavailable";
+    return "";
+  }
+  function withFarmTargetingGuard(scene, host, action, blockedValue, skillKey = "") {
+    if (!playerTargetGuardActive()) return action();
+    const reason = farmTargetGuardReason(scene);
+    const blocked = (value) => {
+      if (skillKey) globalThis.GSTFarmSkillDiagnostics?.blocked?.(scene, skillKey, "farm_cast", value);
+      return blockedValue;
+    };
+    if (reason) return blocked(reason);
     const originalNearest = scene.nearestEnemy, originalAny = scene.anyEnemy;
-    if (typeof originalNearest !== "function" || typeof originalAny !== "function") return blockedValue;
     const nearestMonster = (range) => {
       if (!finite(range) || range < 0) return null;
       const pos = host.pos?.();
@@ -396,7 +407,7 @@
     try {
       scene.nearestEnemy = nearest;
       scene.anyEnemy = any;
-      if (scene.nearestEnemy !== nearest || scene.anyEnemy !== any) return blockedValue;
+      if (scene.nearestEnemy !== nearest || scene.anyEnemy !== any) return blocked("targeting_unavailable");
       return action();
     } catch { return blockedValue; }
     finally {
@@ -514,12 +525,25 @@
         guardedHost.basic = (...callArgs) => withFarmTargetingGuard(this, host,
           () => host.basic?.(...callArgs), undefined);
         guardedHost.cast = (...callArgs) => {
+          const skillKey = typeof callArgs[0] === "string" ? callArgs[0] : "";
+          if (typeof host.cast !== "function") {
+            globalThis.GSTFarmSkillDiagnostics?.blocked?.(this, skillKey, "farm_cast", "native_method_unavailable");
+            return false;
+          }
           const [, aimX, aimY] = callArgs;
           const directPlayerAim = finite(aimX) && finite(aimY)
             && [...(this.views?.values?.() ?? [])].some((actor) => actor?.k === "p" && !actor.dead
               && Math.hypot(actor.x - aimX, actor.y - aimY) < 0.2);
-          return directPlayerAim ? false : withFarmTargetingGuard(this, host,
-            () => host.cast?.(...callArgs), false);
+          if (directPlayerAim) {
+            globalThis.GSTFarmSkillDiagnostics?.blocked?.(this, skillKey, "farm_cast", "player_aim");
+            return false;
+          }
+          return withFarmTargetingGuard(this, host, () => {
+            const diagnostics = globalThis.GSTFarmSkillDiagnostics;
+            return typeof diagnostics?.invoke === "function"
+              ? diagnostics.invoke(this, skillKey, "farm_cast", "host.cast", () => host.cast?.(...callArgs))
+              : host.cast?.(...callArgs);
+          }, false, skillKey);
         };
       }
       if (!filterNow) return guardedHost;
@@ -717,6 +741,7 @@
     if (settings.policyMode !== "extended" || identityBlocked || suspended || session) return;
     try {
       const scene = sceneNow();
+      globalThis.GSTFarmSkillDiagnostics?.setContext?.(scene, settings);
       if (settings.acceptPartyInvites) globalThis.GSTFarmParty?.configure(scene, settings);
       const farmFeaturesActive = settings.enabled || targetFilterActive()
         || globalThis.GSTFarmBossSafety?.hasExclusions?.(scene) === true;
@@ -1076,6 +1101,20 @@
       shortcut = data.code;
       shortcutMessage = "";
     }
+    if (data.type === "skill-diagnostics" && typeof data.requestId === "string") {
+      let result = { accepted: false, enabled: false, reason: "policy_change" };
+      if (settings.identityVerified && !identityBlocked && data.profileKey === settings.accountProfileKey
+          && settings.policyMode === "extended") {
+        try {
+          result = globalThis.GSTFarmSkillDiagnostics?.control?.(sceneNow(), data.action,
+            data.enabled, data.profileKey) ?? result;
+        } catch { result = { accepted: false, enabled: false, reason: "manual_tracking_unavailable" }; }
+      }
+      window.postMessage({ channel, type: "skill-diagnostics-result", requestId: data.requestId,
+        accepted: result.accepted === true, enabled: result.enabled === true,
+        reason: typeof result.reason === "string" ? result.reason : "" }, origin);
+      return;
+    }
     if (data.type === "configure" && typeof data.enabled === "boolean"
         && finite(data.radius) && data.radius >= 1 && data.radius <= 1000) {
       configurationReceived = true;
@@ -1100,6 +1139,10 @@
         identityBlocked, identityVerified: data.identityVerified === true,
         accountProfileKey: typeof data.accountProfileKey === "string" ? data.accountProfileKey : "",
         accountId: typeof data.accountId === "string" ? data.accountId : "",
+        slot: typeof data.accountSlot === "string" ? data.accountSlot : "",
+        character: typeof data.accountCharacter === "string" ? data.accountCharacter : "",
+        classId: typeof data.accountClassId === "string" ? data.accountClassId : "",
+        characterId: typeof data.accountCharacterId === "string" ? data.accountCharacterId : "",
         acceptPartyInvites: data.acceptPartyInvites === true,
         allowPlayerTargets: data.allowPlayerTargets === true,
         enabled: data.enabled, radius: data.radius, autoRespawn: data.autoRespawn !== false,
@@ -1118,6 +1161,7 @@
         idleMode: ["home", "seek"].includes(data.idleMode) ? data.idleMode : "hold",
         preferLoot: data.preferLoot !== false, selfDefense: data.selfDefense === true, autoEncounter: data.autoEncounter === true, excludeBoss: data.excludeBoss === true,
         bossFilter: data.bossFilter === "world" ? "world" : "all" };
+      globalThis.GSTFarmSkillDiagnostics?.setContext?.(sceneNow(), settings);
       stage = "policy";
       globalThis.GSTFarmPolicy?.setMode(settings.policyMode);
       syncFarmKeyGuard();

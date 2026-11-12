@@ -51,6 +51,7 @@
         "features/automation/auto-farm/farm-party.js",
         "features/automation/auto-farm/farm-monster-classification.js",
         "features/automation/auto-farm/farm-boss-safety.js",
+        "features/automation/auto-farm/farm-skill-diagnostics.js",
         "features/automation/auto-farm/farm-map.js",
         "features/automation/auto-farm/farm-visual.js",
         "features/movement/map/area-map-page.js",

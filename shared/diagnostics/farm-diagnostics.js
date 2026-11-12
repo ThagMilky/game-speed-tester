@@ -113,6 +113,7 @@
       background: readSnapshot("GSTBackgroundDiagnostics"),
       movement: readSnapshot("GSTMovementDiagnostics"),
       bossSafety: readSnapshot("GSTFarmBossSafety"),
+      skill: readSnapshot("GSTFarmSkillDiagnostics"),
       flight: readSnapshot("GSTFlight"),
       current: flags(binding?.scene), lastStop: rows.findLast((row) => row.event === "off") ?? null, events: [...rows] })
   };
