@@ -290,8 +290,12 @@ body.embedded {
 .feature-search-results { display: grid; gap: 5px; max-height: min(40vh, 300px); overflow: auto; }
 .feature-search-result { min-height: 38px; text-align: left; font-size: 12px; font-weight: 500; overflow-wrap: anywhere; }
 .feature-search-global { margin: 12px 0 16px; }
+.feature-search-always { margin-bottom: 18px; }
+.feature-search-always .feature-search-toggle { display: none; }
+.feature-search-always .feature-search-area { padding: 0; border: 0; background: transparent; }
 .feature-search-global .feature-search-results { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .feature-search-global .feature-search-result { min-height: 44px; }
+.fps-search-highlight { position: relative; z-index: 1; outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 7px; background: var(--accent-bg); }
 .card-body > .diagnostic, .card-body > .advanced, .card-body > details.subcard { border: 1px solid var(--border); border-radius: 10px; background: var(--subtle); padding: 12px 14px; }
 .card-body > .diagnostic > summary, .card-body > .advanced > summary, .card-body > details.subcard > summary { font-weight: 650; }
 .card-body > fieldset:not(#farmControls) { min-width: 0; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--subtle); }
@@ -307,11 +311,12 @@ body.embedded {
 .fps-actions { position: sticky; top: 0; z-index: 6; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 4px 0 0; padding: 8px 0; background: var(--surface); }
 .fps-actions button { min-width: 0; padding-inline: 7px; overflow-wrap: anywhere; }
 .fps-action-hint { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
-.fps-groups { display: grid; gap: 0; }
-.fps-group { min-width: 0; padding: 12px 0 8px; border-bottom: 1px solid var(--border); }
-.fps-group-title { margin: 0 0 8px; font-size: 16px; line-height: 1.4; font-weight: 650; }
-.fps-group-body { padding: 0 2px 4px; }
+.fps-groups { display: grid; gap: 14px; }
+.fps-group { min-width: 0; padding: 4px 0; }
+.fps-group-title { margin: 0 0 6px; font-size: 16px; line-height: 1.4; font-weight: 650; }
+.fps-group-body { padding: 0 2px; }
 .fps-group-body .hint { margin-block: 8px; }
+#fpsControls { padding: 0 !important; border: 0 !important; background: transparent !important; }
 .dashboard-tile {
   text-align: left;
   display: flex;

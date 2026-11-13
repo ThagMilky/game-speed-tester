@@ -5,19 +5,33 @@
   const normalize = (value) => String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "d").replace(/Đ/g, "d").toLocaleLowerCase("vi").replace(/\s+/g, " ").trim();
   const searchable = "label, button, summary, legend, h2, h3, h4, .hint, .feature-status, .field-title, dt";
+  let highlighted = null, highlightTimer = null;
 
-  function addSearch(host, { global = false, inside = false, title = "Tìm trong tính năng này" } = {}) {
+  function highlightFpsResult(entry) {
+    clearTimeout(highlightTimer);
+    highlighted?.classList.remove("fps-search-highlight");
+    highlighted = null;
+    if (entry.panel.dataset.panel !== "fps") return;
+    highlighted = entry.highlight;
+    highlighted?.classList.add("fps-search-highlight");
+    highlightTimer = setTimeout(() => {
+      highlighted?.classList.remove("fps-search-highlight");
+      highlighted = null;
+    }, 2800);
+  }
+
+  function addSearch(host, { global = false, inside = false, alwaysOpen = false, title = "Tìm trong tính năng này" } = {}) {
     const tools = document.createElement("div");
-    tools.className = global ? "feature-search feature-search-global" : "feature-search";
+    tools.className = `feature-search${global ? " feature-search-global" : ""}${alwaysOpen ? " feature-search-always" : ""}`;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "feature-search-toggle";
     button.textContent = global ? "⌕  Tìm mọi tính năng" : "⌕  Tìm trong tính năng này";
-    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-expanded", String(alwaysOpen));
     button.setAttribute("aria-label", title);
     const area = document.createElement("div");
     area.className = "feature-search-area";
-    area.hidden = true;
+    area.hidden = !alwaysOpen;
     const input = document.createElement("input");
     input.type = "search";
     input.autocomplete = "off";
@@ -51,12 +65,13 @@
           let target = node;
           if (node.tagName === "LABEL") target = node.control ?? node;
           if (node.tagName === "SUMMARY") target = node;
+          const highlight = node.tagName === "LABEL" ? (node.closest(".check-row, .switch-row") ?? node) : node;
           const copy = node.cloneNode(true);
           copy.querySelectorAll(".feature-search").forEach((searchUi) => searchUi.remove());
           const text = copy.textContent.replace(/\s+/g, " ").trim();
           if (!text || text.length > 260 || seen.has(target)) continue;
           seen.add(target);
-          entries.push({ target, text, panel: scope, panelName });
+          entries.push({ target, highlight, text, panel: scope, panelName });
         }
       }
       return entries;
@@ -80,6 +95,7 @@
               if (parent === entry.panel) break;
             }
             entry.target.scrollIntoView({ behavior: "smooth", block: "center" });
+            highlightFpsResult(entry);
             const focusTarget = entry.target.matches?.("input, select, textarea, button, summary, [tabindex]")
               ? entry.target : entry.target.querySelector?.("input, select, textarea, button");
             focusTarget?.focus?.({ preventScroll: true });
@@ -98,7 +114,7 @@
     const heading = panel.querySelector(":scope > summary, :scope > .page-heading");
     if (!heading) continue;
     const body = panel.querySelector(":scope > .card-body");
-    addSearch(body ?? heading, { inside: !!body,
+    addSearch(body ?? heading, { inside: !!body, alwaysOpen: panel.dataset.panel === "fps",
       title: `Tìm trong ${heading.querySelector("strong, h2")?.textContent?.trim() ?? "tính năng này"}` });
   }
 })();
