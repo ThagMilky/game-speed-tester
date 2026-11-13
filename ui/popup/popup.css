@@ -308,8 +308,17 @@ body.embedded {
 .dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .feature-directory > .page-heading { padding: 16px 18px; border-bottom: 1px solid var(--border); }
 .feature-directory > .card-body { padding-top: 16px !important; }
-.fps-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 4px 0 16px; }
+.fps-actions { position: sticky; top: 0; z-index: 6; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 4px 0 0; padding: 8px 0; background: var(--surface); }
 .fps-actions button { min-width: 0; padding-inline: 7px; overflow-wrap: anywhere; }
+.fps-action-hint { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
+.fps-groups { display: grid; gap: 0; }
+.fps-group { min-width: 0; border-bottom: 1px solid var(--border); }
+.fps-group > summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 2px; cursor: pointer; font-weight: 650; list-style: none; }
+.fps-group > summary::-webkit-details-marker { display: none; }
+.fps-group > summary::after { content: "+"; color: var(--muted); font-size: 18px; font-weight: 400; }
+.fps-group[open] > summary::after { content: "−"; }
+.fps-group-body { padding: 0 2px 14px; }
+.fps-group-body .hint { margin-block: 8px; }
 .dashboard-tile {
   text-align: left;
   display: flex;
@@ -365,6 +374,7 @@ body.embedded {
   body.embedded[data-orientation="horizontal"] .wide-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
   body.embedded[data-orientation="horizontal"] .wide-group { min-width: 0; }
   body.embedded[data-orientation="horizontal"] .diagnostics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.embedded[data-orientation="horizontal"] .fps-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 22px; }
 }
 /* Auto Farm uses the space left after the navigation and panel padding. */
 .farm-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -399,7 +409,6 @@ body.embedded {
 @media (max-width: 600px) {
   .dashboard-grid { grid-template-columns: 1fr; }
   .feature-search-global .feature-search-results { grid-template-columns: 1fr; }
-  .fps-actions { grid-template-columns: 1fr; }
   .app-header { padding: 12px 14px; }
   #featurePanels { padding: 12px; }
   #featurePanels > .card > .card-body { padding: 13px 12px; }
@@ -408,6 +417,8 @@ body.embedded {
 @media (max-width: 420px) {
   .card > summary > .feature-search { margin-left: auto; }
   .feature-search-toggle { font-size: 14px; padding: 5px 7px; }
+  .fps-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fps-actions #fpsReset { grid-column: 1 / -1; }
 }
 @media (max-width: 420px) {
   .feature-navigation { grid-template-columns: minmax(0, 1fr); }

@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const fields = ["hidePlayers", "hidePlayerEffects", "hideOwnEffects", "hideOwnCharacter", "hideResourceVisuals", "hideGameUI", "hideNPCVisuals", "hideMonsterEffects",
+  const fields = ["hidePlayers", "hidePlayerEffects", "hideOwnEffects", "hideOwnCharacter", "hideResourceVisuals", "hideResourceNames", "hideGameUI", "hideNPCVisuals", "hideMonsterEffects",
     "hideOwnDisciples", "hideOtherDisciples", "hideCompanionEffects", "hideBasicEffects",
     "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings", "hideBosses", "hideBossEffects", "simpleMinimap", "minimapColors", "limit30Fps"];
   globalThis.GSTFpsOptions = {

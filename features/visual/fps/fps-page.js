@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const origin = "https://nghichthienky.online";
-  const fields = ["hidePlayers", "hidePlayerEffects", "hideOwnEffects", "hideOwnCharacter", "hideResourceVisuals", "hideGameUI", "hideNPCVisuals", "hideMonsterEffects",
+  const fields = ["hidePlayers", "hidePlayerEffects", "hideOwnEffects", "hideOwnCharacter", "hideResourceVisuals", "hideResourceNames", "hideGameUI", "hideNPCVisuals", "hideMonsterEffects",
     "hideOwnDisciples", "hideOtherDisciples", "hideCompanionEffects", "hideBasicEffects",
     "hideMonsters", "hideNumbers", "reduceEnvironment", "reduceScreen", "simpleMap", "hideVegetation", "hideBuildings", "hideBosses", "hideBossEffects", "simpleMinimap", "minimapColors", "limit30Fps"];
   let settings = {}, measure = false, suspended = false, watcher = null, binding = null;
@@ -128,6 +128,10 @@
         && x >= view.x - margin && x <= view.right + margin
         && y >= view.y - margin && y <= view.bottom + margin;
       if (!inView) { if (label?.visible) label.setVisible(false); continue; }
+      if (on("hideResourceNames")) {
+        if (label?.visible) label.setVisible(false);
+        continue;
+      }
       if (!label) {
         label = scene.add.text(x, y - 30, String(node.item ?? ""), {
           fontFamily: "Arial, sans-serif", fontSize: "12px", color: "#fff7da",

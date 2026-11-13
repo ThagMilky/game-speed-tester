@@ -49,7 +49,10 @@
   for (const [id, value] of [["fpsSelectAll", true], ["fpsSelectNone", false]]) {
     document.getElementById(id).addEventListener("click", () => {
       if (!saved || saving) return;
-      for (const input of inputs) input.checked = value;
+      for (const input of inputs) {
+        if (value && ["limit30Fps", "hideGameUI"].includes(input.dataset.fpsField)) continue;
+        input.checked = value;
+      }
       save();
     });
   }

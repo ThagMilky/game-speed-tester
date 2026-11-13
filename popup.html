@@ -434,8 +434,10 @@
             <button id="fpsSelectNone" type="button">Bỏ chọn all</button>
             <button id="fpsReset" type="button" class="secondary">Khôi phục gốc</button>
           </div>
-          <div class="wide-groups"><div class="wide-group">
-          <p class="field-title separated">Nhân vật &amp; hiệu ứng</p>
+          <p class="fps-action-hint">Chọn all không tự bật công tắc tối ưu và bỏ qua Giới hạn FPS 30, Ẩn giao diện game. Bỏ chọn all tắt mọi mục tùy chọn.</p>
+          <div class="fps-groups">
+          <details class="fps-group" open>
+            <summary>Nhân vật &amp; hiệu ứng</summary><div class="fps-group-body">
           <label class="check-row"><input type="checkbox" data-fps-field="hidePlayers"><span>Ẩn hình, danh hiệu và huy hiệu người chơi khác (giữ tên)</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hidePlayerEffects"><span>Giảm hiệu ứng người chơi khác</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideOwnEffects"><span>Giảm hiệu ứng của bạn (giữ dấu ngắm)</span></label>
@@ -450,15 +452,22 @@
           <label class="check-row"><input type="checkbox" data-fps-field="hideBossEffects"><span>Giảm hiệu ứng boss xác định được nguồn (giữ cảnh báo)</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideNPCVisuals"><span>Ẩn hình NPC (giữ tên)</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideNumbers"><span>Ẩn số sát thương, hồi máu và chữ Né (kể cả chữ từ kỹ năng)</span></label>
-          </div><div class="wide-group">
-          <p class="field-title separated">Môi trường</p>
+            </div>
+          </details>
+          <details class="fps-group">
+            <summary>Môi trường &amp; tài nguyên</summary><div class="fps-group-body">
           <label class="check-row"><input type="checkbox" data-fps-field="reduceEnvironment"><span>Giảm thời tiết, sương bụi và hạt trang trí nền</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="reduceScreen"><span>Giảm rung và chớp màn hình</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideVegetation"><span>Ẩn cây cỏ trang trí có chuyển động</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideBuildings"><span>Ẩn vật che khuất (nhà / cây lớn đã nhận diện)</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideResourceVisuals"><span>Ẩn hình tài nguyên (giữ tên)</span></label>
+          <label class="check-row"><input type="checkbox" data-fps-field="hideResourceNames"><span>Ẩn tên vật phẩm thu hoạch/đào</span></label>
+          <p class="hint">Chỉ áp dụng khi bật Ẩn hình tài nguyên.</p>
+            </div>
+          </details>
+          <details class="fps-group">
+            <summary>Bản đồ &amp; minimap</summary><div class="fps-group-body">
           <label class="check-row"><input type="checkbox" data-fps-field="simpleMap"><span>Bản đồ tối giản dạng ô vuông</span></label>
-          <p class="field-title separated">Giới hạn khung hình</p>
-          <label class="check-row"><input type="checkbox" data-fps-field="limit30Fps"><span>Giới hạn FPS tối đa 30</span></label>
-          <p class="hint">Giới hạn khung hình thực tế bằng cơ chế vòng lặp game; FPS đo từ số khung hình được vẽ. Tắt để khôi phục giới hạn gốc.</p>
-          <p class="field-title separated">Minimap</p>
           <label class="check-row"><input type="checkbox" data-fps-field="simpleMinimap"><span>Minimap dạng ô vuông</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="minimapColors"><span>Màu dấu trên minimap</span></label>
           <label for="minimapRange">Vùng nhìn minimap</label>
@@ -466,14 +475,19 @@
           <p class="hint" data-help-for="label[for=minimapRange]">Giữ nguyên kích thước khung, mở rộng vùng nhìn bên trong. Map nhỏ sẽ giới hạn theo kích thước map. Không giúp phát hiện đối tượng game chưa gửi tọa độ; nền ô vuông ở mức rộng sẽ nhỏ hơn.</p>
           <p class="hint" data-help-for="label:has([data-fps-field=minimapColors])">Quái đỏ, boss tím lớn hơn, NPC xanh lá, người chơi khác xanh dương. Bản thân giữ hình mũi tên với màu ngẫu nhiên được lưu lại. Áp dụng cả nền minimap gốc và ô vuông; chỉ hiện đối tượng game đã cung cấp tọa độ, độc lập với ẩn hình quái/player.</p>
           <p class="hint" data-help-for="label:has([data-fps-field=simpleMinimap])">Đổi nền bản đồ nhỏ ở góc màn hình thành lưới: ô tối đi được, ô xám bị chặn. Giữ dấu nhân vật, quái và vùng an toàn; khung minimap vẫn tròn. Mỗi ô lấy mẫu va chạm ở tâm, không biểu diễn hết vật cản nhỏ hoặc bảo đảm cả ô đều đi được. Độc lập với nền địa hình chính.</p>
-          <label class="check-row"><input type="checkbox" data-fps-field="hideVegetation"><span>Ẩn cây cỏ trang trí có chuyển động</span></label>
-          <label class="check-row"><input type="checkbox" data-fps-field="hideBuildings"><span>Ẩn vật che khuất (nhà / cây lớn đã nhận diện)</span></label>
-          <label class="check-row"><input type="checkbox" data-fps-field="hideResourceVisuals"><span>Ẩn hình tài nguyên (giữ tên)</span></label>
+          <p class="hint">Mỗi ô vuông là 1 ô game: tối = đi được, xám sáng = phần bị chặn, gần đen = ngoài map. Giữ hình dạng vật cản trong từng ô, chưa tính độ rộng nhân vật. Giữ tài nguyên, NPC, cổng và cảnh báo. Lớp chưa nhận diện có thể còn hiện.</p>
+            </div>
+          </details>
+          <details class="fps-group">
+            <summary>Tùy chọn thủ công</summary><div class="fps-group-body">
+          <label class="check-row"><input type="checkbox" data-fps-field="limit30Fps"><span>Giới hạn FPS tối đa 30</span></label>
+          <p class="hint">Giới hạn khung hình thực tế bằng cơ chế vòng lặp game; FPS đo từ số khung hình được vẽ. Tắt để khôi phục giới hạn gốc.</p>
           <label class="check-row"><input type="checkbox" data-fps-field="hideGameUI"><span>Ẩn giao diện game</span></label>
-          <p class="hint">Mỗi ô vuông là 1 ô game: tối = đi được, xám sáng = phần bị chặn, gần đen = ngoài map. Giữ hình dạng vật cản trong từng ô, chưa tính độ rộng nhân vật. Giữ tài nguyên, NPC, cổng và cảnh báo. Lớp chưa nhận diện có thể còn hiện. Chọn tất cả chỉ tick lựa chọn, vẫn cần bật công tắc tối ưu.</p>
+            </div>
+          </details>
           <p class="hint">Tự lưu và giữ qua đổi map. Tắt công tắc để khôi phục hình ảnh và FPS gốc; nút khôi phục bỏ tất cả lựa chọn tối ưu. Tên/thanh máu còn hiển thị theo điều kiện gốc trừ đối tượng đã chọn ẩn. Không thay đổi dữ liệu game hoặc cảnh báo nguy hiểm.</p>
           <p class="hint">Chỉ giảm các lớp xác định được; hiệu ứng đang chạy có thể cần kết thúc. Không giảm lag mạng/server. Tick FPS trong Bảng trạng thái để theo dõi. Chưa đo hiệu quả trong game thật.</p>
-          </div></div>
+          </div>
         </fieldset>
         <p id="fpsFeedback" class="notice" role="alert"></p>
       </div>
