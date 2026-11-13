@@ -108,7 +108,7 @@
   }
 
   const overviewHeading = overview.querySelector(".dashboard-heading");
-  addSearch(overviewHeading, { global: true, title: "Tìm trên tất cả tính năng" });
+  addSearch(overviewHeading, { global: true, alwaysOpen: true, title: "Tìm trên tất cả tính năng" });
   for (const panel of panels) {
     const heading = panel.querySelector(":scope > summary, :scope > .page-heading");
     if (!heading) continue;
