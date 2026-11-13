@@ -313,7 +313,8 @@ body.embedded {
 .fps-action-hint { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
 .fps-heading { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: center; gap: 18px !important; }
 .fps-heading-title { min-width: 0; }
-.fps-status { min-width: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.fps-status { display: block; min-width: 0; padding: 10px 13px; border-radius: 8px; background: var(--accent-bg); color: var(--text); font-size: 16px; font-weight: 600; line-height: 1.5; }
+.fps-enable-row { justify-content: flex-start; width: fit-content; max-width: 100%; gap: 12px; }
 .fps-groups { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr); gap: 22px; align-items: start; }
 .fps-column { display: grid; align-content: start; gap: 14px; min-width: 0; }
 .fps-group { min-width: 0; padding: 4px 0; }
