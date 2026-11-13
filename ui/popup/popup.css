@@ -322,6 +322,16 @@ body.embedded {
 .fps-group-body { padding: 0 2px; }
 .fps-group-body .hint { margin-block: 8px; }
 #fpsControls { padding: 0 !important; border: 0 !important; background: transparent !important; }
+.feature-group-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }
+.feature-group, .interface-groups > .subcard { min-width: 0; border: 1px solid var(--border); border-radius: 10px; background: var(--subtle); overflow: hidden; }
+.feature-group > summary, .interface-groups > .subcard > summary { cursor: pointer; padding: 14px; font-weight: 650; }
+.feature-group-body { min-width: 0; padding: 0 14px 14px; }
+.feature-group-body > fieldset { min-width: 0; padding: 0 !important; border: 0 !important; background: transparent !important; }
+.interface-groups > .subcard { padding: 0; }
+.interface-groups > .subcard > .card-body { padding: 0 14px 14px; }
+.interface-groups > .subcard fieldset { padding: 0 !important; border: 0 !important; background: transparent !important; }
+.account-groups .account-form { padding-top: 0; border-top: 0; }
+#connectionRecoveryControls, #harvestControls, #questControls { padding: 0 !important; border: 0 !important; background: transparent !important; }
 .dashboard-tile {
   text-align: left;
   display: flex;
@@ -378,6 +388,9 @@ body.embedded {
   body.embedded[data-orientation="horizontal"] .wide-group { min-width: 0; }
   body.embedded[data-orientation="horizontal"] .diagnostics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body.embedded[data-orientation="horizontal"] .fps-groups { grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr); }
+  body.embedded[data-orientation="horizontal"] .feature-group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.embedded[data-orientation="horizontal"] .speed-control-group { grid-column: 1 / -1; }
+  body.embedded[data-orientation="horizontal"] .harvest-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
 }
 @media (max-width: 620px) {
   body.embedded .fps-heading { grid-template-columns: 1fr; gap: 8px !important; }

@@ -91,6 +91,8 @@
     <details class="card" data-category="settings" data-panel="management">
       <summary><span><strong>Quản lý tính năng</strong><small>Chọn cách Auto Farm hoạt động</small></span></summary>
       <div class="card-body">
+        <div class="feature-group-grid">
+        <details class="feature-group"><summary>Chế độ hoạt động</summary><div class="feature-group-body">
         <label for="farmPolicyMode">Chế độ Auto Farm</label>
         <select id="farmPolicyMode" aria-describedby="farmPolicyExtendedHelp farmPolicyNativeHelp farmPolicyDisabledHelp farmPolicyResume farmPolicySavedMode" disabled>
           <option value="" selected>Đang đọc cài đặt…</option>
@@ -102,11 +104,15 @@
         <p id="farmPolicyNativeHelp" class="hint">Theo game gốc: farm gốc tự điều khiển, không có hỗ trợ farm riêng của extension.</p>
         <p id="farmPolicyDisabledHelp" class="hint">Khóa Auto Farm: dừng phiên đang chạy và chặn các đường bật được hỗ trợ.</p>
         <p id="farmPolicyResume" class="hint">Để tiếp tục sau khi mở khóa, chọn Tool hỗ trợ hoặc Theo game gốc, rồi tự bật farm bằng phím/nút tương ứng.</p>
+        </div></details>
+        <details class="feature-group"><summary>Trạng thái &amp; lưu</summary><div class="feature-group-body">
         <p id="farmPolicySavedMode" class="feature-status" role="status" aria-live="polite">Đang đọc chế độ đã lưu…</p>
         <p id="farmPolicyDescription" class="hint" aria-live="polite">Đang đọc chế độ…</p>
         <p id="farmPolicyRuntimeStatus" class="feature-status" role="status" aria-live="polite">Auto Farm gốc trong tab đang mở: chưa rõ.</p>
         <p class="hint">Trạng thái BẬT/TẮT là trạng thái controller gốc trong tab đang mở. Lưu chế độ không xác nhận game đã nhận cấu hình.</p>
         <p id="farmPolicyFeedback" class="notice" role="status" aria-live="polite"></p>
+        </div></details>
+        </div>
       </div>
     </details>
     <details class="card" data-category="settings" data-panel="connection">
@@ -114,8 +120,13 @@
       <div class="card-body">
         <fieldset id="connectionRecoveryControls" disabled aria-label="Tùy chọn khôi phục kết nối">
           <p class="save-mode">Tự lưu · nick được quản lý dùng cài đặt riêng; tab không quản lý nick dùng mặc định chung</p>
+          <div class="feature-group-grid">
+          <details class="feature-group"><summary>Kết nối lại</summary><div class="feature-group-body">
           <label class="switch-row"><span>Bật hỗ trợ kết nối lại của extension</span><input id="connectionAutoReconnect" class="switch" type="checkbox" checked></label>
           <p class="hint">Tắt chỉ dừng các lần thử bổ sung do extension gọi. Kết nối lại gốc của game vẫn hoạt động.</p>
+          <p id="connectionRecoveryScope" class="feature-status" role="status" aria-live="polite">Đang xác định phạm vi cài đặt…</p>
+          </div></details>
+          <details class="feature-group"><summary>Tự tải lại khi lỗi kéo dài</summary><div class="feature-group-body">
           <label class="switch-row"><span>Tự tải lại sau khi kết nối lỗi kéo dài</span><input id="connectionAutoReload" class="switch" type="checkbox"></label>
           <div class="two-columns separated">
             <div><label for="connectionReloadDelay">Chờ trước khi đếm ngược (30–600 giây)</label><input id="connectionReloadDelay" type="number" min="30" max="600" step="1" value="90"></div>
@@ -124,7 +135,8 @@
             <div><label for="connectionReloadWindow">Trong khoảng thời gian (5–120 phút)</label><input id="connectionReloadWindow" type="number" min="5" max="120" step="1" value="15"></div>
           </div>
           <p class="hint">Mặc định: chờ 90 giây, đếm ngược 10 giây, tối đa 3 lần trong 15 phút. Chỉ tải lại sau khi game báo đúng lỗi mất kết nối và các lần thử đã kết thúc; không tự xử lý màn đăng nhập, lỗi tài khoản hoặc thử thách xác minh. Có thể hủy trong lúc đếm ngược.</p>
-          <p id="connectionRecoveryScope" class="feature-status" role="status" aria-live="polite">Đang xác định phạm vi cài đặt…</p>
+          </div></details>
+          </div>
           <p id="connectionRecoveryFeedback" class="notice" role="status" aria-live="polite"></p>
         </fieldset>
       </div>
@@ -314,7 +326,7 @@
             <p id="harvestShortcutFeedback" class="notice" role="status"></p>
           </div></details>
           <div class="harvest-grid">
-            <div class="harvest-settings">
+            <details class="feature-group harvest-settings"><summary>Phạm vi &amp; điều kiện</summary><div class="feature-group-body">
               <label for="harvestKind">Loại thu hoạch</label>
               <select id="harvestKind"><option value="plant">Chỉ hái</option><option value="ore">Chỉ đào</option><option value="both">Hái &amp; đào</option></select>
               <label for="harvestSearchScope" class="separated">Vùng tìm tài nguyên</label>
@@ -335,17 +347,18 @@
                 <p class="hint">Khoảng cách dừng trước khi thử hái/đào; không tăng tầm tương tác của game. Rời ô nhập để lưu.</p>
               </div></details>
               <details class="diagnostic"><summary>Thông tin hoạt động</summary><p>Tự hồi sinh phụ thuộc công tắc trong mục Tự vệ. Di chuyển hoặc đánh tay tạm dừng; hộp thoại NPC và kiểm tra người chơi vẫn được ưu tiên. Khi bị đánh, sau 10 giây chưa thu hoạch được sẽ tạm bỏ mục tiêu 60 giây.</p></details>
-            </div>
-            <div class="harvest-selection">
+            </div></details>
+            <details class="feature-group harvest-selection"><summary>Tài nguyên muốn thu hoạch</summary><div class="feature-group-body">
               <label for="harvestMode">Tài nguyên muốn thu hoạch</label><select id="harvestMode"><option value="all">Tất cả loại tài nguyên</option><option value="selected">Chỉ loại đã chọn</option></select>
               <p id="harvestEmptySelection" class="notice" role="status" hidden>Chưa chọn tài nguyên; chế độ này sẽ không thu hoạch.</p>
               <label for="harvestSearch" class="separated">Tìm tên tài nguyên</label><input id="harvestSearch" type="search" placeholder="Ví dụ: tho linh" autocomplete="off">
               <div class="harvest-toolbar"><span id="harvestCount">Đã chọn 0 loại</span><button id="clearHarvestItems" type="button" class="quiet">Bỏ chọn tất cả</button></div>
               <div id="harvestItems" class="harvest-list" aria-label="Danh sách tài nguyên"></div>
               <p class="hint">Tìm không dấu; các lựa chọn đã lưu được giữ khi đổi loại, tìm kiếm hoặc đổi map.</p>
-            </div>
+            </div></details>
           </div>
         </fieldset>
+        <div class="feature-group-grid">
         <details class="diagnostic">
           <summary>10 lượt thu hoạch gần nhất</summary>
           <p class="save-mode">Tự ghi cả thành công và lượt bị bỏ. Giữ tối đa 10 lượt trong tab; tải lại trang sẽ đặt lại.</p>
@@ -363,6 +376,7 @@
           </div>
           <p id="harvestDebugFeedback" class="notice" role="status"></p>
         </details>
+        </div>
       </div>
     </details>
     <details class="card" data-category="auto" data-panel="quest">
@@ -370,10 +384,12 @@
       <div class="card-body">
         <fieldset id="questControls" disabled>
           <p class="save-mode">Lựa chọn tự lưu · Bấm Bắt đầu để chạy</p>
-          <div class="wide-groups"><div class="wide-group">
+          <div class="wide-groups">
+          <details class="feature-group wide-group"><summary>Tìm &amp; sắp xếp quest</summary><div class="feature-group-body">
           <label for="questSearch">Tìm quest, NPC, map hoặc mục tiêu</label><input id="questSearch" type="search" placeholder="Tên, NPC, map, loại mục tiêu…">
           <label for="questSort">Sắp xếp</label><select id="questSort"><option value="xp">Tu vi cao trước</option><option value="coins">Linh thạch cao trước</option><option value="name">Tên quest</option></select>
-          </div><div class="wide-group">
+          </div></details>
+          <details class="feature-group wide-group"><summary>Danh sách &amp; chạy quest</summary><div class="feature-group-body">
           <div class="harvest-toolbar"><span id="questCount">Đang đọc quest…</span><button id="questClear" type="button">Bỏ chọn tất cả</button></div>
           <div id="questList" class="harvest-list" aria-label="Quest đã nhận và offer lặp đủ điều kiện"></div>
           <div class="two-columns"><button id="questStart" type="button" class="primary">Bắt đầu Auto Quest</button><button id="questStop" type="button">Dừng Auto Quest</button></div>
@@ -381,7 +397,8 @@
             <div class="harvest-toolbar"><button id="questLogCopy" type="button">Sao chép log</button><button id="questLogClear" type="button">Xóa log</button></div>
             <textarea id="questLog" class="history-output" readonly rows="8" aria-label="Log Auto Quest"></textarea>
           </details>
-          </div></div>
+          </div></details>
+          </div>
         </fieldset>
         <p id="questStatus" class="hint" role="status">Đang đọc dữ liệu quest…</p>
         <p class="hint">Chọn quest đang nhận hoặc offer lặp đủ điều kiện rồi bấm Bắt đầu. Hỗ trợ mục tiêu đánh quái trong map hiện tại và dùng đường đi NPC gốc cho nơi nhận/trả quest; chưa hỗ trợ hái, chế tạo hoặc mục tiêu cần tự farm ở map khác.</p>
@@ -391,14 +408,20 @@
     <details class="card" data-category="settings" data-panel="speed">
       <summary><span><strong>Tốc độ &amp; bay</strong><small>Tự tạm tắt tăng tốc khi dùng tính năng tự động</small></span></summary>
       <div class="card-body">
+        <div class="feature-group-grid">
+        <details class="feature-group"><summary>Luôn bay</summary><div class="feature-group-body">
         <label class="switch-row"><span>Luôn giữ trạng thái bay</span><input id="alwaysFlying" class="switch" type="checkbox"></label>
         <p class="hint">Đã bay thì bỏ qua. Đang đi bộ thì chờ ổn định 1 giây, yêu cầu bay một lần và chờ game xác nhận. Giữ lựa chọn qua đổi map/hồi sinh. Tắt công tắc không ép hạ xuống đi bộ; Auto Farm vẫn có hỗ trợ bay riêng. Nếu bạn tự tắt bay khi công tắc đang bật, tool sẽ bật lại sau khoảng nghỉ. Không spam khi game chưa cho phép bay.</p>
         <p id="flightStatus" class="hint" role="status">Đang đọc trạng thái bay…</p>
+        </div></details>
+        <details class="feature-group"><summary>Luôn thiền</summary><div class="feature-group-body">
         <label class="switch-row separated"><span>Luôn thiền</span><input id="alwaysMeditating" class="switch" type="checkbox" disabled></label>
         <p class="hint">Đồng bộ lựa chọn cho các tab game. Chỉ yêu cầu thiền khi nhân vật an toàn và đứng yên; nhường khi đang farm, tự động hóa khác hoặc thao tác tay. Khi Auto Farm bật, lựa chọn này tự tắt và chỉ bật lại bằng tay.</p>
         <p id="meditationSavedStatus" class="feature-status" role="status" aria-live="polite">Đang đọc lựa chọn thiền đã lưu…</p>
         <p id="meditationRuntimeStatus" class="hint" role="status" aria-live="polite">Trạng thái thiền theo game trong tab đang mở: chưa rõ.</p>
         <p id="meditationFeedback" class="notice" role="status" aria-live="polite"></p>
+        </div></details>
+        <details class="feature-group speed-control-group"><summary>Điều chỉnh tốc độ</summary><div class="feature-group-body">
         <fieldset id="controls" disabled aria-label="Tùy chọn tốc độ">
           <p class="save-mode">Công tắc tự lưu · Đổi số rồi rời ô nhập để lưu (hoặc bấm Lưu tốc độ)</p>
           <label class="switch-row"><span>Bật điều chỉnh tốc độ</span><input id="enabled" class="switch" type="checkbox"></label>
@@ -420,6 +443,8 @@
           <button id="resetGameSpeed" type="button" class="full">Về tốc độ mặc định của game</button>
           <p class="hint">Khi bật Auto Farm, Tự thu hoạch, Tìm rương, Tìm cổng bí cảnh hoặc Auto Quest, extension tự tạm tắt tăng tốc để dùng tốc độ gốc của game. Khi cả năm đều tắt, tăng tốc tự bật lại nếu công tắc Bật điều chỉnh tốc độ vẫn bật. Giữ nguyên mức đi bộ/bay đã lưu; không thay đổi trạng thái bay. Nút về mặc định sẽ tắt hẳn điều chỉnh tốc độ.</p>
         </fieldset>
+        </div></details>
+        </div>
       </div>
     </details>
     <details class="card" data-category="settings" data-panel="fps">
@@ -500,6 +525,7 @@
         <label for="menuOrientation">Bố cục menu</label>
         <select id="menuOrientation" disabled><option value="vertical">Dọc</option><option value="horizontal">Ngang</option></select>
         <p id="menuOrientationFeedback" class="notice" role="status"></p>
+    <div class="feature-group-grid interface-groups">
     <details class="subcard" data-panel="display">
       <summary><span><strong>Bảng trạng thái</strong><small>Ẩn/hiện và chọn thông tin cần xem</small></span></summary>
       <div class="card-body">
@@ -563,13 +589,14 @@
         <p id="menuPositionFeedback" class="notice" role="status"></p>
       </div>
     </details>
+    </div>
       </div>
     </details>
     <section class="card diagnostics-page" data-panel="diagnostics" hidden aria-labelledby="diagnosticsTitle">
       <div class="page-heading"><h2 id="diagnosticsTitle">Chẩn đoán</h2><p>Log chỉ dùng khi cần tìm lỗi. Chọn chức năng cần xuất log bên dưới.</p></div>
       <div class="card-body diagnostics-grid">
-        <section class="diagnostics-group"><h3>Auto Farm</h3><div id="diagnosticsFarm"></div></section>
-        <section class="diagnostics-group"><h3>Thu hoạch</h3><div id="diagnosticsHarvest"></div></section>
+        <details class="feature-group diagnostics-group"><summary>Auto Farm</summary><div class="feature-group-body" id="diagnosticsFarm"></div></details>
+        <details class="feature-group diagnostics-group"><summary>Thu hoạch</summary><div class="feature-group-body" id="diagnosticsHarvest"></div></details>
       </div>
     </section>
     <section class="card account-page" data-panel="accounts" hidden aria-labelledby="accountsTitle">
@@ -577,6 +604,8 @@
       <div class="card-body">
         <p class="hint">Tên đăng nhập và mật khẩu được lưu trên trình duyệt này, không mã hóa. Chỉ thêm tài khoản trên máy bạn tin cậy.</p>
         <p id="accountActiveStatus" class="feature-status" role="status" aria-live="polite">Đang xác nhận tài khoản trong tab hiện tại…</p>
+        <div class="feature-group-grid account-groups">
+        <details class="feature-group"><summary>Nick đã lưu &amp; tự đăng nhập</summary><div class="feature-group-body">
         <div class="account-form">
           <label for="accountAutoLoginMode">Khi mở game trực tiếp</label>
           <select id="accountAutoLoginMode"><option value="off">Không tự đăng nhập</option><option value="last">Nick đăng nhập thành công gần nhất</option><option value="account">Tài khoản chỉ định</option></select>
@@ -585,6 +614,8 @@
           <p id="accountAutoLoginStatus" class="hint" role="status" aria-live="polite"></p>
         </div>
         <div id="accountList" class="account-list" aria-label="Tài khoản đã lưu"></div>
+        </div></details>
+        <details class="feature-group"><summary>Thêm hoặc chỉnh sửa tài khoản</summary><div class="feature-group-body">
         <form id="accountForm" class="account-form">
           <h3 id="accountFormTitle">Thêm tài khoản</h3>
           <label for="accountLabel">Tên gợi nhớ (không bắt buộc)</label>
@@ -602,6 +633,8 @@
           </div>
           <p id="accountFeedback" class="notice" role="status" aria-live="polite"></p>
         </form>
+        </div></details>
+        </div>
       </div>
     </section>
   </main>
