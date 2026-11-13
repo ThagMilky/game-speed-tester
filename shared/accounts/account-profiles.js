@@ -113,9 +113,11 @@
       });
     },
     async activeContext() {
-      const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-      if (!tab?.id) return null;
-      return contextForTab(tab.id);
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+        if (!tab?.id) return null;
+        return contextForTab(tab.id);
+      } catch { return null; }
     },
     removeAccountProfiles(slot) {
       return navigator.locks.request("gst:account-profiles", async () => {
