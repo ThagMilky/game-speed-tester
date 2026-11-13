@@ -6,18 +6,18 @@
     .replace(/đ/g, "d").replace(/Đ/g, "d").toLocaleLowerCase("vi").replace(/\s+/g, " ").trim();
   const searchable = "label, button, summary, legend, h2, h3, h4, .hint, .feature-status, .field-title, dt";
 
-  function addSearch(host, { global = false, title = "Tìm trong tính năng này" } = {}) {
+  function addSearch(host, { global = false, inside = false, title = "Tìm trong tính năng này" } = {}) {
     const tools = document.createElement("div");
     tools.className = global ? "feature-search feature-search-global" : "feature-search";
     const button = document.createElement("button");
     button.type = "button";
     button.className = "feature-search-toggle";
-    button.textContent = "⌕ Tìm";
+    button.textContent = global ? "⌕  Tìm mọi tính năng" : "⌕  Tìm trong tính năng này";
     button.setAttribute("aria-expanded", "false");
     button.setAttribute("aria-label", title);
     const area = document.createElement("div");
     area.className = "feature-search-area";
-    area.hidden = !global;
+    area.hidden = true;
     const input = document.createElement("input");
     input.type = "search";
     input.autocomplete = "off";
@@ -30,7 +30,8 @@
     results.className = "feature-search-results";
     area.append(input, status, results);
     tools.append(button, area);
-    host.append(tools);
+    if (inside) host.prepend(tools);
+    else host.insertAdjacentElement("afterend", tools);
 
     button.addEventListener("click", (event) => {
       event.preventDefault(); event.stopPropagation();
@@ -95,6 +96,9 @@
   addSearch(overviewHeading, { global: true, title: "Tìm trên tất cả tính năng" });
   for (const panel of panels) {
     const heading = panel.querySelector(":scope > summary, :scope > .page-heading");
-    if (heading) addSearch(heading, { title: `Tìm trong ${heading.querySelector("strong, h2")?.textContent?.trim() ?? "tính năng này"}` });
+    if (!heading) continue;
+    const body = panel.querySelector(":scope > .card-body");
+    addSearch(body ?? heading, { inside: !!body,
+      title: `Tìm trong ${heading.querySelector("strong, h2")?.textContent?.trim() ?? "tính năng này"}` });
   }
 })();
