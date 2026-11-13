@@ -312,12 +312,9 @@ body.embedded {
 .fps-actions button { min-width: 0; padding-inline: 7px; overflow-wrap: anywhere; }
 .fps-action-hint { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
 .fps-groups { display: grid; gap: 0; }
-.fps-group { min-width: 0; border-bottom: 1px solid var(--border); }
-.fps-group > summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 2px; cursor: pointer; font-weight: 650; list-style: none; }
-.fps-group > summary::-webkit-details-marker { display: none; }
-.fps-group > summary::after { content: "+"; color: var(--muted); font-size: 18px; font-weight: 400; }
-.fps-group[open] > summary::after { content: "−"; }
-.fps-group-body { padding: 0 2px 14px; }
+.fps-group { min-width: 0; padding: 12px 0 8px; border-bottom: 1px solid var(--border); }
+.fps-group-title { margin: 0 0 8px; font-size: 16px; line-height: 1.4; font-weight: 650; }
+.fps-group-body { padding: 0 2px 4px; }
 .fps-group-body .hint { margin-block: 8px; }
 .dashboard-tile {
   text-align: left;
