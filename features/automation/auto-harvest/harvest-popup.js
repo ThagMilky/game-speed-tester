@@ -16,6 +16,7 @@
   let available = false;
   let confirmed = GSTHarvest.normalize(null);
   let queue = Promise.resolve(), pending = [], storageRevision = 0;
+  let preferenceReadRevision = 0, userEditRevision = 0;
   let mapAvailable = false, saveMessage = "";
   const rangeErrors = new Map();
   const dirty = new Set(), editVersions = new Map(), failedFields = new Set();
@@ -205,6 +206,8 @@
       updateMessage();
       return Promise.resolve(false);
     }
+    userEditRevision++;
+    preferenceReadRevision++;
     pending.push(action); derivePreferences(); renderList();
     saveMessage = "Đang lưu…"; updateMessage();
     const operation = queue.catch(() => {}).then(async () => {
@@ -366,10 +369,13 @@
     void reloadPreferences();
   });
   async function reloadPreferences(contextOverride) {
+    const readRevision = ++preferenceReadRevision;
     const version = harvestAccountContextVersion;
+    const editRevision = userEditRevision;
     const context = arguments.length ? contextOverride : harvestAccountSession?.current?.() ?? harvestAccountContext;
     const saved = await chrome.storage.local.get(["harvestPreferences", GSTAccountProfiles.profilesKey]);
-    if (version !== harvestAccountContextVersion) return;
+    if (readRevision !== preferenceReadRevision || version !== harvestAccountContextVersion
+        || editRevision !== userEditRevision) return;
     harvestAccountContext = context;
     harvestProfileBindingRequired = harvestAccountSession?.bindingRequired?.() === true;
     controls.disabled = !!context && context.verified !== true
@@ -390,16 +396,22 @@
     dirty.clear();
     for (const [key] of ranges) editVersions.set(key, (editVersions.get(key) ?? 0) + 1);
     rangeErrors.clear(); rangeWrites.clear(); failedFields.clear(); saveMessage = "";
-    void reloadPreferences(context);
+    preferenceReadRevision++;
+    if (loaded) void reloadPreferences(context);
   });
-  chrome.storage.local.get(["harvestPreferences", GSTAccountProfiles.profilesKey,
-    "harvestDebugEnabled", "harvestShortcut"]).then(async (saved) => {
+  (async () => {
+    await harvestAccountContextPromise;
+    let saved, revision;
+    do {
+      revision = storageRevision;
+      saved = await chrome.storage.local.get(["harvestPreferences", GSTAccountProfiles.profilesKey,
+        "harvestDebugEnabled", "harvestShortcut"]);
+    } while (revision !== storageRevision);
     showShortcut(saved.harvestShortcut);
     debugToggle.checked = saved.harvestDebugEnabled === true;
     debugDetails.hidden = !debugToggle.checked;
     debugToggle.disabled = false;
-    harvestAccountContext = harvestAccountSession
-      ? harvestAccountSession.current() : await harvestAccountContextPromise;
+    harvestAccountContext = harvestAccountSession ? harvestAccountSession.current() : await harvestAccountContextPromise;
     harvestAccountContextVersion = harvestAccountSession?.version?.() ?? harvestAccountContextVersion;
     harvestProfileBindingRequired = harvestAccountSession?.bindingRequired?.() === true;
     confirmed = GSTHarvest.normalize(harvestProfileBindingRequired && harvestAccountContext?.verified !== true
@@ -415,7 +427,7 @@
     if (harvestAccountContext && harvestAccountContext.verified !== true)
       status.textContent = "Chưa xác nhận nick trong tab hiện tại; cài đặt Thu hoạch bị khóa.";
     refresh();
-  }).catch(() => {
+  })().catch(() => {
     debugToggle.disabled = false;
     feedback.textContent = "Chưa đọc được cài đặt Thu hoạch; hãy mở lại popup.";
   });
