@@ -7,6 +7,7 @@
   const views = new Map([...container.querySelectorAll(":scope > [data-panel]")]
     .map((panel) => [panel.dataset.panel, panel]));
   const navigation = [...document.querySelectorAll("[data-nav-panel]")];
+  const otherPages = new Set(["farm", "harvest", "quest", "management", "connection", "speed"]);
   const pageKey = "popupActivePage";
   let navigationRevision = 0;
   let contextExpired = false;
@@ -63,7 +64,7 @@
       if (panel.tagName === "DETAILS") panel.open = active;
     }
     for (const item of navigation) {
-      if (item.dataset.navPanel === page) item.setAttribute("aria-current", "page");
+      if (item.dataset.navPanel === (otherPages.has(page) ? "other" : page)) item.setAttribute("aria-current", "page");
       else item.removeAttribute("aria-current");
     }
     container.scrollTop = 0;
@@ -72,6 +73,7 @@
       void savePage(page);
     }
   }
+  globalThis.GSTPopupLayout = { selectPage };
 
   for (const item of navigation) item.addEventListener("click", () => selectPage(item.dataset.navPanel));
   for (const item of document.querySelectorAll("[data-open-panel]")) {

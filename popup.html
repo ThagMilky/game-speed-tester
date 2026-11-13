@@ -41,17 +41,13 @@
       <button id="navigationToggle" type="button" aria-expanded="true" aria-controls="navigationItems">Chọn chức năng ▾</button>
       <div id="navigationItems">
       <button type="button" class="nav-item" data-nav-panel="overview" aria-current="page">Tổng quan</button>
-      <span class="nav-caption">TỰ ĐỘNG</span>
-      <button type="button" class="nav-item" data-nav-panel="farm">Auto Farm</button>
-      <button type="button" class="nav-item" data-nav-panel="harvest">Thu hoạch</button>
-      <button type="button" class="nav-item" data-nav-panel="quest">Auto Quest</button>
-      <span class="nav-caption">CÀI ĐẶT</span>
+      <span class="nav-caption">DÙNG THƯỜNG XUYÊN</span>
       <button type="button" class="nav-item" data-nav-panel="accounts">Tài khoản</button>
-      <button type="button" class="nav-item" data-nav-panel="management">Quản lý tính năng</button>
-      <button type="button" class="nav-item" data-nav-panel="speed">Tốc độ &amp; bay</button>
-      <button type="button" class="nav-item" data-nav-panel="fps">Hình ảnh &amp; FPS</button>
       <button type="button" class="nav-item" data-nav-panel="interface">Giao diện</button>
       <button type="button" class="nav-item" data-nav-panel="diagnostics">Chẩn đoán</button>
+      <button type="button" class="nav-item" data-nav-panel="fps">Hình ảnh &amp; FPS</button>
+      <span class="nav-caption">KHÁC</span>
+      <button type="button" class="nav-item" data-nav-panel="other">Tính năng khác</button>
       </div>
     </nav>
     <div class="app-content">
@@ -72,11 +68,24 @@
             </dl>
           </section>
           <div class="dashboard-grid" aria-label="Mở nhanh tính năng">
-            <button type="button" class="dashboard-tile" data-open-panel="farm"><strong>Auto Farm</strong><span data-summary-for="farm">Đang đọc trạng thái…</span></button>
-            <button type="button" class="dashboard-tile" data-open-panel="harvest"><strong>Thu hoạch</strong><span data-summary-for="harvest">Đang đọc cài đặt…</span></button>
-            <button type="button" class="dashboard-tile" data-open-panel="quest"><strong>Auto Quest</strong><span data-summary-for="quest">Đang đọc trạng thái…</span></button>
-            <button type="button" class="dashboard-tile" data-open-panel="speed"><strong>Tốc độ &amp; bay</strong><span data-summary-for="speed">Đang đọc cài đặt…</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="accounts"><strong>Tài khoản</strong><span>Quản lý nick và hồ sơ</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="interface"><strong>Giao diện</strong><span>Bản đồ, font và hiển thị</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="diagnostics"><strong>Chẩn đoán</strong><span>Log và thông tin hỗ trợ</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="fps"><strong>Hình ảnh &amp; FPS</strong><span data-summary-for="fps">Đang đọc cài đặt…</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="other"><strong>Tính năng khác</strong><span>Auto Farm, Thu hoạch, Quest, tốc độ…</span></button>
+          </div>
+        </section>
+        <section class="card feature-directory" data-panel="other" hidden aria-labelledby="otherTitle">
+          <div class="page-heading"><h2 id="otherTitle">Tính năng khác</h2><p>Các tính năng bạn ít dùng, vẫn giữ nguyên cài đặt và cách hoạt động.</p></div>
+          <div class="card-body">
+            <div class="dashboard-grid" aria-label="Mở cài đặt tính năng">
+              <button type="button" class="dashboard-tile" data-open-panel="farm"><strong>Auto Farm</strong><span data-summary-for="farm">Đang đọc trạng thái…</span></button>
+              <button type="button" class="dashboard-tile" data-open-panel="harvest"><strong>Thu hoạch</strong><span data-summary-for="harvest">Đang đọc cài đặt…</span></button>
+              <button type="button" class="dashboard-tile" data-open-panel="quest"><strong>Auto Quest</strong><span data-summary-for="quest">Đang đọc trạng thái…</span></button>
+              <button type="button" class="dashboard-tile" data-open-panel="speed"><strong>Tốc độ &amp; bay</strong><span data-summary-for="speed">Đang đọc cài đặt…</span></button>
+              <button type="button" class="dashboard-tile" data-open-panel="management"><strong>Quản lý tính năng</strong><span>Chế độ Auto Farm</span></button>
+              <button type="button" class="dashboard-tile" data-open-panel="connection"><strong>Kết nối &amp; tự tải lại</strong><span>Cài đặt kết nối theo nick</span></button>
+            </div>
           </div>
         </section>
     <details class="card" data-category="settings" data-panel="management">
@@ -420,6 +429,11 @@
         <fieldset id="fpsControls" disabled aria-label="Tùy chọn tối ưu FPS">
           <p class="save-mode">Tự lưu khi thay đổi</p>
           <label class="switch-row"><span>Bật tối ưu FPS</span><input id="fpsEnabled" class="switch" type="checkbox"></label>
+          <div class="fps-actions" aria-label="Thao tác nhanh hình ảnh và FPS">
+            <button id="fpsSelectAll" type="button">Chọn all</button>
+            <button id="fpsSelectNone" type="button">Bỏ chọn all</button>
+            <button id="fpsReset" type="button" class="secondary">Khôi phục gốc</button>
+          </div>
           <div class="wide-groups"><div class="wide-group">
           <p class="field-title separated">Nhân vật &amp; hiệu ứng</p>
           <label class="check-row"><input type="checkbox" data-fps-field="hidePlayers"><span>Ẩn hình, danh hiệu và huy hiệu người chơi khác (giữ tên)</span></label>
@@ -457,8 +471,6 @@
           <label class="check-row"><input type="checkbox" data-fps-field="hideResourceVisuals"><span>Ẩn hình tài nguyên (giữ tên)</span></label>
           <label class="check-row"><input type="checkbox" data-fps-field="hideGameUI"><span>Ẩn giao diện game</span></label>
           <p class="hint">Mỗi ô vuông là 1 ô game: tối = đi được, xám sáng = phần bị chặn, gần đen = ngoài map. Giữ hình dạng vật cản trong từng ô, chưa tính độ rộng nhân vật. Giữ tài nguyên, NPC, cổng và cảnh báo. Lớp chưa nhận diện có thể còn hiện. Chọn tất cả chỉ tick lựa chọn, vẫn cần bật công tắc tối ưu.</p>
-          <div class="button-row"><button id="fpsSelectAll" type="button">Chọn tất cả</button><button id="fpsSelectNone" type="button">Bỏ chọn tất cả</button></div>
-          <button id="fpsReset" type="button" class="secondary full">Khôi phục hình ảnh gốc</button>
           <p class="hint">Tự lưu và giữ qua đổi map. Tắt công tắc để khôi phục hình ảnh và FPS gốc; nút khôi phục bỏ tất cả lựa chọn tối ưu. Tên/thanh máu còn hiển thị theo điều kiện gốc trừ đối tượng đã chọn ẩn. Không thay đổi dữ liệu game hoặc cảnh báo nguy hiểm.</p>
           <p class="hint">Chỉ giảm các lớp xác định được; hiệu ứng đang chạy có thể cần kết thúc. Không giảm lag mạng/server. Tick FPS trong Bảng trạng thái để theo dõi. Chưa đo hiệu quả trong game thật.</p>
           </div></div>

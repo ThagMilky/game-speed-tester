@@ -72,7 +72,7 @@
         result.textContent = global ? `${entry.panelName} · ${entry.text}` : entry.text;
         result.title = result.textContent;
         result.addEventListener("click", () => {
-          if (global) document.querySelector(`[data-nav-panel="${CSS.escape(entry.panel.dataset.panel)}"]`)?.click();
+          if (global) globalThis.GSTPopupLayout?.selectPage(entry.panel.dataset.panel);
           requestAnimationFrame(() => {
             for (let parent = entry.target.parentElement; parent; parent = parent.parentElement) {
               if (parent.tagName === "DETAILS") parent.open = true;

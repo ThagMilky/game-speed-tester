@@ -306,6 +306,10 @@ body.embedded {
 .dashboard-page .overview { padding: 14px 17px; margin: 0 0 16px; }
 .dashboard-page .overview .field-title { font-size: 15px; font-weight: 600; margin-bottom: 9px; }
 .dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.feature-directory > .page-heading { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.feature-directory > .card-body { padding-top: 16px !important; }
+.fps-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 4px 0 16px; }
+.fps-actions button { min-width: 0; padding-inline: 7px; overflow-wrap: anywhere; }
 .dashboard-tile {
   text-align: left;
   display: flex;
@@ -395,6 +399,7 @@ body.embedded {
 @media (max-width: 600px) {
   .dashboard-grid { grid-template-columns: 1fr; }
   .feature-search-global .feature-search-results { grid-template-columns: 1fr; }
+  .fps-actions { grid-template-columns: 1fr; }
   .app-header { padding: 12px 14px; }
   #featurePanels { padding: 12px; }
   #featurePanels > .card > .card-body { padding: 13px 12px; }
