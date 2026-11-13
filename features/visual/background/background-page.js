@@ -71,7 +71,16 @@
   globalThis.GSTBackground = { status: () => failure ? `Nền: ${failure}` : "" };
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:background:v1") return;
-    harvestEnabled = event.data.harvest === true; chestEnabled = event.data.chest === true;
+    chestEnabled = event.data.chest === true;
+    const next = harvestEnabled || chestEnabled;
+    if (next !== enabled) failure = "";
+    enabled = next;
+    if (!enabled) { detach(); clearInterval(watcher); watcher = null; }
+    else { watch(); discover(); }
+  });
+  window.addEventListener("message", (event) => {
+    if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:background-harvest:v1") return;
+    harvestEnabled = event.data.enabled === true;
     const next = harvestEnabled || chestEnabled;
     if (next !== enabled) failure = "";
     enabled = next;
@@ -81,5 +90,6 @@
   document.addEventListener("visibilitychange", () => { discover(); monitor(); });
   window.addEventListener("pagehide", () => { suspended = true; detach(); clearInterval(watcher); watcher = null; });
   window.addEventListener("pageshow", () => { suspended = false; watch(); discover(); });
+  window.postMessage({ channel: "gst:background-harvest-ready:v1" }, origin);
   window.postMessage({ channel: "gst:background-ready:v1" }, origin);
 })();

@@ -16,6 +16,9 @@
   let debugEnabled = false;
   let attempt = 0;
   let lastResult = null;
+  function publishBackgroundDemand() {
+    window.postMessage({ channel: "gst:background-harvest:v1", enabled: settings.enabled }, origin);
+  }
   // Per-tab page lifetime. Yielding/manual pauses are not failed attempts.
   const totals = { success: 0, failed: 0, unconfirmed: 0, canceled: 0 };
   let lastOutcome = "";
@@ -778,6 +781,7 @@
     const changed = JSON.stringify(next) !== JSON.stringify(settings);
     const behaviorChanged = JSON.stringify({ ...next, showTargetLine: false }) !== JSON.stringify({ ...settings, showTargetLine: false });
     settings = next;
+    publishBackgroundDemand();
     globalThis.GSTHarvestVisual?.configure(binding?.scene, settings.enabled && settings.showTargetLine);
     if (!changed) {
       if (settings.enabled) { watch(); discover(); }
@@ -806,6 +810,10 @@
     safeSince = null;
   }
   window.addEventListener("message", (event) => {
+    if (event.source === window && event.origin === origin && event.data?.channel === "gst:background-harvest-ready:v1") {
+      publishBackgroundDemand();
+      return;
+    }
     if (event.source !== window || event.origin !== origin || event.data?.channel !== "gst:harvest:v1") return;
     if (event.data.type === "debug-configure") { debugEnabled = event.data.enabled === true; return; }
     if (event.data.type === "diagnostics") {
@@ -852,6 +860,7 @@
   });
   window.addEventListener("pageshow", () => {
     suspended = false; watch(); discover();
+    publishBackgroundDemand();
   });
   window.postMessage({ channel: "gst:harvest-status:v1", ready: true }, origin);
 })();
