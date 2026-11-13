@@ -7,15 +7,14 @@
   const searchable = "label, button, summary, legend, h2, h3, h4, .hint, .feature-status, .field-title, dt";
   let highlighted = null, highlightTimer = null;
 
-  function highlightFpsResult(entry) {
+  function highlightResult(entry) {
     clearTimeout(highlightTimer);
-    highlighted?.classList.remove("fps-search-highlight");
+    highlighted?.classList.remove("feature-search-highlight");
     highlighted = null;
-    if (entry.panel.dataset.panel !== "fps") return;
     highlighted = entry.highlight;
-    highlighted?.classList.add("fps-search-highlight");
+    highlighted?.classList.add("feature-search-highlight");
     highlightTimer = setTimeout(() => {
-      highlighted?.classList.remove("fps-search-highlight");
+      highlighted?.classList.remove("feature-search-highlight");
       highlighted = null;
     }, 2800);
   }
@@ -95,7 +94,7 @@
               if (parent === entry.panel) break;
             }
             entry.target.scrollIntoView({ behavior: "smooth", block: "center" });
-            highlightFpsResult(entry);
+            highlightResult(entry);
             const focusTarget = entry.target.matches?.("input, select, textarea, button, summary, [tabindex]")
               ? entry.target : entry.target.querySelector?.("input, select, textarea, button");
             focusTarget?.focus?.({ preventScroll: true });
@@ -114,7 +113,7 @@
     const heading = panel.querySelector(":scope > summary, :scope > .page-heading");
     if (!heading) continue;
     const body = panel.querySelector(":scope > .card-body");
-    addSearch(body ?? heading, { inside: !!body, alwaysOpen: panel.dataset.panel === "fps",
+    addSearch(body ?? heading, { inside: !!body, alwaysOpen: true,
       title: `Tìm trong ${heading.querySelector("strong, h2")?.textContent?.trim() ?? "tính năng này"}` });
   }
 })();

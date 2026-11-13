@@ -78,7 +78,7 @@ button.panel-handle:active { cursor: grabbing; }
 fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
 fieldset:disabled { opacity: .6; }
 label, .field-title { display: block; font-size: 12px; font-weight: 550; margin: 0 0 5px; }
-.switch-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin: 0 0 12px; padding-top: 13px; min-height: 42px; cursor: pointer; }
+.switch-row { display: flex; justify-content: flex-start; align-items: center; gap: 12px; margin: 0 0 12px; padding-top: 13px; min-height: 42px; cursor: pointer; }
 input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; flex-shrink: 0; cursor: pointer; }
 input.switch { appearance: none; width: 34px; height: 20px; border: 1px solid var(--border); border-radius: 20px; background: var(--switch-off); position: relative; }
 input.switch::before { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); }
@@ -295,7 +295,7 @@ body.embedded {
 .feature-search-always .feature-search-area { padding: 0; border: 0; background: transparent; }
 .feature-search-global .feature-search-results { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .feature-search-global .feature-search-result { min-height: 44px; }
-.fps-search-highlight { position: relative; z-index: 1; outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 7px; background: var(--accent-bg); }
+.feature-search-highlight { position: relative; z-index: 1; outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 7px; background: var(--accent-bg); }
 .card-body > .diagnostic, .card-body > .advanced, .card-body > details.subcard { border: 1px solid var(--border); border-radius: 10px; background: var(--subtle); padding: 12px 14px; }
 .card-body > .diagnostic > summary, .card-body > .advanced > summary, .card-body > details.subcard > summary { font-weight: 650; }
 .card-body > fieldset:not(#farmControls) { min-width: 0; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--subtle); }
@@ -315,6 +315,11 @@ body.embedded {
 .fps-heading-title { min-width: 0; }
 .fps-status { display: block; min-width: 0; padding: 10px 13px; border-radius: 8px; background: var(--accent-bg); color: var(--text); font-size: 16px; font-weight: 600; line-height: 1.5; }
 .fps-enable-row { justify-content: flex-start; width: fit-content; max-width: 100%; gap: 12px; }
+.feature-heading { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: center; gap: 18px !important; }
+.feature-heading > :first-child { min-width: 0; }
+.account-page > .page-heading.feature-heading { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.panel-status { display: block; min-width: 0; margin: 0 !important; padding: 10px 13px; border: 0; border-radius: 8px; background: var(--accent-bg); color: var(--text); font-size: 16px; font-weight: 600; line-height: 1.5; }
+.feature-status, .card-body > p.hint[role="status"] { padding: 10px 13px; margin: 0 0 10px; border: 0; border-radius: 8px; background: var(--accent-bg); color: var(--text); font-size: 16px; font-weight: 600; line-height: 1.5; }
 .fps-groups { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr); gap: 22px; align-items: start; }
 .fps-column { display: grid; align-content: start; gap: 14px; min-width: 0; }
 .fps-group { min-width: 0; padding: 4px 0; }
@@ -394,6 +399,7 @@ body.embedded {
 }
 @media (max-width: 620px) {
   body.embedded .fps-heading { grid-template-columns: 1fr; gap: 8px !important; }
+  body.embedded .feature-heading { grid-template-columns: 1fr; gap: 8px !important; }
   body.embedded .fps-groups { grid-template-columns: 1fr; gap: 14px; }
 }
 /* Auto Farm uses the space left after the navigation and panel padding. */
