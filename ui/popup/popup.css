@@ -311,7 +311,11 @@ body.embedded {
 .fps-actions { position: sticky; top: 0; z-index: 6; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 4px 0 0; padding: 8px 0; background: var(--surface); }
 .fps-actions button { min-width: 0; padding-inline: 7px; overflow-wrap: anywhere; }
 .fps-action-hint { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
-.fps-groups { display: grid; gap: 14px; }
+.fps-heading { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: center; gap: 18px !important; }
+.fps-heading-title { min-width: 0; }
+.fps-status { min-width: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.fps-groups { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr); gap: 22px; align-items: start; }
+.fps-column { display: grid; align-content: start; gap: 14px; min-width: 0; }
 .fps-group { min-width: 0; padding: 4px 0; }
 .fps-group-title { margin: 0 0 6px; font-size: 16px; line-height: 1.4; font-weight: 650; }
 .fps-group-body { padding: 0 2px; }
@@ -372,7 +376,11 @@ body.embedded {
   body.embedded[data-orientation="horizontal"] .wide-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
   body.embedded[data-orientation="horizontal"] .wide-group { min-width: 0; }
   body.embedded[data-orientation="horizontal"] .diagnostics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  body.embedded[data-orientation="horizontal"] .fps-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 22px; }
+  body.embedded[data-orientation="horizontal"] .fps-groups { grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr); }
+}
+@media (max-width: 620px) {
+  body.embedded .fps-heading { grid-template-columns: 1fr; gap: 8px !important; }
+  body.embedded .fps-groups { grid-template-columns: 1fr; gap: 14px; }
 }
 /* Auto Farm uses the space left after the navigation and panel padding. */
 .farm-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }

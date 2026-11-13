@@ -19,7 +19,6 @@ const flyingInput = document.getElementById("flyingSpeed");
 const farmWalkingInput = document.getElementById("farmWalkingSpeed");
 const farmFlyingInput = document.getElementById("farmFlyingSpeed");
 const speedInputs = [walkingInput, flyingInput, farmWalkingInput, farmFlyingInput];
-const statusText = document.getElementById("status");
 const feedback = document.getElementById("feedback");
 const displayControls = document.getElementById("displayControls");
 const showOverlay = document.getElementById("showOverlay");
@@ -1208,11 +1207,9 @@ async function refresh() {
     document.getElementById("fix").textContent = status.fix ?? "—";
     document.getElementById("state").textContent = status.state === "flying" ? "Đang bay"
       : status.state === "walking" ? "Đi bộ" : "Chưa rõ";
-    statusText.textContent = status.message;
   } catch {
     for (const id of ["current", "fix"]) document.getElementById(id).textContent = "—";
     document.getElementById("state").textContent = "Chưa rõ";
-    statusText.textContent = "Mở nghichthienky.online để đọc trạng thái. Nếu đã mở, hãy tải lại tab sau khi cập nhật extension; game cũng có thể đang chuyển map.";
   } finally {
     busy = false;
   }
@@ -1399,7 +1396,6 @@ chrome.storage.local.get(["preferences", "displayPreferences", "fontPreferences"
   document.getElementById("farmShortcutSummary").textContent = `Phím tắt · ${shortcutLabel.textContent}`;
   refresh();
 }).catch(() => {
-  statusText.textContent = "Chưa đọc được cài đặt. Hãy mở lại popup.";
   farmPolicySavedMode.textContent = "Không đọc được chế độ Auto Farm đã lưu.";
   farmPolicyFeedback.textContent = "Bộ chọn đang khóa để tránh ghi đè cài đặt chưa đọc được. Hãy mở lại cửa sổ cài đặt để thử lại.";
   farmPolicyMode.disabled = true;
