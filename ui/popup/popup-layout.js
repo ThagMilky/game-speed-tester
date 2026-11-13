@@ -135,6 +135,8 @@
   const toggle = document.getElementById("navigationToggle");
   const items = document.getElementById("navigationItems");
   const wide = matchMedia("(min-width: 760px)");
+  const expandedKey = "popupNavigationExpanded";
+  let expandedRevision = 0;
   let pinned = false, hovered = false, closeTimer;
   function expanded(value) {
     nav.classList.toggle("nav-expanded", value);
@@ -148,8 +150,7 @@
     const horizontal = document.body.classList.contains("embedded")
       && document.body.dataset.orientation === "horizontal" && wide.matches;
     nav.classList.toggle("nav-collapsible", !horizontal);
-    pinned = false;
-    expanded(horizontal || hovered || items.contains(document.activeElement));
+    expanded(horizontal || pinned || hovered || items.contains(document.activeElement));
   }
   function closeLater() {
     clearTimeout(closeTimer);
@@ -167,14 +168,22 @@
   nav.addEventListener("focusin", (event) => { if (event.target !== toggle) expanded(true); });
   nav.addEventListener("focusout", closeLater);
   toggle.addEventListener("click", () => {
-    pinned = !pinned;
+    pinned = !nav.classList.contains("nav-expanded");
     expanded(pinned);
+    const revision = ++expandedRevision;
+    void chrome.storage.local.set({ [expandedKey]: pinned }).catch(() => {
+      if (revision === expandedRevision) toggle.title = "Chưa lưu được trạng thái menu.";
+    });
   });
   nav.addEventListener("keydown", (event) => {
     if (event.key !== "Escape" || !nav.classList.contains("nav-collapsible")) return;
     pinned = false;
     toggle.focus();
     expanded(false);
+    const revision = ++expandedRevision;
+    void chrome.storage.local.set({ [expandedKey]: false }).catch(() => {
+      if (revision === expandedRevision) toggle.title = "Chưa lưu được trạng thái menu.";
+    });
     event.preventDefault();
   });
   new MutationObserver(label).observe(items, { subtree: true, attributes: true, attributeFilter: ["aria-current"] });
@@ -182,4 +191,12 @@
   wide.addEventListener("change", orientation);
   label();
   orientation();
+  const initialExpandedRevision = expandedRevision;
+  chrome.storage.local.get(expandedKey).then((saved) => {
+    if (expandedRevision !== initialExpandedRevision || typeof saved[expandedKey] !== "boolean") return;
+    pinned = saved[expandedKey];
+    const horizontal = document.body.classList.contains("embedded")
+      && document.body.dataset.orientation === "horizontal" && wide.matches;
+    expanded(horizontal || pinned || hovered || items.contains(document.activeElement));
+  }).catch(() => {});
 })();
