@@ -19,23 +19,21 @@
     const content = document.createElement('div'); content.className = 'farm-section-body';
     section.append(heading, content); groups.append(section); destinations[key] = content;
   }
-  const sectionStorageKey = 'farmSectionOpen:v1';
+  const sectionStoragePrefix = 'farmSectionOpen:v1:';
+  const legacySectionStorageKey = 'farmSectionOpen:v1';
   const sectionDefaults = Object.fromEntries([...groups.children].map((section) =>
     [section.id, ['farm-section-range', 'farm-section-targets', 'farm-section-revive'].includes(section.id)]));
   let sectionOpen = { ...sectionDefaults }, pendingSectionOpen = {}, sectionsReady = false;
-  let sectionWrite = Promise.resolve();
-  function saveSectionOpen() {
-    const snapshot = { ...sectionOpen };
-    sectionWrite = sectionWrite.catch(() => {}).then(() => chrome.storage.local.set({ [sectionStorageKey]: snapshot }));
-    sectionWrite = sectionWrite.catch(() => {});
+  const sectionStorageKey = (id) => sectionStoragePrefix + id.slice('farm-section-'.length);
+  function saveSectionOpen(id, open) {
+    try { chrome.storage.local.set({ [sectionStorageKey(id)]: open }).catch(() => {}); }
+    catch { /* The menu may be closing or the extension context may be unavailable. */ }
   }
   function rememberSectionOpen(section, open) {
     if (!Object.hasOwn(sectionDefaults, section?.id)) return;
+    sectionOpen[section.id] = open;
     if (!sectionsReady) pendingSectionOpen[section.id] = open;
-    else if (sectionOpen[section.id] !== open) {
-      sectionOpen[section.id] = open;
-      saveSectionOpen();
-    }
+    saveSectionOpen(section.id, open);
   }
   function setSectionOpen(section, open) {
     rememberSectionOpen(section, open);
@@ -62,16 +60,21 @@
   }
   void (async () => {
     let stored = {};
-    try { stored = (await chrome.storage.local.get(sectionStorageKey))[sectionStorageKey] ?? {}; }
+    try {
+      const keys = [...groups.children].map((section) => sectionStorageKey(section.id));
+      stored = await chrome.storage.local.get([...keys, legacySectionStorageKey]);
+    }
     catch { /* Use the existing defaults when local UI storage is unavailable. */ }
     for (const section of groups.children) {
       const id = section.id;
       sectionOpen[id] = Object.hasOwn(pendingSectionOpen, id) ? pendingSectionOpen[id]
-        : typeof stored?.[id] === 'boolean' ? stored[id] : sectionDefaults[id];
+        : typeof stored?.[sectionStorageKey(id)] === 'boolean' ? stored[sectionStorageKey(id)]
+        : typeof stored?.[legacySectionStorageKey]?.[id] === 'boolean' ? stored[legacySectionStorageKey][id]
+        : sectionDefaults[id];
     }
     sectionsReady = true;
     for (const section of groups.children) section.open = sectionOpen[section.id];
-    if (Object.keys(pendingSectionOpen).length) saveSectionOpen();
+    for (const [id, open] of Object.entries(pendingSectionOpen)) saveSectionOpen(id, open);
   })();
   const mirrors = [];
   function move(nodes, key) {
