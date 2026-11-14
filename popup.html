@@ -93,8 +93,8 @@
     <details class="card" data-category="settings" data-panel="management">
       <summary class="feature-heading"><span><strong>Quản lý tính năng</strong><small>Chọn cách Auto Farm hoạt động</small></span><span id="farmPolicyRuntimeStatus" class="panel-status" role="status" aria-live="polite">Auto Farm gốc trong tab đang mở: chưa rõ.</span></summary>
       <div class="card-body">
-        <div class="feature-group-grid">
-        <details class="feature-group"><summary>Chế độ hoạt động</summary><div class="feature-group-body">
+        <div class="feature-group-grid feature-static-grid">
+        <section class="feature-static-group"><h3>Chế độ hoạt động</h3><div class="feature-group-body">
         <label for="farmPolicyMode">Chế độ Auto Farm</label>
         <select id="farmPolicyMode" aria-describedby="farmPolicyExtendedHelp farmPolicyNativeHelp farmPolicyDisabledHelp farmPolicyResume farmPolicySavedMode" disabled>
           <option value="" selected>Đang đọc cài đặt…</option>
@@ -106,13 +106,13 @@
         <p id="farmPolicyNativeHelp" class="hint">Theo game gốc: farm gốc tự điều khiển, không có hỗ trợ farm riêng của extension.</p>
         <p id="farmPolicyDisabledHelp" class="hint">Khóa Auto Farm: dừng phiên đang chạy và chặn các đường bật được hỗ trợ.</p>
         <p id="farmPolicyResume" class="hint">Để tiếp tục sau khi mở khóa, chọn Tool hỗ trợ hoặc Theo game gốc, rồi tự bật farm bằng phím/nút tương ứng.</p>
-        </div></details>
-        <details class="feature-group"><summary>Trạng thái &amp; lưu</summary><div class="feature-group-body">
+        </div></section>
+        <section class="feature-static-group"><h3>Trạng thái &amp; lưu</h3><div class="feature-group-body">
         <p id="farmPolicySavedMode" class="feature-status" role="status" aria-live="polite">Đang đọc chế độ đã lưu…</p>
         <p id="farmPolicyDescription" class="hint" aria-live="polite">Đang đọc chế độ…</p>
         <p class="hint">Trạng thái BẬT/TẮT là trạng thái controller gốc trong tab đang mở. Lưu chế độ không xác nhận game đã nhận cấu hình.</p>
         <p id="farmPolicyFeedback" class="notice" role="status" aria-live="polite"></p>
-        </div></details>
+        </div></section>
         </div>
       </div>
     </details>
@@ -121,12 +121,12 @@
       <div class="card-body">
         <fieldset id="connectionRecoveryControls" disabled aria-label="Tùy chọn khôi phục kết nối">
           <p class="save-mode">Tự lưu · nick được quản lý dùng cài đặt riêng; tab không quản lý nick dùng mặc định chung</p>
-          <div class="feature-group-grid">
-          <details class="feature-group"><summary>Kết nối lại</summary><div class="feature-group-body">
+          <div class="feature-group-grid feature-static-grid">
+          <section class="feature-static-group"><h3>Kết nối lại</h3><div class="feature-group-body">
           <label class="switch-row"><span>Bật hỗ trợ kết nối lại của extension</span><input id="connectionAutoReconnect" class="switch" type="checkbox" checked></label>
           <p class="hint">Tắt chỉ dừng các lần thử bổ sung do extension gọi. Kết nối lại gốc của game vẫn hoạt động.</p>
-          </div></details>
-          <details class="feature-group"><summary>Tự tải lại khi lỗi kéo dài</summary><div class="feature-group-body">
+          </div></section>
+          <section class="feature-static-group"><h3>Tự tải lại khi lỗi kéo dài</h3><div class="feature-group-body">
           <label class="switch-row"><span>Tự tải lại sau khi kết nối lỗi kéo dài</span><input id="connectionAutoReload" class="switch" type="checkbox"></label>
           <div class="two-columns separated">
             <div><label for="connectionReloadDelay">Chờ trước khi đếm ngược (30–600 giây)</label><input id="connectionReloadDelay" type="number" min="30" max="600" step="1" value="90"></div>
@@ -135,7 +135,7 @@
             <div><label for="connectionReloadWindow">Trong khoảng thời gian (5–120 phút)</label><input id="connectionReloadWindow" type="number" min="5" max="120" step="1" value="15"></div>
           </div>
           <p class="hint">Mặc định: chờ 90 giây, đếm ngược 10 giây, tối đa 3 lần trong 15 phút. Chỉ tải lại sau khi game báo đúng lỗi mất kết nối và các lần thử đã kết thúc; không tự xử lý màn đăng nhập, lỗi tài khoản hoặc thử thách xác minh. Có thể hủy trong lúc đếm ngược.</p>
-          </div></details>
+          </div></section>
           </div>
           <p id="connectionRecoveryFeedback" class="notice" role="status" aria-live="polite"></p>
         </fieldset>
@@ -404,19 +404,19 @@
     <details class="card" data-category="settings" data-panel="speed">
       <summary class="feature-heading"><span><strong>Tốc độ &amp; bay</strong><small>Tự tạm tắt tăng tốc khi dùng tính năng tự động</small></span><span id="flightStatus" class="panel-status" role="status">Đang đọc trạng thái bay…</span></summary>
       <div class="card-body">
-        <div class="feature-group-grid">
-        <details class="feature-group"><summary>Luôn bay</summary><div class="feature-group-body">
+        <div class="feature-group-grid feature-static-grid">
+        <section class="feature-static-group"><h3>Luôn bay</h3><div class="feature-group-body">
         <label class="switch-row"><span>Luôn giữ trạng thái bay</span><input id="alwaysFlying" class="switch" type="checkbox"></label>
         <p class="hint">Đã bay thì bỏ qua. Đang đi bộ thì chờ ổn định 1 giây, yêu cầu bay một lần và chờ game xác nhận. Giữ lựa chọn qua đổi map/hồi sinh. Tắt công tắc không ép hạ xuống đi bộ; Auto Farm vẫn có hỗ trợ bay riêng. Nếu bạn tự tắt bay khi công tắc đang bật, tool sẽ bật lại sau khoảng nghỉ. Không spam khi game chưa cho phép bay.</p>
-        </div></details>
-        <details class="feature-group"><summary>Luôn thiền</summary><div class="feature-group-body">
+        </div></section>
+        <section class="feature-static-group"><h3>Luôn thiền</h3><div class="feature-group-body">
         <label class="switch-row separated"><span>Luôn thiền</span><input id="alwaysMeditating" class="switch" type="checkbox" disabled></label>
         <p class="hint">Đồng bộ lựa chọn cho các tab game. Chỉ yêu cầu thiền khi nhân vật an toàn và đứng yên; nhường khi đang farm, tự động hóa khác hoặc thao tác tay. Khi Auto Farm bật, lựa chọn này tự tắt và chỉ bật lại bằng tay.</p>
         <p id="meditationSavedStatus" class="feature-status" role="status" aria-live="polite">Đang đọc lựa chọn thiền đã lưu…</p>
         <p id="meditationRuntimeStatus" class="hint" role="status" aria-live="polite">Trạng thái thiền theo game trong tab đang mở: chưa rõ.</p>
         <p id="meditationFeedback" class="notice" role="status" aria-live="polite"></p>
-        </div></details>
-        <details class="feature-group speed-control-group"><summary>Điều chỉnh tốc độ</summary><div class="feature-group-body">
+        </div></section>
+        <section class="feature-static-group speed-control-group"><h3>Điều chỉnh tốc độ</h3><div class="feature-group-body">
         <fieldset id="controls" disabled aria-label="Tùy chọn tốc độ">
           <p class="save-mode">Công tắc tự lưu · Đổi số rồi rời ô nhập để lưu (hoặc bấm Lưu tốc độ)</p>
           <label class="switch-row"><span>Bật điều chỉnh tốc độ</span><input id="enabled" class="switch" type="checkbox"></label>
@@ -438,7 +438,7 @@
           <button id="resetGameSpeed" type="button" class="full">Về tốc độ mặc định của game</button>
           <p class="hint">Khi bật Auto Farm, Tự thu hoạch, Tìm rương, Tìm cổng bí cảnh hoặc Auto Quest, extension tự tạm tắt tăng tốc để dùng tốc độ gốc của game. Khi cả năm đều tắt, tăng tốc tự bật lại nếu công tắc Bật điều chỉnh tốc độ vẫn bật. Giữ nguyên mức đi bộ/bay đã lưu; không thay đổi trạng thái bay. Nút về mặc định sẽ tắt hẳn điều chỉnh tốc độ.</p>
         </fieldset>
-        </div></details>
+        </div></section>
         </div>
       </div>
     </details>
