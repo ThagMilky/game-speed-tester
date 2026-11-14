@@ -9,12 +9,14 @@
   const extensionId = chrome.runtime.id;
   const popupUrl = chrome.runtime.getURL("popup.html?embedded=1");
   const extensionOrigin = `chrome-extension://${extensionId}`;
+  const menuLog = (event, detail = {}) => console.info("[GST Menu tool]", event, detail);
   function contextAlive() {
     try { return chrome.runtime.id === extensionId; } catch { return false; }
   }
   let root = null, panel = null, frame = null, frameLoaded = false, opened = false, launch = null, editor = null, feedback = null, closeNotice = null, observer = null;
   let saved = GSTMenuPosition.normalize(null), draft = null, editing = false, dragging = null, saving = false, revision = 0;
   let closeRequest = 0, closing = false, cancelPendingClose = null;
+  let frameLoadTimer = null;
   function bounds() {
     const rect = launch.getBoundingClientRect();
     const margin = 12;
@@ -161,6 +163,7 @@
     if (panel) panel.hidden = true;
     if (closeNotice) { closeNotice.textContent = ""; closeNotice.hidden = true; }
     // Remove the iframe so its popup refresh interval stops while closed.
+    clearTimeout(frameLoadTimer); frameLoadTimer = null;
     frame?.remove(); frame = null; frameLoaded = false;
     return true;
   }
@@ -172,12 +175,25 @@
     }
     mount(); if (!panel || opened || editing) return;
     opened = true; root.dataset.open = "true"; panel.hidden = false;
+    menuLog("iframe-opening", { url: popupUrl });
     frame = document.createElement("iframe"); frameLoaded = false; frame.title = "Menu Game Speed Tester";
     const currentFrame = frame;
-    frame.addEventListener("load", () => { if (frame === currentFrame) frameLoaded = true; });
+    frame.addEventListener("load", () => {
+      if (frame !== currentFrame) return;
+      frameLoaded = true;
+      clearTimeout(frameLoadTimer); frameLoadTimer = null;
+      menuLog("iframe-loaded");
+    });
+    frame.addEventListener("error", () => menuLog("iframe-error"));
     frame.src = popupUrl;
-    frame.style.cssText = "border:0;width:100%;flex:1;min-height:0;background:#11191f";
+    frame.style.cssText = "display:block;border:0;width:100%;height:0;flex:1 1 auto;min-width:0;min-height:0;background:#11191f";
     panel.querySelector("section").append(frame); frame.focus();
+    frameLoadTimer = setTimeout(() => {
+      if (frame !== currentFrame || frameLoaded) return;
+      menuLog("iframe-load-timeout");
+      closeNotice.textContent = "Menu chưa tải xong. Bạn có thể đóng bằng nút × rồi mở lại.";
+      closeNotice.hidden = false;
+    }, 8000);
   }
   function matchesShortcut(event) {
     return event.code === menuShortcut.code && event.ctrlKey === menuShortcut.ctrl
@@ -188,7 +204,7 @@
     if (event.repeat || editing || !matchesShortcut(event)) return;
     if (event.target?.matches?.("input, textarea, select, [contenteditable='true']")) return;
     event.preventDefault(); event.stopImmediatePropagation();
-    if (opened) void close(); else open();
+    if (opened) void close(true); else open();
   }, true);
   function mount() {
     if (root || !document.body) return;
@@ -236,7 +252,7 @@
     panel.setAttribute("role", "dialog"); panel.setAttribute("aria-modal", "true"); panel.setAttribute("aria-label", "Menu điều khiển extension");
     const section = document.createElement("section"), header = document.createElement("header"), title = document.createElement("span");
     title.textContent = "Menu điều khiển";
-    const dismiss = document.createElement("button"); dismiss.textContent = "×"; dismiss.setAttribute("aria-label", "Đóng menu"); dismiss.addEventListener("click", () => { void close(); });
+    const dismiss = document.createElement("button"); dismiss.textContent = "×"; dismiss.setAttribute("aria-label", "Đóng menu"); dismiss.addEventListener("click", () => { void close(true); });
     closeNotice = document.createElement("p"); closeNotice.hidden = true; closeNotice.setAttribute("role", "status");
     closeNotice.style.cssText = "margin:6px 0;color:#ffb4a8;font:12px sans-serif";
     header.append(title, dismiss); section.append(header, closeNotice); panel.append(section); shadow.append(style, launch, panel, editor); document.body.append(root);
@@ -246,12 +262,20 @@
   window.addEventListener("keydown", (event) => {
     if (!opened && !editing) return;
     event.stopImmediatePropagation();
-    if (event.key === "Escape") { event.preventDefault(); if (editing) { if (!saving) endEdit(); } else void close(); }
+    if (event.key === "Escape") { event.preventDefault(); if (editing) { if (!saving) endEdit(); } else void close(true); }
   }, true);
   window.addEventListener("message", (event) => {
     if (frame && event.source === frame.contentWindow && event.origin === extensionOrigin
+        && event.data?.channel === "gst:menu-frame:v1") {
+      const data = event.data;
+      if (["boot", "dom-ready", "loaded"].includes(data.type)) menuLog("popup-" + data.type);
+      else if (data.type === "error" && ["script-resource", "style-resource", "javascript", "promise"].includes(data.kind))
+        menuLog("popup-error", { kind: data.kind, line: Number.isInteger(data.line) ? data.line : 0 });
+      return;
+    }
+    if (frame && event.source === frame.contentWindow && event.origin === extensionOrigin
         && ["gst:menu-close:v1", "gst:menu-edit:v1"].includes(event.data?.channel)) {
-      if (event.data.channel === "gst:menu-edit:v1") void beginEdit(); else void close();
+      if (event.data.channel === "gst:menu-edit:v1") void beginEdit(); else void close(true);
     }
   });
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
