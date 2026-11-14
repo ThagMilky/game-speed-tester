@@ -41,13 +41,14 @@
       <button id="navigationToggle" type="button" aria-expanded="true" aria-controls="navigationItems">Chọn chức năng ▾</button>
       <div id="navigationItems">
       <button type="button" class="nav-item" data-nav-panel="overview" aria-current="page">Tổng quan</button>
-      <span class="nav-caption">DÙNG THƯỜNG XUYÊN</span>
+      <button type="button" class="nav-item" data-nav-panel="farm">Auto Farm</button>
+      <button type="button" class="nav-item" data-nav-panel="harvest">Thu hoạch</button>
+      <button type="button" class="nav-item" data-nav-panel="quest">Auto Quest</button>
+      <button type="button" class="nav-item" data-nav-panel="fps">Hình ảnh &amp; FPS</button>
       <button type="button" class="nav-item" data-nav-panel="accounts">Tài khoản</button>
       <button type="button" class="nav-item" data-nav-panel="interface">Giao diện</button>
       <button type="button" class="nav-item" data-nav-panel="diagnostics">Chẩn đoán</button>
-      <button type="button" class="nav-item" data-nav-panel="fps">Hình ảnh &amp; FPS</button>
-      <span class="nav-caption">KHÁC</span>
-      <button type="button" class="nav-item" data-nav-panel="other">Tính năng khác</button>
+      <button type="button" class="nav-item" data-nav-panel="connection">Kết nối &amp; tự tải lại</button>
       </div>
     </nav>
     <div class="app-content">
@@ -70,22 +71,14 @@
             </dl>
           </section>
           <div class="dashboard-grid" aria-label="Mở nhanh tính năng">
+            <button type="button" class="dashboard-tile" data-open-panel="farm"><strong>Auto Farm</strong><span data-summary-for="farm">Đang đọc trạng thái…</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="harvest"><strong>Thu hoạch</strong><span data-summary-for="harvest">Đang đọc cài đặt…</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="quest"><strong>Auto Quest</strong><span data-summary-for="quest">Đang đọc trạng thái…</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="fps"><strong>Hình ảnh &amp; FPS</strong><span data-summary-for="fps">Đang đọc cài đặt…</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="accounts"><strong>Tài khoản</strong><span>Quản lý nick và hồ sơ</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="interface"><strong>Giao diện</strong><span>Di chuyển, bản đồ, font và hiển thị</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="diagnostics"><strong>Chẩn đoán</strong><span>Log và thông tin hỗ trợ</span></button>
-            <button type="button" class="dashboard-tile" data-open-panel="fps"><strong>Hình ảnh &amp; FPS</strong><span data-summary-for="fps">Đang đọc cài đặt…</span></button>
-            <button type="button" class="dashboard-tile" data-open-panel="other"><strong>Tính năng khác</strong><span>Auto Farm, Thu hoạch, Quest và kết nối…</span></button>
-          </div>
-        </section>
-        <section class="card feature-directory" data-panel="other" hidden aria-labelledby="otherTitle">
-          <div class="page-heading"><h2 id="otherTitle">Tính năng khác</h2><p>Các tính năng bạn ít dùng, vẫn giữ nguyên cài đặt và cách hoạt động.</p></div>
-          <div class="card-body">
-            <div class="dashboard-grid" aria-label="Mở cài đặt tính năng">
-              <button type="button" class="dashboard-tile" data-open-panel="farm"><strong>Auto Farm</strong><span data-summary-for="farm">Đang đọc trạng thái…</span></button>
-              <button type="button" class="dashboard-tile" data-open-panel="harvest"><strong>Thu hoạch</strong><span data-summary-for="harvest">Đang đọc cài đặt…</span></button>
-              <button type="button" class="dashboard-tile" data-open-panel="quest"><strong>Auto Quest</strong><span data-summary-for="quest">Đang đọc trạng thái…</span></button>
-              <button type="button" class="dashboard-tile" data-open-panel="connection"><strong>Kết nối &amp; tự tải lại</strong><span>Cài đặt kết nối theo nick</span></button>
-            </div>
+            <button type="button" class="dashboard-tile" data-open-panel="connection"><strong>Kết nối &amp; tự tải lại</strong><span>Cài đặt kết nối theo nick</span></button>
           </div>
         </section>
     <details class="card" data-category="settings" data-panel="connection">

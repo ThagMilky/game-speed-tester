@@ -315,8 +315,6 @@ body.embedded {
 .dashboard-page .overview .field-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 9px; }
 .dashboard-page .overview .active-features { font-size: 15px; gap: 6px 12px; }
 .dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.feature-directory > .page-heading { padding: 16px 18px; border-bottom: 1px solid var(--border); }
-.feature-directory > .card-body { padding-top: 16px !important; }
 .fps-actions { position: sticky; top: 0; z-index: 6; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 4px 0 0; padding: 8px 0; background: var(--surface); }
 .fps-actions button { min-width: 0; padding-inline: 7px; overflow-wrap: anywhere; }
 .fps-action-hint { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
