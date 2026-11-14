@@ -499,19 +499,16 @@
     <details class="feature-group"><summary><span><strong>Quản lý tính năng</strong><small>Chọn cách Auto Farm hoạt động</small></span></summary><div class="feature-group-body">
       <p id="farmPolicyRuntimeStatus" class="feature-status" role="status" aria-live="polite">Auto Farm gốc trong tab đang mở: chưa rõ.</p>
           <label for="farmPolicyMode">Chế độ Auto Farm</label>
-          <select id="farmPolicyMode" aria-describedby="farmPolicyExtendedHelp farmPolicyNativeHelp farmPolicyDisabledHelp farmPolicyResume farmPolicySavedMode" disabled>
+          <select id="farmPolicyMode" aria-describedby="farmPolicySavedMode farmPolicyDescription" disabled>
             <option value="" selected>Đang đọc cài đặt…</option>
             <option value="extended">Tool hỗ trợ</option>
             <option value="native">Theo game gốc</option>
             <option value="disabled">Khóa Auto Farm</option>
           </select>
-          <p id="farmPolicyExtendedHelp" class="hint">Tool hỗ trợ: farm gốc với các hỗ trợ đã cài của extension.</p>
-          <p id="farmPolicyNativeHelp" class="hint">Theo game gốc: farm gốc tự điều khiển, không có hỗ trợ farm riêng của extension.</p>
-          <p id="farmPolicyDisabledHelp" class="hint">Khóa Auto Farm: dừng phiên đang chạy và chặn các đường bật được hỗ trợ.</p>
-          <p id="farmPolicyResume" class="hint">Để tiếp tục sau khi mở khóa, chọn Tool hỗ trợ hoặc Theo game gốc, rồi tự bật farm bằng phím/nút tương ứng.</p>
+          <p class="hint" data-help-for='label[for="farmPolicyMode"]'>Tool hỗ trợ dùng farm gốc cùng các hỗ trợ của extension. Theo game gốc để farm tự điều khiển. Khóa Auto Farm dừng phiên đang chạy và chặn các đường bật được hỗ trợ.</p>
           <p id="farmPolicySavedMode" class="feature-status" role="status" aria-live="polite">Đang đọc chế độ đã lưu…</p>
           <p id="farmPolicyDescription" class="hint" aria-live="polite">Đang đọc chế độ…</p>
-          <p class="hint">Trạng thái BẬT/TẮT là trạng thái controller gốc trong tab đang mở. Lưu chế độ không xác nhận game đã nhận cấu hình.</p>
+          <p class="hint" data-help-for="#farmPolicySavedMode">Trạng thái BẬT/TẮT là trạng thái controller gốc trong tab đang mở. Lưu chế độ không xác nhận game đã nhận cấu hình. Khi mở khóa, hãy chọn Tool hỗ trợ hoặc Theo game gốc rồi tự bật farm.</p>
           <p id="farmPolicyFeedback" class="notice" role="status" aria-live="polite"></p>
     </div></details>
     <details class="feature-group interface-section" data-panel="display">
