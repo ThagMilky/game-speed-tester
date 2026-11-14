@@ -742,6 +742,50 @@
     watch();
   }
 
+  function trackAimStart(scene) {
+    if (typeof scene?.startAim !== "function") return null;
+    const descriptor = Object.getOwnPropertyDescriptor(scene, "startAim");
+    const tracking = { scene, original: scene.startAim, descriptor, revision: 0 };
+    tracking.wrapper = function (...args) {
+      const result = tracking.original.apply(this, args);
+      if (this === scene && scene.aiming) tracking.revision++;
+      return result;
+    };
+    try {
+      scene.startAim = tracking.wrapper;
+      return scene.startAim === tracking.wrapper ? tracking : null;
+    } catch { return null; }
+  }
+
+  function releaseAimStart(tracking) {
+    if (!tracking || tracking.scene.startAim !== tracking.wrapper) return;
+    try {
+      if (tracking.descriptor) Object.defineProperty(tracking.scene, "startAim", tracking.descriptor);
+      else delete tracking.scene.startAim;
+    } catch { /* The game may have replaced the scene method. */ }
+  }
+
+  function clearDeath() {
+    const episode = death;
+    if (!episode) return;
+    episode.scene.events?.off?.("shutdown", episode.onShutdown);
+    episode.scene.events?.off?.("destroy", episode.onShutdown);
+    releaseAimStart(episode.aimTracking);
+    death = null;
+  }
+
+  function clearStaleDeathAim(scene) {
+    const episode = death;
+    const tracking = episode?.aimTracking;
+    if (episode?.scene === scene && episode.character === scene.profile?.name && episode.auto === scene.auto
+        && episode.aiming && tracking?.scene === scene && scene.startAim === tracking.wrapper
+        && tracking.revision === episode.aimRevision && scene.aiming === episode.aiming
+        && typeof scene.cancelAim === "function") {
+      scene.cancelAim();
+    }
+    clearDeath();
+  }
+
   function stopForLockedPolicy() {
     if (watcher !== null) clearInterval(watcher);
     watcher = null;
@@ -750,7 +794,7 @@
     else clearFilter();
     restoreRankedTarget(oldSession);
     restoreExcludedBossTarget(sceneNow());
-    death = null; revival = null; blockedAuto = null;
+    clearDeath(); revival = null; blockedAuto = null;
   }
 
   function onShutdown() {
@@ -760,13 +804,22 @@
   function checkRespawn(scene, harvestRequest = false) {
     if (!scene?.self || !scene.sys?.isActive?.() || scene.leaving || !connected(scene)) return "Chờ kết nối và scene ổn định để hồi sinh.";
     if (!scene.self.dead) {
-      death = null;
+      clearStaleDeathAim(scene);
       respawnMessage = "";
       return;
     }
-    if (!death || death.scene !== scene) death = { scene, startedAt: performance.now(),
-      nativeDeadAt: 0, nativeReviveTry: 0, nativeProgressAt: performance.now(),
-      nativeDueSince: null, fallbackAttempts: 0, fallbackAt: -Infinity };
+    if (death && (death.scene !== scene || death.character !== scene.profile?.name || death.auto !== scene.auto)) clearDeath();
+    if (!death) {
+      const aimTracking = trackAimStart(scene);
+      const episode = { scene, character: scene.profile?.name, auto: scene.auto, aiming: scene.aiming || null,
+        aimTracking, aimRevision: aimTracking?.revision ?? null, startedAt: performance.now(),
+        nativeDeadAt: 0, nativeReviveTry: 0, nativeProgressAt: performance.now(),
+        nativeDueSince: null, fallbackAttempts: 0, fallbackAt: -Infinity, onShutdown: null };
+      episode.onShutdown = () => { if (death === episode) clearDeath(); };
+      death = episode;
+      scene.events?.on?.("shutdown", episode.onShutdown);
+      scene.events?.on?.("destroy", episode.onShutdown);
+    }
     if (!settings.autoRespawn) return "Tự hồi sinh đang tắt; bạn có thể hồi sinh bằng tay.";
     if (!harvestRequest && !scene.auto?.on) return;
     if ([...document.querySelectorAll('[role="alertdialog"]')].some((el) =>
@@ -1396,7 +1449,7 @@
     window.removeEventListener("keydown", guardFarmKey, true);
     suspended = true;
     clearActivationLock(); clearInterval(activationWatcher); activationWatcher = null;
-    death = null;
+    clearDeath();
     revival = null;
     respawnMessage = "";
     if (watcher !== null) clearInterval(watcher);

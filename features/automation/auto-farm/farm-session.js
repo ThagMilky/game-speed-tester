@@ -72,6 +72,7 @@
       if (intent?.blocked === true && globalThis.GSTFarmRevivePolicy?.active(scene)) save(scene, true);
       if (scene.driver?.displaced) { if (intent?.on) save(scene, false); stableAt = null; return; }
       if (scene.auto.on) {
+        ensureNativeUpdateTracking(binding);
         monitorResume();
         restoreAttempts.delete(scene.auto);
         binding.seenOn = true;
