@@ -64,6 +64,7 @@ button.panel-handle:active { cursor: grabbing; }
 .card-body { padding: 0 14px 14px; position: relative; }
 .account-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; }
 .account-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 0; }
+.account-saved-section > #accountAddButton { margin: 8px 0 12px; }
 .account-entry { display: grid; gap: 8px; min-width: 0; padding: 0 0 12px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; }
 .account-entry-info { display: grid; gap: 3px; min-width: 0; padding: 9px 11px; border-radius: 7px; background: var(--accent-bg); }
 .account-entry h3, .account-form h3 { margin: 0; font-size: 15px; line-height: 1.4; }
