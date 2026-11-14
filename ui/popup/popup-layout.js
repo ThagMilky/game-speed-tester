@@ -7,7 +7,7 @@
   const views = new Map([...container.querySelectorAll(":scope > [data-panel]")]
     .map((panel) => [panel.dataset.panel, panel]));
   const navigation = [...document.querySelectorAll("[data-nav-panel]")];
-  const otherPages = new Set(["farm", "harvest", "quest", "connection", "speed"]);
+  const otherPages = new Set(["farm", "harvest", "quest", "connection"]);
   const pageKey = "popupActivePage";
   let navigationRevision = 0;
   let contextExpired = false;
@@ -56,6 +56,7 @@
   }
 
   function selectPage(page, save = true) {
+    if (page === "speed") page = "interface";
     if (page !== "overview" && !views.has(page)) return;
     overview.hidden = page !== "overview";
     for (const [id, panel] of views) {

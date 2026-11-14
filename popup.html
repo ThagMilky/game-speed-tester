@@ -71,10 +71,10 @@
           </section>
           <div class="dashboard-grid" aria-label="Mở nhanh tính năng">
             <button type="button" class="dashboard-tile" data-open-panel="accounts"><strong>Tài khoản</strong><span>Quản lý nick và hồ sơ</span></button>
-            <button type="button" class="dashboard-tile" data-open-panel="interface"><strong>Giao diện</strong><span>Bản đồ, font và hiển thị</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="interface"><strong>Giao diện</strong><span>Di chuyển, bản đồ, font và hiển thị</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="diagnostics"><strong>Chẩn đoán</strong><span>Log và thông tin hỗ trợ</span></button>
             <button type="button" class="dashboard-tile" data-open-panel="fps"><strong>Hình ảnh &amp; FPS</strong><span data-summary-for="fps">Đang đọc cài đặt…</span></button>
-            <button type="button" class="dashboard-tile" data-open-panel="other"><strong>Tính năng khác</strong><span>Auto Farm, Thu hoạch, Quest, tốc độ…</span></button>
+            <button type="button" class="dashboard-tile" data-open-panel="other"><strong>Tính năng khác</strong><span>Auto Farm, Thu hoạch, Quest và kết nối…</span></button>
           </div>
         </section>
         <section class="card feature-directory" data-panel="other" hidden aria-labelledby="otherTitle">
@@ -84,7 +84,6 @@
               <button type="button" class="dashboard-tile" data-open-panel="farm"><strong>Auto Farm</strong><span data-summary-for="farm">Đang đọc trạng thái…</span></button>
               <button type="button" class="dashboard-tile" data-open-panel="harvest"><strong>Thu hoạch</strong><span data-summary-for="harvest">Đang đọc cài đặt…</span></button>
               <button type="button" class="dashboard-tile" data-open-panel="quest"><strong>Auto Quest</strong><span data-summary-for="quest">Đang đọc trạng thái…</span></button>
-              <button type="button" class="dashboard-tile" data-open-panel="speed"><strong>Tốc độ &amp; bay</strong><span data-summary-for="speed">Đang đọc cài đặt…</span></button>
               <button type="button" class="dashboard-tile" data-open-panel="connection"><strong>Kết nối &amp; tự tải lại</strong><span>Cài đặt kết nối theo nick</span></button>
             </div>
           </div>
@@ -374,47 +373,6 @@
         <p class="hint">Mở game với tham số timer. Đường đi gốc đã yêu cầu có thể chuyển map; đổi map ngoài hành trình đó, chết, mất kết nối hoặc tắt Auto Farm sẽ dừng. Dừng tay hoặc tải lại không tự tiếp tục; cần bấm Bắt đầu để ra lệnh mới.</p>
       </div>
     </details>
-    <details class="card" data-category="settings" data-panel="speed">
-      <summary class="feature-heading"><span><strong>Tốc độ &amp; bay</strong><small>Tự tạm tắt tăng tốc khi dùng tính năng tự động</small></span><span id="flightStatus" class="panel-status" role="status">Đang đọc trạng thái bay…</span></summary>
-      <div class="card-body">
-        <div class="feature-group-grid feature-flat-grid">
-        <section class="feature-flat-section"><h3>Luôn bay</h3><div class="feature-group-body">
-        <label class="switch-row"><span>Luôn giữ trạng thái bay</span><input id="alwaysFlying" class="switch" type="checkbox"></label>
-        <p class="hint">Đã bay thì bỏ qua. Đang đi bộ thì chờ ổn định 1 giây, yêu cầu bay một lần và chờ game xác nhận. Giữ lựa chọn qua đổi map/hồi sinh. Tắt công tắc không ép hạ xuống đi bộ; Auto Farm vẫn có hỗ trợ bay riêng. Nếu bạn tự tắt bay khi công tắc đang bật, tool sẽ bật lại sau khoảng nghỉ. Không spam khi game chưa cho phép bay.</p>
-        </div></section>
-        <section class="feature-flat-section"><h3>Luôn thiền</h3><div class="feature-group-body">
-        <label class="switch-row separated"><span>Luôn thiền</span><input id="alwaysMeditating" class="switch" type="checkbox" disabled></label>
-        <p class="hint">Đồng bộ lựa chọn cho các tab game. Chỉ yêu cầu thiền khi nhân vật an toàn và đứng yên; nhường khi đang farm, tự động hóa khác hoặc thao tác tay. Khi Auto Farm bật, lựa chọn này tự tắt và chỉ bật lại bằng tay.</p>
-        <p id="meditationSavedStatus" class="feature-status" role="status" aria-live="polite">Đang đọc lựa chọn thiền đã lưu…</p>
-        <p id="meditationRuntimeStatus" class="hint" role="status" aria-live="polite">Trạng thái thiền theo game trong tab đang mở: chưa rõ.</p>
-        <p id="meditationFeedback" class="notice" role="status" aria-live="polite"></p>
-        </div></section>
-        <section class="feature-flat-section speed-control-group"><h3>Điều chỉnh tốc độ</h3><div class="feature-group-body">
-        <fieldset id="controls" disabled aria-label="Tùy chọn tốc độ">
-          <p class="save-mode">Công tắc tự lưu · Đổi số rồi rời ô nhập để lưu (hoặc bấm Lưu tốc độ)</p>
-          <label class="switch-row"><span>Bật điều chỉnh tốc độ</span><input id="enabled" class="switch" type="checkbox"></label>
-          <div id="speedSettings" hidden>
-          <p class="field-title">Bình thường</p>
-          <div class="two-columns">
-            <div><label for="walkingSpeed">Đi bộ</label><input id="walkingSpeed" type="number" min="1" max="6" step="0.001" value="3.5" required></div>
-            <div><label for="flyingSpeed">Bay</label><input id="flyingSpeed" type="number" min="1" max="6" step="0.001" value="2" required></div>
-          </div>
-          <div hidden>
-            <p class="field-title separated">Mức tốc độ farm cũ (không còn áp dụng)</p>
-            <div class="two-columns">
-              <div><label for="farmWalkingSpeed">Đi bộ khi farm</label><input id="farmWalkingSpeed" type="number" min="1" max="6" step="0.001" value="2" required></div>
-              <div><label for="farmFlyingSpeed">Bay khi farm</label><input id="farmFlyingSpeed" type="number" min="1" max="6" step="0.001" value="1.5" required></div>
-            </div>
-          </div>
-          <button id="save" type="button" class="primary full">Lưu tốc độ</button>
-          </div>
-          <button id="resetGameSpeed" type="button" class="full">Về tốc độ mặc định của game</button>
-          <p class="hint">Khi bật Auto Farm, Tự thu hoạch, Tìm rương, Tìm cổng bí cảnh hoặc Auto Quest, extension tự tạm tắt tăng tốc để dùng tốc độ gốc của game. Khi cả năm đều tắt, tăng tốc tự bật lại nếu công tắc Bật điều chỉnh tốc độ vẫn bật. Giữ nguyên mức đi bộ/bay đã lưu; không thay đổi trạng thái bay. Nút về mặc định sẽ tắt hẳn điều chỉnh tốc độ.</p>
-        </fieldset>
-        </div></section>
-        </div>
-      </div>
-    </details>
     <details class="card" data-category="settings" data-panel="fps">
       <summary class="fps-heading"><span class="fps-heading-title"><strong>Hình ảnh &amp; FPS</strong><small>Giảm hình ảnh, giữ dữ liệu và điều khiển game</small></span><span id="fpsStatus" class="fps-status" role="status" aria-live="polite">Đang đọc trạng thái FPS…</span></summary>
       <div class="card-body">
@@ -488,7 +446,7 @@
       </div>
     </details>
     <details class="card" data-panel="interface" data-category="settings">
-      <summary><span><strong>Giao diện</strong><small>Bản đồ khu vực, bảng trạng thái, font và menu</small></span></summary>
+      <summary><span><strong>Giao diện</strong><small>Di chuyển, tốc độ, bản đồ, bảng trạng thái, font và menu</small></span></summary>
       <div class="card-body">
         <div class="interface-layout-setting">
         <label for="menuOrientation">Bố cục menu</label>
@@ -496,6 +454,48 @@
         <p id="menuOrientationFeedback" class="notice" role="status"></p>
         </div>
     <div class="feature-group-grid interface-groups">
+    <details class="feature-group interface-section" data-panel="movement-speed">
+      <summary><span><strong>Di chuyển &amp; tốc độ</strong><small>Luôn bay, thiền và điều chỉnh tốc độ</small></span></summary>
+      <div class="feature-group-body">
+        <p id="flightStatus" class="feature-status" role="status" aria-live="polite">Đang đọc trạng thái bay…</p>
+        <div class="feature-group-grid feature-flat-grid">
+        <section class="feature-flat-section"><h3>Luôn bay</h3><div class="feature-group-body">
+        <label class="switch-row"><span>Luôn giữ trạng thái bay</span><input id="alwaysFlying" class="switch" type="checkbox"></label>
+        <p class="hint">Đã bay thì bỏ qua. Đang đi bộ thì chờ ổn định 1 giây, yêu cầu bay một lần và chờ game xác nhận. Giữ lựa chọn qua đổi map/hồi sinh. Tắt công tắc không ép hạ xuống đi bộ; Auto Farm vẫn có hỗ trợ bay riêng. Nếu bạn tự tắt bay khi công tắc đang bật, tool sẽ bật lại sau khoảng nghỉ. Không spam khi game chưa cho phép bay.</p>
+        </div></section>
+        <section class="feature-flat-section"><h3>Luôn thiền</h3><div class="feature-group-body">
+        <label class="switch-row separated"><span>Luôn thiền</span><input id="alwaysMeditating" class="switch" type="checkbox" disabled></label>
+        <p class="hint">Đồng bộ lựa chọn cho các tab game. Chỉ yêu cầu thiền khi nhân vật an toàn và đứng yên; nhường khi đang farm, tự động hóa khác hoặc thao tác tay. Khi Auto Farm bật, lựa chọn này tự tắt và chỉ bật lại bằng tay.</p>
+        <p id="meditationSavedStatus" class="feature-status" role="status" aria-live="polite">Đang đọc lựa chọn thiền đã lưu…</p>
+        <p id="meditationRuntimeStatus" class="hint" role="status" aria-live="polite">Trạng thái thiền theo game trong tab đang mở: chưa rõ.</p>
+        <p id="meditationFeedback" class="notice" role="status" aria-live="polite"></p>
+        </div></section>
+        <section class="feature-flat-section speed-control-group"><h3>Điều chỉnh tốc độ</h3><div class="feature-group-body">
+        <fieldset id="controls" disabled aria-label="Tùy chọn tốc độ">
+          <p class="save-mode">Công tắc tự lưu · Đổi số rồi rời ô nhập để lưu (hoặc bấm Lưu tốc độ)</p>
+          <label class="switch-row"><span>Bật điều chỉnh tốc độ</span><input id="enabled" class="switch" type="checkbox"></label>
+          <div id="speedSettings" hidden>
+          <p class="field-title">Bình thường</p>
+          <div class="two-columns">
+            <div><label for="walkingSpeed">Đi bộ</label><input id="walkingSpeed" type="number" min="1" max="6" step="0.001" value="3.5" required></div>
+            <div><label for="flyingSpeed">Bay</label><input id="flyingSpeed" type="number" min="1" max="6" step="0.001" value="2" required></div>
+          </div>
+          <div hidden>
+            <p class="field-title separated">Mức tốc độ farm cũ (không còn áp dụng)</p>
+            <div class="two-columns">
+              <div><label for="farmWalkingSpeed">Đi bộ khi farm</label><input id="farmWalkingSpeed" type="number" min="1" max="6" step="0.001" value="2" required></div>
+              <div><label for="farmFlyingSpeed">Bay khi farm</label><input id="farmFlyingSpeed" type="number" min="1" max="6" step="0.001" value="1.5" required></div>
+            </div>
+          </div>
+          <button id="save" type="button" class="primary full">Lưu tốc độ</button>
+          </div>
+          <button id="resetGameSpeed" type="button" class="full">Về tốc độ mặc định của game</button>
+          <p class="hint">Khi bật Auto Farm, Tự thu hoạch, Tìm rương, Tìm cổng bí cảnh hoặc Auto Quest, extension tự tạm tắt tăng tốc để dùng tốc độ gốc của game. Khi cả năm đều tắt, tăng tốc tự bật lại nếu công tắc Bật điều chỉnh tốc độ vẫn bật. Giữ nguyên mức đi bộ/bay đã lưu; không thay đổi trạng thái bay. Nút về mặc định sẽ tắt hẳn điều chỉnh tốc độ.</p>
+        </fieldset>
+        </div></section>
+        </div>
+      </div>
+    </details>
     <details class="feature-group"><summary><span><strong>Quản lý tính năng</strong><small>Chọn cách Auto Farm hoạt động</small></span></summary><div class="feature-group-body">
       <p id="farmPolicyRuntimeStatus" class="feature-status" role="status" aria-live="polite">Auto Farm gốc trong tab đang mở: chưa rõ.</p>
           <label for="farmPolicyMode">Chế độ Auto Farm</label>
