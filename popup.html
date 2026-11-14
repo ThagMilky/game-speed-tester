@@ -598,22 +598,22 @@
       <div class="page-heading feature-heading"><div><h2 id="accountsTitle">Tài khoản</h2><p>Quản lý nick và mở từng nick trong tab riêng.</p></div><p id="accountActiveStatus" class="panel-status" role="status" aria-live="polite">Đang xác nhận tài khoản trong tab hiện tại…</p></div>
       <div class="card-body">
         <p class="hint">Tên đăng nhập và mật khẩu được lưu trên trình duyệt này, không mã hóa. Chỉ thêm tài khoản trên máy bạn tin cậy.</p>
-        <div class="feature-group-grid feature-flat-grid account-groups">
-        <section class="feature-flat-section"><h3>Nick đã lưu &amp; tự đăng nhập</h3><div class="feature-group-body">
-        <div class="account-form">
+        <div class="account-layout">
+        <section class="feature-flat-section account-saved-section"><h3>Tài khoản đã lưu</h3>
+        <div id="accountList" class="account-list" aria-label="Tài khoản đã lưu"></div>
+        </section>
+        <section class="feature-flat-section"><h3>Tự đăng nhập</h3><div class="feature-group-body">
+        <div class="account-autologin">
           <label for="accountAutoLoginMode">Khi mở game trực tiếp</label>
           <select id="accountAutoLoginMode"><option value="off">Không tự đăng nhập</option><option value="last">Nick đăng nhập thành công gần nhất</option><option value="account">Tài khoản chỉ định</option></select>
           <div id="accountAutoLoginTarget" hidden><label for="accountAutoLoginAccount">Tài khoản mặc định</label><select id="accountAutoLoginAccount"></select></div>
           <p class="hint">Chỉ áp dụng khi mở game không có slot riêng và chưa kết nối nhân vật. Tab nick khác giữ nguyên. Nếu cần, extension dùng mật khẩu đã lưu để điền form game.</p>
           <p id="accountAutoLoginStatus" class="hint" role="status" aria-live="polite"></p>
         </div>
-        <div id="accountList" class="account-list" aria-label="Tài khoản đã lưu"></div>
         </div></section>
         <section class="feature-flat-section"><h3>Thêm hoặc chỉnh sửa tài khoản</h3><div class="feature-group-body">
         <form id="accountForm" class="account-form">
           <h3 id="accountFormTitle">Thêm tài khoản</h3>
-          <label for="accountLabel">Tên gợi nhớ (không bắt buộc)</label>
-          <input id="accountLabel" type="text" maxlength="80" autocomplete="off" placeholder="Để trống sẽ dùng tên đăng nhập">
           <label for="accountUsername">Tên đăng nhập</label>
           <input id="accountUsername" type="text" maxlength="254" autocomplete="username" required>
           <label for="accountPassword">Mật khẩu</label>
@@ -621,6 +621,8 @@
             <input id="accountPassword" type="password" maxlength="64" autocomplete="new-password" required>
             <button id="accountPasswordToggle" type="button" class="quiet" aria-pressed="false">Hiện</button>
           </div>
+          <label for="accountLabel">Tên hiển thị (không bắt buộc)</label>
+          <input id="accountLabel" type="text" maxlength="80" autocomplete="off" placeholder="Để trống để dùng tên đăng nhập">
           <div class="button-row">
             <button id="accountSave" type="submit" class="primary">Lưu tài khoản</button>
             <button id="accountCancel" type="button" class="quiet" hidden>Hủy sửa</button>

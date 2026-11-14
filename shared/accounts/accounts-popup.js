@@ -127,14 +127,26 @@
         expectedCharacterId: row.expectedCharacterId };
       const card = document.createElement("article");
       card.className = "account-entry";
+      const info = document.createElement("div");
+      info.className = "account-entry-info";
       const heading = document.createElement("h3");
       heading.textContent = row.label;
-      const identity = document.createElement("small");
-      identity.textContent = row.expectedCharacter
-        ? "Đã xác nhận nhân vật: " + row.expectedCharacter + (row.expectedClassId ? " · lớp " + row.expectedClassId : "")
-        : "Chưa xác nhận nhân vật";
-      const user = document.createElement("small");
-      user.textContent = "Tên đăng nhập: " + row.username;
+      const user = document.createElement("div");
+      user.className = "account-entry-detail";
+      const userLabel = document.createElement("strong");
+      userLabel.textContent = "Tên đăng nhập: ";
+      const userValue = document.createElement("span");
+      userValue.textContent = row.username;
+      user.append(userLabel, userValue);
+      const identity = document.createElement("div");
+      identity.className = "account-entry-detail";
+      const identityLabel = document.createElement("strong");
+      identityLabel.textContent = row.expectedCharacter ? "Đã xác nhận nhân vật: " : "Trạng thái nhân vật: ";
+      const identityValue = document.createElement("span");
+      identityValue.textContent = row.expectedCharacter
+        ? row.expectedCharacter + (row.expectedClassId ? " · lớp " + row.expectedClassId : "")
+        : "Chưa xác nhận";
+      identity.append(identityLabel, identityValue);
       const actions = document.createElement("div");
       actions.className = "account-entry-actions";
       const login = document.createElement("button");
@@ -158,7 +170,8 @@
         actions.append(reverify);
       }
       actions.append(remove);
-      card.append(heading, user, identity, actions);
+      info.append(heading, user, identity);
+      card.append(info, actions);
       return card;
     });
     if (!nodes.length) {
