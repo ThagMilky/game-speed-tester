@@ -90,7 +90,8 @@
           if (global) globalThis.GSTPopupLayout?.selectPage(entry.panel.dataset.panel);
           requestAnimationFrame(() => {
             for (let parent = entry.target.parentElement; parent; parent = parent.parentElement) {
-              if (parent.tagName === "DETAILS") parent.open = true;
+              if (parent.matches?.("details.farm-section")) globalThis.GSTFarmSectionLayout?.setOpen(parent, true);
+              else if (parent.tagName === "DETAILS") parent.open = true;
               if (parent === entry.panel) break;
             }
             entry.target.scrollIntoView({ behavior: "smooth", block: "center" });

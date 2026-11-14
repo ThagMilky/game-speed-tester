@@ -19,6 +19,60 @@
     const content = document.createElement('div'); content.className = 'farm-section-body';
     section.append(heading, content); groups.append(section); destinations[key] = content;
   }
+  const sectionStorageKey = 'farmSectionOpen:v1';
+  const sectionDefaults = Object.fromEntries([...groups.children].map((section) =>
+    [section.id, ['farm-section-range', 'farm-section-targets', 'farm-section-revive'].includes(section.id)]));
+  let sectionOpen = { ...sectionDefaults }, pendingSectionOpen = {}, sectionsReady = false;
+  let sectionWrite = Promise.resolve();
+  function saveSectionOpen() {
+    const snapshot = { ...sectionOpen };
+    sectionWrite = sectionWrite.catch(() => {}).then(() => chrome.storage.local.set({ [sectionStorageKey]: snapshot }));
+    sectionWrite = sectionWrite.catch(() => {});
+  }
+  function rememberSectionOpen(section, open) {
+    if (!Object.hasOwn(sectionDefaults, section?.id)) return;
+    if (!sectionsReady) pendingSectionOpen[section.id] = open;
+    else if (sectionOpen[section.id] !== open) {
+      sectionOpen[section.id] = open;
+      saveSectionOpen();
+    }
+  }
+  function setSectionOpen(section, open) {
+    rememberSectionOpen(section, open);
+    section.open = open;
+  }
+  globalThis.GSTFarmSectionLayout = { setOpen: setSectionOpen };
+  for (const section of groups.children) {
+    const summary = section.querySelector(':scope > summary');
+    section.addEventListener('click', (event) => {
+      if (event.target === summary || summary.contains(event.target)) {
+        if (event.detail !== 0) rememberSectionOpen(section, !section.open);
+      }
+    }, true);
+    summary.addEventListener('keydown', (event) => {
+      if (!event.repeat && event.key === 'Enter') rememberSectionOpen(section, !section.open);
+    }, true);
+    summary.addEventListener('keyup', (event) => {
+      if (event.key === ' ') rememberSectionOpen(section, !section.open);
+    }, true);
+    section.addEventListener('toggle', () => {
+      if (!sectionsReady) pendingSectionOpen[section.id] = section.open;
+      else rememberSectionOpen(section, section.open);
+    });
+  }
+  void (async () => {
+    let stored = {};
+    try { stored = (await chrome.storage.local.get(sectionStorageKey))[sectionStorageKey] ?? {}; }
+    catch { /* Use the existing defaults when local UI storage is unavailable. */ }
+    for (const section of groups.children) {
+      const id = section.id;
+      sectionOpen[id] = Object.hasOwn(pendingSectionOpen, id) ? pendingSectionOpen[id]
+        : typeof stored?.[id] === 'boolean' ? stored[id] : sectionDefaults[id];
+    }
+    sectionsReady = true;
+    for (const section of groups.children) section.open = sectionOpen[section.id];
+    if (Object.keys(pendingSectionOpen).length) saveSectionOpen();
+  })();
   const mirrors = [];
   function move(nodes, key) {
     nodes = nodes.filter(Boolean);
@@ -140,7 +194,7 @@
       chip.className = 'farm-status-chip'; chip.dataset.state = row.on === null ? 'unknown' : row.on ? 'on' : 'off';
       chip.textContent = `${row.on === null ? '?' : row.on ? '● Bật:' : '○ Tắt:'} ${row.title}`;
       chip.addEventListener('click', () => {
-        const input = byId(row.id); const section = input.closest('.farm-section'); section.open = true;
+        const input = byId(row.id); const section = input.closest('.farm-section'); setSectionOpen(section, true);
         (input.closest('label') ?? input).scrollIntoView({ block: 'center', behavior: 'smooth' });
         section.querySelector('summary').focus({ preventScroll: true });
       });
