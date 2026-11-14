@@ -7,6 +7,48 @@ const origin = "https://nghichthienky.online";
 const tabAttempts = new Map();
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const firstInstallDefaults = Object.freeze({
+  flightPreferences: { always: true },
+  displayPreferences: { visible: true, fields: {
+    override: false, speed: false, movement: false, autoFarm: true,
+    harvest: true, fps: true, fix: false, message: false
+  } },
+  farmPreferences: {
+    enabled: false, policyMode: "extended", searchScope: "radius", targetMode: "all",
+    targetLevel: 1, targetMinLevel: 1, targetMaxLevel: 20, bossFilter: "all", radius: 22,
+    excludeBoss: false, noRetreat: false, showTargetLine: false, showRange: false,
+    nearbyClear: true, nearbyRadius: 2, breakSeals: false, idleMode: "hold", preferLoot: false,
+    selfDefense: true, autoRespawn: true, autoEncounter: false, bossDodge: true,
+    acceptPartyInvites: false, allowPlayerTargets: false, eliteDodge: false, bossRetreat: false,
+    retreatHpPercent: 40, recoveryHpPercent: 100
+  },
+  harvestPreferences: {
+    enabled: false, showTargetLine: false, kind: "plant", allowFarm: false,
+    searchScope: "map", radius: 6, reach: 1.2, mode: "all", items: []
+  },
+  areaMapOptions: {
+    npcs: false, resources: false, gates: false, portals: false, exits: false,
+    clickMove: false, returnDeath: true
+  },
+  realmPreferences: { keepFarm: false },
+  connectionRecoveryPreferences: {
+    autoReconnect: true, autoReload: false, reloadDelaySeconds: 90,
+    reloadCountdownSeconds: 10, reloadLimit: 3, reloadWindowMinutes: 15
+  },
+  fontPreferences: { enabled: false, font: "Times New Roman" }
+});
+
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason !== "install") return;
+  const keys = Object.keys(firstInstallDefaults);
+  void chrome.storage.local.get(keys).then((saved) => {
+    const missing = Object.fromEntries(keys
+      .filter((key) => !Object.hasOwn(saved, key))
+      .map((key) => [key, firstInstallDefaults[key]]));
+    if (Object.keys(missing).length) return chrome.storage.local.set(missing);
+  }).catch(() => {});
+});
+
 async function readAccounts() {
   const saved = await chrome.storage.local.get(accountsKey);
   return Array.isArray(saved[accountsKey]) ? saved[accountsKey] : [];
