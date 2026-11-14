@@ -337,20 +337,22 @@ body.embedded {
 .fps-group-body .hint { margin-block: 8px; }
 #fpsControls { padding: 0 !important; border: 0 !important; background: transparent !important; }
 .feature-group-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }
+.feature-organized { display:grid; grid-template-columns:minmax(0, 1fr); gap:12px; align-items:start; }
 .feature-flat-grid { row-gap: 24px; column-gap: 28px; }
 .feature-flat-section { min-width: 0; }
 .feature-flat-section > h3 { margin: 0 0 10px; font-size: 16px; line-height: 1.4; font-weight: 650; }
 .feature-flat-section > h3 small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; font-weight: 400; }
 .feature-flat-section > .feature-group-body { padding: 0; }
 .feature-flat-section > .card-body { padding: 0; }
-.feature-group, .interface-groups > .subcard { min-width: 0; border: 1px solid var(--border); border-radius: 10px; background: var(--subtle); overflow: hidden; }
+.feature-group, .interface-groups > .subcard, .ui-section { min-width: 0; border: 1px solid var(--border); border-radius: 10px; background: var(--subtle); overflow: hidden; scroll-margin:20px; }
 .feature-group > summary, .interface-groups > .subcard > summary { cursor: pointer; padding: 14px; font-weight: 650; }
+.ui-section > summary { cursor:pointer; padding:14px; font-weight:650; }
 .feature-group-body { min-width: 0; padding: 0 14px 14px; }
 .feature-group-body > fieldset { min-width: 0; padding: 0 !important; border: 0 !important; background: transparent !important; }
 .interface-groups > .interface-section fieldset { padding: 0 !important; border: 0 !important; background: transparent !important; }
 .interface-layout-setting { margin-bottom: 20px; }
-.feature-group-grid.interface-groups { display: block; column-gap: 12px; column-fill: balance; }
-.interface-groups > .feature-group { margin: 0 0 12px; break-inside: avoid; }
+.feature-group-grid.interface-groups { display:grid; grid-template-columns:minmax(0, 1fr); gap:12px; align-items:start; }
+.interface-groups > .feature-group { margin:0; }
 #connectionRecoveryControls, #harvestControls, #questControls { padding: 0 !important; border: 0 !important; background: transparent !important; }
 .dashboard-tile {
   text-align: left;
@@ -406,8 +408,6 @@ body.embedded {
     padding: 11px 13px;
     font-size: 16px;
   }
-  body.embedded[data-orientation="horizontal"] .wide-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
-  body.embedded[data-orientation="horizontal"] .wide-group { min-width: 0; }
   body.embedded[data-orientation="horizontal"] .diagnostics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body.embedded[data-orientation="horizontal"] .fps-groups { grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr); }
   body.embedded[data-orientation="horizontal"] .feature-group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -442,9 +442,6 @@ body.embedded {
 }
 @media (min-width: 1000px) {
   body.embedded[data-orientation="horizontal"] .farm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 759px) {
-  body.embedded .wide-groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 }
 @media (max-width: 600px) {
   .dashboard-grid { grid-template-columns: 1fr; }
@@ -487,9 +484,12 @@ body.embedded {
 .farm-status-chip[data-state="off"] { color:var(--muted); background:var(--subtle); }
 .farm-status-filters button[aria-pressed="true"] { outline:2px solid var(--accent); }
 @media(min-width:760px) {
+  body.embedded[data-orientation="horizontal"] .feature-organized,
+  body.embedded[data-orientation="horizontal"] .interface-groups { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  body.embedded[data-orientation="horizontal"] .feature-organized > .ui-section[open],
+  body.embedded[data-orientation="horizontal"] .interface-groups > .ui-section[open] { grid-column:1 / -1; }
   body.embedded[data-orientation="horizontal"] .farm-organized { grid-template-columns:repeat(2, minmax(0, 1fr)); }
   body.embedded[data-orientation="horizontal"] .farm-organized > .farm-section[open] { grid-column:1 / -1; }
   body.embedded[data-orientation="horizontal"] .harvest-organized { grid-template-columns:repeat(2, minmax(0, 1fr)); }
   body.embedded[data-orientation="horizontal"] .harvest-organized > .harvest-section[open] { grid-column:1 / -1; }
 }
-@media(min-width:760px) { body.embedded[data-orientation="horizontal"] .interface-groups { columns:2; } }
