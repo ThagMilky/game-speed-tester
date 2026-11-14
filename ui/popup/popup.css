@@ -411,7 +411,8 @@ body.embedded {
   body.embedded[data-orientation="horizontal"] .diagnostics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body.embedded[data-orientation="horizontal"] .fps-groups { grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr); }
   body.embedded[data-orientation="horizontal"] .feature-group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  body.embedded[data-orientation="horizontal"] .speed-control-group { grid-column: 1 / -1; }
+  body.embedded[data-orientation="horizontal"] #interface-section-movement-speed .feature-group-grid.feature-flat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.embedded[data-orientation="horizontal"] #interface-section-movement-speed .speed-control-group { grid-column: auto; }
 }
 @media (max-width: 620px) {
   .dashboard-top { grid-template-columns: 1fr; gap: 10px; }
