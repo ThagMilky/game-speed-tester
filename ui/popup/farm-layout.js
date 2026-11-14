@@ -25,14 +25,25 @@
     [section.id, ['farm-section-range', 'farm-section-targets', 'farm-section-revive'].includes(section.id)]));
   let sectionOpen = { ...sectionDefaults }, pendingSectionOpen = {}, sectionsReady = false;
   const sectionStorageKey = (id) => sectionStoragePrefix + id.slice('farm-section-'.length);
+  function logSectionState(event, id, detail = {}) {
+    console.info('[GST Auto Farm UI]', event, { section: id, ...detail });
+  }
   function saveSectionOpen(id, open) {
-    try { chrome.storage.local.set({ [sectionStorageKey(id)]: open }).catch(() => {}); }
-    catch { /* The menu may be closing or the extension context may be unavailable. */ }
+    try {
+      chrome.storage.local.set({ [sectionStorageKey(id)]: open }).then(() => {
+        logSectionState('saved', id, { open });
+      }).catch((error) => {
+        logSectionState('save-failed', id, { open, error: error?.message ?? String(error) });
+      });
+    } catch (error) {
+      logSectionState('save-threw', id, { open, error: error?.message ?? String(error) });
+    }
   }
   function rememberSectionOpen(section, open) {
     if (!Object.hasOwn(sectionDefaults, section?.id)) return;
     sectionOpen[section.id] = open;
     if (!sectionsReady) pendingSectionOpen[section.id] = open;
+    logSectionState('change-requested', section.id, { open, ready: sectionsReady });
     saveSectionOpen(section.id, open);
   }
   function setSectionOpen(section, open) {
@@ -44,6 +55,7 @@
     const summary = section.querySelector(':scope > summary');
     section.addEventListener('click', (event) => {
       if (event.target === summary || summary.contains(event.target)) {
+        logSectionState('summary-click', section.id, { detail: event.detail, open: section.open });
         if (event.detail !== 0) rememberSectionOpen(section, !section.open);
       }
     }, true);
@@ -63,14 +75,18 @@
     try {
       const keys = [...groups.children].map((section) => sectionStorageKey(section.id));
       stored = await chrome.storage.local.get([...keys, legacySectionStorageKey]);
+    } catch (error) {
+      logSectionState('load-failed', 'all', { error: error?.message ?? String(error) });
     }
-    catch { /* Use the existing defaults when local UI storage is unavailable. */ }
     for (const section of groups.children) {
       const id = section.id;
       sectionOpen[id] = Object.hasOwn(pendingSectionOpen, id) ? pendingSectionOpen[id]
         : typeof stored?.[sectionStorageKey(id)] === 'boolean' ? stored[sectionStorageKey(id)]
         : typeof stored?.[legacySectionStorageKey]?.[id] === 'boolean' ? stored[legacySectionStorageKey][id]
         : sectionDefaults[id];
+      logSectionState('restored', id, { open: sectionOpen[id], source: Object.hasOwn(pendingSectionOpen, id) ? 'pending'
+        : typeof stored?.[sectionStorageKey(id)] === 'boolean' ? 'storage'
+        : typeof stored?.[legacySectionStorageKey]?.[id] === 'boolean' ? 'legacy-storage' : 'default' });
     }
     sectionsReady = true;
     for (const section of groups.children) section.open = sectionOpen[section.id];
