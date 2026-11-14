@@ -62,6 +62,7 @@
         "features/automation/auto-farm/farm-seals.js",
         "features/automation/auto-harvest/harvest-visual.js",
         "features/automation/auto-harvest/harvest-page.js",
+        "shared/coordination/feature-toast-page.js",
         "features/automation/auto-reconnect/reconnect-page.js",
         "features/visual/fps/fps-map.js",
         "features/visual/fps/fps-minimap.js",
@@ -83,6 +84,7 @@
       "js": [
         "shared/accounts/account-profiles.js",
         "shared/accounts/account-content.js",
+        "ui/interface/feature-toasts.js",
         "features/automation/auto-harvest/harvest-options.js",
         "core/content.js",
         "ui/interface/game-panel-scroll.js",

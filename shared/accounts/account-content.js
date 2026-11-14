@@ -188,6 +188,9 @@
         loginTrace: loginTrace.map(({ stage, at }) => ({ stage, at }))
       };
       currentContext = context;
+      window.postMessage({ channel: "gst:feature-toast-context:v1", verified, slot,
+        character: verified ? context.character : "", classId: verified ? context.classId : "",
+        characterId: verified ? context.characterId : "" }, origin);
       GSTAccountProfiles.setContext(context);
       if (identity !== lastIdentity || forceProfile) {
         lastIdentity = identity;

@@ -781,6 +781,8 @@
     const changed = JSON.stringify(next) !== JSON.stringify(settings);
     const behaviorChanged = JSON.stringify({ ...next, showTargetLine: false }) !== JSON.stringify({ ...settings, showTargetLine: false });
     settings = next;
+    window.__gstHarvestAppliedEnabled = settings.enabled;
+    globalThis.GSTFeatureToast?.setHarvestApplied?.(settings.enabled);
     publishBackgroundDemand();
     globalThis.GSTHarvestVisual?.configure(binding?.scene, settings.enabled && settings.showTargetLine);
     if (!changed) {
