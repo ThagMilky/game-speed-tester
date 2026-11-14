@@ -348,6 +348,9 @@ body.embedded {
 .feature-group-body { min-width: 0; padding: 0 14px 14px; }
 .feature-group-body > fieldset { min-width: 0; padding: 0 !important; border: 0 !important; background: transparent !important; }
 .interface-groups > .interface-section fieldset { padding: 0 !important; border: 0 !important; background: transparent !important; }
+.interface-layout-setting { margin-bottom: 20px; }
+.feature-group-grid.interface-groups { display: block; column-gap: 12px; column-fill: balance; }
+.interface-groups > .feature-group { margin: 0 0 12px; break-inside: avoid; }
 #connectionRecoveryControls, #harvestControls, #questControls { padding: 0 !important; border: 0 !important; background: transparent !important; }
 .dashboard-tile {
   text-align: left;
@@ -486,3 +489,4 @@ body.embedded {
 .farm-status-chip[data-state="off"] { color:var(--muted); background:var(--subtle); }
 .farm-status-filters button[aria-pressed="true"] { outline:2px solid var(--accent); }
 @media(min-width:760px) { body.embedded[data-orientation="horizontal"] .farm-organized { columns:2; } }
+@media(min-width:760px) { body.embedded[data-orientation="horizontal"] .interface-groups { columns:2; } }
