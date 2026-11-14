@@ -146,6 +146,14 @@
     column.querySelector('.farm-group-title')?.remove();
     move([column], key);
   }
+  for (const label of groups.querySelectorAll('label.check-row')) {
+    const input = label.querySelector(':scope > input[type="checkbox"]');
+    const text = label.querySelector(':scope > span');
+    if (!input || !text) continue;
+    label.classList.replace('check-row', 'switch-row');
+    input.classList.add('switch');
+    label.insertBefore(text, input);
+  }
   oldGrid.hidden = true;
   function syncLocks() {
     for (const { wrapper, sources } of mirrors) wrapper.disabled = [...sources].some((source) => source.disabled);
