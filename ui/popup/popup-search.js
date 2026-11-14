@@ -91,6 +91,7 @@
           requestAnimationFrame(() => {
             for (let parent = entry.target.parentElement; parent; parent = parent.parentElement) {
               if (parent.matches?.("details.farm-section")) globalThis.GSTFarmSectionLayout?.setOpen(parent, true);
+              else if (parent.matches?.("details.harvest-section")) globalThis.GSTHarvestSectionLayout?.setOpen(parent, true);
               else if (parent.tagName === "DETAILS") parent.open = true;
               if (parent === entry.panel) break;
             }
