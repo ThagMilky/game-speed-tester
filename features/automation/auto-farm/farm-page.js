@@ -13,6 +13,7 @@
   let death = null;
   let respawnMessage = "";
   let watcher = null;
+  let respawnWatcher = null;
   let session = null;
   let blockedAuto = null;
   let revival = null;
@@ -37,7 +38,7 @@
     && settings.searchScope === "radius" && session?.scene === scene
     ? { home: { ...session.home }, radius: settings.radius } : null;
   // Both features share the same once-per-death request state.
-  GSTHarvest.respawn = (scene) => checkRespawn(scene, true);
+  GSTHarvest.respawn = (scene) => checkRespawn(scene);
   GSTHarvest.autoRespawnEnabled = () => settings.autoRespawn;
   const targetMode = (value) => value === "level" ? "maxLevel" : value === "bossFirst" ? "bossLevel"
     : ["maxLevel", "minLevel", "range", "boss", "bossLevel", "highLevel", "lowLevel"].includes(value) ? value : "all";
@@ -774,6 +775,30 @@
     death = null;
   }
 
+  function syncRespawnObserver() {
+    const enabled = configurationReceived && globalThis.GSTFarmConfigurationReady === true
+      && settings.autoRespawn && !identityBlocked && !suspended;
+    if (!enabled) {
+      if (respawnWatcher !== null) clearInterval(respawnWatcher);
+      respawnWatcher = null;
+      clearDeath();
+      return;
+    }
+    if (respawnWatcher !== null) return;
+    respawnWatcher = setInterval(() => {
+      try {
+        if (!configurationReceived || globalThis.GSTFarmConfigurationReady !== true
+            || !settings.autoRespawn || identityBlocked || suspended) {
+          syncRespawnObserver();
+          return;
+        }
+        const scene = sceneNow();
+        if (death && death.scene !== scene) clearDeath();
+        if (scene?.sys?.isActive?.() && scene.self && !scene.leaving && connected(scene)) checkRespawn(scene);
+      } catch { respawnMessage = "Tự hồi sinh đang chờ scene ổn định."; }
+    }, 1000);
+  }
+
   function clearStaleDeathAim(scene) {
     const episode = death;
     const tracking = episode?.aimTracking;
@@ -801,12 +826,16 @@
     stop("Scene ended; extended range stopped.", true);
   }
 
-  function checkRespawn(scene, harvestRequest = false) {
+  function checkRespawn(scene) {
     if (!scene?.self || !scene.sys?.isActive?.() || scene.leaving || !connected(scene)) return "Chờ kết nối và scene ổn định để hồi sinh.";
     if (!scene.self.dead) {
       clearStaleDeathAim(scene);
       respawnMessage = "";
       return;
+    }
+    if (!configurationReceived || globalThis.GSTFarmConfigurationReady !== true || identityBlocked || !settings.autoRespawn) {
+      if (death?.scene === scene) clearDeath();
+      return "Tự hồi sinh đang tắt hoặc chờ xác nhận tài khoản/cấu hình.";
     }
     if (death && (death.scene !== scene || death.character !== scene.profile?.name || death.auto !== scene.auto)) clearDeath();
     if (!death) {
@@ -820,8 +849,6 @@
       scene.events?.on?.("shutdown", episode.onShutdown);
       scene.events?.on?.("destroy", episode.onShutdown);
     }
-    if (!settings.autoRespawn) return "Tự hồi sinh đang tắt; bạn có thể hồi sinh bằng tay.";
-    if (!harvestRequest && !scene.auto?.on) return;
     if ([...document.querySelectorAll('[role="alertdialog"]')].some((el) =>
       el.getClientRects().length && getComputedStyle(el).visibility !== "hidden")) {
       respawnMessage = "Chờ bạn xử lý hộp kiểm tra người chơi trước khi hồi sinh.";
@@ -1294,6 +1321,7 @@
       configurationReceived = true;
       let stage = "settings";
       globalThis.GSTFarmConfigurationReady = false;
+      syncRespawnObserver();
       configurationError = "";
       try {
       const scopeChanged = settings.searchScope !== (data.searchScope === "map" ? "map" : "radius");
@@ -1411,6 +1439,7 @@
         discover();
       }
       globalThis.GSTFarmConfigurationReady = true;
+      syncRespawnObserver();
       } catch (error) {
         // Export only a fixed stage and standard error class, never raw messages/stacks.
         const kind = ["TypeError", "ReferenceError", "RangeError", "SyntaxError"].includes(error?.name)
@@ -1448,8 +1477,10 @@
   window.addEventListener("pagehide", () => {
     window.removeEventListener("keydown", guardFarmKey, true);
     suspended = true;
+    configurationReceived = false;
+    globalThis.GSTFarmConfigurationReady = false;
+    syncRespawnObserver();
     clearActivationLock(); clearInterval(activationWatcher); activationWatcher = null;
-    clearDeath();
     revival = null;
     respawnMessage = "";
     if (watcher !== null) clearInterval(watcher);
@@ -1463,6 +1494,7 @@
     syncFarmKeyGuard();
     suspended = false;
     syncActivationTracking();
+    syncRespawnObserver();
     watch();
     discover();
   });
