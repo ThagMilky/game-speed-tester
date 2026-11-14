@@ -114,9 +114,6 @@
     content.classList.add('farm-flat-body');
   }
   pair('farmShowRange', 'display');
-  const idle = byId('farmIdleMode');
-  move([idle.previousElementSibling, idle, idle.nextElementSibling], 'range');
-  pair('farmKeepAcrossMaps', 'range');
   pair('farmAutoRespawn', 'revive');
   move([byId('farmReturnDeath').closest('div.separated')], 'revive');
   pair('farmAllowPlayerTargets', 'targets');
@@ -146,6 +143,9 @@
     column.querySelector('.farm-group-title')?.remove();
     move([column], key);
   }
+  const idle = byId('farmIdleMode');
+  move([idle.previousElementSibling, idle, idle.nextElementSibling], 'range');
+  pair('farmKeepAcrossMaps', 'range');
   for (const label of groups.querySelectorAll('label.check-row')) {
     const input = label.querySelector(':scope > input[type="checkbox"]');
     const text = label.querySelector(':scope > span');
