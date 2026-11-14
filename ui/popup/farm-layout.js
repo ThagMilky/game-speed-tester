@@ -14,7 +14,6 @@
     ['display', 'Hiển thị & phím tắt']]) {
     const section = document.createElement('details');
     section.className = 'farm-section'; section.id = 'farm-section-' + key;
-    section.open = ['range', 'targets', 'revive'].includes(key);
     const heading = document.createElement('summary'); heading.textContent = title;
     const content = document.createElement('div'); content.className = 'farm-section-body';
     section.append(heading, content); groups.append(section); destinations[key] = content;
@@ -65,10 +64,6 @@
     summary.addEventListener('keyup', (event) => {
       if (event.key === ' ') rememberSectionOpen(section, !section.open);
     }, true);
-    section.addEventListener('toggle', () => {
-      if (!sectionsReady) pendingSectionOpen[section.id] = section.open;
-      else rememberSectionOpen(section, section.open);
-    });
   }
   void (async () => {
     let stored = {};
