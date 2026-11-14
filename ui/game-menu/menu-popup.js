@@ -2,6 +2,12 @@
   "use strict";
   const embedded = new URLSearchParams(location.search).get("embedded") === "1";
   const button = document.getElementById("openGameMenu");
+  let shortcut = { code: "Tab", ctrl: false, alt: false, shift: false, meta: false }, recording = false, shortcutRevision = 0;
+  function matchesShortcut(event) {
+    return event.code === shortcut.code && event.ctrlKey === shortcut.ctrl
+      && event.altKey === shortcut.alt && event.shiftKey === shortcut.shift
+      && event.metaKey === shortcut.meta;
+  }
   if (embedded) {
     document.body.classList.add("embedded"); button.hidden = true;
     window.addEventListener("keydown", (event) => {
@@ -9,13 +15,16 @@
         event.preventDefault(); event.stopImmediatePropagation();
         if (recording) { recording = false; shortcutFeedback.textContent = "Đã hủy."; return; }
         parent.postMessage({ channel: "gst:menu-close:v1" }, "https://nghichthienky.online");
+        return;
       }
+      if (recording || event.repeat || !matchesShortcut(event)) return;
+      event.preventDefault(); event.stopImmediatePropagation();
+      parent.postMessage({ channel: "gst:menu-close:v1" }, "https://nghichthienky.online");
     }, true);
   }
   const controls = document.getElementById("menuPositionControls"), select = document.getElementById("menuPosition");
   const feedback = document.getElementById("menuPositionFeedback");
   const shortcutLabel = document.getElementById("menuShortcutLabel"), shortcutFeedback = document.getElementById("menuShortcutFeedback");
-  let shortcut = { code: "Tab", ctrl: false, alt: false, shift: false, meta: false }, recording = false, shortcutRevision = 0;
   const showShortcut = () => { shortcutLabel.textContent = `${shortcut.ctrl ? "Ctrl + " : ""}${shortcut.alt ? "Alt + " : ""}${shortcut.shift ? "Shift + " : ""}${shortcut.meta ? "Meta + " : ""}${shortcut.code}`; };
   const storeShortcut = async (value) => {
     try { await chrome.storage.local.set({ menuShortcut: value }); shortcut = value; showShortcut(); shortcutFeedback.textContent = "Đã lưu phím mở Menu tool."; }

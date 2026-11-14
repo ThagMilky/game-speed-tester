@@ -185,9 +185,10 @@
       && event.metaKey === menuShortcut.meta;
   }
   window.addEventListener("keydown", (event) => {
-    if (event.repeat || editing || opened || !matchesShortcut(event)) return;
+    if (event.repeat || editing || !matchesShortcut(event)) return;
     if (event.target?.matches?.("input, textarea, select, [contenteditable='true']")) return;
-    event.preventDefault(); event.stopImmediatePropagation(); open();
+    event.preventDefault(); event.stopImmediatePropagation();
+    if (opened) void close(); else open();
   }, true);
   function mount() {
     if (root || !document.body) return;
