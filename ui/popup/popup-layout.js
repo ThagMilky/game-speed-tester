@@ -7,7 +7,7 @@
   const views = new Map([...container.querySelectorAll(":scope > [data-panel]")]
     .map((panel) => [panel.dataset.panel, panel]));
   const navigation = [...document.querySelectorAll("[data-nav-panel]")];
-  const otherPages = new Set(["farm", "harvest", "quest", "management", "connection", "speed"]);
+  const otherPages = new Set(["farm", "harvest", "quest", "connection", "speed"]);
   const pageKey = "popupActivePage";
   let navigationRevision = 0;
   let contextExpired = false;

@@ -85,37 +85,10 @@
               <button type="button" class="dashboard-tile" data-open-panel="harvest"><strong>Thu hoạch</strong><span data-summary-for="harvest">Đang đọc cài đặt…</span></button>
               <button type="button" class="dashboard-tile" data-open-panel="quest"><strong>Auto Quest</strong><span data-summary-for="quest">Đang đọc trạng thái…</span></button>
               <button type="button" class="dashboard-tile" data-open-panel="speed"><strong>Tốc độ &amp; bay</strong><span data-summary-for="speed">Đang đọc cài đặt…</span></button>
-              <button type="button" class="dashboard-tile" data-open-panel="management"><strong>Quản lý tính năng</strong><span>Chế độ Auto Farm</span></button>
               <button type="button" class="dashboard-tile" data-open-panel="connection"><strong>Kết nối &amp; tự tải lại</strong><span>Cài đặt kết nối theo nick</span></button>
             </div>
           </div>
         </section>
-    <details class="card" data-category="settings" data-panel="management">
-      <summary class="feature-heading"><span><strong>Quản lý tính năng</strong><small>Chọn cách Auto Farm hoạt động</small></span><span id="farmPolicyRuntimeStatus" class="panel-status" role="status" aria-live="polite">Auto Farm gốc trong tab đang mở: chưa rõ.</span></summary>
-      <div class="card-body">
-        <div class="feature-group-grid feature-flat-grid">
-        <section class="feature-flat-section"><h3>Chế độ hoạt động</h3><div class="feature-group-body">
-        <label for="farmPolicyMode">Chế độ Auto Farm</label>
-        <select id="farmPolicyMode" aria-describedby="farmPolicyExtendedHelp farmPolicyNativeHelp farmPolicyDisabledHelp farmPolicyResume farmPolicySavedMode" disabled>
-          <option value="" selected>Đang đọc cài đặt…</option>
-          <option value="extended">Tool hỗ trợ</option>
-          <option value="native">Theo game gốc</option>
-          <option value="disabled">Khóa Auto Farm</option>
-        </select>
-        <p id="farmPolicyExtendedHelp" class="hint">Tool hỗ trợ: farm gốc với các hỗ trợ đã cài của extension.</p>
-        <p id="farmPolicyNativeHelp" class="hint">Theo game gốc: farm gốc tự điều khiển, không có hỗ trợ farm riêng của extension.</p>
-        <p id="farmPolicyDisabledHelp" class="hint">Khóa Auto Farm: dừng phiên đang chạy và chặn các đường bật được hỗ trợ.</p>
-        <p id="farmPolicyResume" class="hint">Để tiếp tục sau khi mở khóa, chọn Tool hỗ trợ hoặc Theo game gốc, rồi tự bật farm bằng phím/nút tương ứng.</p>
-        </div></section>
-        <section class="feature-flat-section"><h3>Trạng thái &amp; lưu</h3><div class="feature-group-body">
-        <p id="farmPolicySavedMode" class="feature-status" role="status" aria-live="polite">Đang đọc chế độ đã lưu…</p>
-        <p id="farmPolicyDescription" class="hint" aria-live="polite">Đang đọc chế độ…</p>
-        <p class="hint">Trạng thái BẬT/TẮT là trạng thái controller gốc trong tab đang mở. Lưu chế độ không xác nhận game đã nhận cấu hình.</p>
-        <p id="farmPolicyFeedback" class="notice" role="status" aria-live="polite"></p>
-        </div></section>
-        </div>
-      </div>
-    </details>
     <details class="card" data-category="settings" data-panel="connection">
       <summary class="feature-heading"><span><strong>Kết nối &amp; tự tải lại</strong><small>Hỗ trợ kết nối riêng theo nick đã xác nhận</small></span><span id="connectionRecoveryScope" class="panel-status" role="status" aria-live="polite">Đang xác định phạm vi cài đặt…</span></summary>
       <div class="card-body">
@@ -521,6 +494,31 @@
         <select id="menuOrientation" disabled><option value="vertical">Dọc</option><option value="horizontal">Ngang</option></select>
         <p id="menuOrientationFeedback" class="notice" role="status"></p>
     <div class="feature-group-grid feature-flat-grid interface-groups">
+    <section class="feature-flat-section interface-section">
+      <h3>Quản lý tính năng <small>Chọn cách Auto Farm hoạt động</small></h3>
+      <p id="farmPolicyRuntimeStatus" class="feature-status" role="status" aria-live="polite">Auto Farm gốc trong tab đang mở: chưa rõ.</p>
+      <div class="feature-group-grid feature-flat-grid">
+        <section class="feature-flat-section"><h3>Chế độ hoạt động</h3><div class="feature-group-body">
+          <label for="farmPolicyMode">Chế độ Auto Farm</label>
+          <select id="farmPolicyMode" aria-describedby="farmPolicyExtendedHelp farmPolicyNativeHelp farmPolicyDisabledHelp farmPolicyResume farmPolicySavedMode" disabled>
+            <option value="" selected>Đang đọc cài đặt…</option>
+            <option value="extended">Tool hỗ trợ</option>
+            <option value="native">Theo game gốc</option>
+            <option value="disabled">Khóa Auto Farm</option>
+          </select>
+          <p id="farmPolicyExtendedHelp" class="hint">Tool hỗ trợ: farm gốc với các hỗ trợ đã cài của extension.</p>
+          <p id="farmPolicyNativeHelp" class="hint">Theo game gốc: farm gốc tự điều khiển, không có hỗ trợ farm riêng của extension.</p>
+          <p id="farmPolicyDisabledHelp" class="hint">Khóa Auto Farm: dừng phiên đang chạy và chặn các đường bật được hỗ trợ.</p>
+          <p id="farmPolicyResume" class="hint">Để tiếp tục sau khi mở khóa, chọn Tool hỗ trợ hoặc Theo game gốc, rồi tự bật farm bằng phím/nút tương ứng.</p>
+        </div></section>
+        <section class="feature-flat-section"><h3>Trạng thái &amp; lưu</h3><div class="feature-group-body">
+          <p id="farmPolicySavedMode" class="feature-status" role="status" aria-live="polite">Đang đọc chế độ đã lưu…</p>
+          <p id="farmPolicyDescription" class="hint" aria-live="polite">Đang đọc chế độ…</p>
+          <p class="hint">Trạng thái BẬT/TẮT là trạng thái controller gốc trong tab đang mở. Lưu chế độ không xác nhận game đã nhận cấu hình.</p>
+          <p id="farmPolicyFeedback" class="notice" role="status" aria-live="polite"></p>
+        </div></section>
+      </div>
+    </section>
     <section class="feature-flat-section interface-section" data-panel="display">
       <h3>Bảng trạng thái <small>Ẩn/hiện và chọn thông tin cần xem</small></h3>
       <div class="card-body">
