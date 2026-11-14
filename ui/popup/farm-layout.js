@@ -156,7 +156,12 @@
   }
   oldGrid.hidden = true;
   function syncLocks() {
-    for (const { wrapper, sources } of mirrors) wrapper.disabled = [...sources].some((source) => source.disabled);
+    for (const { wrapper, sources } of mirrors) {
+      const disabled = [...sources].some((source) => source.disabled);
+      // A later move can observe an earlier mirror as a source. Rewriting
+      // its reflected attribute unchanged would retrigger this observer forever.
+      if (wrapper.disabled !== disabled) wrapper.disabled = disabled;
+    }
   }
   const locks = new MutationObserver(syncLocks);
   for (const source of new Set(mirrors.flatMap(({ sources }) => [...sources])))
