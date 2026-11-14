@@ -480,6 +480,7 @@ body.embedded {
 .farm-flat-body { padding:0 !important; }
 .farm-status-bar { position:sticky; bottom:0; z-index:5; margin-top:16px; padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--bg); box-shadow:0 -4px 16px #0002; }
 .farm-status-bar > summary { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; cursor:pointer; font-weight:700; }
+.farm-status-close { margin-left:auto; padding:3px 8px; font-size:12px; }
 .farm-status-filters, .farm-status-chips { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
 .farm-status-chips { max-height:160px; overflow:auto; }
 .farm-status-chip { padding:6px 9px; font-size:12px; text-align:left; }

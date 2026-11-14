@@ -158,7 +158,13 @@
   const bar = document.createElement('details'); bar.className = 'farm-status-bar';
   const summary = document.createElement('summary');
   const runtime = document.createElement('span'), count = document.createElement('span');
-  summary.append(runtime, count);
+  const closeStatus = document.createElement('button'); closeStatus.type = 'button';
+  closeStatus.className = 'farm-status-close'; closeStatus.textContent = 'Đóng';
+  closeStatus.setAttribute('aria-label', 'Thu gọn trạng thái Auto Farm');
+  closeStatus.addEventListener('click', (event) => {
+    event.preventDefault(); event.stopPropagation(); bar.open = false;
+  });
+  summary.append(runtime, count, closeStatus);
   const scope = document.createElement('p'); scope.className = 'hint'; scope.setAttribute('role', 'status');
   const filters = document.createElement('div'); filters.className = 'farm-status-filters';
   const list = document.createElement('div'); list.className = 'farm-status-chips';
