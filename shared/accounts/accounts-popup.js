@@ -7,7 +7,7 @@
   const status = byId("accountActiveStatus"), title = byId("accountFormTitle");
   byId("accountAddButton").addEventListener("click", () => {
     form.scrollIntoView({ behavior: "smooth", block: "start" });
-    labelInput.focus({ preventScroll: true });
+    usernameInput.focus({ preventScroll: true });
   });
   const cancel = byId("accountCancel");
   let rows = [], editingId = "", busy = false;
