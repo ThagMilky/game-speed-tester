@@ -5,6 +5,10 @@
   const labelInput = byId("accountLabel"), usernameInput = byId("accountUsername");
   const passwordInput = byId("accountPassword"), feedback = byId("accountFeedback");
   const status = byId("accountActiveStatus"), title = byId("accountFormTitle");
+  byId("accountAddButton").addEventListener("click", () => {
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+    labelInput.focus({ preventScroll: true });
+  });
   const cancel = byId("accountCancel");
   let rows = [], editingId = "", busy = false;
   const autoMode = byId("accountAutoLoginMode"), autoAccount = byId("accountAutoLoginAccount");
