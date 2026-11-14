@@ -764,39 +764,82 @@
       respawnMessage = "";
       return;
     }
-    if (!death || death.scene !== scene) death = { scene, requested: false };
+    if (!death || death.scene !== scene) death = { scene, startedAt: performance.now(),
+      nativeDeadAt: 0, nativeReviveTry: 0, nativeProgressAt: performance.now(),
+      nativeDueSince: null, fallbackAttempts: 0, fallbackAt: -Infinity };
     if (!settings.autoRespawn) return "Tự hồi sinh đang tắt; bạn có thể hồi sinh bằng tay.";
     if (!harvestRequest && !scene.auto?.on) return;
     if ([...document.querySelectorAll('[role="alertdialog"]')].some((el) =>
-      el.getClientRects().length && getComputedStyle(el).visibility !== "hidden")) return "Chờ bạn xử lý hộp kiểm tra người chơi trước khi hồi sinh.";
+      el.getClientRects().length && getComputedStyle(el).visibility !== "hidden")) {
+      respawnMessage = "Chờ bạn xử lý hộp kiểm tra người chơi trước khi hồi sinh.";
+      return respawnMessage;
+    }
     const button = scene.hud?.deathBtn;
     if (!(button instanceof HTMLButtonElement) || !button.isConnected
         || scene.hud?.death?.style.display === "none") {
-      respawnMessage = "Revive button unavailable; waiting for game UI.";
+      respawnMessage = "Nút hồi sinh chưa hiển thị; đang chờ giao diện game.";
       return "Chờ game hiển thị nút hồi sinh.";
     }
     if (button.disabled) {
-      respawnMessage = "Waiting for the game's revival countdown.";
+      respawnMessage = "Chờ hết thời gian hồi sinh của game.";
       return "Chờ hết thời gian hồi sinh của game.";
     }
-    if (scene.auto?.on && typeof scene.auto.update === "function" && finite(scene.auto.reviveTry)) {
-      respawnMessage = "Built-in Auto Farm controls revival; waiting for its next attempt.";
-      return "Auto Farm gốc đang xử lý hồi sinh; chờ game.";
+    const now = performance.now();
+    const deadAt = finite(scene.auto?.deadAt) ? scene.auto.deadAt : 0;
+    const reviveTry = finite(scene.auto?.reviveTry) ? scene.auto.reviveTry : 0;
+    if (deadAt > 0 && deadAt !== death.nativeDeadAt) {
+      death.nativeDeadAt = deadAt;
+      death.nativeProgressAt = now;
     }
-    if (death.requested) {
-      respawnMessage = "Đã gửi yêu cầu hồi sinh qua bộ điều khiển gốc; đang chờ game.";
-      return "Đã gửi yêu cầu hồi sinh một lần; chờ game xác nhận. Có thể thử lại bằng tay nếu cần.";
+    if (reviveTry > 0 && reviveTry !== death.nativeReviveTry) {
+      death.nativeReviveTry = reviveTry;
+      death.nativeProgressAt = now;
+    }
+    const nativeControllerPresent = scene.auto?.on === true
+      && typeof scene.auto.update === "function" && finite(scene.auto.deadAt) && finite(scene.auto.reviveTry);
+    const deathAge = now - death.startedAt;
+    const nativeProgressAge = now - death.nativeProgressAt;
+    let gameNow = NaN;
+    try { if (typeof scene.now === "function") gameNow = scene.now(); } catch { /* Native progress remains unknown. */ }
+    const nativeDue = nativeControllerPresent && deadAt > 0 && finite(gameNow)
+      && gameNow - deadAt > 5.3 && gameNow > reviveTry;
+    const nativeUpdateSkipped = !!scene.pendingSkill || !!scene.aiming || !!scene.self.med && !scene.auto.resting;
+    if (nativeDue && !nativeUpdateSkipped) {
+      death.nativeDueSince ??= now;
+      if (now - death.nativeDueSince < 1000) {
+        respawnMessage = "Auto Farm gốc đã đến lượt hồi sinh; chờ lượt xử lý tiếp theo.";
+        return respawnMessage;
+      }
+    } else death.nativeDueSince = null;
+    // The game waits 5.3 game-seconds before its first attempt. Give that
+    // native path time, then fall back only after its observed state stalls.
+    if (nativeControllerPresent && (deathAge < 8000 || nativeProgressAge < 6000)) {
+      respawnMessage = death.nativeReviveTry > 0
+        ? "Auto Farm gốc đang thử hồi sinh; chờ game phản hồi."
+        : "Chờ Auto Farm gốc ghi nhận ca chết và thử hồi sinh.";
+      return respawnMessage;
+    }
+    if (death.fallbackAttempts > 0 && now - death.fallbackAt < 6000) {
+      respawnMessage = "Đã gửi yêu cầu hồi sinh qua bộ điều khiển gốc; đang chờ game phản hồi.";
+      return respawnMessage;
+    }
+    if (death.fallbackAttempts >= 2) {
+      respawnMessage = "Game chưa xác nhận hồi sinh sau các lần thử; hãy dùng nút hồi sinh bằng tay.";
+      return respawnMessage;
     }
     const host = typeof scene.autoHost === "function" ? scene.autoHost() : null;
     if (typeof host?.respawn !== "function") {
       respawnMessage = "Không có bộ chọn cách hồi sinh của game; nhường xử lý cho giao diện gốc.";
       return "Thiếu bộ chọn kiểu hồi sinh của game; nhường xử lý cho giao diện gốc.";
     }
-    death.requested = true;
+    death.fallbackAttempts++;
+    death.fallbackAt = now;
     globalThis.GSTBackgroundDiagnostics?.record("revive_request", scene);
     host.respawn();
-    respawnMessage = "Đã yêu cầu bộ điều khiển gốc chọn cách hồi sinh; đang chờ game.";
-    return "Đã yêu cầu bộ điều khiển gốc chọn cách hồi sinh; chờ game xác nhận.";
+    respawnMessage = death.fallbackAttempts === 1
+      ? "Auto Farm gốc chưa tiến triển; đã yêu cầu bộ chọn hồi sinh của game."
+      : "Chưa thấy game phản hồi; đã thử lại qua bộ chọn hồi sinh của game.";
+    return respawnMessage;
   }
 
   function ensureFlying(s) {
@@ -819,6 +862,10 @@
       const scene = sceneNow();
       globalThis.GSTFarmSkillDiagnostics?.setContext?.(scene, settings);
       if (settings.acceptPartyInvites) globalThis.GSTFarmParty?.configure(scene, settings);
+      // Revival policy is independent of extended targeting. Attach it even
+      // when the player-target guard is the only active Farm feature.
+      globalThis.GSTFarmRevivePolicy?.attach(scene);
+      checkRespawn(scene);
       const farmFeaturesActive = settings.enabled || targetFilterActive()
         || globalThis.GSTFarmBossSafety?.hasExclusions?.(scene) === true;
       if (!farmFeaturesActive && playerTargetGuardActive()) {
@@ -828,7 +875,6 @@
         return;
       }
       globalThis.GSTFarmCombat?.attach(scene);
-      globalThis.GSTFarmRevivePolicy?.attach(scene);
       globalThis.GSTFarmBehavior?.attach(scene);
       globalThis.GSTFarmDefense?.attach(scene);
       globalThis.GSTFarmEncounter?.attach(scene);
@@ -837,7 +883,6 @@
       globalThis.GSTFarmVisual?.attach(scene);
       globalThis.GSTFarmRouting?.attach(scene);
       globalThis.GSTFarmDiagnostics?.attach(scene);
-      checkRespawn(scene);
       const exclusionFilterNeeded = globalThis.GSTFarmBossSafety?.hasExclusions?.(scene) === true;
       if (compatible(scene) && scene.self && !scene.leaving && connected(scene)
           && scene.auto !== blockedAuto
@@ -1302,7 +1347,7 @@
       } else if (settings.policyMode === "disabled") {
         shortcutMessage = "";
         message = "Auto Farm đang bị khóa bởi chế độ Disabled; tùy chọn đã lưu vẫn được giữ.";
-      } else if (!settings.enabled && !targetFilterActive() && !playerTargetGuardActive()) {
+      } else if (!settings.enabled && !targetFilterActive() && !playerTargetGuardActive() && !settings.autoRespawn) {
         if (watcher !== null) clearInterval(watcher);
         watcher = null;
         stop("Extended range disabled; original center restored where owned.");

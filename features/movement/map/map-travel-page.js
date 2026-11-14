@@ -113,11 +113,17 @@
     const scene = binding?.scene, current = job;
     if (!current || current.scene !== scene || binding.auto !== this) return false;
     if (current.mode === "return" && !scene.auto?.on) {
-      release("Đã hủy quay lại vị trí chết vì Auto Farm đang tắt.", true);
+      const interrupted = globalThis.GSTFarmSession?.deathInterruption?.(scene) === true;
+      release(interrupted ? "Auto Farm đang tiếp tục sau khi hồi sinh; giữ điểm quay lại." : "Đã hủy quay lại vị trí chết vì Auto Farm đang tắt.", !interrupted);
+      return false;
+    }
+    if (scene.self?.dead) {
+      const preserveDestination = current.mode === "return" && preferences.returnDeath;
+      release("Nhân vật đã chết; giữ điểm quay lại chờ xử lý hồi sinh.", !preserveDestination);
       return false;
     }
     if (!compatible(scene) || !connected(scene) || sceneNow() !== scene
-        || scene.leaving || scene.map.scene !== current.map || scene.self.dead) {
+        || scene.leaving || scene.map.scene !== current.map) {
       release("Hành trình đã dừng vì nhân vật hoặc bản đồ thay đổi.", true);
       return false;
     }
@@ -218,7 +224,11 @@
     const inRealm = !!scene.self.realm?.inside;
     const farmOn = scene.auto?.on === true;
     if (binding.lastFarmOn === true && !farmOn && (job?.mode === "return" || pending)) {
-      release("Đã hủy quay lại vị trí chết vì bạn tắt Auto Farm.", true);
+      const interrupted = globalThis.GSTFarmSession?.deathInterruption?.(scene) === true;
+      if (interrupted) {
+        if (job?.mode === "return") release("Auto Farm đang tiếp tục sau khi hồi sinh; giữ điểm quay lại.", false);
+        message = "Auto Farm tạm dừng do hồi sinh; giữ điểm quay lại.";
+      } else release("Đã hủy quay lại vị trí chết vì bạn tắt Auto Farm.", true);
     }
     binding.lastFarmOn = farmOn;
     if (scene.self.dead) {
@@ -228,7 +238,8 @@
           release("Chết trong bí cảnh: không quay lại vị trí chết.", true);
         } else {
           release("Nhân vật đã chết; chờ hồi sinh.");
-          if (preferences.returnDeath && farmOn && lastAlive && lastAlive.map === map
+          const interrupted = globalThis.GSTFarmSession?.deathInterruption?.(scene) === true;
+          if (preferences.returnDeath && (farmOn || interrupted) && lastAlive && lastAlive.map === map
               && lastAlive.profile === profile && Date.now() - lastAlive.at < 10000) {
             pending = { x: lastAlive.x, y: lastAlive.y, map, profile, at: Date.now() };
             savePending();

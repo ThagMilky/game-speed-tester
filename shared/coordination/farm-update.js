@@ -1,12 +1,16 @@
 (() => {
   "use strict";
-  // One native update wrapper shared by the two temporary movement owners.
+  // One native update wrapper shared by all temporary update callbacks.
   const bindings = new WeakMap();
   globalThis.GSTFarmUpdate = {
     attached(scene) {
       if (!scene?.auto) return false;
       const entry = bindings.get(scene.auto);
       return !!entry && scene.auto.update === entry.wrapper;
+    },
+    nativeUpdateRunning(scene) {
+      const entry = scene?.auto && bindings.get(scene.auto);
+      return !!entry && scene.auto.update === entry.wrapper && entry.nativeUpdateDepth > 0;
     },
     // Let a recovery owner invoke native rest and report its meditation toggle.
     runRecovery(scene, host, ...args) {
@@ -30,8 +34,9 @@
         }
       });
       auto.resting = true;
+      entry.nativeUpdateDepth++;
       try { entry.original.apply(auto, [recoveryHost, ...args]); return { ran: true, meditation, restingBefore: wasResting }; }
-      finally { auto.resting = wasResting; }
+      finally { entry.nativeUpdateDepth--; auto.resting = wasResting; }
     },
     add(scene, priority, callback) {
       const auto = scene.auto;
@@ -40,17 +45,20 @@
       if (!entry) {
         const original = auto.update;
         const descriptor = Object.getOwnPropertyDescriptor(auto, "update");
-        entry = { original, descriptor, callbacks: new Map(), ordered: [] };
+        entry = { original, descriptor, callbacks: new Map(), ordered: [], nativeUpdateDepth: 0 };
         entry.wrapper = function (...args) {
           if (this === auto) {
             for (const handler of entry.ordered) if (handler.callback.apply(this, args) === true) return;
           }
+          let nativeArgs = args;
           if (this === auto && globalThis.GSTFarmCombat?.active(scene)) {
-            const nativeArgs = [...args];
+            nativeArgs = [...args];
             nativeArgs[0] = GSTFarmCombat.host(scene, args[0]);
-            return original.apply(this, nativeArgs);
           }
-          return original.apply(this, args);
+          if (this !== auto) return original.apply(this, args);
+          entry.nativeUpdateDepth++;
+          try { return original.apply(this, nativeArgs); }
+          finally { entry.nativeUpdateDepth--; }
         };
         auto.update = entry.wrapper;
         bindings.set(auto, entry);

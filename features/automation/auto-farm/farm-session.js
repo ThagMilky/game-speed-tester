@@ -3,6 +3,7 @@
   const origin = "https://nghichthienky.online", storageKey = "gst:farm-intent:v1";
   let configured = false, keep = true, suspended = false, identityBlocked = false, watcher = null, binding = null, policyMode = "extended";
   let intent = null, stableAt = null, pausedUntil = 0, attempted = false, at = -Infinity, suppressSeed = false;
+  let deathInterruption = null;
   let resumeTimer = null;
   let seedCurrent = false;
   const restoreAttempts = new WeakSet();
@@ -15,11 +16,23 @@
   }
   function save(scene, on) {
     if (typeof scene.profile?.name !== "string") return;
+    deathInterruption = null;
     if (on) suppressSeed = false;
     intent = { name: scene.profile.name, on, blocked: false };
     try { sessionStorage.setItem(storageKey, JSON.stringify(intent)); }
     catch { /* Do not claim persistence when browser storage is unavailable. */ }
+    if (!on && binding?.scene === scene) clearNativeUpdateTracking(binding);
     monitorResume();
+  }
+  function ensureNativeUpdateTracking(owner) {
+    if (!owner || owner.removeNativeUpdate || !owner.auto.on) return;
+    try { owner.removeNativeUpdate = GSTFarmUpdate.add(owner.scene, 100, () => false); }
+    catch { /* Keep the existing update owner; no parallel wrapper is installed. */ }
+  }
+  function clearNativeUpdateTracking(owner) {
+    if (!owner?.removeNativeUpdate) return;
+    try { owner.removeNativeUpdate(); } catch { /* The game may have replaced its controller. */ }
+    finally { owner.removeNativeUpdate = null; }
   }
   function monitorResume() {
     const needed = configured && policyMode === "extended" && !identityBlocked && !suppressSeed && !suspended && binding && keep && intent?.on && !binding.scene.auto.on && !attempted;
@@ -31,7 +44,9 @@
   function detach() {
     if (!binding) return;
     const old = binding; binding = null;
+    if (deathInterruption?.scene === old.scene) deathInterruption = null;
     monitorResume();
+    clearNativeUpdateTracking(old);
     old.scene.events.off("preupdate", frame);
     old.scene.events.off("shutdown", shutdown);
     old.scene.events.off("destroy", shutdown);
@@ -52,6 +67,8 @@
       at = now;
       if (!scene.self) { stableAt = null; return; }
       if (intent?.name !== scene.profile?.name) { save(scene, scene.auto.on); stableAt = null; }
+      if (deathInterruption && deathInterruption.scene === scene && !scene.auto.on
+          && performance.now() - deathInterruption.at >= 120000 && intent?.on === true) save(scene, false);
       if (intent?.blocked === true && globalThis.GSTFarmRevivePolicy?.active(scene)) save(scene, true);
       if (scene.driver?.displaced) { if (intent?.on) save(scene, false); stableAt = null; return; }
       if (scene.auto.on) {
@@ -84,6 +101,7 @@
       attempted = true;
       restoreAttempts.add(scene.auto);
       monitorResume();
+      ensureNativeUpdateTracking(binding);
       binding.restoring = true;
       try {
         if (globalThis.GSTFarmDiagnostics) GSTFarmDiagnostics.restore(scene);
@@ -110,10 +128,22 @@
       const descriptor = Object.getOwnPropertyDescriptor(scene, "toggleAutoFarm");
       const wrapper = function (...args) {
         const owner = binding, before = this.auto.on;
+        const nativeDeathStop = before === true && this.auto.stopOnRevive === true
+          && this.self?.dead !== true && owner?.seenOn === true && intent?.on === true
+          && intent.name === this.profile?.name
+          && globalThis.GSTFarmUpdate?.nativeUpdateRunning?.(this) === true;
         const result = original.apply(this, args);
         if (owner?.scene !== this || before === this.auto.on || owner.restoring || suspended || this.leaving) return result;
         restoreAttempts.delete(this.auto);
-        if (this.auto.on) { save(this, true); owner.seenOn = true; attempted = false; }
+        if (this.auto.on) {
+          ensureNativeUpdateTracking(owner);
+          save(this, true); owner.seenOn = true; attempted = false;
+        }
+        else if (nativeDeathStop && keep && policyMode === "extended" && !identityBlocked) {
+          deathInterruption = { scene: this, auto: this.auto, name: this.profile.name, at: performance.now() };
+          owner.seenOn = false; stableAt = null; attempted = false;
+          monitorResume();
+        }
         else {
           // Native click-to-move turns farm off before it creates clickOrder.
           // Inspect after that synchronous call; an intentional V/menu OFF remains OFF.
@@ -124,14 +154,17 @@
             if (keep && this.clickOrder && intent?.on) {
               pausedUntil = performance.now() + 3000;
               owner.seenOn = false; stableAt = null; attempted = false;
+              clearNativeUpdateTracking(owner);
               monitorResume();
-            } else { save(this, false); owner.seenOn = false; }
+            } else { save(this, false); owner.seenOn = false; clearNativeUpdateTracking(owner); }
           });
         }
         return result;
       };
       scene.toggleAutoFarm = wrapper;
-      binding = { scene, auto: scene.auto, original, descriptor, wrapper, seenOn: scene.auto.on, pendingToggle: false, restoring: false };
+      binding = { scene, auto: scene.auto, original, descriptor, wrapper, seenOn: scene.auto.on,
+        pendingToggle: false, restoring: false, removeNativeUpdate: null };
+      ensureNativeUpdateTracking(binding);
       attempted = restoreAttempts.has(scene.auto);
       scene.events.on("preupdate", frame);
       scene.events.on("shutdown", shutdown);
@@ -148,6 +181,7 @@
       if (identityBlocked) return;
       policyMode = globalThis.GSTFarmPolicy?.normalize(mode) ?? "extended";
       if (policyMode !== "extended") {
+        deathInterruption = null;
         suppressSeed = true;
         const target = binding?.scene ?? scene;
         if (typeof target?.profile?.name === "string" && target.profile.name === intent?.name) save(target, false);
@@ -173,6 +207,7 @@
     setIdentityBlocked(blocked) {
       identityBlocked = blocked === true;
       if (identityBlocked) {
+        deathInterruption = null;
         detach(); clearInterval(watcher); watcher = null; monitorResume();
         return;
       }
@@ -183,6 +218,13 @@
       if (binding?.scene === scene) { save(scene, false); binding.seenOn = false; stableAt = null; }
     },
     remember: (scene) => { if (policyMode === "extended" && keep && scene?.auto?.on) save(scene, true); },
+    deathInterruption: (scene) => {
+      const state = deathInterruption;
+      return !!state && state.scene === scene && state.auto === scene?.auto
+        && state.name === scene.profile?.name && sceneNow() === scene
+        && policyMode === "extended" && !identityBlocked && keep && !suspended
+        && intent?.on === true && performance.now() - state.at < 120000;
+    },
     waiting: (scene) => policyMode === "extended" && !!binding && binding.scene === scene && keep && intent?.on && !scene.auto.on,
     status: (scene) => binding && binding.scene === scene && keep && intent?.on && !scene.auto.on
       && policyMode === "extended"
